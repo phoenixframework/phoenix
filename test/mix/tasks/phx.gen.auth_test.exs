@@ -86,7 +86,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
   test "generates with defaults (Prompt: --no-live)", config do
     in_tmp_phx_project(config.test, fn ->
-      send self(), {:mix_shell_input, :yes?, false}
+      send(self(), {:mix_shell_input, :yes?, false})
 
       Gen.Auth.run(
         ~w(Accounts User users --no-compile),
@@ -222,7 +222,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
   test "generates with defaults (Prompt: --live)", config do
     in_tmp_phx_project(config.test, fn ->
-      send self(), {:mix_shell_input, :yes?, true}
+      send(self(), {:mix_shell_input, :yes?, true})
 
       Gen.Auth.run(
         ~w(Accounts User users --no-compile),
@@ -487,7 +487,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
   test "generates with --web option", config do
     in_tmp_phx_project(config.test, fn ->
-      send self(), {:mix_shell_input, :yes?, false}
+      send(self(), {:mix_shell_input, :yes?, false})
 
       Gen.Auth.run(
         ~w(Accounts User users --web warehouse --no-compile),
@@ -518,16 +518,19 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyAppWeb.Warehouse.UserConfirmationHTML do"
       end)
 
-      assert_file("lib/my_app_web/controllers/warehouse/user_confirmation_html/new.html.heex", fn file ->
-        assert file =~
-                 ~S(<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/confirm"}>)
+      assert_file(
+        "lib/my_app_web/controllers/warehouse/user_confirmation_html/new.html.heex",
+        fn file ->
+          assert file =~
+                   ~S(<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/confirm"}>)
 
-        assert file =~
-                 ~r|<\.link.*href={~p"/warehouse/users/register"}.*>|s
+          assert file =~
+                   ~r|<\.link.*href={~p"/warehouse/users/register"}.*>|s
 
-        assert file =~
-                 ~r|<\.link.*href={~p"/warehouse/users/log-in"}.*>|s
-      end)
+          assert file =~
+                   ~r|<\.link.*href={~p"/warehouse/users/log-in"}.*>|s
+        end
+      )
 
       assert_file(
         "lib/my_app_web/controllers/warehouse/user_confirmation_controller.ex",
@@ -613,16 +616,19 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyAppWeb.Warehouse.UserSessionController do"
       end)
 
-      assert_file("lib/my_app_web/controllers/warehouse/user_session_html/new.html.heex", fn file ->
-        assert file =~
-                 ~S|<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/log-in"}>|
+      assert_file(
+        "lib/my_app_web/controllers/warehouse/user_session_html/new.html.heex",
+        fn file ->
+          assert file =~
+                   ~S|<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/log-in"}>|
 
-        assert file =~
-                 ~S|<.link navigate={~p"/warehouse/users/register"}|
+          assert file =~
+                   ~S|<.link navigate={~p"/warehouse/users/register"}|
 
-        assert file =~
-                 ~S|<.link href={~p"/warehouse/users/reset-password"}|
-      end)
+          assert file =~
+                   ~S|<.link href={~p"/warehouse/users/reset-password"}|
+        end
+      )
 
       assert_file(
         "test/my_app_web/controllers/warehouse/user_session_controller_test.exs",
@@ -639,13 +645,16 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyAppWeb.Warehouse.UserSettingsController do"
       end)
 
-      assert_file("lib/my_app_web/controllers/warehouse/user_settings_html/edit.html.heex", fn file ->
-        assert file =~
-                 ~S|<.simple_form :let={f} for={@email_changeset} action={~p"/warehouse/users/settings"} id="update_email">|
+      assert_file(
+        "lib/my_app_web/controllers/warehouse/user_settings_html/edit.html.heex",
+        fn file ->
+          assert file =~
+                   ~S|<.simple_form :let={f} for={@email_changeset} action={~p"/warehouse/users/settings"} id="update_email">|
 
-        assert file =~
-                 ~s|<.simple_form\n      :let={f}\n      for={@password_changeset}\n      action={~p"/warehouse/users/settings"}\n      id="update_password"\n    >|
-      end)
+          assert file =~
+                   ~s|<.simple_form\n      :let={f}\n      for={@password_changeset}\n      action={~p"/warehouse/users/settings"}\n      id="update_password"\n    >|
+        end
+      )
 
       assert_file("lib/my_app_web/controllers/warehouse/user_settings_html.ex", fn file ->
         assert file =~ "defmodule MyAppWeb.Warehouse.UserSettingsHTML do"
@@ -715,7 +724,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   describe "--database option" do
     test "when the database is postgres", config do
       in_tmp_phx_project(config.test, fn ->
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --no-compile),
@@ -768,7 +777,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when the database is mysql", config do
       in_tmp_phx_project(config.test, fn ->
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --no-compile),
@@ -821,7 +830,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when the database is sqlite3", config do
       in_tmp_phx_project(config.test, fn ->
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --no-compile),
@@ -874,7 +883,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when the database is mssql", config do
       in_tmp_phx_project(config.test, fn ->
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --no-compile),
@@ -928,37 +937,37 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
   test "allows utc_datetime", config do
     in_tmp_phx_project(config.test, fn ->
-      send self(), {:mix_shell_input, :yes?, false}
-      with_generator_env(:my_app, [timestamp_type: :utc_datetime], fn ->
+      send(self(), {:mix_shell_input, :yes?, false})
 
+      with_generator_env(:my_app, [timestamp_type: :utc_datetime], fn ->
         Gen.Auth.run(
-        ~w(Accounts User users --no-compile),
-        ecto_adapter: Ecto.Adapters.Postgres
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
         )
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
 
-        assert_file migration, fn file ->
+        assert_file(migration, fn file ->
           assert file =~ "timestamps(type: :utc_datetime)"
           assert file =~ "timestamps(type: :utc_datetime, updated_at: false)"
-        end
+        end)
 
-        assert_file "lib/my_app/accounts/user.ex", fn file ->
+        assert_file("lib/my_app/accounts/user.ex", fn file ->
           assert file =~ "field :confirmed_at, :utc_datetime"
           assert file =~ "timestamps(type: :utc_datetime)"
           assert file =~ "now = DateTime.utc_now() |> DateTime.truncate(:second)"
-        end
+        end)
 
-        assert_file "lib/my_app/accounts/user_token.ex", fn file ->
+        assert_file("lib/my_app/accounts/user_token.ex", fn file ->
           assert file =~ "timestamps(type: :utc_datetime, updated_at: false)"
-        end
+        end)
       end)
     end)
   end
 
   test "supports --binary-id option", config do
     in_tmp_phx_project(config.test, fn ->
-      send self(), {:mix_shell_input, :yes?, false}
+      send(self(), {:mix_shell_input, :yes?, false})
 
       Gen.Auth.run(
         ~w(Accounts User users --binary-id --no-compile),
@@ -990,7 +999,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   describe "--hashing-lib option" do
     test "when bcrypt", config do
       in_tmp_phx_project(config.test, fn ->
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --hashing-lib bcrypt --no-compile),
@@ -1015,7 +1024,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when pbkdf2", config do
       in_tmp_phx_project(config.test, fn ->
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --hashing-lib pbkdf2 --no-compile),
@@ -1040,7 +1049,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
     test "when argon2", config do
       in_tmp_phx_project(config.test, fn ->
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --hashing-lib argon2 --no-compile),
@@ -1068,7 +1077,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
   test "with --table option", config do
     in_tmp_phx_project(config.test, fn ->
-      send self(), {:mix_shell_input, :yes?, false}
+      send(self(), {:mix_shell_input, :yes?, false})
 
       Gen.Auth.run(
         ~w(Accounts User users --table my_users --no-compile),
@@ -1099,7 +1108,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       in_tmp_phx_umbrella_project(config.test, fn ->
         in_project(:my_app, "apps/my_app", fn _module ->
           with_generator_env(:my_app_web, [context_app: nil], fn ->
-            send self(), {:mix_shell_input, :yes?, false}
+            send(self(), {:mix_shell_input, :yes?, false})
 
             Gen.Auth.run(
               ~w(Accounts User users --no-compile),
@@ -1134,8 +1143,15 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         )
 
         assert_file("apps/my_app/lib/my_app_web/controllers/user_reset_password_controller.ex")
-        assert_file("apps/my_app/lib/my_app_web/controllers/user_reset_password_html/edit.html.heex")
-        assert_file("apps/my_app/lib/my_app_web/controllers/user_reset_password_html/new.html.heex")
+
+        assert_file(
+          "apps/my_app/lib/my_app_web/controllers/user_reset_password_html/edit.html.heex"
+        )
+
+        assert_file(
+          "apps/my_app/lib/my_app_web/controllers/user_reset_password_html/new.html.heex"
+        )
+
         assert_file("apps/my_app/lib/my_app_web/controllers/user_reset_password_html.ex")
 
         assert_file(
@@ -1157,7 +1173,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       in_tmp_phx_umbrella_project(config.test, fn ->
         in_project(:my_app_web, "apps/my_app_web", fn _module ->
           with_generator_env(:my_app_web, [context_app: :my_app], fn ->
-            send self(), {:mix_shell_input, :yes?, false}
+            send(self(), {:mix_shell_input, :yes?, false})
 
             Gen.Auth.run(
               ~w(Accounts User users --no-compile),
@@ -1177,7 +1193,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file("apps/my_app_web/lib/my_app_web/user_auth.ex")
         assert_file("apps/my_app_web/test/my_app_web/user_auth_test.exs")
         assert_file("apps/my_app_web/lib/my_app_web/controllers/user_confirmation_html.ex")
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_confirmation_html/new.html.heex")
+
+        assert_file(
+          "apps/my_app_web/lib/my_app_web/controllers/user_confirmation_html/new.html.heex"
+        )
+
         assert_file("apps/my_app_web/lib/my_app_web/controllers/user_confirmation_controller.ex")
 
         assert_file(
@@ -1195,8 +1215,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           "apps/my_app_web/lib/my_app_web/controllers/user_reset_password_controller.ex"
         )
 
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_reset_password_html/edit.html.heex")
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_reset_password_html/new.html.heex")
+        assert_file(
+          "apps/my_app_web/lib/my_app_web/controllers/user_reset_password_html/edit.html.heex"
+        )
+
+        assert_file(
+          "apps/my_app_web/lib/my_app_web/controllers/user_reset_password_html/new.html.heex"
+        )
+
         assert_file("apps/my_app_web/lib/my_app_web/controllers/user_reset_password_html.ex")
 
         assert_file(
@@ -1212,7 +1238,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert_file("apps/my_app_web/lib/my_app_web/controllers/user_session_html.ex")
         assert_file("apps/my_app_web/lib/my_app_web/controllers/user_settings_controller.ex")
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_settings_html/edit.html.heex")
+
+        assert_file(
+          "apps/my_app_web/lib/my_app_web/controllers/user_settings_html/edit.html.heex"
+        )
+
         assert_file("apps/my_app_web/lib/my_app_web/controllers/user_settings_html.ex")
 
         assert_file(
@@ -1242,7 +1272,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       in_tmp_phx_project(config.test, fn ->
         File.write!("mix.exs", "")
 
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --no-compile),
@@ -1274,7 +1304,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           String.replace(file, "use MyAppWeb, :router", "")
         end)
 
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --no-compile),
@@ -1309,7 +1339,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           String.replace(file, "plug :put_secure_browser_headers\n", "")
         end)
 
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --no-compile),
@@ -1340,7 +1370,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         File.rm!("lib/my_app_web/components/layouts/root.html.heex")
         File.rm!("lib/my_app_web/components/layouts/app.html.heex")
 
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --no-compile),
@@ -1353,60 +1383,60 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert error == """
 
-        Unable to find an application layout file to inject user menu items.
+               Unable to find an application layout file to inject user menu items.
 
-        Missing files:
+               Missing files:
 
-          * lib/my_app_web/components/layouts/root.html.heex
-          * lib/my_app_web/components/layouts/app.html.heex
+                 * lib/my_app_web/components/layouts/root.html.heex
+                 * lib/my_app_web/components/layouts/app.html.heex
 
-        Please ensure this phoenix app was not generated with
-        --no-html. If you have changed the name of your application
-        layout file, please add the following code to it where you'd
-        like the user menu items to be rendered.
+               Please ensure this phoenix app was not generated with
+               --no-html. If you have changed the name of your application
+               layout file, please add the following code to it where you'd
+               like the user menu items to be rendered.
 
-            <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-              <%= if @current_user do %>
-                <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                  <%= @current_user.email %>
-                </li>
-                <li>
-                  <.link
-                    href={~p"/users/settings"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                  >
-                    Settings
-                  </.link>
-                </li>
-                <li>
-                  <.link
-                    href={~p"/users/log-out"}
-                    method="delete"
-                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                  >
-                    Log out
-                  </.link>
-                </li>
-              <% else %>
-                <li>
-                  <.link
-                    href={~p"/users/register"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                  >
-                    Register
-                  </.link>
-                </li>
-                <li>
-                  <.link
-                    href={~p"/users/log-in"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                  >
-                    Log in
-                  </.link>
-                </li>
-              <% end %>
-            </ul>
-        """
+                   <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+                     <%= if @current_user do %>
+                       <li class="text-[0.8125rem] leading-6 text-zinc-900">
+                         <%= @current_user.email %>
+                       </li>
+                       <li>
+                         <.link
+                           href={~p"/users/settings"}
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                         >
+                           Settings
+                         </.link>
+                       </li>
+                       <li>
+                         <.link
+                           href={~p"/users/log-out"}
+                           method="delete"
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                         >
+                           Log out
+                         </.link>
+                       </li>
+                     <% else %>
+                       <li>
+                         <.link
+                           href={~p"/users/register"}
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                         >
+                           Register
+                         </.link>
+                       </li>
+                       <li>
+                         <.link
+                           href={~p"/users/log-in"}
+                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+                         >
+                           Log in
+                         </.link>
+                       </li>
+                     <% end %>
+                   </ul>
+               """
       end)
     end
 
@@ -1416,7 +1446,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           ""
         end)
 
-        send self(), {:mix_shell_input, :yes?, false}
+        send(self(), {:mix_shell_input, :yes?, false})
 
         Gen.Auth.run(
           ~w(Accounts User users --no-compile),
@@ -1483,7 +1513,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       File.mkdir_p!("priv/templates/phx.gen.auth")
       File.write!("priv/templates/phx.gen.auth/auth.ex", "#it works!")
 
-      send self(), {:mix_shell_input, :yes?, false}
+      send(self(), {:mix_shell_input, :yes?, false})
 
       Gen.Auth.run(
         ~w(Accounts Admin admins --no-compile),

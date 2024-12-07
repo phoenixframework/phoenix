@@ -59,9 +59,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
         assert file =~ ~S|PHX_SERVER=true exec ./phoenix start|
       end)
 
-      refute_file "lib/phoenix/release.ex"
-      refute_file "rel/overlays/bin/migrate"
-      refute_file "rel/overlays/bin/migrate.bat"
+      refute_file("lib/phoenix/release.ex")
+      refute_file("rel/overlays/bin/migrate")
+      refute_file("rel/overlays/bin/migrate.bat")
       refute_file("Dockerfile")
       refute_file(".dockerignore")
 
@@ -86,7 +86,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       end)
 
       assert_file("Dockerfile", fn file ->
-        assert file =~ ~S|COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/phoenix ./|
+        assert file =~
+                 ~S|COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/phoenix ./|
+
         assert file =~ ~S|CMD ["/app/bin/server"]|
       end)
 
