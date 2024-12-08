@@ -13,12 +13,12 @@ defmodule Mix.Phoenix.MigrationTest do
 
   test "table_options/1 returns possible table options" do
     assert Migration.table_options(%Schema{}) == ""
-    assert Migration.table_options(%Schema{prefix: "some_prefix"}) == ", prefix: :some_prefix"
+    assert Migration.table_options(%Schema{prefix: "some_prefix"}) == ", prefix: \"some_prefix\""
     assert Migration.table_options(%Schema{binary_id: true}) == ", primary_key: false"
     assert Migration.table_options(%Schema{opts: [primary_key: "uuid"]}) == ", primary_key: false"
 
     schema = %Schema{prefix: "some_prefix", binary_id: true, opts: [primary_key: "uuid"]}
-    assert Migration.table_options(schema) == ", primary_key: false, prefix: :some_prefix"
+    assert Migration.table_options(schema) == ", primary_key: false, prefix: \"some_prefix\""
   end
 
   test "maybe_specific_primary_key/1 returns specific primary key column by options " <>
@@ -143,19 +143,37 @@ defmodule Mix.Phoenix.MigrationTest do
     assert Migration.timestamps_type(schema) == "type: :utc_datetime"
   end
 
-  test "indexes/1 returns formatted indexes" do
-    schema = %Schema{table: "comments", attrs: @parsed_attrs}
+  describe "indexes/1" do
+    test "returns formatted indexes" do
+      schema = %Schema{table: "comments", attrs: @parsed_attrs}
 
-    assert Migration.indexes(schema) ==
-             """
+      assert Migration.indexes(schema) ==
+               """
 
 
-                 create index("comments", [:points], unique: true)
-                 create index("comments", [:title])
-                 create index("comments", [:book_id])
-                 create index("comments", [:booking_id], unique: true)
-                 create index("comments", [:post_id])
-             """
-             |> String.trim_trailing("\n")
+                   create index("comments", [:points], unique: true)
+                   create index("comments", [:title])
+                   create index("comments", [:book_id])
+                   create index("comments", [:booking_id], unique: true)
+                   create index("comments", [:post_id])
+               """
+               |> String.trim_trailing("\n")
+    end
+
+    test "applies prefix option" do
+      schema = %Schema{table: "comments", attrs: @parsed_attrs, prefix: "some_prefix"}
+
+      assert Migration.indexes(schema) ==
+               """
+
+
+                   create index("comments", [:points], prefix: "some_prefix", unique: true)
+                   create index("comments", [:title], prefix: "some_prefix")
+                   create index("comments", [:book_id], prefix: "some_prefix")
+                   create index("comments", [:booking_id], prefix: "some_prefix", unique: true)
+                   create index("comments", [:post_id], prefix: "some_prefix")
+               """
+               |> String.trim_trailing("\n")
+    end
   end
 end

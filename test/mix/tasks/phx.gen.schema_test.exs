@@ -357,7 +357,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates schema and migration with prefix", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts --prefix cms))
+      Gen.Schema.run(~w(Blog.Post posts title:string:*:index --prefix cms))
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "@schema_prefix :cms"
@@ -366,7 +366,8 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
       assert_file(migration, fn file ->
-        assert file =~ "create table(\"posts\", prefix: :cms) do"
+        assert file =~ "create table(\"posts\", prefix: \"cms\") do"
+        assert file =~ "create index(\"posts\", [:title], prefix: \"cms\")"
       end)
     end)
   end

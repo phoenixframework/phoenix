@@ -22,7 +22,7 @@ defmodule Mix.Phoenix.Migration do
   """
   def table_options(%Schema{} = schema) do
     primary_key = if schema.binary_id || schema.opts[:primary_key], do: ", primary_key: false"
-    prefix = if schema.prefix, do: ", prefix: :#{schema.prefix}"
+    prefix = if schema.prefix, do: ~s/, prefix: "#{schema.prefix}"/
 
     [primary_key, prefix] |> Enum.map_join(&(&1 || ""))
   end
@@ -101,13 +101,14 @@ defmodule Mix.Phoenix.Migration do
     |> Attribute.indexed()
     |> Attribute.without_virtual()
     |> Attribute.sort()
-    |> Enum.map(&~s/create index("#{schema.table}", #{index_specifics(&1)})/)
+    |> Enum.map(&index_specifics(&1, schema))
     |> Mix.Phoenix.indent_text(spaces: 4, top: 2)
   end
 
-  defp index_specifics(attr) do
+  defp index_specifics(attr, schema) do
+    prefix = if schema.prefix, do: ~s/, prefix: "#{schema.prefix}"/
     unique = if attr.options[:unique], do: ", unique: true"
 
-    "[:#{attr.name}]#{unique}"
+    ~s/create index("#{schema.table}", [:#{attr.name}]#{prefix}#{unique})/
   end
 end
