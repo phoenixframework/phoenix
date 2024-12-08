@@ -89,7 +89,9 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = put_format(conn, "print")
     assert layout(conn) == {AppView, :print}
 
-    assert_raise Plug.Conn.AlreadySentError, fn ->
+    message = "The response was already sent. Request was to `/` using {AppView, :print}"
+
+    assert_raise Plug.Conn.AlreadySentError, message, fn ->
       put_layout(sent_conn(), {AppView, :print})
     end
   end
