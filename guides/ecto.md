@@ -245,7 +245,7 @@ iex> changeset.errors
 Now, let's make `number_of_pets` optional. In order to do this, we simply remove it from the list in the `changeset/2` function, in `Hello.User`.
 
 ```elixir
-    |> validate_required([:name, :email, :bio])
+|> validate_required([:name, :email, :bio])
 ```
 
 Now casting the changeset should tell us that only `name`, `email`, and `bio` can't be blank. We can test that by running `recompile()` inside IEx and then rebuilding our changeset.
@@ -529,7 +529,7 @@ Let's open up our `mix.exs` file and do that now.
 defmodule HelloPhoenix.MixProject do
   use Mix.Project
 
-  . . .
+  ...
   # Specifies your project dependencies.
   #
   # Type `mix help deps` for examples and options.

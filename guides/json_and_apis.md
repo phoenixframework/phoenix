@@ -52,7 +52,7 @@ The API scope uses the `:api` pipeline, which will run specific steps such as en
 Then we need to update our repository by running migrations:
 
 ```console
-mix ecto.migrate
+$ mix ecto.migrate
 ```
 
 ### Trying out the JSON API
@@ -62,13 +62,13 @@ Before we go ahead and change those files, let's take a look at how our API beha
 First, we need to start the server:
 
 ```console
-mix phx.server
+$ mix phx.server
 ```
 
 Next, let's make a smoke test to check our API is working with:
 
 ```console
-curl -i http://localhost:4000/api/urls
+$ curl -i http://localhost:4000/api/urls
 ```
 
 If everything went as planned we should get a `200` response:
@@ -88,11 +88,11 @@ x-request-id: Fuyg-wMl4S-hAfsAAAUk
 We didn't get any data because we haven't populated the database with any yet. So let's add some links:
 
 ```console
-curl -iX POST http://localhost:4000/api/urls \
+$ curl -iX POST http://localhost:4000/api/urls \
    -H 'Content-Type: application/json' \
    -d '{"url": {"link":"https://phoenixframework.org", "title":"Phoenix Framework"}}'
 
-curl -iX POST http://localhost:4000/api/urls \
+$ curl -iX POST http://localhost:4000/api/urls \
    -H 'Content-Type: application/json' \
    -d '{"url": {"link":"https://elixir-lang.org", "title":"Elixir"}}'
 ```
@@ -100,19 +100,19 @@ curl -iX POST http://localhost:4000/api/urls \
 Now we can retrieve all links:
 
 ```console
-curl -i http://localhost:4000/api/urls
+$ curl -i http://localhost:4000/api/urls
 ```
 
 Or we can just retrieve a link by its `id`:
 
 ```console
-curl -i http://localhost:4000/api/urls/1
+$ curl -i http://localhost:4000/api/urls/1
 ```
 
 Next, we can update a link with:
 
 ```console
-curl -iX PUT http://localhost:4000/api/urls/2 \
+$ curl -iX PUT http://localhost:4000/api/urls/2 \
    -H 'Content-Type: application/json' \
    -d '{"url": {"title":"Elixir Programming Language"}}'
 ```
@@ -122,7 +122,7 @@ The response should be a `200` with the updated link in the body.
 Finally, we need to try out the removal of a link:
 
 ```console
-curl -iX DELETE http://localhost:4000/api/urls/2 \
+$ curl -iX DELETE http://localhost:4000/api/urls/2 \
    -H 'Content-Type: application/json'
 ```
 
@@ -291,7 +291,7 @@ As we can see, it will convert the errors into a data structure, which will be r
 As you can see, the changeset requires both link and title to be given. This means we can try posting a url with no link and title and see how our API responds:
 
 ```console
-curl -iX POST http://localhost:4000/api/urls \
+$ curl -iX POST http://localhost:4000/api/urls \
    -H 'Content-Type: application/json' \
    -d '{"url": {}}'
 
@@ -310,7 +310,7 @@ for the REST API.
 From your terminal run:
 
 ```console
-mix help phx.new
+$ mix help phx.new
 ```
 
 The output should contain the following:

@@ -4,7 +4,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   @moduledoc """
   Generates LiveView, templates, and context for a resource.
 
-      mix phx.gen.live Accounts User users name:string age:integer
+  ```console
+  $ mix phx.gen.live Accounts User users name:string age:integer
+  ```
 
   The first argument is the context module.  The context is an Elixir module
   that serves as an API boundary for the given resource. A context often holds
@@ -64,7 +66,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
-      mix phx.gen.live Accounts User users --context-app warehouse
+  ```console
+  $ mix phx.gen.live Accounts User users --context-app warehouse
+  ```
 
   ## Web namespace
 
@@ -72,7 +76,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
-      mix phx.gen.live Accounts User users --web Sales
+  ```console
+  $ mix phx.gen.live Accounts User users --web Sales
+  ```
 
   Which would generate the LiveViews in `lib/app_web/live/sales/user_live/`,
   namespaced `AppWeb.Sales.UserLive` instead of `AppWeb.UserLive`.
@@ -84,7 +90,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   to yourself. You can use the `--no-context` and `--no-schema` flags
   for file generation control.
 
-      mix phx.gen.live Accounts User users --no-context --no-schema
+  ```console
+  $ mix phx.gen.live Accounts User users --no-context --no-schema
+  ```
 
   In the cases above, tests are still generated, but they will all fail.
 

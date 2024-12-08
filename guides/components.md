@@ -56,7 +56,7 @@ We declared the attributes we accept via the `attr/3` macro provided by `Phoenix
 
 Next we need to update `show.html.heex`:
 
-```elixir
+```heex
 <section>
   <.greet messenger={@messenger} />
 </section>
@@ -92,7 +92,7 @@ Next, let's fully understand the expressive power behind the HEEx template langu
 Function components and templates files are powered by [the HEEx template language](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2), which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
 
 ```elixir
-  render(conn, :show, username: "joe")
+render(conn, :show, username: "joe")
 ```
 
 Then you can access said username in the templates as `<%= @username %>`. In addition to displaying assigns and functions, we can use pretty much any Elixir expression. For example, in order to have conditionals:

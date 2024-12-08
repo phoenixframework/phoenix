@@ -74,7 +74,7 @@ future styling).
 
 ### Enhancements
   * [phx.gen.auth] Add enhanced session fixation protection.
-    For applications which's previously used `phx.gen.auth`, the following line can be added to the `renew_session` function in the auth module:
+    For applications which previously used `phx.gen.auth`, the following line can be added to the `renew_session` function in the auth module:
 
     ```diff
       defp renew_session(conn) do

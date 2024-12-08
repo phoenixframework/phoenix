@@ -163,8 +163,8 @@ For a free tier database, update your `Repo` config with:
 ```elixir
 ssl: true,
 ssl_opts: [
-  verify: :verify_none,
-  cacerts: :public_key.cacerts_get()
+  verify: :verify_none,
+  cacerts: :public_key.cacerts_get()
 ]
 ```
 

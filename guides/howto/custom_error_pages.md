@@ -53,7 +53,7 @@ config :hello, HelloWeb.Endpoint,
   http: [port: 4000],
   debug_errors: false,
   code_reloader: true,
-  . . .
+  ...
 ```
 
 After modifying our config file, we need to restart our server in order for this change to take effect. After restarting the server, let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.

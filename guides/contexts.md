@@ -359,7 +359,6 @@ $ mix ecto.gen.migration create_product_categories
 Next, let's open up the new migration file and add the following code to the `change` function:
 
 ```elixir
-
 defmodule Hello.Repo.Migrations.CreateProductCategories do
   use Ecto.Migration
 
@@ -497,8 +496,9 @@ Next, let's expose our new feature to the web by adding the category input to ou
       |> Ecto.Changeset.get_change(:categories, [])
       |> Enum.map(& &1.data.id)
 
-    for cat <- Hello.Catalog.list_categories(),
-        do: [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    for cat <- Hello.Catalog.list_categories() do
+      [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    end
   end
 ```
 
@@ -519,7 +519,7 @@ With our `category_opts` function in place, we can open up `lib/hello_web/contro
 
 We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to the list in `lib/hello_web/controllers/product_html/show.html.heex`:
 
-```heex
+```diff
 <.list>
   ...
 + <:item title="Categories">
@@ -604,12 +604,11 @@ Would you like to proceed? [Yn] y
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
-
 ```
 
 We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's check the generated migration file in `priv/repo/migrations/*_create_cart_items.ex`:
 
-```elixir
+```diff
     create table("cart_items") do
       add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
       add :quantity, :integer, null: false
@@ -660,7 +659,7 @@ Our `Catalog.Product` resource serves to keep the responsibilities of representi
 
 Now that we know where our data dependencies exist, let's add our schema associations so we can tie shopping cart items to products. First, let's make a quick change to our cart schema in `lib/hello/shopping_cart/cart.ex` to associate a cart to its items:
 
-```elixir
+```diff
   schema "carts" do
     field :user_uuid, Ecto.UUID
 
@@ -672,7 +671,7 @@ Now that we know where our data dependencies exist, let's add our schema associa
 
 Now that our cart is associated to the items we place in it, let's tweak the cart item associations inside `lib/hello/shopping_cart/cart_item.ex`:
 
-```elixir
+```diff
   schema "cart_items" do
     field :price_when_carted, :decimal
     field :quantity, :integer
@@ -705,7 +704,7 @@ As we mentioned before, the context generators are only a starting point for our
 
 We won't focus on a real user authentication system at this point, but by the time we're done, you'll be able to naturally integrate one with what we've written here. To simulate a current user session, open up your `lib/hello_web/router.ex` and key this in:
 
-```elixir
+```diff
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -794,7 +793,7 @@ We defined a new `CartItemController` with the create and delete actions that we
 
 Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
-```elixir
+```diff
 +  alias Hello.Catalog
 -  alias Hello.ShoppingCart.Cart
 +  alias Hello.ShoppingCart.{Cart, CartItem}
@@ -1118,7 +1117,7 @@ We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and
 
 With our migration in place, let's wire up our orders and line items associations in `lib/hello/orders/order.ex`:
 
-```elixir
+```diff
   schema "orders" do
     field :total_price, :decimal
     field :user_uuid, Ecto.UUID
@@ -1145,7 +1144,7 @@ We used `has_many :line_items` to associate orders and line items, just like we'
 
 Generator added for us `belongs_to` to associate line items to orders and products, correctly inferring referenced schema for `order` from its field name. With our associations in place, we can start integrating the web interface into our order process. Open up your router `lib/hello_web/router.ex` and add the following line:
 
-```elixir
+```diff
   scope "/", HelloWeb do
     pipe_through :browser
 

@@ -12,14 +12,6 @@ Please take a look at this list and make sure to install anything necessary for 
 
 Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](https://elixir-lang.org/install.html) to help.
 
-If we have just installed Elixir for the first time, we will need to install the Hex package manager as well. Hex is necessary to get a Phoenix app running (by installing dependencies) and to install any extra dependencies we might need along the way.
-
-Here's the command to install Hex (If you have Hex already installed, it will upgrade Hex to the latest version):
-
-```console
-$ mix local.hex
-```
-
 ## Erlang 24 or later
 
 Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. Without Erlang, Elixir code has no virtual machine to run on, so we need to install Erlang as well.

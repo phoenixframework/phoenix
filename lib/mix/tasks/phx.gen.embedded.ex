@@ -4,7 +4,9 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   @moduledoc """
   Generates an embedded Ecto schema for casting/validating data outside the DB.
 
-      mix phx.gen.embedded Blog.Post title:string views:integer
+  ```console
+  $ mix phx.gen.embedded Blog.Post title:string views:integer
+  ```
 
   The first argument is the schema module followed by the schema attributes.
 
@@ -18,7 +20,9 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   where type are the types supported by Ecto. Default type is `string`,
   which can be omitted when field doesn't have options.
 
-      mix phx.gen.embedded Blog.Post title views:integer
+  ```console
+  $ mix phx.gen.embedded Blog.Post title views:integer
+  ```
 
   #{Mix.Phoenix.Attribute.supported_types()}
 

@@ -88,7 +88,7 @@ $ fly deploy
 
 Note: On Apple Silicon (M1) computers, docker runs cross-platform builds using qemu which might not always work. If you get a segmentation fault error like the following:
 
-```
+```console
  => [build  7/17] RUN mix deps.get --only
  => => # qemu: uncaught target signal 11 (Segmentation fault) - core dumped
 ```

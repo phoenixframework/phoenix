@@ -583,13 +583,13 @@ Don't forget to add your new repo to your supervision tree
 Notice that this task has updated `config/config.exs`. If we take a look, we'll see this extra configuration block for our new repo.
 
 ```elixir
-. . .
+...
 config :hello, OurCustom.Repo,
   username: "user",
   password: "pass",
   hostname: "localhost",
   database: "hello_repo",
-. . .
+...
 ```
 
 Of course, we'll need to change the login credentials to match what our database expects. We'll also need to change the config for other environments.
@@ -597,7 +597,7 @@ Of course, we'll need to change the login credentials to match what our database
 We certainly should follow the instructions and add our new repo to our supervision tree. In our `Hello` application, we would open up `lib/hello/application.ex`, and add our repo as a worker to the `children` list.
 
 ```elixir
-. . .
+...
 children = [
   Hello.Repo,
   # Our custom repo
@@ -605,7 +605,7 @@ children = [
   # Start the endpoint when the application starts
   HelloWeb.Endpoint,
 ]
-. . .
+...
 ```
 
 ### `mix ecto.gen.migration`
@@ -638,7 +638,7 @@ Notice that there is a single function `change/0` which will handle both forward
 What we want to do is create a `comments` table with a `body` column, a `word_count` column, and timestamp columns for `inserted_at` and `updated_at`.
 
 ```elixir
-. . .
+...
 def change do
   create table(:comments) do
     add :body, :string
@@ -646,7 +646,7 @@ def change do
     timestamps()
   end
 end
-. . .
+...
 ```
 
 Again, we can run this task with the `-r` flag and another repo if we need to.
@@ -707,13 +707,13 @@ $ mix ecto.migrate -n 2
 The `--step` option will behave the same way.
 
 ```console
-mix ecto.migrate --step 2
+$ mix ecto.migrate --step 2
 ```
 
 The `--to` option will run all migrations up to and including given version.
 
 ```console
-mix ecto.migrate --to 20150317170448
+$ mix ecto.migrate --to 20150317170448
 ```
 
 ### `mix ecto.rollback`
