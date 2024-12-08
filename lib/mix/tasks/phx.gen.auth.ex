@@ -129,11 +129,18 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     {opts, parsed} = OptionParser.parse!(args, strict: @switches)
     validate_args!(parsed)
     hashing_library = build_hashing_library!(opts)
+    ecto_base64_dependency = ~s|{:ecto_base64, "~> 0.1.0"}|
+    totp_dependency = ~s|{:nimble_totp, "~> 1.0"}|
+    qrcode_depencency = ~s|{:eqrcode, "~> 0.1.10"}|
 
     context_args = OptionParser.to_argv(opts, switches: @switches) ++ parsed
     {context, schema} = Gen.Context.build(context_args, __MODULE__)
 
-    context = put_live_option(context)
+    context = 
+      context
+      |> put_live_option()
+      |> put_totp_option()
+
     Gen.Context.prompt_for_code_injection(context)
 
     if "--no-compile" not in args do
@@ -165,7 +172,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       router_scope: router_scope(context),
       web_path_prefix: web_path_prefix(schema),
       test_case_options: test_case_options(ecto_adapter),
-      live?: Keyword.fetch!(context.opts, :live)
+      live?: Keyword.fetch!(context.opts, :live),
+      totp?: Keyword.fetch!(context.opts, :totp)
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -177,6 +185,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> inject_conn_case_helpers(paths, binding)
     |> inject_config(hashing_library)
     |> maybe_inject_mix_dependency(hashing_library)
+    |> maybe_inject_mix_dependency(ecto_base64_dependency)
+    |> maybe_inject_mix_dependency(totp_dependency)
+    |> maybe_inject_mix_dependency(qrcode_depencency)
     |> inject_routes(paths, binding)
     |> maybe_inject_router_import(binding)
     |> maybe_inject_router_plug()
@@ -255,32 +266,19 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     web_path = to_string(schema.web_path)
     controller_pre = Path.join([web_pre, "controllers", web_path])
 
-    default_files = [
-      "migration.ex": [migrations_pre, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"],
-      "notifier.ex": [context.dir, "#{singular}_notifier.ex"],
-      "schema.ex": [context.dir, "#{singular}.ex"],
-      "schema_token.ex": [context.dir, "#{singular}_token.ex"],
-      "auth.ex": [web_pre, web_path, "#{singular}_auth.ex"],
-      "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
-      "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
-      "session_controller_test.exs": [
-        web_test_pre,
-        "controllers",
-        web_path,
-        "#{singular}_session_controller_test.exs"
-      ]
-    ]
+    live? = Keyword.get(context.opts, :live) == true
+    totp? = Keyword.get(context.opts, :totp) == true
 
-    case Keyword.fetch(context.opts, :live) do
-      {:ok, true} ->
-        live_files = [
-          "registration_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "registration.ex"
-          ],
+    generated_files = [
+      if totp? do
+        ["totp_controller.ex": [controller_pre, "#{singular}_totp_controller.ex"]]
+      end,
+      if live? do
+        [
+          if totp? do
+            ["totp_live.ex": [web_pre, "live", web_path, "#{singular}_live", "totp.ex"]]
+          end,
+          "registration_live.ex": [web_pre, "live", web_path, "#{singular}_live", "registration.ex"],
           "registration_live_test.exs": [
             web_test_pre,
             "live",
@@ -361,11 +359,12 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             "confirmation_instructions_test.exs"
           ]
         ]
-
-        remap_files(default_files ++ live_files)
-
-      _ ->
-        non_live_files = [
+      else
+        [
+          if totp? do
+            ["totp_html.ex": [controller_pre, "#{singular}_totp_html.ex"],
+            "totp_new.html.heex": [controller_pre, "#{singular}_totp_html", "new.html.heex"]]
+          end,
           "confirmation_html.ex": [controller_pre, "#{singular}_confirmation_html.ex"],
           "confirmation_new.html.heex": [
             controller_pre,
@@ -420,6 +419,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           ],
           "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
           "session_new.html.heex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
+          
           "settings_html.ex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
           "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
           "settings_edit.html.heex": [
@@ -434,9 +434,26 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             "#{singular}_settings_controller_test.exs"
           ]
         ]
+      end,
+      "migration.ex": [migrations_pre, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"],
+      "notifier.ex": [context.dir, "#{singular}_notifier.ex"],
+      "schema.ex": [context.dir, "#{singular}.ex"],
+      "schema_token.ex": [context.dir, "#{singular}_token.ex"],
+      "auth.ex": [web_pre, web_path, "#{singular}_auth.ex"],
+      "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
+      "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
+      "session_controller_test.exs": [
+        web_test_pre,
+        "controllers",
+        web_path,
+        "#{singular}_session_controller_test.exs"
+      ]
+    ]
 
-        remap_files(default_files ++ non_live_files)
-    end
+    generated_files
+    |> List.flatten()
+    |> Enum.reject(&is_nil/1)
+    |> remap_files()
   end
 
   defp remap_files(files) do
@@ -505,9 +522,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     context
   end
 
-  defp maybe_inject_mix_dependency(%Context{context_app: ctx_app} = context, %HashingLibrary{
-         mix_dependency: mix_dependency
-       }) do
+  defp maybe_inject_mix_dependency(context, %HashingLibrary{} = lib) do
+    maybe_inject_mix_dependency(context, lib.mix_dependency)
+  end
+
+  defp maybe_inject_mix_dependency(%Context{context_app: ctx_app} = context, mix_dependency) do
     file_path = Mix.Phoenix.context_app_path(ctx_app, "mix.exs")
 
     file = File.read!(file_path)
@@ -870,25 +889,30 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   defp test_case_options(adapter) when is_atom(adapter), do: ""
 
   defp put_live_option(schema) do
-    opts =
-      case Keyword.fetch(schema.opts, :live) do
-        {:ok, _live?} ->
-          schema.opts
+    case Keyword.fetch(schema.opts, :live) do
+      {:ok, _live?} ->
+        schema
 
-        _ ->
-          Mix.shell().info("""
-          An authentication system can be created in two different ways:
-          - Using Phoenix.LiveView (default)
-          - Using Phoenix.Controller only\
-          """)
+      _ ->
+        Mix.shell().info("""
+        An authentication system can be created in two different ways:
+        - Using Phoenix.LiveView (default)
+        - Using Phoenix.Controller only\
+        """)
 
-          if Mix.shell().yes?("Do you want to create a LiveView based authentication system?") do
-            Keyword.put_new(schema.opts, :live, true)
-          else
-            Keyword.put_new(schema.opts, :live, false)
-          end
-      end
+        live? = Mix.shell().yes?("Do you want to create a LiveView based authentication system?")
+        Map.put(schema, :opts, Keyword.put_new(schema.opts, :live, live?))
+    end
+  end
 
-    Map.put(schema, :opts, opts)
+  defp put_totp_option(schema) do
+    case Keyword.fetch(schema.opts, :totp) do
+      {:ok, _totp?} -> 
+        schema
+
+      _ -> 
+        totp? = Mix.shell().yes?("Do you want to generate two-factor authentication too?")
+        Map.put(schema, :opts, Keyword.put_new(schema.opts, :totp, totp?))
+    end
   end
 end
