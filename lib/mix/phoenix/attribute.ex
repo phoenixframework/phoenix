@@ -95,7 +95,8 @@ defmodule Mix.Phoenix.Attribute do
       examples: []
     },
     "map" => %{
-      details: "",
+      details:
+        "There is no trivial way to generate html input for map, so it is skipped for now.",
       examples: []
     },
     "enum" => %{
@@ -314,22 +315,22 @@ defmodule Mix.Phoenix.Attribute do
 
   defp raise_unknown_type_error(type, cli_attr) do
     Mix.raise("""
-    Unknown type `#{type}` is given in CLI attribute `#{cli_attr}`.
+    CLI attribute `#{cli_attr}` has unknown type `#{type}`.
 
     #{supported_types()}
     """)
   end
 
-  defp raise_unknown_option_error({option, type, cli_attr}) do
+  defp raise_unknown_option_error(option, type, cli_attr) do
     Mix.raise("""
-    Unknown option `#{option}` is given in CLI attribute `#{cli_attr}`.
+    CLI attribute `#{cli_attr}` of base type `#{type}` has unknown option `#{option}`.
     #{type_specs(type)}
     """)
   end
 
-  defp raise_type_error(type, cli_attr) do
+  defp raise_validation_error(type, cli_attr) do
     Mix.raise("""
-    CLI attribute `#{cli_attr}` has issue related to its type `#{type}`.
+    CLI attribute `#{cli_attr}` of base type `#{type}` has an invalid option.
     #{type_specs(type)}
     """)
   end
@@ -434,69 +435,73 @@ defmodule Mix.Phoenix.Attribute do
   end
 
   defp parse_attr(cli_attr, schema_details) when is_binary(cli_attr) do
-    cli_attr
-    |> String.split(":")
-    |> parse_name()
-    |> parse_type(cli_attr)
-    |> parse_options(cli_attr)
-    |> validate_attr(cli_attr)
-    |> prefill_data(schema_details)
-    |> new()
+    [name | attr_info] = String.split(cli_attr, ":")
+    {type, options} = parse_type_and_options(attr_info, cli_attr)
+
+    attr = %Attribute{name: String.to_atom(name), type: type, options: options}
+
+    if not valid?(attr), do: raise_validation_error(base_type(attr.type), cli_attr)
+
+    %{attr | options: prefill_options(attr, schema_details)}
   end
 
-  defp new({name, type, %{} = options}) do
-    %Attribute{
-      name: name,
-      type: type,
-      options: options
-    }
-  end
+  defp base_type({:array, type}), do: base_type(type)
+  defp base_type(type), do: type
 
-  defp parse_name([name | rest]), do: {String.to_atom(name), rest}
+  defp parse_type_and_options([], _cli_attr), do: {@default_type, %{}}
 
-  defp parse_type({name, []}, _cli_attr), do: {name, @default_type, %{}}
-  defp parse_type({name, [type]}, cli_attr), do: {name, string_to_type(type, cli_attr), %{}}
+  # NOTE: To keep initial rule about possibility to skip default `string` type in CLI,
+  #       we need to consider first item to be either type or option.
+  #       As consequence of this, only compound type like `[array,inner_type]` can have
+  #       invalid type case. General type is either given or default to string.
+  defp parse_type_and_options(attr_info, cli_attr) do
+    [type_or_option | options] = attr_info
 
-  defp parse_type({name, [type | options]}, cli_attr),
-    do: {name, string_to_type(type, cli_attr), options}
-
-  defp string_to_type(type, _cli_attr) when type in @standard_types, do: String.to_atom(type)
-  defp string_to_type("datetime", _cli_attr), do: :naive_datetime
-  defp string_to_type("array", _cli_attr), do: {:array, :string}
-
-  defp string_to_type(type, cli_attr) do
-    cond do
-      match = regex_match("[array,inner_type]", type, @specific_types_specs) ->
-        if match["inner_type"] == "references", do: raise_unknown_type_error(type, cli_attr)
-        {:array, string_to_type(match["inner_type"], cli_attr)}
-
-      true ->
-        raise_unknown_type_error(type, cli_attr)
+    case parse_type(type_or_option, cli_attr) do
+      nil -> {@default_type, parse_options(attr_info, @default_type, cli_attr)}
+      type -> {type, parse_options(options, type, cli_attr)}
     end
   end
 
-  defp parse_options({name, type, options}, cli_attr) do
-    options =
-      Enum.reduce(options, %{}, fn option, parsed_options ->
-        Map.merge(parsed_options, string_to_options({option, type, cli_attr}))
-      end)
-
-    {name, type, options}
+  defp parse_type(type, cli_attr) do
+    parse_array_type(type, cli_attr) || parse_general_type(type)
   end
 
-  defp string_to_options({"*", _, _}), do: %{required: true}
+  defp parse_array_type(type, cli_attr) do
+    if match = regex_match("[array,inner_type]", type, @specific_types_specs) do
+      inner_type = parse_type(match["inner_type"], cli_attr)
 
-  defp string_to_options({"virtual", type, _}) when type not in [:references],
-    do: %{virtual: true}
+      if inner_type in [:references, nil], do: raise_unknown_type_error(type, cli_attr)
+
+      {:array, inner_type}
+    end
+  end
+
+  defp parse_general_type(type) when type in @standard_types, do: String.to_atom(type)
+  defp parse_general_type("datetime"), do: :naive_datetime
+  defp parse_general_type("array"), do: {:array, @default_type}
+  defp parse_general_type(_type), do: nil
+
+  # NOTE: General option case should be checked before type specific option case.
+  defp parse_options(options, type, cli_attr) do
+    type = base_type(type)
+
+    Enum.into(options, %{}, fn option ->
+      parse_general_option(option, type) ||
+        parse_type_specific_option(option, type) ||
+        raise_unknown_option_error(option, type, cli_attr)
+    end)
+  end
 
   @flag_options ["unique", "index", "redact", "required"]
-  defp string_to_options({option, _, _}) when option in @flag_options,
-    do: %{String.to_atom(option) => true}
+  defp parse_general_option(option, _type) when option in @flag_options,
+    do: {String.to_atom(option), true}
 
-  defp string_to_options({option, {:array, inner_type}, cli_attr}),
-    do: string_to_options({option, inner_type, cli_attr})
+  defp parse_general_option("*", _type), do: {:required, true}
+  defp parse_general_option("virtual", type) when type not in [:references], do: {:virtual, true}
+  defp parse_general_option(_option, _type), do: nil
 
-  defp string_to_options({option, :enum, _} = data) do
+  defp parse_type_specific_option(option, :enum) do
     cond do
       match = regex_match("[[one,1],[two,2]]", option) ->
         parsed_values =
@@ -507,95 +512,93 @@ defmodule Mix.Phoenix.Attribute do
             {String.to_atom(value_name), String.to_integer(value_int)}
           end)
 
-        %{values: parsed_values}
+        {:values, parsed_values}
 
       match = regex_match("[one,two]", option) ->
         parsed_values = match["values"] |> String.split(",") |> Enum.map(&String.to_atom/1)
-        %{values: parsed_values}
+        {:values, parsed_values}
 
       true ->
-        raise_unknown_option_error(data)
+        nil
     end
   end
 
-  defp string_to_options({option, :decimal, _} = data) do
+  defp parse_type_specific_option(option, :decimal) do
     cond do
       match = regex_match("precision,value", option) ->
-        %{precision: String.to_integer(match["value"])}
+        {:precision, String.to_integer(match["value"])}
 
       match = regex_match("scale,value", option) ->
-        %{scale: String.to_integer(match["value"])}
+        {:scale, String.to_integer(match["value"])}
 
       match = regex_match("default,value", option) ->
-        %{default: match["value"] |> String.to_float() |> Float.to_string()}
+        {:default, match["value"] |> String.to_float() |> Float.to_string()}
 
       true ->
-        raise_unknown_option_error(data)
+        nil
     end
   end
 
-  defp string_to_options({option, :float, _} = data) do
+  defp parse_type_specific_option(option, :float) do
     cond do
-      match = regex_match("default,value", option) -> %{default: String.to_float(match["value"])}
-      true -> raise_unknown_option_error(data)
+      match = regex_match("default,value", option) -> {:default, String.to_float(match["value"])}
+      true -> nil
     end
   end
 
-  defp string_to_options({option, :integer, _} = data) do
+  defp parse_type_specific_option(option, :integer) do
     cond do
       match = regex_match("default,value", option) ->
-        %{default: String.to_integer(match["value"])}
+        {:default, String.to_integer(match["value"])}
 
       true ->
-        raise_unknown_option_error(data)
+        nil
     end
   end
 
-  defp string_to_options({option, :boolean, _} = data) do
+  defp parse_type_specific_option(option, :boolean) do
     cond do
-      match = regex_match("default,value", option) -> %{default: match["value"] in ["true", "1"]}
-      true -> raise_unknown_option_error(data)
+      match = regex_match("default,value", option) -> {:default, match["value"] in ["true", "1"]}
+      true -> nil
     end
   end
 
-  defp string_to_options({option, :string, _} = data) do
+  defp parse_type_specific_option(option, :string) do
     cond do
-      match = regex_match("size,value", option) -> %{size: String.to_integer(match["value"])}
-      true -> raise_unknown_option_error(data)
+      match = regex_match("size,value", option) -> {:size, String.to_integer(match["value"])}
+      true -> nil
     end
   end
-
-  defp string_to_options({option, :references, _} = data) do
-    cond do
-      match = regex_match("on_delete,value", option) ->
-        on_delete = references_on_delete(match["value"]) || raise_unknown_option_error(data)
-        %{on_delete: on_delete}
-
-      match = regex_match("assoc,value", option) ->
-        %{association_name: String.to_atom(match["value"])}
-
-      match = regex_match("column,value", option) ->
-        %{referenced_column: String.to_atom(match["value"])}
-
-      match = regex_match("type,value", option) ->
-        type = references_type(match["value"]) || raise_unknown_option_error(data)
-        %{referenced_type: type}
-
-      match = regex_match("table,value", option) ->
-        %{referenced_table: match["value"]}
-
-      Schema.valid?(option) ->
-        %{association_schema: option}
-
-      true ->
-        raise_unknown_option_error(data)
-    end
-  end
-
-  defp string_to_options({_, _, _} = data), do: raise_unknown_option_error(data)
 
   @referenced_types ["id", "binary_id", "string"]
-  defp references_type(value), do: if(value in @referenced_types, do: String.to_atom(value))
+  defp parse_type_specific_option(option, :references) do
+    cond do
+      match = regex_match("on_delete,value", option) ->
+        on_delete = references_on_delete(match["value"])
+        if on_delete, do: {:on_delete, on_delete}
+
+      match = regex_match("assoc,value", option) ->
+        {:association_name, String.to_atom(match["value"])}
+
+      Schema.valid?(option) ->
+        {:association_schema, option}
+
+      match = regex_match("column,value", option) ->
+        {:referenced_column, String.to_atom(match["value"])}
+
+      match = regex_match("type,value", option) ->
+        if match["value"] in @referenced_types,
+          do: {:referenced_type, String.to_atom(match["value"])}
+
+      match = regex_match("table,value", option) ->
+        {:referenced_table, match["value"]}
+
+      true ->
+        nil
+    end
+  end
+
+  defp parse_type_specific_option(_option, _type), do: nil
 
   @references_on_delete_values ["nothing", "delete_all", "nilify_all", "restrict"]
   defp references_on_delete(value) when value in @references_on_delete_values,
@@ -610,80 +613,45 @@ defmodule Mix.Phoenix.Attribute do
   defp regex_match(spec_key, value, spec \\ @supported_options_specs),
     do: Regex.named_captures(spec[spec_key].regex, value)
 
-  defp validate_attr({_name, :any, options} = attr, cli_attr) do
-    cond do
-      not Map.has_key?(options, :virtual) -> raise_type_error(:any, cli_attr)
-      true -> attr
-    end
+  # Validate attribute options.
+
+  defp valid?(%Attribute{type: :decimal, options: options}) do
+    (not Map.has_key?(options, :scale) or Map.has_key?(options, :precision)) and
+      (Map.get(options, :precision, @precision_min) >
+         (scale = Map.get(options, :scale, @scale_min)) and scale > 0)
   end
 
-  defp validate_attr({_name, :string, options} = attr, cli_attr) do
-    cond do
-      Map.get(options, :size, 1) <= 0 -> raise_type_error(:string, cli_attr)
-      true -> attr
-    end
+  defp valid?(%Attribute{type: :any} = attr), do: Map.has_key?(attr.options, :virtual)
+  defp valid?(%Attribute{type: :string} = attr), do: Map.get(attr.options, :size, 1) > 0
+  defp valid?(%Attribute{type: :enum} = attr), do: Map.has_key?(attr.options, :values)
+  defp valid?(%Attribute{type: {:array, type}} = attr), do: valid?(%{attr | type: type})
+  defp valid?(%Attribute{}), do: true
+
+  # Prefill attribute options.
+
+  defp prefill_options(%Attribute{type: :boolean} = attr, _schema_details) do
+    attr.options
+    |> Map.put(:required, true)
+    |> Map.put_new(:default, false)
   end
 
-  defp validate_attr({_name, :decimal, options} = attr, cli_attr) do
-    cond do
-      Map.has_key?(options, :scale) and not Map.has_key?(options, :precision) ->
-        raise_type_error(:decimal, cli_attr)
-
-      Map.get(options, :precision, @precision_min) <=
-        (scale = Map.get(options, :scale, @scale_min)) or scale <= 0 ->
-        raise_type_error(:decimal, cli_attr)
-
-      true ->
-        attr
-    end
+  defp prefill_options(%Attribute{type: :decimal} = attr, _schema_details) do
+    attr.options
+    |> maybe_adjust_decimal_default()
   end
 
-  defp validate_attr({_name, :enum, options} = attr, cli_attr) do
-    cond do
-      not Map.has_key?(options, :values) -> raise_type_error(:enum, cli_attr)
-      true -> attr
-    end
+  defp prefill_options(%Attribute{name: name, type: :references} = attr, schema_details) do
+    attr.options
+    |> Map.put(:index, true)
+    |> Map.put_new(:on_delete, :nothing)
+    |> derive_association_name(name)
+    |> derive_association_schema(name, schema_details)
+    |> derive_referenced_table()
+    |> derive_referenced_column()
+    |> derive_referenced_type()
   end
 
-  defp validate_attr({name, {:array, inner_type}, options} = attr, cli_attr) do
-    validate_attr({name, inner_type, options}, cli_attr)
-    attr
-  end
-
-  defp validate_attr(attr, _cli_attr), do: attr
-
-  defp prefill_data({name, :boolean, options}, _schema_details) do
-    options =
-      options
-      |> Map.put(:required, true)
-      |> Map.put_new(:default, false)
-
-    {name, :boolean, options}
-  end
-
-  defp prefill_data({name, :decimal, options}, _schema_details) do
-    options =
-      options
-      |> maybe_adjust_decimal_default()
-
-    {name, :decimal, options}
-  end
-
-  defp prefill_data({name, :references, options}, schema_details) do
-    options =
-      options
-      |> Map.put(:index, true)
-      |> Map.put_new(:on_delete, :nothing)
-      |> derive_association_name(name)
-      |> derive_association_schema(name, schema_details)
-      |> derive_referenced_table()
-      |> derive_referenced_column()
-      |> derive_referenced_type()
-
-    {name, :references, options}
-  end
-
-  defp prefill_data(attr, _schema_details), do: attr
+  defp prefill_options(%Attribute{options: options}, _schema_details), do: options
 
   defp maybe_adjust_decimal_default(%{default: default} = options),
     do: Map.put(options, :default, adjust_decimal_value(default, options))

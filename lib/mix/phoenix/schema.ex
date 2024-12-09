@@ -181,8 +181,8 @@ defmodule Mix.Phoenix.Schema do
     "field #{name}, #{type}#{values}#{default}#{redact}#{virtual}"
   end
 
-  defp field_type(%Attribute{type: {:array, inner_type}} = attr),
-    do: {:array, field_type(%{attr | type: inner_type})}
+  defp field_type(%Attribute{type: {:array, type}} = attr),
+    do: {:array, field_type(%{attr | type: type})}
 
   defp field_type(%Attribute{type: :text}), do: :string
   defp field_type(%Attribute{type: :uuid}), do: Ecto.UUID
@@ -192,8 +192,8 @@ defmodule Mix.Phoenix.Schema do
   defp enum_values_option(%Attribute{type: :enum} = attr),
     do: ", values: #{inspect(attr.options.values)}"
 
-  defp enum_values_option(%Attribute{type: {:array, inner_type}} = attr),
-    do: enum_values_option(%{attr | type: inner_type})
+  defp enum_values_option(%Attribute{type: {:array, type}} = attr),
+    do: enum_values_option(%{attr | type: type})
 
   defp enum_values_option(_attr), do: ""
 

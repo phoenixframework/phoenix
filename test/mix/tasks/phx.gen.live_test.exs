@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
     in_tmp_live_project(config.test, fn ->
       Gen.Live.run(~w(Blog Post posts
                       title
-                      slug:string:unique
+                      slug:unique
                       votes:integer
                       cost:decimal
                       content:text
@@ -207,7 +207,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
   test "generates into existing context without prompt with --merge-with-existing-context",
        config do
     in_tmp_live_project(config.test, fn ->
-      Gen.Live.run(~w(Blog Post posts))
+      Gen.Live.run(~w(Blog Post posts title:*))
 
       assert_file("lib/phoenix/blog.ex", fn file ->
         assert file =~ "def get_post!"
@@ -218,7 +218,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ "def change_post"
       end)
 
-      Gen.Live.run(~w(Blog Comment comments --merge-with-existing-context))
+      Gen.Live.run(~w(Blog Comment comments message:string:* --merge-with-existing-context))
 
       refute_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> _notice]}
@@ -302,7 +302,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
   test "with --no-context skips context and schema file generation", config do
     in_tmp_live_project(config.test, fn ->
-      Gen.Live.run(~w(Blog Post posts --no-context))
+      Gen.Live.run(~w(Blog Post posts title:string:* --no-context))
 
       refute_file("lib/phoenix/blog.ex")
       refute_file("lib/phoenix/blog/post.ex")
@@ -320,7 +320,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
   test "with --no-schema skips schema file generation", config do
     in_tmp_live_project(config.test, fn ->
-      Gen.Live.run(~w(Blog Post posts --no-schema))
+      Gen.Live.run(~w(Blog Post posts title:string:* --no-schema))
 
       assert_file("lib/phoenix/blog.ex")
       refute_file("lib/phoenix/blog/post.ex")
@@ -336,12 +336,12 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
   test "with --no-context does not emit warning when context exists", config do
     in_tmp_live_project(config.test, fn ->
-      Gen.Live.run(~w(Blog Post posts))
+      Gen.Live.run(~w(Blog Post posts title:string:*))
 
       assert_file("lib/phoenix/blog.ex")
       assert_file("lib/phoenix/blog/post.ex")
 
-      Gen.Live.run(~w(Blog Comment comments --no-context))
+      Gen.Live.run(~w(Blog Comment comments title:string:* --no-context))
       refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
 
       assert_file("lib/phoenix_web/live/comment_live/index.ex")
@@ -377,7 +377,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
   test "when more than 50 attributes are given", config do
     in_tmp_live_project(config.test, fn ->
       long_attribute_list = Enum.map_join(0..55, " ", &"attribute#{&1}:string")
-      Gen.Live.run(~w(Blog Post posts title:string:* #{long_attribute_list}))
+      Gen.Live.run(~w(Blog Post posts title:* #{long_attribute_list}))
 
       assert_file("test/phoenix_web/live/post_live_test.exs", fn file ->
         refute file =~ "...}"
@@ -391,7 +391,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         File.cd!("phoenix_web")
         Application.put_env(:phoenix, :generators, context_app: nil)
 
-        Gen.Live.run(~w(Accounts User users))
+        Gen.Live.run(~w(Accounts User users name:string:*))
 
         assert_file("lib/phoenix/accounts.ex")
         assert_file("lib/phoenix/accounts/user.ex")
@@ -434,7 +434,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
         File.cd!("phoenix")
 
-        Gen.Live.run(~w(Accounts User users))
+        Gen.Live.run(~w(Accounts User users name:string:*))
 
         assert_file("another_app/lib/another_app/accounts.ex")
         assert_file("another_app/lib/another_app/accounts/user.ex")

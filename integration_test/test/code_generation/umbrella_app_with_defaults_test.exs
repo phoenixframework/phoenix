@@ -30,7 +30,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
         mix_run!(
-          ~w(phx.gen.html Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.html Blog Post posts title:*:unique body:string status:enum:[unpublished,published,deleted]),
           web_root_path
         )
 
@@ -57,7 +57,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
         mix_run!(
-          ~w(phx.gen.html Blog Post posts title:string:* body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.html Blog Post posts title:* body:string status:enum:[unpublished,published,deleted]),
           web_root_path
         )
 
@@ -85,7 +85,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
         mix_run!(
-          ~w(phx.gen.json Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.json Blog Post posts title:*:unique body:string status:enum:[unpublished,published,deleted]),
           web_root_path
         )
 
@@ -112,7 +112,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
         mix_run!(
-          ~w(phx.gen.json Blog Post posts title:string:* body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.json Blog Post posts title:* body:string status:enum:[unpublished,published,deleted]),
           web_root_path
         )
 
@@ -140,7 +140,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
         mix_run!(
-          ~w(phx.gen.live Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.live Blog Post posts title:*:unique body:string status:enum:[unpublished,published,deleted]),
           web_root_path
         )
 
@@ -170,7 +170,7 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
         mix_run!(
-          ~w(phx.gen.live Blog Post posts title:string:* body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.live Blog Post posts title:* body:string status:enum:[unpublished,published,deleted]),
           web_root_path
         )
 

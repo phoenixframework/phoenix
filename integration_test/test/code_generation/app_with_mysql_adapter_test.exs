@@ -9,7 +9,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMySqlAdapterTest do
           generate_phoenix_app(tmp_dir, "default_mysql_app", ["--database", "mysql"])
 
         mix_run!(
-          ~w(phx.gen.html Blog Post posts title:string:* body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.html Blog Post posts title:* body:string status:enum:[unpublished,published,deleted]),
           app_root_path
         )
 
@@ -38,7 +38,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMySqlAdapterTest do
           generate_phoenix_app(tmp_dir, "default_mysql_app", ["--database", "mysql"])
 
         mix_run!(
-          ~w(phx.gen.json Blog Post posts title:string:* body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.json Blog Post posts title:* body:string status:enum:[unpublished,published,deleted]),
           app_root_path
         )
 
@@ -67,7 +67,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMySqlAdapterTest do
           generate_phoenix_app(tmp_dir, "default_mysql_app", ["--database", "mysql", "--live"])
 
         mix_run!(
-          ~w(phx.gen.live Blog Post posts title:string:* body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.live Blog Post posts title:* body:string status:enum:[unpublished,published,deleted]),
           app_root_path
         )
 

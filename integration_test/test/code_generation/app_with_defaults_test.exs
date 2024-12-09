@@ -28,7 +28,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
 
         mix_run!(
-          ~w(phx.gen.html Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.html Blog Post posts title:*:unique body:string status:enum:[unpublished,published,deleted]),
           app_root_path
         )
 
@@ -54,7 +54,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
 
         mix_run!(
-          ~w(phx.gen.html Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted] order:integer:unique),
+          ~w(phx.gen.html Blog Post posts title:*:unique body:string status:enum:[unpublished,published,deleted] order:integer:unique),
           app_root_path
         )
 
@@ -81,7 +81,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
 
         mix_run!(
-          ~w(phx.gen.json Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.json Blog Post posts title:*:unique body:string status:enum:[unpublished,published,deleted]),
           app_root_path
         )
 
@@ -107,7 +107,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
 
         mix_run!(
-          ~w(phx.gen.json Blog Post posts title:string:*:unique body:string status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.json Blog Post posts title:*:unique body:string status:enum:[unpublished,published,deleted]),
           app_root_path
         )
 
@@ -134,7 +134,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog", ["--live"])
 
         mix_run!(
-          ~w(phx.gen.live Blog Post posts title:string:*:unique body:string p:boolean s:enum:[a,b,c]),
+          ~w(phx.gen.live Blog Post posts title:*:unique body:string p:boolean s:enum:[a,b,c]),
           app_root_path
         )
 
@@ -163,7 +163,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog", ["--live"])
 
         mix_run!(
-          ~w(phx.gen.live Blog Post posts title:string:* body:string public:boolean status:enum:[unpublished,published,deleted]),
+          ~w(phx.gen.live Blog Post posts title:* body:string public:boolean status:enum:[unpublished,published,deleted]),
           app_root_path
         )
 

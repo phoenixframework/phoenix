@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "generates embedded schema", config do
     in_tmp_project(config.test, fn ->
-      Gen.Embedded.run(~w(Blog.Post))
+      Gen.Embedded.run(~w(Blog.Post title:string:*))
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "embedded_schema do"
@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "generates nested embedded schema", config do
     in_tmp_project(config.test, fn ->
-      Gen.Embedded.run(~w(Blog.Admin.User))
+      Gen.Embedded.run(~w(Blog.Admin.User name:string:*))
 
       assert_file("lib/phoenix/blog/admin/user.ex", fn file ->
         assert file =~ "defmodule Phoenix.Blog.Admin.User do"
@@ -81,7 +81,7 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
 
   test "generates embedded schema with redact option", config do
     in_tmp_project(config.test, fn ->
-      Gen.Embedded.run(~w(Blog.Comment title secret:string:*:redact))
+      Gen.Embedded.run(~w(Blog.Comment comments title:string:* title secret:redact))
 
       assert_file("lib/phoenix/blog/comment.ex", fn file ->
         assert file =~ "field :secret, :string, redact: true"
@@ -92,7 +92,7 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
   test "generates embedded schema with references", config do
     in_tmp_project(config.test, fn ->
       Gen.Embedded.run(
-        ~w(Blog.Comment body word_count:integer author_id:references:*:table,users:column,id:type,string)
+        ~w(Blog.Comment comments body word_count:integer author_id:references:*:table,users:column,id:type,string)
       )
 
       assert_file("lib/phoenix/blog/comment.ex", fn file ->

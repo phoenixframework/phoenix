@@ -42,11 +42,13 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     in_tmp_project(config.test, fn ->
       Gen.Html.run(~w(Blog Post posts
                       title
-                      slug:string:unique
-                      votes:integer cost:decimal
+                      slug:unique
+                      votes:integer
+                      cost:decimal
                       content:text
                       tags:[array,text]
-                      popular:boolean drafted_at:datetime
+                      popular:boolean
+                      drafted_at:datetime
                       status:enum:[unpublished,published,deleted]
                       published_at:utc_datetime
                       published_at_usec:utc_datetime_usec
@@ -227,7 +229,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   test "generates into existing context without prompt with --merge-with-existing-context",
        config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts))
+      Gen.Html.run(~w(Blog Post posts title:*))
 
       assert_file("lib/phoenix/blog.ex", fn file ->
         assert file =~ "def get_post!"
@@ -238,7 +240,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "def change_post"
       end)
 
-      Gen.Html.run(~w(Blog Comment comments --merge-with-existing-context))
+      Gen.Html.run(~w(Blog Comment comments message:string:* --merge-with-existing-context))
 
       refute_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> _notice]}
@@ -256,7 +258,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with --web namespace generates namespaced web modules and directories", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts --web Blog))
+      Gen.Html.run(~w(Blog Post posts title:string:* --web Blog))
 
       assert_file("test/phoenix_web/controllers/blog/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.Blog.PostControllerTest"
@@ -307,7 +309,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with --no-context skips context and schema file generation", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Comment comments --no-context))
+      Gen.Html.run(~w(Blog Comment comments title:string:* --no-context))
 
       refute_file("lib/phoenix/blog.ex")
       refute_file("lib/phoenix/blog/comment.ex")
@@ -332,7 +334,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with a matching plural and singular term", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Tracker Series series))
+      Gen.Html.run(~w(Tracker Series series value:integer:*))
 
       assert_file("lib/phoenix_web/controllers/series_controller.ex", fn file ->
         assert file =~ "render(conn, :index, series_collection: series)"
@@ -342,12 +344,12 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with --no-context no warning is emitted when context exists", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts))
+      Gen.Html.run(~w(Blog Post posts title:string:*))
 
       assert_file("lib/phoenix/blog.ex")
       assert_file("lib/phoenix/blog/post.ex")
 
-      Gen.Html.run(~w(Blog Comment comments --no-context))
+      Gen.Html.run(~w(Blog Comment comments title:string:* --no-context))
       refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
 
       assert_file("test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
@@ -367,7 +369,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "with --no-schema skips schema file generation", config do
     in_tmp_project(config.test, fn ->
-      Gen.Html.run(~w(Blog Comment comments --no-schema))
+      Gen.Html.run(~w(Blog Comment comments title:string:* --no-schema))
 
       assert_file("lib/phoenix/blog.ex")
       refute_file("lib/phoenix/blog/comment.ex")
@@ -391,7 +393,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   test "when more than 50 arguments are given", config do
     in_tmp_project(config.test, fn ->
       long_attribute_list = Enum.map_join(0..55, " ", &"attribute#{&1}:string")
-      Gen.Html.run(~w(Blog Post posts title:string:* #{long_attribute_list}))
+      Gen.Html.run(~w(Blog Post posts title:* #{long_attribute_list}))
 
       assert_file("test/phoenix_web/controllers/post_controller_test.exs", fn file ->
         refute file =~ "...}"
@@ -403,7 +405,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     test "without context_app generators config uses web dir", config do
       in_tmp_umbrella_project(config.test, fn ->
         Application.put_env(:phoenix, :generators, context_app: nil)
-        Gen.Html.run(~w(Accounts User users))
+        Gen.Html.run(~w(Accounts User users name:string:*))
 
         assert_file("lib/phoenix/accounts.ex")
         assert_file("lib/phoenix/accounts/user.ex")
@@ -438,7 +440,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         File.mkdir!("another_app")
         Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
 
-        Gen.Html.run(~w(Accounts User users))
+        Gen.Html.run(~w(Accounts User users name:string:*))
 
         assert_file("another_app/lib/another_app/accounts.ex")
         assert_file("another_app/lib/another_app/accounts/user.ex")

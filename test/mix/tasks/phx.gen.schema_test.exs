@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     in_tmp_project("build", fn ->
       # Accepts first attribute to be required.
       send(self(), {:mix_shell_input, :yes?, true})
-      schema = Gen.Schema.build(~w(Blog.Post posts title content:text tags:map), [])
+      schema = Gen.Schema.build(~w(Blog.Post posts title:string tags:map), [])
 
       assert %Schema{
                alias: Post,
@@ -28,7 +28,6 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
                human_singular: "Post",
                attrs: [
                  %Attribute{name: :title, type: :string, options: %{required: true}},
-                 %Attribute{name: :content, type: :text, options: %{}},
                  %Attribute{name: :tags, type: :map, options: %{}}
                ],
                route_helper: "post"
@@ -85,7 +84,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates schema", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post blog_posts))
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string:*))
 
       assert_file("lib/phoenix/blog/post.ex")
 
@@ -99,7 +98,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "allows a custom repo", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post blog_posts --repo MyApp.CustomRepo))
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string:* --repo MyApp.CustomRepo))
 
       assert [migration] = Path.wildcard("priv/custom_repo/migrations/*_create_blog_posts.exs")
 
@@ -111,7 +110,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "allows a custom migration dir", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post blog_posts --migration-dir priv/custom_dir))
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string:* --migration-dir priv/custom_dir))
 
       assert [migration] = Path.wildcard("priv/custom_dir/*_create_blog_posts.exs")
 
@@ -124,7 +123,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
   test "custom migration_dir takes precedence over custom repo name", config do
     in_tmp_project(config.test, fn ->
       Gen.Schema.run(
-        ~w(Blog.Post blog_posts --repo MyApp.CustomRepo --migration-dir priv/custom_dir)
+        ~w(Blog.Post blog_posts title:string:* --repo MyApp.CustomRepo --migration-dir priv/custom_dir)
       )
 
       assert [migration] = Path.wildcard("priv/custom_dir/*_create_blog_posts.exs")
@@ -137,7 +136,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "adds validation for required fields", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts title:string:* tags:map:* published_at:naive_datetime))
+      Gen.Schema.run(~w(Blog.Post posts title:string:* tags:map published_at:naive_datetime))
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
@@ -145,20 +144,20 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         assert file =~ "defmodule Phoenix.Repo.Migrations.CreatePosts do"
         assert file =~ "create table(\"posts\") do"
         assert file =~ "add :title, :string, null: false"
-        assert file =~ "add :tags, :map, null: false"
+        assert file =~ "add :tags, :map"
         assert file =~ "add :published_at, :naive_datetime"
       end)
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "cast(attrs, [:published_at, :tags, :title]"
-        assert file =~ "validate_required([:tags, :title]"
+        assert file =~ "validate_required([:title]"
       end)
     end)
   end
 
   test "generates nested schema", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(~w(Blog.Admin.User users))
+      Gen.Schema.run(~w(Blog.Admin.User users name:string:*))
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users.exs")
 
@@ -188,9 +187,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates unique indices", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(
-        ~w(Blog.Post posts title:string:*:unique secret:string:redact unique_int:integer:unique)
-      )
+      Gen.Schema.run(~w(Blog.Post posts title:*:unique secret:redact unique_int:integer:unique))
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
@@ -357,7 +354,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates schema and migration with prefix", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts title:string:*:index --prefix cms))
+      Gen.Schema.run(~w(Blog.Post posts title:*:index --prefix cms))
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "@schema_prefix :cms"
@@ -449,7 +446,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates schema without extra line break", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts))
+      Gen.Schema.run(~w(Blog.Post posts title:*))
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "import Ecto.Changeset\n\n  schema"
@@ -483,7 +480,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       in_tmp_umbrella_project(config.test, fn ->
         Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
 
-        Gen.Schema.run(~w(Blog.Post blog_posts))
+        Gen.Schema.run(~w(Blog.Post blog_posts title:string:*))
 
         assert_file("another_app/lib/another_app/blog/post.ex")
         assert [_] = Path.wildcard("another_app/priv/repo/migrations/*_create_blog_posts.exs")

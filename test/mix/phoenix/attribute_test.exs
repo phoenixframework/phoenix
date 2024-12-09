@@ -27,7 +27,7 @@ defmodule Mix.Phoenix.AttributeTest do
         "title:string:unique",
         "title:string:index",
         "title:string:required",
-        "title:string:*:size,40",
+        "title:*:size,40",
         "card_number:string:redact",
         "name:text",
         "data:binary",
@@ -182,25 +182,27 @@ defmodule Mix.Phoenix.AttributeTest do
              ]
     end
 
-    test "raises with an unknown type, providing list of supported types" do
+    test "raises with an unknown type for compound cases, providing list of supported types" do
       assert_raise(
         Mix.Error,
-        ~r"Unknown type `other` is given in CLI attribute `some:other`",
-        fn -> parse_cli_attrs(["some:other"]) end
+        ~r"CLI attribute `some:\[array,other\]` has unknown type `\[array,other\]`",
+        fn -> parse_cli_attrs(["some:[array,other]"]) end
       )
 
       assert_raise(
         Mix.Error,
         ~r"Supported attribute types",
-        fn -> parse_cli_attrs(["some:other"]) end
+        fn -> parse_cli_attrs(["some:[array,references]"]) end
       )
+
+      parse_cli_attrs(["some:*:unique"])
     end
 
     test "raises with an unknown option, providing list of supported options for the type" do
       assert_raise(
         Mix.Error,
-        ~r"Unknown option `other` is given in CLI attribute `title:string:other`",
-        fn -> parse_cli_attrs(["title:string:other"]) end
+        ~r"CLI attribute `title:other` of base type `string` has unknown option `other`",
+        fn -> parse_cli_attrs(["title:other"]) end
       )
 
       assert_raise(
@@ -213,37 +215,37 @@ defmodule Mix.Phoenix.AttributeTest do
     test "raises with a type specific issue, providing list of supported options for the type" do
       assert_raise(
         Mix.Error,
-        ~r"CLI attribute `data:any` has issue related to its type `any`",
+        ~r"CLI attribute `data:any` of base type `any` has an invalid option",
         fn -> parse_cli_attrs(["data:any"]) end
       )
 
       assert_raise(
         Mix.Error,
-        ~r"CLI attribute `city:string:size,0` has issue related to its type `string`",
-        fn -> parse_cli_attrs(["city:string:size,0"]) end
+        ~r"CLI attribute `city:size,0` of base type `string` has an invalid option",
+        fn -> parse_cli_attrs(["city:size,0"]) end
       )
 
       assert_raise(
         Mix.Error,
-        ~r"CLI attribute `price:decimal:scale,1` has issue related to its type `decimal`",
+        ~r"CLI attribute `price:decimal:scale,1` of base type `decimal` has an invalid option",
         fn -> parse_cli_attrs(["price:decimal:scale,1"]) end
       )
 
       assert_raise(
         Mix.Error,
-        ~r"CLI attribute `price:decimal:precision,10:scale,10` has issue related to its type `decimal`",
+        ~r"CLI attribute `price:decimal:precision,10:scale,10` of base type `decimal` has an invalid option",
         fn -> parse_cli_attrs(["price:decimal:precision,10:scale,10"]) end
       )
 
       assert_raise(
         Mix.Error,
-        ~r"CLI attribute `status:enum` has issue related to its type `enum`",
+        ~r"CLI attribute `status:enum` of base type `enum` has an invalid option",
         fn -> parse_cli_attrs(["status:enum"]) end
       )
 
       assert_raise(
         Mix.Error,
-        ~r"CLI attribute `status:\[array,enum\]` has issue related to its type `enum`",
+        ~r"CLI attribute `status:\[array,enum\]` of base type `enum` has an invalid option",
         fn -> parse_cli_attrs(["status:[array,enum]"]) end
       )
 
@@ -332,7 +334,7 @@ defmodule Mix.Phoenix.AttributeTest do
                          points:integer
                          points:integer:default,0
 
-               * `map`
+               * `map` - There is no trivial way to generate html input for map, so it is skipped for now.
 
                * `naive_datetime`
 

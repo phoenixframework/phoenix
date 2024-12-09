@@ -59,8 +59,11 @@ defmodule Mix.Phoenix do
     end
   end
 
-  defp to_app_source(path, source_dir) when is_binary(path), do: Path.join(path, source_dir)
-  defp to_app_source(app, source_dir) when is_atom(app), do: Application.app_dir(app, source_dir)
+  defp to_app_source(path, source_dir) when is_binary(path),
+    do: Path.join(path, source_dir)
+
+  defp to_app_source(app, source_dir) when is_atom(app),
+    do: Application.app_dir(app, source_dir)
 
   @doc """
   Inflects path, scope, alias and more from the given name.
@@ -99,7 +102,7 @@ defmodule Mix.Phoenix do
 
   """
   def inflect(singular) do
-    base = base()
+    base = Mix.Phoenix.base()
     web_module = base |> web_module() |> inspect()
     scoped = Phoenix.Naming.camelize(singular)
     path = Phoenix.Naming.underscore(scoped)

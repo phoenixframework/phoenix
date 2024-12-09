@@ -72,8 +72,8 @@ defmodule Mix.Phoenix.Migration do
     "#{type}#{precision_and_scale}#{size}#{default}"
   end
 
-  defp column_type(%Attribute{type: {:array, inner_type}} = attr),
-    do: {:array, column_type(%{attr | type: inner_type})}
+  defp column_type(%Attribute{type: {:array, type}} = attr),
+    do: {:array, column_type(%{attr | type: type})}
 
   defp column_type(%Attribute{type: :enum, options: %{values: [value | _rest]}}),
     do: if(is_atom(value), do: :string, else: :integer)

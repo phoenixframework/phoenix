@@ -154,7 +154,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     in_tmp_project(config.test, fn ->
       # Accepts first attribute to be required.
       send(self(), {:mix_shell_input, :yes?, true})
-      Gen.Context.run(~w(Blog Post posts slug:string:unique secret:string:redact title))
+      Gen.Context.run(~w(Blog Post posts slug:unique secret:string:redact title))
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "field :secret, :string, redact: true"
@@ -242,7 +242,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     in_tmp_project(config.test, fn ->
       Gen.Context.run(~w(Blog Post posts
             slug:string:unique
-            subject:string:unique
+            subject:unique
             body:text:unique
             order:integer:unique
             price:decimal:unique
@@ -319,7 +319,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     in_tmp_project(config.test, fn ->
       Gen.Context.run(~w(Blog Post posts
             slug:string:unique
-            subject:string:unique:*
+            subject:unique:*
             body:text:unique
             order:integer:unique
           ))
@@ -332,7 +332,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
   test "generates into existing context without prompt with --merge-with-existing-context",
        config do
     in_tmp_project(config.test, fn ->
-      Gen.Context.run(~w(Blog Post posts))
+      Gen.Context.run(~w(Blog Post posts title:*))
 
       assert_file("lib/phoenix/blog.ex", fn file ->
         assert file =~ "def get_post!"
@@ -343,7 +343,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def change_post"
       end)
 
-      Gen.Context.run(~w(Blog Comment comments --merge-with-existing-context))
+      Gen.Context.run(~w(Blog Comment comments message:string:* --merge-with-existing-context))
 
       refute_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> _notice]}
@@ -362,7 +362,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
   test "when more than 50 attributes are given", config do
     in_tmp_project(config.test, fn ->
       long_attribute_list = Enum.map_join(0..55, " ", &"attribute#{&1}:string")
-      Gen.Context.run(~w(Blog Post posts title:string:* #{long_attribute_list}))
+      Gen.Context.run(~w(Blog Post posts title:* #{long_attribute_list}))
 
       assert_file("test/phoenix/blog_test.exs", fn file ->
         refute file =~ "...}"
@@ -372,9 +372,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "generates context with no schema and repo option", config do
     in_tmp_project(config.test, fn ->
-      Gen.Context.run(
-        ~w(Blog Post posts title:string:*:unique content --no-schema --repo=Foo.RepoX)
-      )
+      Gen.Context.run(~w(Blog Post posts title:string:* --no-schema --repo=Foo.RepoX))
 
       refute_file("lib/phoenix/blog/post.ex")
 
@@ -398,8 +396,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       assert_file("test/support/fixtures/blog_fixtures.ex", fn file ->
         assert file =~ "defmodule Phoenix.BlogFixtures do"
         assert file =~ "def post_fixture(attrs \\\\ %{})"
-        assert file =~ "title: unique_post_title()"
-        assert file =~ "content: \"content value\""
+        assert file =~ "title: \"title value\""
       end)
 
       assert Path.wildcard("priv/repo/migrations/*_create_posts.exs") == []
