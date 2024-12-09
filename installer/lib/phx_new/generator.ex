@@ -465,13 +465,13 @@ defmodule Phx.New.Generator do
   # ## Examples
   #
   #     iex> ~s|<tag>#{maybe_eex_gettext("Hello", true)}</tag>|
-  #     ~S|<tag><%= gettext("Hello") %></tag>|
+  #     ~S|<tag>{gettext("Hello")}</tag>|
   #
   #     iex> ~s|<tag>#{maybe_eex_gettext("Hello", false)}</tag>|
   #     ~S|<tag>Hello</tag>|
   def maybe_eex_gettext(message, gettext?) do
     if gettext? do
-      ~s|<%= gettext(#{inspect(message)}) %>|
+      ~s|{gettext(#{inspect(message)})}|
     else
       message
     end

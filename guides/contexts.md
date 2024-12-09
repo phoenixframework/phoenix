@@ -525,10 +525,9 @@ We added a `category_select` above our save button. Now let's try it out. Next, 
 <.list>
   ...
 + <:item title="Categories">
-+   <%= for cat <- @product.categories do %>
-+     <%= cat.title %>
-+     <br/>
-+   <% end %>
++   <ul>
++     <li :for={cat <- @product.categories}>{cat.title}</li>
++   </ul>
 + </:item>
 </.list>
 ```
@@ -937,29 +936,23 @@ We created a view to render our `show.html` template and aliased our `ShoppingCa
 Next we can create the template at `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```heex
-<%= if @cart.items == [] do %>
-  <.header>
-    My Cart
-    <:subtitle>Your cart is empty</:subtitle>
-  </.header>
-<% else %>
-  <.header>
-    My Cart
-  </.header>
+<.header>
+  My Cart
+  <:subtitle :if={@cart.items == []}>Your cart is empty</:subtitle>
+</.header>
 
+<div :if={@cart.items !== []}>
   <.simple_form :let={f} for={@changeset} action={~p"/cart"}>
-    <.inputs_for :let={item_form} field={f[:items]}>
-	<% item = item_form.data %>
+    <.inputs_for :let={%{data: item} = item_form} field={f[:items]}>
       <.input field={item_form[:quantity]} type="number" label={item.product.title} />
-      <%= currency_to_str(ShoppingCart.total_item_price(item)) %>
+      {currency_to_str(ShoppingCart.total_item_price(item))}
     </.inputs_for>
     <:actions>
       <.button>Update cart</.button>
     </:actions>
   </.simple_form>
-
-  <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
-<% end %>
+  <b>Total</b>: {currency_to_str(ShoppingCart.total_cart_price(@cart))}
+</div>
 
 <.back navigate={~p"/products"}>Back to products</.back>
 ```
@@ -1299,20 +1292,20 @@ Next we can create the template at `lib/hello_web/controllers/order_html/show.ht
 <.header>
   Thank you for your order!
   <:subtitle>
-     <strong>User uuid: </strong><%= @order.user_uuid %>
+     <strong>User uuid: </strong>{@order.user_uuid}
   </:subtitle>
 </.header>
 
 <.table id="items" rows={@order.line_items}>
-  <:col :let={item} label="Title"><%= item.product.title %></:col>
-  <:col :let={item} label="Quantity"><%= item.quantity %></:col>
+  <:col :let={item} label="Title">{item.product.title}</:col>
+  <:col :let={item} label="Quantity">{item.quantity}</:col>
   <:col :let={item} label="Price">
-    <%= HelloWeb.CartHTML.currency_to_str(item.price) %>
+    {HelloWeb.CartHTML.currency_to_str(item.price)}
   </:col>
 </.table>
 
 <strong>Total price:</strong>
-<%= HelloWeb.CartHTML.currency_to_str(@order.total_price) %>
+{HelloWeb.CartHTML.currency_to_str(@order.total_price)}
 
 <.back navigate={~p"/products"}>Back to products</.back>
 ```
@@ -1324,11 +1317,11 @@ Our last addition will be to add the "complete order" button to our cart page to
 ```diff
   <.header>
     My Cart
-+    <:actions>
-+      <.link href={~p"/orders"} method="post">
-+        <.button>Complete order</.button>
-+      </.link>
-+    </:actions>
++   <:actions>
++     <.link href={~p"/orders"} method="post">
++       <.button>Complete order</.button>
++     </.link>
++   </:actions>
   </.header>
 ```
 

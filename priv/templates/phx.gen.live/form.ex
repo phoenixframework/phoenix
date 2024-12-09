@@ -8,7 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def render(assigns) do
     ~H"""
     <.header>
-      <%%= @page_title %>
+      {@page_title}
       <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
     </.header>
 

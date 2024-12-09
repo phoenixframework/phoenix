@@ -43,8 +43,12 @@ defmodule Mix.Phoenix do
         end) || raise "could not find #{source_file_path} in any of the sources"
 
       case format do
-        :text -> Mix.Generator.create_file(target, File.read!(source))
-        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+        :text ->
+          Mix.Generator.create_file(target, File.read!(source))
+
+        :eex ->
+          Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+
         :new_eex ->
           if File.exists?(target) do
             :ok
@@ -57,6 +61,7 @@ defmodule Mix.Phoenix do
 
   defp to_app_source(path, source_dir) when is_binary(path),
     do: Path.join(path, source_dir)
+
   defp to_app_source(app, source_dir) when is_atom(app),
     do: Application.app_dir(app, source_dir)
 
@@ -97,23 +102,25 @@ defmodule Mix.Phoenix do
 
   """
   def inflect(singular) do
-    base       = Mix.Phoenix.base()
+    base = Mix.Phoenix.base()
     web_module = base |> web_module() |> inspect()
-    scoped     = Phoenix.Naming.camelize(singular)
-    path       = Phoenix.Naming.underscore(scoped)
-    singular   = String.split(path, "/") |> List.last
-    module     = Module.concat(base, scoped) |> inspect
-    alias      = String.split(module, ".") |> List.last
-    human      = Phoenix.Naming.humanize(singular)
+    scoped = Phoenix.Naming.camelize(singular)
+    path = Phoenix.Naming.underscore(scoped)
+    singular = String.split(path, "/") |> List.last()
+    module = Module.concat(base, scoped) |> inspect
+    alias = String.split(module, ".") |> List.last()
+    human = Phoenix.Naming.humanize(singular)
 
-    [alias: alias,
-     human: human,
-     base: base,
-     web_module: web_module,
-     module: module,
-     scoped: scoped,
-     singular: singular,
-     path: path]
+    [
+      alias: alias,
+      human: human,
+      base: base,
+      web_module: web_module,
+      module: module,
+      scoped: scoped,
+      singular: singular,
+      path: path
+    ]
   end
 
   @doc """
@@ -121,8 +128,9 @@ defmodule Mix.Phoenix do
   """
   def check_module_name_availability!(name) do
     name = Module.concat(Elixir, name)
+
     if Code.ensure_loaded?(name) do
-      Mix.raise "Module name #{inspect name} is already taken, please choose another name"
+      Mix.raise("Module name #{inspect(name)} is already taken, please choose another name")
     end
   end
 
@@ -151,7 +159,7 @@ defmodule Mix.Phoenix do
   defp app_base(app) do
     case Application.get_env(app, :namespace, app) do
       ^app -> app |> to_string() |> Phoenix.Naming.camelize()
-      mod  -> mod |> inspect()
+      mod -> mod |> inspect()
     end
   end
 
@@ -190,7 +198,7 @@ defmodule Mix.Phoenix do
   Checks if the given `app_path` is inside an umbrella.
   """
   def in_umbrella?(app_path) do
-    umbrella = Path.expand(Path.join [app_path, "..", ".."])
+    umbrella = Path.expand(Path.join([app_path, "..", ".."]))
     mix_path = Path.join(umbrella, "mix.exs")
     apps_path = Path.join(umbrella, "apps")
     File.exists?(mix_path) && File.exists?(apps_path)
@@ -223,6 +231,7 @@ defmodule Mix.Phoenix do
           {^ctx_app, path} -> Path.relative_to_cwd(path)
           _ -> mix_app_path(ctx_app, this_app)
         end
+
       Path.join(app_path, rel_path)
     end
   end
@@ -270,8 +279,9 @@ defmodule Mix.Phoenix do
     case Application.get_env(this_otp_app, :generators)[:context_app] do
       nil ->
         :error
+
       false ->
-        Mix.raise """
+        Mix.raise("""
         no context_app configured for current application #{this_otp_app}.
 
         Add the context_app generators config in config.exs, or pass the
@@ -288,9 +298,11 @@ defmodule Mix.Phoenix do
 
         Note: cli option only works when `context_app` is not set to `false`
         in the config.
-        """
+        """)
+
       {app, _path} ->
         {:ok, app}
+
       app ->
         {:ok, app}
     end
@@ -300,11 +312,12 @@ defmodule Mix.Phoenix do
     case Mix.Project.deps_paths() do
       %{^app => path} ->
         Path.relative_to_cwd(path)
-      deps ->
-        Mix.raise """
-        no directory for context_app #{inspect app} found in #{this_otp_app}'s deps.
 
-        Ensure you have listed #{inspect app} as an in_umbrella dependency in mix.exs:
+      deps ->
+        Mix.raise("""
+        no directory for context_app #{inspect(app)} found in #{this_otp_app}'s deps.
+
+        Ensure you have listed #{inspect(app)} as an in_umbrella dependency in mix.exs:
 
             def deps do
               [
@@ -315,9 +328,9 @@ defmodule Mix.Phoenix do
 
         Existing deps:
 
-            #{inspect Map.keys(deps)}
+            #{inspect(Map.keys(deps))}
 
-        """
+        """)
     end
   end
 
@@ -332,15 +345,18 @@ defmodule Mix.Phoenix do
       end)
 
     case Enum.filter(file_paths, &File.exists?(&1)) do
-      [] -> :ok
+      [] ->
+        :ok
+
       conflicts ->
-        Mix.shell().info"""
+        Mix.shell().info("""
         The following files conflict with new files to be generated:
 
         #{Enum.map_join(conflicts, "\n", &"  * #{&1}")}
 
         See the --web option to namespace similarly named resources
-        """
+        """)
+
         unless Mix.shell().yes?("Proceed with interactive overwrite?") do
           System.halt()
         end
@@ -359,11 +375,23 @@ defmodule Mix.Phoenix do
   end
 
   def to_text(data) do
-    inspect data, limit: :infinity, printable_limit: :infinity
+    inspect(data, limit: :infinity, printable_limit: :infinity)
   end
 
   def prepend_newline(string) do
     "\n" <> string
+  end
+
+  @doc """
+  Ensures user's LiveView is compatible with the current generators.
+  """
+  def ensure_live_view_compat!(generator_mod) do
+    vsn = Application.spec(:phoenix_live_view)[:vsn]
+
+    # if lv is not installed, such as in phoenix's own test env, do not raise
+    if vsn && Version.compare("#{vsn}", "1.0.0-rc.7") != :gt do
+      raise "#{inspect(generator_mod)} requires :phoenix_live_view >= 1.0.0, got: #{vsn}"
+    end
   end
 
   # In the context of a HEEx attribute value, transforms a given message into a
