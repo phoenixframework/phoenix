@@ -59,8 +59,11 @@ defmodule Mix.Phoenix do
     end
   end
 
-  defp to_app_source(path, source_dir) when is_binary(path), do: Path.join(path, source_dir)
-  defp to_app_source(app, source_dir) when is_atom(app), do: Application.app_dir(app, source_dir)
+  defp to_app_source(path, source_dir) when is_binary(path),
+    do: Path.join(path, source_dir)
+
+  defp to_app_source(app, source_dir) when is_atom(app),
+    do: Application.app_dir(app, source_dir)
 
   @doc """
   Inflects path, scope, alias and more from the given name.
@@ -99,7 +102,7 @@ defmodule Mix.Phoenix do
 
   """
   def inflect(singular) do
-    base = base()
+    base = Mix.Phoenix.base()
     web_module = base |> web_module() |> inspect()
     scoped = Phoenix.Naming.camelize(singular)
     path = Phoenix.Naming.underscore(scoped)
@@ -377,6 +380,18 @@ defmodule Mix.Phoenix do
 
   def prepend_newline(string) do
     "\n" <> string
+  end
+
+  @doc """
+  Ensures user's LiveView is compatible with the current generators.
+  """
+  def ensure_live_view_compat!(generator_mod) do
+    vsn = Application.spec(:phoenix_live_view)[:vsn]
+
+    # if lv is not installed, such as in phoenix's own test env, do not raise
+    if vsn && Version.compare("#{vsn}", "1.0.0-rc.7") != :gt do
+      raise "#{inspect(generator_mod)} requires :phoenix_live_view >= 1.0.0, got: #{vsn}"
+    end
   end
 
   # In the context of a HEEx attribute value, transforms a given message into a

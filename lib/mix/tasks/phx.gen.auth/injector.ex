@@ -170,7 +170,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
       <%= if @current_#{schema.singular} do %>
         <li class="#{base_tailwind_classes}">
-          <%= @current_#{schema.singular}.email %>
+          {@current_#{schema.singular}.email}
         </li>
         <li>
           <.link

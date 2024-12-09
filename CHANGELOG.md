@@ -74,7 +74,7 @@ future styling).
 
 ### Enhancements
   * [phx.gen.auth] Add enhanced session fixation protection.
-    For applications whichs previously used `phx.gen.auth`, the following line can be added to the `renew_session` function in the auth module:
+    For applications which previously used `phx.gen.auth`, the following line can be added to the `renew_session` function in the auth module:
 
     ```diff
       defp renew_session(conn) do
@@ -231,7 +231,7 @@ future styling).
   * [Router] Add `Phoenix.VerifiedRoutes` for `~p`-based route generation with compile-time verification.
   * [Router] Support `helpers: false` to `use Phoenix.Router` to disable helper generation
   * [Router] Add `--info [url]` switch to `phx.routes` to get route information about a url/path
-  * [Flash] Add `Phoenix.Flash` for unfied flash access
+  * [Flash] Add `Phoenix.Flash` for unified flash access
 
 ### JavaScript Client Bug Fixes
   * Fix heartbeat being sent after disconnect and causing abnormal disconnects

@@ -11,7 +11,7 @@
   </.header>
 
   <.simple_form :let={f} for={@conn.params["<%= schema.singular %>"]} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/log-in"}>
-    <.error :if={@error_message}><%%= @error_message %></.error>
+    <.error :if={@error_message}>{@error_message}</.error>
 
     <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
     <.input
