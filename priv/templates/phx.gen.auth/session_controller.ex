@@ -8,7 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     create(conn, params, "Account created successfully!")
   end
 
-  def create(conn, %{"_action" => "password_updated"} = params) do
+  def create(conn, %{"_action" => "password-updated"} = params) do
     conn
     |> put_session(:<%= schema.singular %>_return_to, ~p"<%= schema.route_prefix %>/settings")
     |> create(params, "Password updated successfully!")
@@ -30,7 +30,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn
       |> put_flash(:error, "Invalid email or password")
       |> put_flash(:email, String.slice(email, 0, 160))
-      |> redirect(to: ~p"<%= schema.route_prefix %>/log_in")
+      |> redirect(to: ~p"<%= schema.route_prefix %>/log-in")
     end
   end<% else %>
 

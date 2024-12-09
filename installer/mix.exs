@@ -17,7 +17,7 @@ defmodule Phx.New.MixProject do
   #   4. test/test_helper.exs at the root
   #   5. installer/lib/mix/tasks/phx.new.ex
   #
-  @elixir_requirement "~> 1.14"
+  @elixir_requirement "~> 1.15"
 
   def project do
     [

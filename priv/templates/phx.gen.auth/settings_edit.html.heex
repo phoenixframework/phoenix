@@ -12,12 +12,13 @@
 
       <input type="hidden" name="action" value="update_email" />
 
-      <.input field={f[:email]} type="email" label="Email" required />
+      <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
       <.input
         field={f[:current_password]}
         name="current_password"
         type="password"
         label="Current Password"
+        autocomplete="current-password"
         required
         id="current_password_for_email"
       />
@@ -39,11 +40,18 @@
 
       <input type="hidden" name="action" value="update_password" />
 
-      <.input field={f[:password]} type="password" label="New password" required />
+      <.input
+        field={f[:password]}
+        type="password"
+        label="New password"
+        autocomplete="new-password"
+        required
+      />
       <.input
         field={f[:password_confirmation]}
         type="password"
         label="Confirm new password"
+        autocomplete="new-password"
         required
       />
 
@@ -53,6 +61,7 @@
         type="password"
         label="Current password"
         id="current_password_for_password"
+        autocomplete="current-password"
         required
       />
       <:actions>

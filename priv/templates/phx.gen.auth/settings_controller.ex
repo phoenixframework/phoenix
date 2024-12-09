@@ -19,7 +19,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <%= inspect context.alias %>.deliver_<%= schema.singular %>_update_email_instructions(
           applied_<%= schema.singular %>,
           <%= schema.singular %>.email,
-          &url(~p"<%= schema.route_prefix %>/settings/confirm_email/#{&1}")
+          &url(~p"<%= schema.route_prefix %>/settings/confirm-email/#{&1}")
         )
 
         conn

@@ -9,19 +9,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
   end
 
-  describe "GET <%= schema.route_prefix %>/reset_password" do
+  describe "GET <%= schema.route_prefix %>/reset-password" do
     test "renders the reset password page", %{conn: conn} do
-      conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password")
+      conn = get(conn, ~p"<%= schema.route_prefix %>/reset-password")
       response = html_response(conn, 200)
       assert response =~ "Forgot your password?"
     end
   end
 
-  describe "POST <%= schema.route_prefix %>/reset_password" do
+  describe "POST <%= schema.route_prefix %>/reset-password" do
     @tag :capture_log
     test "sends a new reset password token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
-        post(conn, ~p"<%= schema.route_prefix %>/reset_password", %{
+        post(conn, ~p"<%= schema.route_prefix %>/reset-password", %{
           "<%= schema.singular %>" => %{"email" => <%= schema.singular %>.email}
         })
 
@@ -35,7 +35,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "does not send reset password token if email is invalid", %{conn: conn} do
       conn =
-        post(conn, ~p"<%= schema.route_prefix %>/reset_password", %{
+        post(conn, ~p"<%= schema.route_prefix %>/reset-password", %{
           "<%= schema.singular %>" => %{"email" => "unknown@example.com"}
         })
 
@@ -48,7 +48,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  describe "GET <%= schema.route_prefix %>/reset_password/:token" do
+  describe "GET <%= schema.route_prefix %>/reset-password/:token" do
     setup %{<%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
@@ -59,12 +59,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "renders reset password", %{conn: conn, token: token} do
-      conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}")
+      conn = get(conn, ~p"<%= schema.route_prefix %>/reset-password/#{token}")
       assert html_response(conn, 200) =~ "Reset password"
     end
 
     test "does not render reset password with invalid token", %{conn: conn} do
-      conn = get(conn, ~p"<%= schema.route_prefix %>/reset_password/oops")
+      conn = get(conn, ~p"<%= schema.route_prefix %>/reset-password/oops")
       assert redirected_to(conn) == ~p"/"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
@@ -72,7 +72,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  describe "PUT <%= schema.route_prefix %>/reset_password/:token" do
+  describe "PUT <%= schema.route_prefix %>/reset-password/:token" do
     setup %{<%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
@@ -84,14 +84,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "resets password once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>, token: token} do
       conn =
-        put(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}", %{
+        put(conn, ~p"<%= schema.route_prefix %>/reset-password/#{token}", %{
           "<%= schema.singular %>" => %{
             "password" => "new valid password",
             "password_confirmation" => "new valid password"
           }
         })
 
-      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log_in"
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
       refute get_session(conn, :<%= schema.singular %>_token)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
@@ -102,7 +102,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     test "does not reset password on invalid data", %{conn: conn, token: token} do
       conn =
-        put(conn, ~p"<%= schema.route_prefix %>/reset_password/#{token}", %{
+        put(conn, ~p"<%= schema.route_prefix %>/reset-password/#{token}", %{
           "<%= schema.singular %>" => %{
             "password" => "too short",
             "password_confirmation" => "does not match"
@@ -113,7 +113,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
 
     test "does not reset password with invalid token", %{conn: conn} do
-      conn = put(conn, ~p"<%= schema.route_prefix %>/reset_password/oops")
+      conn = put(conn, ~p"<%= schema.route_prefix %>/reset-password/oops")
       assert redirected_to(conn) == ~p"/"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~

@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>SettingsLive do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Settings do
   use <%= inspect context.web_module %>, :live_view
 
   alias <%= inspect context.module %>
@@ -18,7 +18,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           phx-submit="update_email"
           phx-change="validate_email"
         >
-          <.input field={@email_form[:email]} type="email" label="Email" required />
+          <.input
+            field={@email_form[:email]}
+            type="email"
+            label="Email"
+            autocomplete="username"
+            required
+          />
           <.input
             field={@email_form[:current_password]}
             name="current_password"
@@ -26,6 +32,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             type="password"
             label="Current password"
             value={@email_form_current_password}
+            autocomplete="current-password"
             required
           />
           <:actions>
@@ -37,7 +44,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <.simple_form
           for={@password_form}
           id="password_form"
-          action={~p"<%= schema.route_prefix %>/log_in?_action=password_updated"}
+          action={~p"<%= schema.route_prefix %>/log-in?_action=password-updated"}
           method="post"
           phx-change="validate_password"
           phx-submit="update_password"
@@ -47,13 +54,21 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             name={@password_form[:email].name}
             type="hidden"
             id="hidden_<%= schema.singular %>_email"
+            autocomplete="username"
             value={@current_email}
           />
-          <.input field={@password_form[:password]} type="password" label="New password" required />
+          <.input
+            field={@password_form[:password]}
+            type="password"
+            label="New password"
+            autocomplete="new-password"
+            required
+          />
           <.input
             field={@password_form[:password_confirmation]}
             type="password"
             label="Confirm new password"
+            autocomplete="new-password"
             required
           />
           <.input
@@ -63,6 +78,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             label="Current password"
             id="current_password_for_password"
             value={@current_password}
+            autocomplete="current-password"
             required
           />
           <:actions>
@@ -125,7 +141,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <%= inspect context.alias %>.deliver_<%= schema.singular %>_update_email_instructions(
           applied_<%= schema.singular %>,
           <%= schema.singular %>.email,
-          &url(~p"<%= schema.route_prefix %>/settings/confirm_email/#{&1}")
+          &url(~p"<%= schema.route_prefix %>/settings/confirm-email/#{&1}")
         )
 
         info = "A link to confirm your email change has been sent to the new address."

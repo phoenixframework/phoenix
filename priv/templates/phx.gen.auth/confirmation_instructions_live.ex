@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ConfirmationInstructionsLive do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.ConfirmationInstructions do
   use <%= inspect context.web_module %>, :live_view
 
   alias <%= inspect context.module %>
@@ -12,7 +12,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.header>
 
       <.simple_form for={@form} id="resend_confirmation_form" phx-submit="send_instructions">
-        <.input field={@form[:email]} type="email" placeholder="Email" required />
+        <.input
+          field={@form[:email]}
+          type="email"
+          placeholder="Email"
+          autocomplete="username"
+          required
+        />
         <:actions>
           <.button phx-disable-with="Sending..." class="w-full">
             Resend confirmation instructions
@@ -20,9 +26,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </:actions>
       </.simple_form>
 
-      <p class="text-center mt-4">
+      <p :if={!@current_<%= schema.singular %>} class="text-center mt-4">
         <.link href={~p"<%= schema.route_prefix %>/register"}>Register</.link>
-        | <.link href={~p"<%= schema.route_prefix %>/log_in"}>Log in</.link>
+        | <.link href={~p"<%= schema.route_prefix %>/log-in"}>Log in</.link>
       </p>
     </div>
     """

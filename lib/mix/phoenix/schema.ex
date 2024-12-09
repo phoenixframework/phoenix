@@ -425,7 +425,7 @@ defmodule Mix.Phoenix.Schema do
       mix phx.gen.schema Comment comments body:text status:enum:published:unpublished
   """
 
-  defp validate_attr!({name, :datetime}), do: validate_attr!({name, :naive_datetime})
+  defp validate_attr!({name, :datetime}), do: {name, :naive_datetime}
 
   defp validate_attr!({name, :array}) do
     Mix.raise("""
@@ -438,7 +438,6 @@ defmodule Mix.Phoenix.Schema do
 
   defp validate_attr!({_name, :enum}), do: Mix.raise(@enum_missing_value_error)
   defp validate_attr!({_name, type} = attr) when type in @valid_types, do: attr
-  defp validate_attr!({_name, {:enum, _vals}} = attr), do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_types, do: attr
 
   defp validate_attr!({_, type}) do

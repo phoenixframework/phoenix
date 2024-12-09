@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>LoginLiveTest do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.LoginTest do
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
   import Phoenix.LiveViewTest
@@ -6,7 +6,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "Log in page" do
     test "renders log in page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
+      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       assert html =~ "Log in"
       assert html =~ "Register"
@@ -17,7 +17,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       result =
         conn
         |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture())
-        |> live(~p"<%= schema.route_prefix %>/log_in")
+        |> live(~p"<%= schema.route_prefix %>/log-in")
         |> follow_redirect(conn, ~p"/")
 
       assert {:ok, _conn} = result
@@ -29,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       password = "123456789abcd"
       <%= schema.singular %> = <%= schema.singular %>_fixture(%{password: password})
 
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       form =
         form(lv, "#login_form", <%= schema.singular %>: %{email: <%= schema.singular %>.email, password: password, remember_me: true})
@@ -42,7 +42,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects to login page with a flash error if there are no valid credentials", %{
       conn: conn
     } do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       form =
         form(lv, "#login_form",
@@ -53,13 +53,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
 
-      assert redirected_to(conn) == "<%= schema.route_prefix %>/log_in"
+      assert redirected_to(conn) == "<%= schema.route_prefix %>/log-in"
     end
   end
 
   describe "login navigation" do
     test "redirects to registration page when the Register button is clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       {:ok, _login_live, login_html} =
         lv
@@ -73,13 +73,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects to forgot password page when the Forgot Password button is clicked", %{
       conn: conn
     } do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log_in")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       {:ok, conn} =
         lv
         |> element(~s|main a:fl-contains("Forgot your password?")|)
         |> render_click()
-        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/reset_password")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/reset-password")
 
       assert conn.resp_body =~ "Forgot your password?"
     end

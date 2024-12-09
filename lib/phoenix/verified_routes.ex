@@ -1,12 +1,14 @@
 defmodule Phoenix.VerifiedRoutes do
-  @moduledoc ~S"""
+  @moduledoc ~S'''
   Provides route generation with compile-time verification.
 
   Use of the `sigil_p` macro allows paths and URLs throughout your
   application to be compile-time verified against your Phoenix router(s).
   For example, the following path and URL usages:
 
+      ~H"""
       <.link href={~p"/sessions/new"} method="post">Log in</.link>
+      """
 
       redirect(to: url(~p"/posts/#{post}"))
 
@@ -17,8 +19,10 @@ defmodule Phoenix.VerifiedRoutes do
 
   Unmatched routes will issue compiler warnings:
 
-      warning: no route path for AppWeb.Router matches "/postz/#{post}"
-        lib/app_web/controllers/post_controller.ex:100: AppWeb.PostController.show/2
+  ```console
+  warning: no route path for AppWeb.Router matches "/postz/#{post}"
+    lib/app_web/controllers/post_controller.ex:100: AppWeb.PostController.show/2
+  ```
 
   Additionally, interpolated ~p values are encoded via the `Phoenix.Param` protocol.
   For example, a `%Post{}` struct in your application may derive the `Phoenix.Param`
@@ -101,7 +105,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   *Note: Elixir >= 1.14.0 is required for comprehensive warnings. Older versions
   will compile properly, but no warnings will be issued.
-  """
+  '''
   @doc false
   defstruct router: nil,
             route: nil,

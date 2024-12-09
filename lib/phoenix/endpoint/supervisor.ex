@@ -13,7 +13,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     with {:ok, pid} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
       # We don't use the defaults in the checks below
       conf = Keyword.merge(Application.get_env(otp_app, mod, []), opts)
-      warmup(mod)
       log_access_url(mod, conf)
       browser_open(mod, conf)
 
@@ -83,12 +82,12 @@ defmodule Phoenix.Endpoint.Supervisor do
 
     children =
       config_children(mod, secret_conf, default_conf) ++
+        warmup_children(mod) ++
         pubsub_children(mod, conf) ++
-        socket_children(mod, :child_spec) ++
+        socket_children(mod, conf, :child_spec) ++
         server_children(mod, conf, server?) ++
-        socket_children(mod, :drainer_spec) ++
+        socket_children(mod, conf, :drainer_spec) ++
         watcher_children(mod, conf, server?)
-
     Supervisor.init(children, strategy: :one_for_one)
   end
 
@@ -118,8 +117,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(endpoint, fun) do
+  defp socket_children(endpoint, conf, fun) do
     for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__(), &elem(&1, 1)),
+        _ = check_origin_or_csrf_checked!(conf, opts),
         spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
         spec != :ignore do
       spec
@@ -135,9 +135,29 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
+  defp check_origin_or_csrf_checked!(endpoint_conf, socket_opts) do
+    check_origin = endpoint_conf[:check_origin]
+
+    for {transport, transport_opts} <- socket_opts, is_list(transport_opts) do
+      check_origin = Keyword.get(transport_opts, :check_origin, check_origin)
+
+      check_csrf = transport_opts[:check_csrf]
+
+      if check_origin == false and check_csrf == false do
+        raise ArgumentError,
+              "one of :check_origin and :check_csrf must be set to non-false value for " <>
+                "transport #{inspect(transport)}"
+      end
+    end
+  end
+
   defp config_children(mod, conf, default_conf) do
     args = {mod, conf, default_conf, name: Module.concat(mod, "Config")}
     [{Phoenix.Config, args}]
+  end
+
+  defp warmup_children(mod) do
+    [%{id: :warmup, start: {__MODULE__, :warmup, [mod]}}]
   end
 
   defp server_children(mod, config, server?) do
@@ -330,6 +350,11 @@ defmodule Phoenix.Endpoint.Supervisor do
     rescue
       e -> Logger.error("Could not warm up static assets: #{Exception.message(e)}")
     end
+
+    # To prevent a race condition where the socket listener is already started
+    # but the config not warmed up, we run warmup/1 as a child in the supervision
+    # tree. As we don't actually want to start a process, we return :ignore here.
+    :ignore
   end
 
   defp warmup_persistent(endpoint) do

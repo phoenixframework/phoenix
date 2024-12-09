@@ -3,7 +3,7 @@
     Register for an account
     <:subtitle>
       Already registered?
-      <.link navigate={~p"<%= schema.route_prefix %>/log_in"} class="font-semibold text-brand hover:underline">
+      <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="font-semibold text-brand hover:underline">
         Log in
       </.link>
       to your account now.
@@ -15,8 +15,14 @@
       Oops, something went wrong! Please check the errors below.
     </.error>
 
-    <.input field={f[:email]} type="email" label="Email" required />
-    <.input field={f[:password]} type="password" label="Password" required />
+    <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
+    <.input
+      field={f[:password]}
+      type="password"
+      label="Password"
+      autocomplete="new-password"
+      required
+    />
 
     <:actions>
       <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>

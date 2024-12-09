@@ -56,17 +56,13 @@ We declared the attributes we accept via the `attr/3` macro provided by `Phoenix
 
 Next we need to update `show.html.heex`:
 
-```elixir
+```heex
 <section>
   <.greet messenger={@messenger} />
 </section>
 ```
 
-When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before.
-
-Since templates are embedded inside the `HelloHTML` module, we were able to invoke the view function simply as `<.greet messenger="..." />`.
-
-If the component was defined elsewhere, we can also type `<HelloWeb.HelloHTML.greet messenger="..." />`.
+When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before. Since the `show.html.heex` template is embedded within the `HelloHTML` module, we were able to invoke the function component directly as `<.greet messenger="..." />`. If the component was defined elsewhere, we would need to give its full name: `<HelloWeb.HelloHTML.greet messenger="..." />`.
 
 By declaring attributes as required, Phoenix will warn at compile time if we call the `<.greet />` component without passing attributes. If an attribute is optional, you can specify the `:default` option with a value:
 
@@ -74,26 +70,29 @@ By declaring attributes as required, Phoenix will warn at compile time if we cal
 attr :messenger, :string, default: nil
 ```
 
-Although this is a quick example, it shows the different roles function components play in Phoenix:
+Overall, function components are the essential building block of Phoenix rendering stack. The majority of the times, they are functions that receive a single argument called `assigns` and call the `~H` sigil, as we did in `greet/1`. They can also be invoked from templates, with compile-time validation of its attributes declared via `attr`.
 
-* Function components can be defined as functions that receive `assigns` as argument and call the `~H` sigil, as we did in `greet/1`
+In fact, every template embedded into `HelloHTML` is a function component in itself. `show.html.heex` simply becomes a function component named `show`. This also means you can directly render function components directly from the controller, skipping the `show.html.heex` template:
 
-* Function components can be embedded from template files, that's how we load `show.html.heex` into `HelloWeb.HelloHTML`
+```elixir
+def HelloWeb.HelloController do
+  use HelloWeb, :controller
 
-* Function components can declare which attributes are expected, which are validated at compilation time
+  def show(conn, %{"messenger" => messenger}) do
+    # Render the HelloWeb.HelloHTML.greet/1 component
+    render(conn, :greet, messenger: messenger)
+  end
+end
+```
 
-* Function components can be directly rendered from controllers
-
-* Function components can be directly rendered from other function components, as we called `<.greet messenger={@messenger} />` from `show.html.heex`
-
-And there's more. Before we go deeper, let's fully understand the expressive power behind the HEEx template language.
+Next, let's fully understand the expressive power behind the HEEx template language.
 
 ## HEEx
 
 Function components and templates files are powered by [the HEEx template language](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2), which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
 
 ```elixir
-  render(conn, :show, username: "joe")
+render(conn, :show, username: "joe")
 ```
 
 Then you can access said username in the templates as `<%= @username %>`. In addition to displaying assigns and functions, we can use pretty much any Elixir expression. For example, in order to have conditionals:

@@ -458,8 +458,9 @@ defmodule Phoenix.Socket.Transport do
 
     * `:user_agent` - the value of the "user-agent" request header
 
+  The CSRF check can be disabled by setting the `:check_csrf` option to `false`.
   """
-  def connect_info(conn, endpoint, keys) do
+  def connect_info(conn, endpoint, keys, opts \\ []) do
     for key <- keys, into: %{} do
       case key do
         :peer_data ->
@@ -478,7 +479,7 @@ defmodule Phoenix.Socket.Transport do
           {:user_agent, fetch_user_agent(conn)}
 
         {:session, session} ->
-          {:session, connect_session(conn, endpoint, session)}
+          {:session, connect_session(conn, endpoint, session, opts)}
 
         {key, val} ->
           {key, val}
@@ -486,26 +487,24 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}) do
+  defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}, opts) do
     conn = Plug.Conn.fetch_cookies(conn)
+    check_csrf = Keyword.get(opts, :check_csrf, true)
 
-    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
-         cookie when is_binary(cookie) <- conn.cookies[key],
+    with cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
          {_, session} <- store.get(conn, cookie, init),
-         csrf_state when is_binary(csrf_state) <-
-           Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]),
-         true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
+         true <- not check_csrf or csrf_token_valid?(conn, session, csrf_token_key) do
       session
     else
       _ -> nil
     end
   end
 
-  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}) do
+  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}, opts) do
     case apply(module, function, args) do
       session_config when is_list(session_config) ->
-        connect_session(conn, endpoint, init_session(session_config))
+        connect_session(conn, endpoint, init_session(session_config), opts)
 
       other ->
         raise ArgumentError,
@@ -539,6 +538,14 @@ defmodule Phoenix.Socket.Transport do
   defp fetch_user_agent(conn) do
     with {_, value} <- List.keyfind(conn.req_headers, "user-agent", 0) do
       value
+    end
+  end
+
+  defp csrf_token_valid?(conn, session, csrf_token_key) do
+    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
+         csrf_state when is_binary(csrf_state) <-
+           Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]) do
+       Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token)
     end
   end
 

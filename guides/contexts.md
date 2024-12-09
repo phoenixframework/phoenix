@@ -20,8 +20,6 @@ By giving modules that expose and group related functionality the name **context
 
 In Phoenix, contexts often encapsulate data access and data validation. They often talk to a database or APIs. Overall, think of them as boundaries to decouple and isolate parts of your application. Let's use these ideas to build out our web application. Our goal is to build an ecommerce system where we can showcase products, allow users to add products to their cart, and complete their orders.
 
-> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully writing their applications. This guide focuses on those readers.
-
 ### Adding a Catalog Context
 
 An ecommerce platform has wide-reaching coupling across a codebase so it's important to think about writing well-defined modules. With that in mind, our goal is to build a product catalog API that handles creating, updating, and deleting the products available in our system. We'll start off with the basic features of showcasing our products, and we will add shopping cart features later. We'll see how starting with a solid foundation with isolated boundaries allows us to grow our application naturally as we add functionality.
@@ -29,9 +27,6 @@ An ecommerce platform has wide-reaching coupling across a codebase so it's impor
 Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`, and `mix phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new product catalog context.
 
 In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have products to showcase on pages for sale, along with descriptions, pricing, etc. Along with selling products, we know we'll need to support carting, order checkout, and so on. While the products being purchased are related to the cart and checkout processes, showcasing a product and managing the *exhibition* of our products is distinctly different than tracking what a user has placed in their cart or how an order is placed. A `Catalog` context is a natural place for the management of our product details and the showcasing of those products we have for sale.
-
-> #### Naming things is hard {: .tip}
-> If you're stuck when trying to come up with a context name when the grouped functionality in your system isn't yet clear, you can simply use the plural form of the resource you're creating. For example, a `Products` context for managing products. As you grow your application and the parts of your system become clear, you can simply rename the context to a more refined one.
 
 To jump-start our catalog context, we'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting products, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
 
@@ -60,7 +55,6 @@ Add the resource to your browser scope in lib/hello_web/router.ex:
 
     resources "/products", ProductController
 
-
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
@@ -79,7 +73,7 @@ Phoenix generated the web files as expected in `lib/hello_web/`. We can also see
 
 With the new route in place, Phoenix reminds us to update our repo by running `mix ecto.migrate`, but first we need to make a few tweaks to the generated migration in `priv/repo/migrations/*_create_products.exs`:
 
-```elixir
+```diff
   def change do
     create table(:products) do
       add :title, :string
@@ -122,6 +116,14 @@ Views: 0
 ```
 
 If we follow the "Back" link, we get a list of all products, which should contain the one we just created. Likewise, we can update this record or delete it. Now that we've seen how it works in the browser, it's time to take a look at the generated code.
+
+> #### Naming things is hard {: .tip}
+>
+> When starting a web application, it may be hard to draw lines or name its different contexts, especially when the domain you are working with is not as well established as e-commerce.
+>
+> If you're stuck when defining or naming a context, you can simply create a new context using the plural form of the resource you're creating. For example, a `Products` context for managing products. You will find that, even in such cases, you will organically discover other resources that belong to the `Products` context, such as categories or image galleries.
+>
+> As your applications grows and the different parts of your system become clear, you can simply rename the context or move resources around. The beauty of Elixir modules is that they are stateless, so moving them around should be simply a matter of renaming the module names (and renaming the files for consistency).
 
 ## Starting with generators
 
@@ -359,7 +361,6 @@ $ mix ecto.gen.migration create_product_categories
 Next, let's open up the new migration file and add the following code to the `change` function:
 
 ```elixir
-
 defmodule Hello.Repo.Migrations.CreateProductCategories do
   use Ecto.Migration
 
@@ -497,8 +498,9 @@ Next, let's expose our new feature to the web by adding the category input to ou
       |> Ecto.Changeset.get_change(:categories, [])
       |> Enum.map(& &1.data.id)
 
-    for cat <- Hello.Catalog.list_categories(),
-        do: [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    for cat <- Hello.Catalog.list_categories() do
+      [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    end
   end
 ```
 
@@ -519,7 +521,7 @@ With our `category_opts` function in place, we can open up `lib/hello_web/contro
 
 We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to the list in `lib/hello_web/controllers/product_html/show.html.heex`:
 
-```heex
+```diff
 <.list>
   ...
 + <:item title="Categories">
@@ -604,12 +606,11 @@ Would you like to proceed? [Yn] y
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
-
 ```
 
 We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's touch up the generated migration file in `priv/repo/migrations/*_create_cart_items.ex`:
 
-```elixir
+```diff
     create table(:cart_items) do
 -     add :price_when_carted, :decimal
 +     add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
@@ -663,7 +664,7 @@ Our `Catalog.Product` resource serves to keep the responsibilities of representi
 
 Now that we know where our data dependencies exist, let's add our schema associations so we can tie shopping cart items to products. First, let's make a quick change to our cart schema in `lib/hello/shopping_cart/cart.ex` to associate a cart to its items:
 
-```elixir
+```diff
   schema "carts" do
     field :user_uuid, Ecto.UUID
 
@@ -675,7 +676,7 @@ Now that we know where our data dependencies exist, let's add our schema associa
 
 Now that our cart is associated to the items we place in it, let's set up the cart item associations inside `lib/hello/shopping_cart/cart_item.ex`:
 
-```elixir
+```diff
   schema "cart_items" do
     field :price_when_carted, :decimal
     field :quantity, :integer
@@ -707,7 +708,7 @@ As we mentioned before, the context generators are only a starting point for our
 
 We won't focus on a real user authentication system at this point, but by the time we're done, you'll be able to naturally integrate one with what we've written here. To simulate a current user session, open up your `lib/hello_web/router.ex` and key this in:
 
-```elixir
+```diff
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -796,7 +797,7 @@ We defined a new `CartItemController` with the create and delete actions that we
 
 Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
-```elixir
+```diff
 +  alias Hello.Catalog
 -  alias Hello.ShoppingCart.Cart
 +  alias Hello.ShoppingCart.{Cart, CartItem}
@@ -1066,7 +1067,7 @@ Remember to update your repository by running migrations:
 
 We generated an `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
 
-```elixir
+```diff
   def change do
     create table(:orders) do
       add :user_uuid, :uuid
@@ -1103,7 +1104,7 @@ Remember to update your repository by running migrations:
 
 We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and inject supporting functions into our orders context. Like before, let's modify the migration in `priv/repo/migrations/*_create_order_line_items.exs` and make the following decimal field changes:
 
-```elixir
+```diff
   def change do
     create table(:order_line_items) do
 -     add :price, :decimal
@@ -1122,7 +1123,7 @@ We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and
 
 With our migration in place, let's wire up our orders and line items associations in `lib/hello/orders/order.ex`:
 
-```elixir
+```diff
   schema "orders" do
     field :total_price, :decimal
     field :user_uuid, Ecto.UUID
@@ -1136,7 +1137,7 @@ With our migration in place, let's wire up our orders and line items association
 
 We used `has_many :line_items` to associate orders and line items, just like we've seen before. Next, we used the `:through` feature of `has_many`, which allows us to instruct ecto how to associate resources across another relationship. In this case, we can associate products of an order by finding all products through associated line items. Next, let's wire up the association in the other direction in `lib/hello/orders/line_item.ex`:
 
-```elixir
+```diff
   schema "order_line_items" do
     field :price, :decimal
     field :quantity, :integer
@@ -1152,7 +1153,7 @@ We used `has_many :line_items` to associate orders and line items, just like we'
 
 We used `belongs_to` to associate line items to orders and products. With our associations in place, we can start integrating the web interface into our order process. Open up your router `lib/hello_web/router.ex` and add the following line:
 
-```elixir
+```diff
   scope "/", HelloWeb do
     pipe_through :browser
 

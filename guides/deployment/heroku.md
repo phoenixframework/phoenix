@@ -97,11 +97,11 @@ The buildpack uses a predefined Elixir and Erlang version, but to avoid surprise
 
 ```console
 # Elixir version
-elixir_version=1.14.0
+elixir_version=1.15.0
 
 # Erlang version
 # https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
-erlang_version=24.3
+erlang_version=25.3
 
 # Invoke assets.deploy defined in your mix.exs to deploy assets with esbuild
 # Note we nuke the esbuild executable from the image

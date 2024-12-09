@@ -180,4 +180,44 @@ defmodule Phoenix.Endpoint.SupervisorTest do
              end)
     end
   end
+
+  describe "origin & CSRF checks config" do
+    defmodule TestSocket do
+      @behaviour Phoenix.Socket.Transport
+      def child_spec(_), do: :ignore
+      def connect(_), do: {:ok, []}
+      def init(state), do: {:ok, state}
+      def handle_in(_, state), do: {:ok, state}
+      def handle_info(_, state), do: {:ok, state}
+      def terminate(_, _), do: :ok
+    end
+
+    defmodule SocketEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      socket "/ws", TestSocket, websocket: [check_csrf: false, check_origin: false]
+    end
+
+    Application.put_env(:phoenix, SocketEndpoint, [])
+
+    test "fails when CSRF and origin checks both disabled in transport" do
+      assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
+        Supervisor.init({:phoenix, SocketEndpoint, []})
+      end
+    end
+
+    defmodule SocketEndpointOriginCheckDisabled do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      socket "/ws", TestSocket, websocket: [check_csrf: false]
+    end
+
+    Application.put_env(:phoenix, SocketEndpointOriginCheckDisabled, check_origin: false)
+
+    test "fails when origin is disabled in endpoint config and CSRF disabled in transport" do
+      assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
+        Supervisor.init({:phoenix, SocketEndpointOriginCheckDisabled, []})
+      end
+    end
+  end
 end
