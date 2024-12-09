@@ -14,7 +14,7 @@ defmodule Mix.Phoenix.Web do
     |> Enum.map(fn attr ->
       value_expression = maybe_array_values(attr, "#{schema_singular}.#{attr.name}")
 
-      ~s(<:col :let={{_id, #{schema_singular}}} label="#{label(attr.name)}"><%= #{value_expression} %></:col>)
+      ~s(<:col :let={{_id, #{schema_singular}}} label="#{label(attr.name)}">{#{value_expression}}</:col>)
     end)
     |> Mix.Phoenix.indent_text(spaces: 6, top: 1)
   end
@@ -30,7 +30,7 @@ defmodule Mix.Phoenix.Web do
     |> Enum.map(fn attr ->
       value_expression = maybe_array_values(attr, "#{schema_singular}.#{attr.name}")
 
-      ~s(<:col :let={#{schema_singular}} label="#{label(attr.name)}"><%= #{value_expression} %></:col>)
+      ~s(<:col :let={#{schema_singular}} label="#{label(attr.name)}">{#{value_expression}}</:col>)
     end)
     |> Mix.Phoenix.indent_text(spaces: 2, top: 1)
   end
@@ -45,7 +45,7 @@ defmodule Mix.Phoenix.Web do
     schema.attrs
     |> Enum.map(fn attr ->
       value_expression = maybe_array_values(attr, "@#{schema_singular}.#{attr.name}")
-      ~s(<:item title="#{label(attr.name)}"><%= #{value_expression} %></:item>)
+      ~s(<:item title="#{label(attr.name)}">{#{value_expression}}</:item>)
     end)
   end
 

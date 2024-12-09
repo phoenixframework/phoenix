@@ -106,33 +106,33 @@ defmodule Mix.Phoenix.WebTest do
     assert Web.live_table_columns(schema) ==
              """
 
-                   <:col :let={{_id, comment}} label="Points"><%= comment.points %></:col>
-                   <:col :let={{_id, comment}} label="Sum"><%= comment.sum %></:col>
-                   <:col :let={{_id, comment}} label="Price"><%= comment.price %></:col>
-                   <:col :let={{_id, comment}} label="The cake is a lie"><%= comment.the_cake_is_a_lie %></:col>
-                   <:col :let={{_id, comment}} label="Title"><%= comment.title %></:col>
-                   <:col :let={{_id, comment}} label="Name"><%= comment.name %></:col>
-                   <:col :let={{_id, comment}} label="Data"><%= comment.data %></:col>
-                   <:col :let={{_id, comment}} label="Token"><%= comment.token %></:col>
-                   <:col :let={{_id, comment}} label="Date of birth"><%= comment.date_of_birth %></:col>
-                   <:col :let={{_id, comment}} label="Happy hour"><%= comment.happy_hour %></:col>
-                   <:col :let={{_id, comment}} label="Happy hour"><%= comment.happy_hour %></:col>
-                   <:col :let={{_id, comment}} label="Joined"><%= comment.joined %></:col>
-                   <:col :let={{_id, comment}} label="Joined"><%= comment.joined %></:col>
-                   <:col :let={{_id, comment}} label="Joined"><%= comment.joined %></:col>
-                   <:col :let={{_id, comment}} label="Joined"><%= comment.joined %></:col>
-                   <:col :let={{_id, comment}} label="Meta"><%= comment.meta %></:col>
-                   <:col :let={{_id, comment}} label="Status"><%= comment.status %></:col>
-                   <:col :let={{_id, comment}} label="Status"><%= comment.status %></:col>
-                   <:col :let={{_id, comment}} label="Post"><%= comment.post_id %></:col>
-                   <:col :let={{_id, comment}} label="Author"><%= comment.author_id %></:col>
-                   <:col :let={{_id, comment}} label="Booking"><%= comment.booking_id %></:col>
-                   <:col :let={{_id, comment}} label="Book"><%= comment.book_id %></:col>
-                   <:col :let={{_id, comment}} label="Data"><%= comment.data %></:col>
-                   <:col :let={{_id, comment}} label="Tags"><%= array_values(comment.tags) %></:col>
-                   <:col :let={{_id, comment}} label="Tags"><%= array_values(comment.tags) %></:col>
-                   <:col :let={{_id, comment}} label="Tags"><%= array_values(comment.tags) %></:col>
-                   <:col :let={{_id, comment}} label="Tags"><%= array_values(comment.tags) %></:col>
+                   <:col :let={{_id, comment}} label="Points">{comment.points}</:col>
+                   <:col :let={{_id, comment}} label="Sum">{comment.sum}</:col>
+                   <:col :let={{_id, comment}} label="Price">{comment.price}</:col>
+                   <:col :let={{_id, comment}} label="The cake is a lie">{comment.the_cake_is_a_lie}</:col>
+                   <:col :let={{_id, comment}} label="Title">{comment.title}</:col>
+                   <:col :let={{_id, comment}} label="Name">{comment.name}</:col>
+                   <:col :let={{_id, comment}} label="Data">{comment.data}</:col>
+                   <:col :let={{_id, comment}} label="Token">{comment.token}</:col>
+                   <:col :let={{_id, comment}} label="Date of birth">{comment.date_of_birth}</:col>
+                   <:col :let={{_id, comment}} label="Happy hour">{comment.happy_hour}</:col>
+                   <:col :let={{_id, comment}} label="Happy hour">{comment.happy_hour}</:col>
+                   <:col :let={{_id, comment}} label="Joined">{comment.joined}</:col>
+                   <:col :let={{_id, comment}} label="Joined">{comment.joined}</:col>
+                   <:col :let={{_id, comment}} label="Joined">{comment.joined}</:col>
+                   <:col :let={{_id, comment}} label="Joined">{comment.joined}</:col>
+                   <:col :let={{_id, comment}} label="Meta">{comment.meta}</:col>
+                   <:col :let={{_id, comment}} label="Status">{comment.status}</:col>
+                   <:col :let={{_id, comment}} label="Status">{comment.status}</:col>
+                   <:col :let={{_id, comment}} label="Post">{comment.post_id}</:col>
+                   <:col :let={{_id, comment}} label="Author">{comment.author_id}</:col>
+                   <:col :let={{_id, comment}} label="Booking">{comment.booking_id}</:col>
+                   <:col :let={{_id, comment}} label="Book">{comment.book_id}</:col>
+                   <:col :let={{_id, comment}} label="Data">{comment.data}</:col>
+                   <:col :let={{_id, comment}} label="Tags">{array_values(comment.tags)}</:col>
+                   <:col :let={{_id, comment}} label="Tags">{array_values(comment.tags)}</:col>
+                   <:col :let={{_id, comment}} label="Tags">{array_values(comment.tags)}</:col>
+                   <:col :let={{_id, comment}} label="Tags">{array_values(comment.tags)}</:col>
              """
              |> String.trim_trailing("\n")
   end
@@ -144,33 +144,33 @@ defmodule Mix.Phoenix.WebTest do
     assert Web.table_columns(schema) ==
              """
 
-               <:col :let={comment} label="Points"><%= comment.points %></:col>
-               <:col :let={comment} label="Sum"><%= comment.sum %></:col>
-               <:col :let={comment} label="Price"><%= comment.price %></:col>
-               <:col :let={comment} label="The cake is a lie"><%= comment.the_cake_is_a_lie %></:col>
-               <:col :let={comment} label="Title"><%= comment.title %></:col>
-               <:col :let={comment} label="Name"><%= comment.name %></:col>
-               <:col :let={comment} label="Data"><%= comment.data %></:col>
-               <:col :let={comment} label="Token"><%= comment.token %></:col>
-               <:col :let={comment} label="Date of birth"><%= comment.date_of_birth %></:col>
-               <:col :let={comment} label="Happy hour"><%= comment.happy_hour %></:col>
-               <:col :let={comment} label="Happy hour"><%= comment.happy_hour %></:col>
-               <:col :let={comment} label="Joined"><%= comment.joined %></:col>
-               <:col :let={comment} label="Joined"><%= comment.joined %></:col>
-               <:col :let={comment} label="Joined"><%= comment.joined %></:col>
-               <:col :let={comment} label="Joined"><%= comment.joined %></:col>
-               <:col :let={comment} label="Meta"><%= comment.meta %></:col>
-               <:col :let={comment} label="Status"><%= comment.status %></:col>
-               <:col :let={comment} label="Status"><%= comment.status %></:col>
-               <:col :let={comment} label="Post"><%= comment.post_id %></:col>
-               <:col :let={comment} label="Author"><%= comment.author_id %></:col>
-               <:col :let={comment} label="Booking"><%= comment.booking_id %></:col>
-               <:col :let={comment} label="Book"><%= comment.book_id %></:col>
-               <:col :let={comment} label="Data"><%= comment.data %></:col>
-               <:col :let={comment} label="Tags"><%= array_values(comment.tags) %></:col>
-               <:col :let={comment} label="Tags"><%= array_values(comment.tags) %></:col>
-               <:col :let={comment} label="Tags"><%= array_values(comment.tags) %></:col>
-               <:col :let={comment} label="Tags"><%= array_values(comment.tags) %></:col>
+               <:col :let={comment} label="Points">{comment.points}</:col>
+               <:col :let={comment} label="Sum">{comment.sum}</:col>
+               <:col :let={comment} label="Price">{comment.price}</:col>
+               <:col :let={comment} label="The cake is a lie">{comment.the_cake_is_a_lie}</:col>
+               <:col :let={comment} label="Title">{comment.title}</:col>
+               <:col :let={comment} label="Name">{comment.name}</:col>
+               <:col :let={comment} label="Data">{comment.data}</:col>
+               <:col :let={comment} label="Token">{comment.token}</:col>
+               <:col :let={comment} label="Date of birth">{comment.date_of_birth}</:col>
+               <:col :let={comment} label="Happy hour">{comment.happy_hour}</:col>
+               <:col :let={comment} label="Happy hour">{comment.happy_hour}</:col>
+               <:col :let={comment} label="Joined">{comment.joined}</:col>
+               <:col :let={comment} label="Joined">{comment.joined}</:col>
+               <:col :let={comment} label="Joined">{comment.joined}</:col>
+               <:col :let={comment} label="Joined">{comment.joined}</:col>
+               <:col :let={comment} label="Meta">{comment.meta}</:col>
+               <:col :let={comment} label="Status">{comment.status}</:col>
+               <:col :let={comment} label="Status">{comment.status}</:col>
+               <:col :let={comment} label="Post">{comment.post_id}</:col>
+               <:col :let={comment} label="Author">{comment.author_id}</:col>
+               <:col :let={comment} label="Booking">{comment.booking_id}</:col>
+               <:col :let={comment} label="Book">{comment.book_id}</:col>
+               <:col :let={comment} label="Data">{comment.data}</:col>
+               <:col :let={comment} label="Tags">{array_values(comment.tags)}</:col>
+               <:col :let={comment} label="Tags">{array_values(comment.tags)}</:col>
+               <:col :let={comment} label="Tags">{array_values(comment.tags)}</:col>
+               <:col :let={comment} label="Tags">{array_values(comment.tags)}</:col>
              """
              |> String.trim_trailing("\n")
   end
@@ -180,33 +180,33 @@ defmodule Mix.Phoenix.WebTest do
     schema = %Schema{singular: "comment", attrs: @parsed_attrs}
 
     assert Web.list_items(schema) == [
-             "<:item title=\"Points\"><%= @comment.points %></:item>",
-             "<:item title=\"Sum\"><%= @comment.sum %></:item>",
-             "<:item title=\"Price\"><%= @comment.price %></:item>",
-             "<:item title=\"The cake is a lie\"><%= @comment.the_cake_is_a_lie %></:item>",
-             "<:item title=\"Title\"><%= @comment.title %></:item>",
-             "<:item title=\"Name\"><%= @comment.name %></:item>",
-             "<:item title=\"Data\"><%= @comment.data %></:item>",
-             "<:item title=\"Token\"><%= @comment.token %></:item>",
-             "<:item title=\"Date of birth\"><%= @comment.date_of_birth %></:item>",
-             "<:item title=\"Happy hour\"><%= @comment.happy_hour %></:item>",
-             "<:item title=\"Happy hour\"><%= @comment.happy_hour %></:item>",
-             "<:item title=\"Joined\"><%= @comment.joined %></:item>",
-             "<:item title=\"Joined\"><%= @comment.joined %></:item>",
-             "<:item title=\"Joined\"><%= @comment.joined %></:item>",
-             "<:item title=\"Joined\"><%= @comment.joined %></:item>",
-             "<:item title=\"Meta\"><%= @comment.meta %></:item>",
-             "<:item title=\"Status\"><%= @comment.status %></:item>",
-             "<:item title=\"Status\"><%= @comment.status %></:item>",
-             "<:item title=\"Post\"><%= @comment.post_id %></:item>",
-             "<:item title=\"Author\"><%= @comment.author_id %></:item>",
-             "<:item title=\"Booking\"><%= @comment.booking_id %></:item>",
-             "<:item title=\"Book\"><%= @comment.book_id %></:item>",
-             "<:item title=\"Data\"><%= @comment.data %></:item>",
-             "<:item title=\"Tags\"><%= array_values(@comment.tags) %></:item>",
-             "<:item title=\"Tags\"><%= array_values(@comment.tags) %></:item>",
-             "<:item title=\"Tags\"><%= array_values(@comment.tags) %></:item>",
-             "<:item title=\"Tags\"><%= array_values(@comment.tags) %></:item>"
+             "<:item title=\"Points\">{@comment.points}</:item>",
+             "<:item title=\"Sum\">{@comment.sum}</:item>",
+             "<:item title=\"Price\">{@comment.price}</:item>",
+             "<:item title=\"The cake is a lie\">{@comment.the_cake_is_a_lie}</:item>",
+             "<:item title=\"Title\">{@comment.title}</:item>",
+             "<:item title=\"Name\">{@comment.name}</:item>",
+             "<:item title=\"Data\">{@comment.data}</:item>",
+             "<:item title=\"Token\">{@comment.token}</:item>",
+             "<:item title=\"Date of birth\">{@comment.date_of_birth}</:item>",
+             "<:item title=\"Happy hour\">{@comment.happy_hour}</:item>",
+             "<:item title=\"Happy hour\">{@comment.happy_hour}</:item>",
+             "<:item title=\"Joined\">{@comment.joined}</:item>",
+             "<:item title=\"Joined\">{@comment.joined}</:item>",
+             "<:item title=\"Joined\">{@comment.joined}</:item>",
+             "<:item title=\"Joined\">{@comment.joined}</:item>",
+             "<:item title=\"Meta\">{@comment.meta}</:item>",
+             "<:item title=\"Status\">{@comment.status}</:item>",
+             "<:item title=\"Status\">{@comment.status}</:item>",
+             "<:item title=\"Post\">{@comment.post_id}</:item>",
+             "<:item title=\"Author\">{@comment.author_id}</:item>",
+             "<:item title=\"Booking\">{@comment.booking_id}</:item>",
+             "<:item title=\"Book\">{@comment.book_id}</:item>",
+             "<:item title=\"Data\">{@comment.data}</:item>",
+             "<:item title=\"Tags\">{array_values(@comment.tags)}</:item>",
+             "<:item title=\"Tags\">{array_values(@comment.tags)}</:item>",
+             "<:item title=\"Tags\">{array_values(@comment.tags)}</:item>",
+             "<:item title=\"Tags\">{array_values(@comment.tags)}</:item>"
            ]
   end
 

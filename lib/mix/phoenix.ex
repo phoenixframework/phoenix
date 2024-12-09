@@ -159,7 +159,7 @@ defmodule Mix.Phoenix do
   defp app_base(app) do
     case Application.get_env(app, :namespace, app) do
       ^app -> app |> to_string() |> Phoenix.Naming.camelize()
-      mod -> inspect(mod)
+      mod -> mod |> inspect()
     end
   end
 
@@ -411,6 +411,18 @@ defmodule Mix.Phoenix do
   end
 
   def prepend_newline(string) when is_binary(string), do: "\n" <> string
+
+  @doc """
+  Ensures user's LiveView is compatible with the current generators.
+  """
+  def ensure_live_view_compat!(generator_mod) do
+    vsn = Application.spec(:phoenix_live_view)[:vsn]
+
+    # if lv is not installed, such as in phoenix's own test env, do not raise
+    if vsn && Version.compare("#{vsn}", "1.0.0-rc.7") != :gt do
+      raise "#{inspect(generator_mod)} requires :phoenix_live_view >= 1.0.0, got: #{vsn}"
+    end
+  end
 
   # In the context of a HEEx attribute value, transforms a given message into a
   # dynamic `gettext` call or a fixed-value string attribute, depending on the

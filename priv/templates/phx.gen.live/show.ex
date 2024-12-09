@@ -7,7 +7,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def render(assigns) do
     ~H"""
     <.header>
-      <%= schema.human_singular %> <%%= @<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %> %>
+      <%= schema.human_singular %> {@<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>}
       <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
       <:actions>
         <.button phx-click={JS.dispatch("click", to: {:inner, "a"})}>
