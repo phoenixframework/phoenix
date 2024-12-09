@@ -1,5 +1,5 @@
 <.header>
-  <%= schema.human_singular %> <%%= @<%= schema.singular %>.id %>
+  <%= schema.human_singular %> {@<%= schema.singular %>.id}
   <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
   <:actions>
     <.link href={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
@@ -9,7 +9,7 @@
 </.header>
 
 <.list><%= for {k, _} <- schema.attrs do %>
-  <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= @<%= schema.singular %>.<%= k %> %></:item><% end %>
+  <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{@<%= schema.singular %>.<%= k %>}</:item><% end %>
 </.list>
 
 <.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>

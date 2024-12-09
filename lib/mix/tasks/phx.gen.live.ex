@@ -107,6 +107,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       )
     end
 
+    Mix.Phoenix.ensure_live_view_compat!(__MODULE__)
+
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 

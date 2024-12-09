@@ -8,7 +8,7 @@
 </.header>
 
 <.table id="<%= schema.plural %>" rows={@<%= schema.collection %>} row_click={&JS.navigate(~p"<%= schema.route_prefix %>/#{&1}")}><%= for {k, _} <- schema.attrs do %>
-  <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col><% end %>
+  <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{<%= schema.singular %>.<%= k %>}</:col><% end %>
   <:action :let={<%= schema.singular %>}>
     <div class="sr-only">
       <.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>
