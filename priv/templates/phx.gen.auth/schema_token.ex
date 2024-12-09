@@ -169,12 +169,22 @@ defmodule <%= inspect schema.module %>Token do
   end
 
   @doc """
-  Gets all tokens for the given <%= schema.singular %> for the given contexts.
+  Gets all tokens for the given <%= schema.singular %>.
   """
-  def by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all) do
+  def by_<%= schema.singular %>_query(<%= schema.singular %>) do
     from t in <%= inspect schema.alias %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id
   end
 
+  @doc """
+  Gets all tokens for the given <%= schema.singular %> except the given contexts.
+  """
+  def by_<%= schema.singular %>_except_contexts_query(<%= schema.singular %>, [_ | _] = contexts) do
+    from t in <%= inspect schema.alias %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id and t.context not in ^contexts
+  end
+
+  @doc """
+  Gets all tokens for the given <%= schema.singular %> for the given contexts.
+  """
   def by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [_ | _] = contexts) do
     from t in <%= inspect schema.alias %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id and t.context in ^contexts
   end
