@@ -149,6 +149,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
+  def files_to_be_generated(%Context{generate?: false}), do: []
+
   def files_to_be_generated(%Context{schema: schema}) do
     if schema.generate? do
       Gen.Schema.files_to_be_generated(schema)
@@ -158,6 +160,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
+  def copy_new_files(%Context{generate?: false} = context, _, _), do: context
+
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
     if schema.generate?, do: Gen.Schema.copy_new_files(schema, paths, binding)
     inject_schema_access(context, paths, binding)

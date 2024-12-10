@@ -122,16 +122,8 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   defp prompt_for_conflicts(context) do
     context
     |> files_to_be_generated()
-    |> Kernel.++(context_files(context))
+    |> Kernel.++(Gen.Context.files_to_be_generated(context))
     |> Mix.Phoenix.prompt_for_conflicts()
-  end
-
-  defp context_files(%Context{generate?: true} = context) do
-    Gen.Context.files_to_be_generated(context)
-  end
-
-  defp context_files(%Context{generate?: false}) do
-    []
   end
 
   @doc false
@@ -154,9 +146,10 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
+    Gen.Context.copy_new_files(context, paths, binding)
+
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.json", binding, files)
-    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
 
     context
   end
