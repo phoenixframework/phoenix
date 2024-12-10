@@ -176,6 +176,6 @@ defmodule Mix.Tasks.Phx.Gen.Json do
       """)
     end
 
-    if context.generate?, do: Gen.Context.print_shell_instructions(context)
+    Gen.Context.print_shell_instructions(context)
   end
 end

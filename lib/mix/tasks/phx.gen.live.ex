@@ -243,7 +243,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       """)
     end
 
-    if context.generate?, do: Gen.Context.print_shell_instructions(context)
+    Gen.Context.print_shell_instructions(context)
     maybe_print_upgrade_info()
   end
 
