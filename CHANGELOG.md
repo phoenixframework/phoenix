@@ -46,7 +46,7 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
-## 1.7.18 (2024-12-09)
+## 1.7.18 (2024-12-10)
 
 ### Enhancements
   * Use new interpolation syntax in generators
