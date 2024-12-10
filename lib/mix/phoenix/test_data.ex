@@ -96,6 +96,30 @@ defmodule Mix.Phoenix.TestData do
     do: Map.get(attr.options, :default, value) |> inspect()
 
   @doc """
+  Invalid attributes used in context.
+  """
+  def context_invalid_attrs(%Schema{} = schema) do
+    schema
+    |> invalid_attrs()
+    |> Mix.Phoenix.indent_text(spaces: 6, top: 1, new_line: ",\n")
+  end
+
+  @doc """
+  Invalid attributes used in controller for html and json.
+  """
+  def controller_invalid_attrs(%Schema{} = schema) do
+    schema
+    |> invalid_attrs()
+    |> Mix.Phoenix.indent_text(spaces: 4, top: 1, new_line: ",\n")
+  end
+
+  defp invalid_attrs(%Schema{} = schema) do
+    schema.attrs
+    |> Attribute.sort()
+    |> Enum.map(&"#{&1.name}: nil")
+  end
+
+  @doc """
   Invalid attributes used in live.
   """
   def live_invalid_attrs(%Schema{} = schema) do
@@ -267,14 +291,11 @@ defmodule Mix.Phoenix.TestData do
     attrs = Attribute.sort(attrs)
 
     %{
-      invalid: invalid_attrs(attrs),
       create: sample_action_attrs(attrs, :create),
       update: sample_action_attrs(attrs, :update),
       references_assigns: references_assigns(attrs, schema_module)
     }
   end
-
-  defp invalid_attrs(attrs), do: Enum.map_join(attrs, ", ", &"#{&1.name}: nil")
 
   defp sample_action_attrs(attrs, action) when action in [:create, :update],
     do: Enum.map(attrs, &{&1, sample_attr_value(&1, action)})

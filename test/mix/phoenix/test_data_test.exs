@@ -211,6 +211,84 @@ defmodule Mix.Phoenix.TestDataTest do
            }
   end
 
+  test "context_invalid_attrs/1 returns invalid attributes used in context" do
+    schema = %Schema{attrs: @parsed_attrs}
+
+    assert TestData.context_invalid_attrs(schema) ==
+             """
+
+                   agreed: nil,
+                   data: nil,
+                   data: nil,
+                   date_of_birth: nil,
+                   happy_hour: nil,
+                   happy_hour: nil,
+                   joined: nil,
+                   joined: nil,
+                   joined: nil,
+                   joined: nil,
+                   meta: nil,
+                   name: nil,
+                   points: nil,
+                   price: nil,
+                   status: nil,
+                   status: nil,
+                   sum: nil,
+                   tags: nil,
+                   tags: nil,
+                   tags: nil,
+                   tags: nil,
+                   the_cake_is_a_lie: nil,
+                   title: nil,
+                   title_limited: nil,
+                   token: nil,
+                   author_id: nil,
+                   book_id: nil,
+                   booking_id: nil,
+                   post_id: nil
+             """
+             |> String.trim_trailing("\n")
+  end
+
+  test "controller_invalid_attrs/1 returns invalid attributes used in controller for html and json" do
+    schema = %Schema{attrs: @parsed_attrs}
+
+    assert TestData.controller_invalid_attrs(schema) ==
+             """
+
+                 agreed: nil,
+                 data: nil,
+                 data: nil,
+                 date_of_birth: nil,
+                 happy_hour: nil,
+                 happy_hour: nil,
+                 joined: nil,
+                 joined: nil,
+                 joined: nil,
+                 joined: nil,
+                 meta: nil,
+                 name: nil,
+                 points: nil,
+                 price: nil,
+                 status: nil,
+                 status: nil,
+                 sum: nil,
+                 tags: nil,
+                 tags: nil,
+                 tags: nil,
+                 tags: nil,
+                 the_cake_is_a_lie: nil,
+                 title: nil,
+                 title_limited: nil,
+                 token: nil,
+                 author_id: nil,
+                 book_id: nil,
+                 booking_id: nil,
+                 post_id: nil
+             """
+             |> String.trim_trailing("\n")
+  end
+
   test "live_invalid_attrs/1 returns invalid attributes used in live" do
     sample_values = TestData.sample_values(@parsed_attrs, TestApp.Blog.Comment)
     schema = %Schema{sample_values: sample_values}
@@ -605,36 +683,6 @@ defmodule Mix.Phoenix.TestDataTest do
   test "sample_values/1 returns map of base sample attrs to be used in test files, " <>
          "specific formatting logic is invoked per case when it needed only (based on these data)" do
     assert TestData.sample_values(@parsed_attrs, TestApp.Blog.Comment) == %{
-             invalid:
-               "agreed: nil, " <>
-                 "data: nil, " <>
-                 "data: nil, " <>
-                 "date_of_birth: nil, " <>
-                 "happy_hour: nil, " <>
-                 "happy_hour: nil, " <>
-                 "joined: nil, " <>
-                 "joined: nil, " <>
-                 "joined: nil, " <>
-                 "joined: nil, " <>
-                 "meta: nil, " <>
-                 "name: nil, " <>
-                 "points: nil, " <>
-                 "price: nil, " <>
-                 "status: nil, " <>
-                 "status: nil, " <>
-                 "sum: nil, " <>
-                 "tags: nil, " <>
-                 "tags: nil, " <>
-                 "tags: nil, " <>
-                 "tags: nil, " <>
-                 "the_cake_is_a_lie: nil, " <>
-                 "title: nil, " <>
-                 "title_limited: nil, " <>
-                 "token: nil, " <>
-                 "author_id: nil, " <>
-                 "book_id: nil, " <>
-                 "booking_id: nil, " <>
-                 "post_id: nil",
              create: [
                {%Attribute{
                   name: :agreed,

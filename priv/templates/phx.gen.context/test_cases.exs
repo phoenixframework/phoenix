@@ -4,7 +4,8 @@
 
     import <%= inspect(context.module) %>Fixtures
 
-    @invalid_attrs %{<%= schema.sample_values.invalid %>}
+    @invalid_attrs %{<%= Mix.Phoenix.TestData.context_invalid_attrs(schema) %>
+    }
 
     test "list_<%= schema.plural %>/0 returns all <%= schema.plural %>" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()

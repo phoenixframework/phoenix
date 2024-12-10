@@ -3,7 +3,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   import <%= inspect(context.module) %>Fixtures
 
-  @invalid_attrs %{<%= schema.sample_values.invalid %>}
+  @invalid_attrs %{<%= Mix.Phoenix.TestData.controller_invalid_attrs(schema) %>
+  }
 
   describe "index" do
     test "lists all <%= schema.plural %>", %{conn: conn} do

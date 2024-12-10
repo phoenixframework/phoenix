@@ -5,7 +5,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   alias <%= inspect schema.module %>
 
-  @invalid_attrs %{<%= schema.sample_values.invalid %>}
+  @invalid_attrs %{<%= Mix.Phoenix.TestData.controller_invalid_attrs(schema) %>
+  }
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
