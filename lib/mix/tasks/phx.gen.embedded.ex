@@ -26,9 +26,14 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
 
   The following types are supported:
 
-  #{for attr <- Mix.Phoenix.Schema.valid_types(), do: "  * `#{inspect attr}`\n"}
+  #{for attr <- Mix.Phoenix.Schema.valid_types(), do: "  * `#{inspect(attr)}`\n"}
     * `:datetime` - An alias for `:naive_datetime`
+
+  ## Format
+  #{Mix.Phoenix.override_format_instruction()}
+
   """
+
   use Mix.Task
 
   alias Mix.Phoenix.Schema
@@ -38,7 +43,9 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.embedded must be invoked from within your *_web application root directory"
+      Mix.raise(
+        "mix phx.gen.embedded must be invoked from within your *_web application root directory"
+      )
     end
 
     schema = build(args)
@@ -47,13 +54,16 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
 
     prompt_for_conflicts(schema)
 
-    copy_new_files(schema, paths, schema: schema)
+    schema
+    |> copy_new_files(paths, schema: schema)
+    |> format_files()
   end
 
   @doc false
   def build(args) do
     {schema_opts, parsed, _} = OptionParser.parse(args, switches: @switches)
     [schema_name | attrs] = validate_args!(parsed)
+
     opts =
       schema_opts
       |> Keyword.put(:embedded, true)
@@ -69,26 +79,28 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
     if Schema.valid?(schema) do
       args
     else
-      raise_with_help "Expected the schema argument, #{inspect schema}, to be a valid module name"
+      raise_with_help(
+        "Expected the schema argument, #{inspect(schema)}, to be a valid module name"
+      )
     end
   end
+
   def validate_args!(_) do
-    raise_with_help "Invalid arguments"
+    raise_with_help("Invalid arguments")
   end
 
   @doc false
-  @spec raise_with_help(String.t) :: no_return()
+  @spec raise_with_help(String.t()) :: no_return()
   def raise_with_help(msg) do
-    Mix.raise """
+    Mix.raise("""
     #{msg}
 
     mix phx.gen.embedded expects a module name followed by
     any number of attributes:
 
         mix phx.gen.embedded Blog.Post title:string
-    """
+    """)
   end
-
 
   defp prompt_for_conflicts(schema) do
     schema
@@ -96,16 +108,21 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 
-  @doc false
-  def files_to_be_generated(%Schema{} = schema) do
+  defp files_to_be_generated(%Schema{} = schema) do
     [{:eex, "embedded_schema.ex", schema.file}]
   end
 
-  @doc false
-  def copy_new_files(%Schema{} = schema, paths, binding) do
+  defp copy_new_files(%Schema{} = schema, paths, binding) do
     files = files_to_be_generated(schema)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.embedded", binding, files)
 
     schema
   end
+
+  defp format_files(%Schema{} = schema) do
+    files_to_format(schema) |> Mix.Phoenix.maybe_format()
+    schema
+  end
+
+  defp files_to_format(%Schema{} = schema), do: [schema.file]
 end
