@@ -154,6 +154,7 @@ defmodule Mix.Tasks.Phx.New do
 
   def run(argv) do
     elixir_version_check!()
+    check_for_new_version()
 
     case OptionParser.parse!(argv, strict: @switches) do
       {_opts, []} ->
@@ -402,6 +403,58 @@ defmodule Mix.Tasks.Phx.New do
         "Phoenix v#{@version} requires at least Elixir v1.15\n " <>
           "You have #{System.version()}. Please update accordingly"
       )
+    end
+  end
+
+  defp check_for_new_version do
+    current_version =
+      Application.spec(:phx_new)[:vsn]
+      |> to_string()
+      |> Version.parse!()
+
+    latest_version = get_latest_version("phx_new")
+
+    if Version.compare(current_version, latest_version) == :lt do
+      Mix.shell().info([
+        :yellow,
+        "A new version of phx.new is available:",
+        :green,
+        " v#{latest_version}",
+        :reset,
+        ".",
+        "\n",
+        "You are currently running ",
+        :red,
+        "v#{current_version}",
+        :reset,
+        ".\n",
+        "To update, run:\n\n",
+        "    $ mix local.phx\n"
+      ])
+    end
+  rescue
+    _ ->
+      # ignore any errors to not prevent the generators from running
+      # due to any issues while checking the version
+      :ok
+  end
+
+  defp get_latest_version(package) do
+    case :hex_repo.get_package(:hex_core.default_config(), package) do
+      {:ok, {200, _headers, package}} ->
+        latest_release =
+          Enum.max_by(
+            package.releases,
+            fn release ->
+              Version.parse!(release.version)
+            end,
+            Version
+          )
+
+        Version.parse!(latest_release.version)
+
+      _ ->
+        nil
     end
   end
 end

@@ -61,6 +61,7 @@ defmodule Phx.New.MixProject do
 
   def deps do
     [
+      {:hex_core, "~> 0.11.0"},
       {:ex_doc, "~> 0.24", only: :docs}
     ]
   end
