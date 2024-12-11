@@ -460,16 +460,15 @@ defmodule Mix.Tasks.Phx.New do
       try do
         with {:ok, {200, _headers, package}} <-
                :hex_repo.get_package(:hex_core.default_config(), package) do
-          latest_release =
-            Enum.max_by(
-              package.releases,
-              fn release ->
-                Version.parse!(release.version)
-              end,
-              Version
-            )
+          versions =
+            for release <- package.releases,
+                version = Version.parse!(release.version),
+                # ignore pre-releases like release candidates, etc.
+                version.pre == [] do
+              version
+            end
 
-          Version.parse!(latest_release.version)
+          Enum.max(versions, Version)
         end
       rescue
         e -> {:error, e}
