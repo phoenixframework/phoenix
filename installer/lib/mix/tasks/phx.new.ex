@@ -69,6 +69,8 @@ defmodule Mix.Tasks.Phx.New do
 
     * `-v`, `--version` - prints the Phoenix installer version
 
+    * `--no-version-check` - skip the version check for the latest phx_new version
+
   When passing the `--no-ecto` flag, Phoenix generators such as
   `phx.gen.html`, `phx.gen.json`, `phx.gen.live`, and `phx.gen.context`
   may no longer work as expected as they generate context files that rely
@@ -142,7 +144,8 @@ defmodule Mix.Tasks.Phx.New do
     mailer: :boolean,
     adapter: :string,
     inside_docker_env: :boolean,
-    from_elixir_install: :boolean
+    from_elixir_install: :boolean,
+    version_check: :boolean
   ]
 
   @reserved_app_names ~w(server table)
@@ -154,19 +157,37 @@ defmodule Mix.Tasks.Phx.New do
 
   def run(argv) do
     elixir_version_check!()
-    check_for_new_version()
 
-    case OptionParser.parse!(argv, strict: @switches) do
-      {_opts, []} ->
-        Mix.Tasks.Help.run(["phx.new"])
+    {opts, argv} = OptionParser.parse!(argv, strict: @switches)
 
-      {opts, [base_path | _]} ->
-        if opts[:umbrella] do
-          generate(base_path, Umbrella, :project_path, opts)
-        else
-          generate(base_path, Single, :base_path, opts)
-        end
+    version_task =
+      if Keyword.get(opts, :version_check, true) do
+        get_latest_version("phx_new")
+      end
+
+    result =
+      case {opts, argv} do
+        {_opts, []} ->
+          Mix.Tasks.Help.run(["phx.new"])
+
+        {opts, [base_path | _]} ->
+          if opts[:umbrella] do
+            generate(base_path, Umbrella, :project_path, opts)
+          else
+            generate(base_path, Single, :base_path, opts)
+          end
+      end
+
+    if version_task do
+      try do
+        latest_version = Task.await(version_task, 3_000)
+        maybe_warn_outdated(latest_version)
+      catch
+        :exit, _ -> :ok
+      end
     end
+
+    result
   end
 
   @doc false
@@ -406,13 +427,11 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  defp check_for_new_version do
+  defp maybe_warn_outdated(latest_version) do
     current_version =
       Application.spec(:phx_new)[:vsn]
       |> to_string()
       |> Version.parse!()
-
-    latest_version = get_latest_version("phx_new")
 
     if Version.compare(current_version, latest_version) == :lt do
       Mix.shell().info([
@@ -432,29 +451,31 @@ defmodule Mix.Tasks.Phx.New do
         "    $ mix local.phx\n"
       ])
     end
-  rescue
-    _ ->
-      # ignore any errors to not prevent the generators from running
-      # due to any issues while checking the version
-      :ok
   end
 
   defp get_latest_version(package) do
-    case :hex_repo.get_package(:hex_core.default_config(), package) do
-      {:ok, {200, _headers, package}} ->
-        latest_release =
-          Enum.max_by(
-            package.releases,
-            fn release ->
-              Version.parse!(release.version)
-            end,
-            Version
-          )
+    Task.async(fn ->
+      # ignore any errors to not prevent the generators from running
+      # due to any issues while checking the version
+      try do
+        with {:ok, {200, _headers, package}} <-
+               :hex_repo.get_package(:hex_core.default_config(), package) do
+          latest_release =
+            Enum.max_by(
+              package.releases,
+              fn release ->
+                Version.parse!(release.version)
+              end,
+              Version
+            )
 
-        Version.parse!(latest_release.version)
-
-      _ ->
-        nil
-    end
+          Version.parse!(latest_release.version)
+        end
+      rescue
+        e -> {:error, e}
+      catch
+        :exit, _ -> {:error, :exit}
+      end
+    end)
   end
 end
