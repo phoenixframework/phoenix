@@ -180,8 +180,12 @@ defmodule Mix.Tasks.Phx.New do
 
     if version_task do
       try do
-        latest_version = Task.await(version_task, 3_000)
+        # if we get anything else than a `Version`, we'll get a MatchError
+        # and fail silently
+        %Version{} = latest_version = Task.await(version_task, 3_000)
         maybe_warn_outdated(latest_version)
+      rescue
+        _ -> :ok
       catch
         :exit, _ -> :ok
       end
