@@ -25,21 +25,6 @@ defmodule Phoenix.Naming do
     |> underscore()
   end
 
-  # TODO: remove conditional once we require Elixir 1.15 for existing apps
-  if Version.match?(System.version(), ">= 1.15.0") do
-    defmacrop maybe_pin(name) do
-      quote do
-        ^unquote(name)
-      end
-    end
-  else
-    defmacrop maybe_pin(name) do
-      quote do
-        unquote(name)
-      end
-    end
-  end
-
   @doc """
   Removes the given suffix from the name if it exists.
 
@@ -58,8 +43,7 @@ defmodule Phoenix.Naming do
     suffix_size = byte_size(suffix)
     prefix_size = byte_size(string) - suffix_size
     case string do
-      # TODO: replace maybe_pin with ^prefix_size once we require Elixir 1.15 for existing apps
-      <<prefix::binary-size(maybe_pin(prefix_size)), ^suffix::binary>> -> prefix
+      <<prefix::binary-size(prefix_size), ^suffix::binary>> -> prefix
       _ -> string
     end
   end
