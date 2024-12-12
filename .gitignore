@@ -21,3 +21,5 @@ erl_crash.dump
 phoenix-*.ez
 
 .DS_Store
+
+/.vscode/
