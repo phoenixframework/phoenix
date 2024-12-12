@@ -27,7 +27,17 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
 
-        mix_run!(~w(phx.gen.html Blog Post posts title:unique body:string status:enum:unpublished:published:deleted), app_root_path)
+        mix_run!(
+          ~w(phx.gen.html Blog Post posts
+            title:unique
+            body:string
+            preface
+            author_name
+            author_email
+            other_very_important_attribute
+            status:enum:unpublished:published:deleted),
+          app_root_path
+        )
 
         modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -74,7 +84,17 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog")
 
-        mix_run!(~w(phx.gen.json Blog Post posts title:unique body:string status:enum:unpublished:published:deleted), app_root_path)
+        mix_run!(
+          ~w(phx.gen.json Blog Post posts
+            title:unique
+            body:string
+            preface
+            author_name
+            author_email
+            other_very_important_attribute
+            status:enum:unpublished:published:deleted),
+          app_root_path
+        )
 
         modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
           inject_before_final_end(file, """
@@ -121,7 +141,18 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
       with_installer_tmp("app_with_defaults", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog", ["--live"])
 
-        mix_run!(~w(phx.gen.live Blog Post posts title:unique body:string p:boolean s:enum:a:b:c), app_root_path)
+        mix_run!(
+          ~w(phx.gen.live Blog Post posts
+            title:unique
+            body:string
+            preface
+            author_name
+            author_email
+            other_very_important_attribute
+            public:boolean
+            status:enum:unpublished:published:deleted),
+          app_root_path
+        )
 
         modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
           inject_before_final_end(file, """

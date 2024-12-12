@@ -88,7 +88,12 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   You can also change the table name or configure the migrations to
   use binary ids for primary keys, see `mix phx.gen.schema` for more
   information.
+
+  ## Format
+  #{Mix.Phoenix.override_format_instruction()}
+
   """
+
   use Mix.Task
 
   alias Mix.Phoenix.{Context, Schema}
@@ -107,29 +112,22 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
-    binding = [context: context, schema: schema, inputs: inputs(schema)]
+    binding = [context: context, schema: schema]
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
 
     context
     |> copy_new_files(paths, binding)
+    |> format_files()
     |> print_shell_instructions()
   end
 
   defp prompt_for_conflicts(context) do
     context
     |> files_to_be_generated()
-    |> Kernel.++(context_files(context))
+    |> Kernel.++(Gen.Context.files_to_be_generated(context))
     |> Mix.Phoenix.prompt_for_conflicts()
-  end
-
-  defp context_files(%Context{generate?: true} = context) do
-    Gen.Context.files_to_be_generated(context)
-  end
-
-  defp context_files(%Context{generate?: false}) do
-    []
   end
 
   @doc false
@@ -157,10 +155,23 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
+    Gen.Context.copy_new_files(context, paths, binding)
+
+    binding = Keyword.merge(binding, inputs: inputs(context.schema))
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.html", binding, files)
-    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
+
     context
+  end
+
+  defp format_files(%Context{} = context) do
+    files_to_format(context) |> Mix.Phoenix.maybe_format()
+    context
+  end
+
+  defp files_to_format(%Context{} = context) do
+    (files_to_be_generated(context) |> Enum.map(fn {_, _, file} -> file end)) ++
+      Gen.Context.files_to_format(context)
   end
 
   @doc false
@@ -185,7 +196,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       """)
     end
 
-    if context.generate?, do: Gen.Context.print_shell_instructions(context)
+    Gen.Context.print_shell_instructions(context)
   end
 
   @doc false
