@@ -68,21 +68,17 @@ defmodule Mix.Phoenix do
   @default_format_extensions [".ex", ".exs", ".heex"]
   @doc """
   Conditionally run `mix format` for generated files.
-  By default, unless `format_extensions` is set in generators config,
-  files with extensions `#{inspect(@default_format_extensions)}` are formatted and
-  override format instruction is printed into console.
-  `format_extensions` can be set to `[]` to turn off formatting.
+  By default files with extensions `#{inspect(@default_format_extensions)}` are formatted.
+  It can be adjusted with generators config `format_extensions`, and turned off with value `[]`.
   If no files pass condition, formatting is not performed.
   """
   def maybe_format(files) when is_list(files) do
-    config = Application.get_env(otp_app(), :generators, []) |> Keyword.get(:format_extensions)
-    format_extensions = config || @default_format_extensions
-    files = Enum.filter(files, &String.ends_with?(&1, format_extensions))
+    format_extensions =
+      Application.get_env(otp_app(), :generators, [])
+      |> Keyword.get(:format_extensions, @default_format_extensions)
 
-    if files != [] do
-      Mix.Task.run("format", files)
-      if !config, do: Mix.shell().info(override_format_instruction())
-    end
+    files = Enum.filter(files, &String.ends_with?(&1, format_extensions))
+    if files != [], do: Mix.Task.run("format", files)
   end
 
   @doc """
