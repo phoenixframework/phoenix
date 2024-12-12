@@ -23,7 +23,6 @@ defmodule Phoenix.MixProject do
       elixir: @elixir_requirement,
       deps: deps(),
       package: package(),
-      preferred_cli_env: [docs: :docs],
       consolidate_protocols: Mix.env() != :test,
       xref: [
         exclude: [
@@ -44,6 +43,12 @@ defmodule Phoenix.MixProject do
       source_url: @scm_url,
       homepage_url: "https://www.phoenixframework.org",
       description: "Peace of mind from prototype to production"
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [docs: :docs]
     ]
   end
 
@@ -124,12 +129,12 @@ defmodule Phoenix.MixProject do
       main: "overview",
       logo: "logo.png",
       extra_section: "GUIDES",
-      assets: "guides/assets",
+      assets: %{"guides/assets" => "assets"},
       formatters: ["html", "epub"],
       groups_for_modules: groups_for_modules(),
       extras: extras(),
       groups_for_extras: groups_for_extras(),
-      groups_for_functions: [
+      groups_for_docs: [
         Reflection: &(&1[:type] == :reflection)
       ],
       skip_undefined_reference_warnings_on: ["CHANGELOG.md"]
