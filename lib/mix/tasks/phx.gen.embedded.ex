@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
 
   The following types are supported:
 
-  #{for attr <- Mix.Phoenix.Schema.valid_types(), do: " * `#{inspect attr}`\n"}
+  #{for attr <- Mix.Phoenix.Schema.valid_types(), do: "  * `#{inspect attr}`\n"}
     * `:datetime` - An alias for `:naive_datetime`
 
   ## Format

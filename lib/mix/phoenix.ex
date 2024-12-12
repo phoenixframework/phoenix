@@ -82,7 +82,7 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
-  Override format instruction for console and docs.
+  Format docs with override instruction.
   """
   def override_format_instruction do
     """
