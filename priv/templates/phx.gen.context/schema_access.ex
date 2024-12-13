@@ -1,5 +1,6 @@
-
-  alias <%= inspect schema.module %>
+  <%= if scope = Mix.Phoenix.Context.new_inject(context, "alias #{inspect(context.scope_module)}") do %>
+  <%= scope %>
+  <% end %>alias <%= inspect schema.module %>
 
   @doc """
   Returns the list of <%= schema.plural %>.

@@ -114,6 +114,12 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       """)
 
       assert Context.pre_existing_test_fixtures?(context)
+
+      Gen.Context.run(~w(Blog Post posts slug:unique secret:redact title:string --merge-with-existing-context))
+      assert_file("lib/phoenix/blog.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Blog"
+        assert file =~ "alias Phoenix.Scope"
+      end)
     end)
   end
 
@@ -163,6 +169,8 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       end)
 
       assert_file("lib/phoenix/blog.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Blog"
+        assert file =~ "alias Phoenix.Scope"
         assert file =~ "def get_post!"
         assert file =~ "def list_posts"
         assert file =~ "def create_post"

@@ -125,6 +125,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   def build(args, help \\ __MODULE__) do
     {opts, parsed, _} = parse_opts(args)
     [context_name, schema_name, plural | schema_args] = validate_args!(parsed, help)
+    Mix.Task.run("phx.gen.scope", ["--skip-existing"])
     schema_module = inspect(Module.concat(context_name, schema_name))
     schema = Gen.Schema.build([schema_module, plural | schema_args], opts, help)
     context = Context.new(context_name, schema, opts)

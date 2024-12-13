@@ -9,6 +9,7 @@ defmodule Mix.Phoenix.Context do
             alias: nil,
             base_module: nil,
             web_module: nil,
+            scope_module: nil,
             basename: nil,
             file: nil,
             test_file: nil,
@@ -48,6 +49,7 @@ defmodule Mix.Phoenix.Context do
       alias: alias,
       base_module: base,
       web_module: web_module(),
+      scope_module: Module.concat([base, "Scope"]),
       basename: basename,
       file: file,
       test_file: test_file,
@@ -56,6 +58,10 @@ defmodule Mix.Phoenix.Context do
       generate?: generate?,
       context_app: ctx_app,
       opts: opts}
+  end
+
+  def new_inject(%Context{} = ctx, content) do
+    !String.contains?(File.read!(ctx.file), content) && content
   end
 
   def pre_existing?(%Context{file: file}), do: File.exists?(file)

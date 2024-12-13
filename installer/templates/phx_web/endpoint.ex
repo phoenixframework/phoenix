@@ -12,8 +12,8 @@ defmodule <%= @endpoint_module %> do
   ]
 
   <%= if !(@dashboard || @live) do %><%= "# " %><% end %>socket "/live", Phoenix.LiveView.Socket,
-  <%= if !(@dashboard || @live) do %><%= "# " %><% end %>  websocket: [connect_info: [session: @session_options]],
-  <%= if !(@dashboard || @live) do %><%= "# " %><% end %>  longpoll: [connect_info: [session: @session_options]]
+  <%= if !(@dashboard || @live) do %><%= "# " %><% end %>  websocket: [connect_info: [:peer_data, session: @session_options]],
+  <%= if !(@dashboard || @live) do %><%= "# " %><% end %>  longpoll: [connect_info: [:peer_data, session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
