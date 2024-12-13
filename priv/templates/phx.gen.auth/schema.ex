@@ -1,6 +1,8 @@
 defmodule <%= inspect schema.module %> do
   use Ecto.Schema
   import Ecto.Changeset
+
+<%= if totp? do %>  alias <%= inspect context.module %><% end %>
 <%= if schema.binary_id do %>  @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id<% end %>
   schema <%= inspect schema.table %> do
@@ -8,6 +10,8 @@ defmodule <%= inspect schema.module %> do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
+    <%= if totp? do %>field :totp_secret, EctoBase64, redact: true
+    <% end %>field :last_login, :naive_datetime
     field :confirmed_at, <%= inspect schema.timestamp_type %>
 
     timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}" %>)
@@ -87,7 +91,47 @@ defmodule <%= inspect schema.module %> do
     else
       changeset
     end
-  end
+  end<%= if totp? do %>
+
+  @doc """
+  A <%= schema.singular %> changeset for changing the OTP secret.
+  """
+  def totp_changeset(<%= schema.singular %>, attrs) do
+    cast(<%= schema.singular %>, attrs, [:totp_secret])
+  end<% end %>
+
+  @doc """
+  A <%= schema.singular %> changeset for marking the last login.
+  """
+  def login_changeset(<%= schema.singular %>) do
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    change(<%= schema.singular %>, last_login: now)
+  end<%= if totp? do %>
+
+  @doc """
+  Validates whether the provided code is valid for the OTP secret.
+
+  ## Options
+
+    * `:for` - Against which OTP secret to compare the code.
+      Can be either `:given` or `:<%= schema.singular %>`. If `:given`, the code will
+      be checked against the new OTP secret in the changeset changes. If
+      `:<%= schema.singular %>`, the code will be checked against the OTP secret on the <%= schema.singular %>.
+      Defaults to `:given`.
+  """
+  def validate_totp(changeset, code, opts \\ []) do
+    secret =
+      case Keyword.get(opts, :for, :given) do
+        :given -> Map.fetch!(changeset.changes, :totp_secret)
+        :<%= schema.singular %> -> changeset.data
+      end
+
+    if <%= inspect context.alias %>.valid_<%= schema.singular %>_totp?(secret, code) do
+      changeset
+    else
+      add_error(changeset, :code, "did not match")
+    end
+  end<% end %>
 
   @doc """
   A <%= schema.singular %> changeset for changing the email.
