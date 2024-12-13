@@ -40,7 +40,7 @@ We will cover all Phoenix Mix tasks, except `phx.new`, `phx.new.ecto`, and `phx.
 
 Phoenix offers the ability to generate all the code to stand up a complete HTML resource — Ecto migration, Ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous time saver. Let's take a look at how to make this happen.
 
-The `mix phx.gen.html` task takes the following arguments: the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
+The `mix phx.gen.html` task takes the following arguments: the module name of the context, the module name of the schema, the resource name, and a list of `name:type:options` attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer
@@ -132,7 +132,7 @@ It will tell us we need to add a line to our router file, but since we skipped t
 
 Phoenix also offers the ability to generate all the code to stand up a complete JSON resource — Ecto migration, Ecto schema, controller with all the necessary actions and view. This command will not create any template for the app.
 
-The `mix phx.gen.json` task takes the following arguments: the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
+The `mix phx.gen.json` task takes the following arguments: the module name of the context, the module name of the schema, the resource name, and a list of `name:type:options` attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
 ```console
 $ mix phx.gen.json Blog Post posts title:string content:string
@@ -179,7 +179,7 @@ warning: no route path for HelloWeb.Router matches \"/posts\"
 
 If we don't need a complete HTML/JSON resource and only need a context, we can use the `mix phx.gen.context` task. It will generate a context, a schema, a migration and a test case.
 
-The `mix phx.gen.context` task takes the following arguments: the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes.
+The `mix phx.gen.context` task takes the following arguments: the module name of the context, the module name of the schema, the resource name, and a list of `name:type:options` attributes.
 
 ```console
 $ mix phx.gen.context Accounts User users name:string age:integer
@@ -211,10 +211,10 @@ $ mix phx.gen.context Admin.Accounts User users name:string age:integer
 
 If we don't need a complete HTML/JSON resource and are not interested in generating or altering a context we can use the `mix phx.gen.schema` task. It will generate a schema, and a migration.
 
-The `mix phx.gen.schema` task takes the following arguments: the module name of the schema (which may be namespaced), the resource name, and a list of column_name:type attributes.
+The `mix phx.gen.schema` task takes the following arguments: the module name of the schema (which may be namespaced), the resource name, and a list of `name:type:options` attributes.
 
 ```console
-$ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id:references:users
+$ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id:references
 * creating lib/hello/accounts/credential.ex
 * creating priv/repo/migrations/20170906162013_create_credentials.exs
 ```
