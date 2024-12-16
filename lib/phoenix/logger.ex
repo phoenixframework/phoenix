@@ -48,6 +48,24 @@ defmodule Phoenix.Logger do
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: This event is not logged
 
+    * `[:phoenix, :socket_dispatch, :start]` - dispatched by `Phoenix.Endpoint`
+      before dispatching to a matched route
+      * Measurement: `%{system_time: System.system_time}`
+      * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, user_socket: atom, log: Logger.level | false}`
+      * Disable logging: `socket "/foo", MySocket, log: false` in your endpoint
+
+    * `[:phoenix, :socket_dispatch, :exception]` - dispatched by `Phoenix.Endpoint`
+      after exceptions on dispatching a route
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{conn: Plug.Conn.t, kind: :throw | :error | :exit, reason: term(), stacktrace: Exception.stacktrace()}`
+      * Disable logging: This event is not logged
+
+    * `[:phoenix, :socket_dispatch, :stop]` - dispatched by `Phoenix.Endpoint`
+      after successfully dispatching a matched route
+      * Measurement: `%{duration: native_time}`
+      * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, user_socket: atom, log: Logger.level | false}`
+      * Disable logging: This event is not logged
+
     * `[:phoenix, :error_rendered]` - dispatched at the end of an error view being rendered
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{conn: Plug.Conn.t, status: Plug.Conn.status, kind: Exception.kind, reason: term, stacktrace: Exception.stacktrace}`
@@ -132,6 +150,7 @@ defmodule Phoenix.Logger do
       [:phoenix, :endpoint, :start] => &__MODULE__.phoenix_endpoint_start/4,
       [:phoenix, :endpoint, :stop] => &__MODULE__.phoenix_endpoint_stop/4,
       [:phoenix, :router_dispatch, :start] => &__MODULE__.phoenix_router_dispatch_start/4,
+      [:phoenix, :socket_dispatch, :start] => &__MODULE__.phoenix_socket_dispatch_start/4,
       [:phoenix, :error_rendered] => &__MODULE__.phoenix_error_rendered/4,
       [:phoenix, :socket_connected] => &__MODULE__.phoenix_socket_connected/4,
       [:phoenix, :channel_joined] => &__MODULE__.phoenix_channel_joined/4,
@@ -305,6 +324,23 @@ defmodule Phoenix.Logger do
 
   defp params(%Plug.Conn.Unfetched{}), do: "[UNFETCHED]"
   defp params(params), do: params |> filter_values() |> inspect()
+
+  ## Event: [:phoenix, :socket_dispatch, :start]
+
+  @doc false
+  def phoenix_socket_dispatch_start(_, _, %{log: false}, _), do: :ok
+
+  def phoenix_socket_dispatch_start(_, _, metadata, _) do
+    %{log: level, conn: conn, plug: plug} = metadata
+    level = log_level(level, conn)
+
+    Logger.log(level, fn ->
+      [
+        "Processing with ",
+        inspect(plug)
+      ]
+    end)
+  end
 
   ## Event: [:phoenix, :socket_connected]
 

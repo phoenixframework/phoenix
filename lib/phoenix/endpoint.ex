@@ -635,10 +635,26 @@ defmodule Phoenix.Endpoint do
 
     dispatches =
       for {path, socket, socket_opts} <- sockets,
-          {path, plug, conn_ast, plug_opts} <- socket_paths(module, path, socket, socket_opts) do
+          {match_path, plug, conn_ast, plug_opts} <- socket_paths(module, path, socket, socket_opts) do
         quote do
-          defp do_socket_dispatch(unquote(path), conn) do
-            halt(unquote(plug).call(unquote(conn_ast), unquote(Macro.escape(plug_opts))))
+          defp do_socket_dispatch(unquote(match_path), conn) do
+            conn = unquote(conn_ast)
+
+            metadata = %{
+              conn: conn,
+              plug: unquote(plug),
+              route: unquote("#{path}/#{List.last(match_path)}"),
+              plug_opts: unquote(Macro.escape(plug_opts)),
+              path_params: conn.path_params,
+              user_socket: unquote(socket),
+              log: unquote(Keyword.get(socket_opts, :log, false))
+            }
+
+            :telemetry.span([:phoenix, :socket_dispatch], metadata, fn ->
+              conn = halt(unquote(plug).call(unquote(conn_ast), unquote(Macro.escape(plug_opts))))
+
+              {conn, %{metadata | conn: conn}}
+            end)
           end
         end
       end
@@ -979,6 +995,10 @@ defmodule Phoenix.Endpoint do
       and a `{:error, :rate_limit}` return may be handled on `MySocket` as:
 
           def handle_error(conn, :rate_limit), do: Plug.Conn.send_resp(conn, 429, "Too many requests")
+
+    * `:log` - the level to log the socket dispatching under, may be set to false. Defaults to
+      `false`. To alter the plug log level, please see
+      https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-dynamic-log-level.
 
   ## Longpoll configuration
 

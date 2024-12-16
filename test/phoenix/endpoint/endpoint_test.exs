@@ -7,6 +7,8 @@ defmodule Phoenix.Endpoint.EndpointTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
+  import ExUnit.CaptureLog
+
   @config [
     url: [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api"],
     static_url: [host: "static.example.com"],
@@ -252,6 +254,57 @@ defmodule Phoenix.Endpoint.EndpointTest do
   after
     :code.purge(__MODULE__.AddressEndpoint)
     :code.delete(__MODULE__.AddressEndpoint)
+  end
+
+  @socket_dispatch_start [:phoenix, :socket_dispatch, :start]
+  @socket_dispatch_stop [:phoenix, :socket_dispatch, :stop]
+  @socket_dispatch_events [@socket_dispatch_start, @socket_dispatch_stop]
+
+  def message_pid(event, measures, metadata, test_pid) do
+    send(test_pid, {:telemetry_event, event, {measures, metadata}})
+  end
+
+  test "phoenix.socket_dispatch.start and .stop are emitted on sockets", context do
+    Application.put_env(:phoenix, __MODULE__.SocketEndpoint, static_url: [path: "/static"])
+
+    defmodule TestSocket do
+      @behaviour Phoenix.Socket.Transport
+      def child_spec(_), do: :ignore
+      def connect(_), do: {:ok, []}
+      def init(state), do: {:ok, state}
+      def handle_in(_, state), do: {:ok, state}
+      def handle_info(_, state), do: {:ok, state}
+      def terminate(_, _), do: :ok
+    end
+
+    defmodule SocketEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      socket "/custom/:socket_var", TestSocket, websocket: [early_validate_upgrade: false], log: :debug
+    end
+
+    :telemetry.attach_many(context.test, @socket_dispatch_events, &__MODULE__.message_pid/4, self())
+    Logger.enable(self())
+
+    SocketEndpoint.start_link()
+
+    assert capture_log(fn -> SocketEndpoint.call(conn(:get, "/custom/value/websocket"), []) end) =~ """
+           [debug] Processing with Phoenix.Transports.WebSocket
+           """
+
+    assert_received {:telemetry_event, [:phoenix, :socket_dispatch, :start], {_, metadata}}
+
+    assert metadata.plug == Phoenix.Transports.WebSocket
+    assert metadata.route == "/custom/:socket_var/websocket"
+    assert metadata.path_params == %{"socket_var" => "value"}
+    assert metadata.log == :debug
+    assert metadata.user_socket == TestSocket
+
+    assert_received {:telemetry_event, [:phoenix, :socket_dispatch, :stop], {_, _}}
+  after
+    :telemetry.detach(context.test)
+    :code.purge(__MODULE__.SocketEndpoint)
+    :code.delete(__MODULE__.SocketEndpoint)
   end
 
   test "injects pubsub broadcast with configured server" do
