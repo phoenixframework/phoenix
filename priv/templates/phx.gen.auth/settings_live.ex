@@ -84,7 +84,56 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             <.button phx-disable-with="Changing...">Change Password</.button>
           </:actions>
         </.simple_form>
-      </div>
+      </div><%= if totp? do %>
+      <div>
+        <%%= if @current_<%= schema.singular %>.totp_secret do %>
+          <.simple_form for={@totp_form} id="totp_form" phx-submit="disable_totp">
+            <.header class="text-center">
+              Turn off verification in two steps
+              <:subtitle>Enter the code provided by your 2FA app</:subtitle>
+            </.header>
+
+            <.input field={@totp_form[:code]} type="text" maxlength="6" label="Code" required />
+
+            <.input
+              field={@totp_form[:current_password]}
+              type="password"
+              label="Current password"
+              required
+            />
+
+            <:actions>
+              <.button phx-disable-with="Turning off...">Turn off</.button>
+            </:actions>
+          </.simple_form>
+        <%% else %>
+          <.simple_form for={@totp_form} id="totp_form" phx-submit="enable_totp">
+            <.header class="text-center">
+              Turn on verification in two steps
+              <:subtitle>Scan the QR code below with your favorite 2FA app</:subtitle>
+            </.header>
+
+            <div class="bg-white max-w-[200px] mx-auto aspect-square">
+              <%%= @otp_url
+              |> EQRCode.encode()
+              |> EQRCode.svg(viewbox: true)
+              |> raw() %>
+            </div>
+
+            <.input
+              field={@totp_form[:code]}
+              type="text"
+              maxlength="6"
+              label="Enter the code provided by your 2FA app"
+              required
+            />
+
+            <:actions>
+              <.button phx-disable-with="Turning on...">Turn on</.button>
+            </:actions>
+          </.simple_form>
+        <%% end %>
+      </div><% end %>
     </div>
     """
   end
@@ -105,7 +154,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def mount(_params, _session, socket) do
     <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
     email_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>)
-    password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>)
+    password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>)<%= if totp? do %>
+    totp_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_totp(<%= schema.singular %>)
+
+    totp_secret = <%= schema.singular %>.totp_secret || NimbleTOTP.secret()
+    otp_url = NimbleTOTP.otpauth_uri("Dummy - #{<%= schema.singular %>.email}", totp_secret, issuer: "Dummy")<% end %>
 
     socket =
       socket
@@ -114,7 +167,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       |> assign(:current_email, <%= schema.singular %>.email)
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
-      |> assign(:trigger_submit, false)
+      |> assign(:trigger_submit, false)<%= if totp? do %>
+      |> assign(:totp_form, to_form(totp_changeset))
+      |> assign(:totp_secret, totp_secret)
+      |> assign(:otp_url, otp_url)<% end %>
 
     {:ok, socket}
   end
@@ -179,5 +235,46 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:error, changeset} ->
         {:noreply, assign(socket, password_form: to_form(changeset))}
     end
+  end<%= if totp? do %>
+
+  def handle_event("enable_totp", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
+    %{"code" => code} = <%= schema.singular %>_params
+    <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
+    secret = socket.assigns.totp_secret
+
+    case <%= inspect context.alias %>.enable_<%= schema.singular %>_totp(<%= schema.singular %>, secret, code) do
+      {:ok, <%= schema.singular %>} ->
+        info = "2FA enabled successfully."
+        changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_totp(<%= schema.singular %>)
+
+        {:noreply,
+         socket
+         |> put_flash(:info, info)
+         |> assign(:current_<%= schema.singular %>, <%= schema.singular %>)
+         |> assign(:totp_form, to_form(changeset))}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :totp_form, to_form(Map.put(changeset, :action, :insert)))}
+    end
   end
+
+  def handle_event("disable_totp", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
+    %{"code" => code, "current_password" => password} = <%= schema.singular %>_params
+    <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
+
+    case <%= inspect context.alias %>.disable_<%= schema.singular %>_totp(<%= schema.singular %>, password, code) do
+      {:ok, <%= schema.singular %>} ->
+        info = "2FA disabled successfully."
+        changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_totp(<%= schema.singular %>)
+
+        {:noreply,
+         socket
+         |> put_flash(:info, info)
+         |> assign(:current_<%= schema.singular %>, <%= schema.singular %>)
+         |> assign(:totp_form, to_form(changeset))}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :totp_form, to_form(Map.put(changeset, :action, :insert)))}
+    end
+  end<% end %>
 end

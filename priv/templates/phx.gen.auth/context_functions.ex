@@ -341,4 +341,78 @@
       {:ok, %{<%= schema.singular %>: <%= schema.singular %>}} -> {:ok, <%= schema.singular %>}
       {:error, :<%= schema.singular %>, changeset, _} -> {:error, changeset}
     end
+  end<%= if totp? do %>
+
+  @doc """
+  Checks if the entered OTP code is valid or not.
+
+  We're also allowing codes to be 30 seconds in the past or future,
+  to account for slightly mismatching times on different devices.
+  """
+  def valid_<%= schema.singular %>_totp?(<%= schema.singular %>_or_secret, validation_code, offset \\ 30, opts \\ [])
+
+  def valid_<%= schema.singular %>_totp?(%<%= inspect schema.alias %>{} = <%= schema.singular %>, validation_code, offset, opts)
+      when is_binary(validation_code) and is_binary(<%= schema.singular %>.totp_secret) do
+    opts = Keyword.put_new(opts, :since, <%= schema.singular %>.last_login)
+    valid_<%= schema.singular %>_totp?(<%= schema.singular %>.totp_secret, validation_code, offset, opts)
   end
+
+  def valid_<%= schema.singular %>_totp?(totp_secret, validation_code, offset, opts) when is_binary(validation_code) do
+    Enum.any?([-offset, 0, offset], fn offset ->
+      time = Keyword.get(opts, :time, System.os_time(:second))
+      opts = Keyword.put(opts, :time, time + offset)
+
+      NimbleTOTP.valid?(totp_secret, validation_code, opts)
+    end)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the <%= schema.singular %> OTP secret.
+
+  ## Examples
+
+      iex> change_<%= schema.singular %>_totp(<%= schema.singular %>)
+      %Ecto.Changeset{data: %<%= inspect schema.alias %>{}}
+
+  """
+  def change_<%= schema.singular %>_totp(<%= schema.singular %>, attrs \\ %{}) do
+    <%= inspect schema.alias %>.totp_changeset(<%= schema.singular %>, attrs)
+  end
+
+  @doc """
+  Updates the `last_login` field for the given <%= schema.singular %>.
+  """
+  def mark_<%= schema.singular %>_login(<%= schema.singular %>) do
+    <%= schema.singular %>
+    |> <%= inspect schema.alias %>.login_changeset()
+    |> Repo.update!()
+  end
+
+  @doc """
+  Enables 2FA for an account if the provided code is valid for
+  the given secret.
+  """
+  def enable_<%= schema.singular %>_totp(<%= schema.singular %>, secret, code) do
+    attrs = %{totp_secret: secret}
+
+    <%= schema.singular %>
+    |> <%= inspect schema.alias %>.totp_changeset(attrs)
+    |> <%= inspect schema.alias %>.validate_totp(code)
+    |> <%= inspect schema.alias %>.login_changeset()
+    |> Repo.update()
+  end
+
+  @doc """
+  Disables 2FA for an account if the provided code is valid for
+  the OTP secret on the account.
+  """
+  def disable_<%= schema.singular %>_totp(<%= schema.singular %>, password, code) do
+    attrs = %{totp_secret: nil}
+
+    <%= schema.singular %>
+    |> <%= inspect schema.alias %>.totp_changeset(attrs)
+    |> <%= inspect schema.alias %>.validate_totp(code, for: :<%= schema.singular %>)
+    |> <%= inspect schema.alias %>.validate_current_password(password)
+    |> <%= inspect schema.alias %>.login_changeset()
+    |> Repo.update()
+  end<% end %>
