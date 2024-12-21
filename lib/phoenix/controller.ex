@@ -642,7 +642,9 @@ defmodule Phoenix.Controller do
     if state in @unsent do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
     else
-      raise AlreadySentError
+      raise AlreadySentError, """
+      The response was already sent. Request was to `#{conn.request_path}` using #{inspect(layout)}\
+      """
     end
   end
 
