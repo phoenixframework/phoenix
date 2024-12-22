@@ -28,7 +28,6 @@ defmodule MixHelper do
   end
 
   def in_tmp_project(which, function) do
-    conf_before = Application.get_env(:phoenix, :generators) || []
     base = Path.join([tmp_path(), random_string(10)])
     path = Path.join([base, to_string(which)])
 
@@ -38,24 +37,14 @@ defmodule MixHelper do
 
       File.cd!(path, fn ->
         File.touch!("mix.exs")
-
-        File.write!(".formatter.exs", """
-        [
-          import_deps: [:phoenix, :ecto, :ecto_sql],
-          inputs: ["*.exs"]
-        ]
-        """)
-
-        function.()
+        with_generator_env([format_extensions: []], function)
       end)
     after
       File.rm_rf!(base)
-      Application.put_env(:phoenix, :generators, conf_before)
     end
   end
 
   def in_tmp_umbrella_project(which, function) do
-    conf_before = Application.get_env(:phoenix, :generators) || []
     base = Path.join([tmp_path(), random_string(10)])
     path = Path.join([base, to_string(which)])
 
@@ -72,9 +61,10 @@ defmodule MixHelper do
         File.write!(Path.join(config_path, file), "import Config\n")
       end
 
-      File.cd!(apps_path, function)
+      File.cd!(apps_path, fn ->
+        with_generator_env([format_extensions: []], function)
+      end)
     after
-      Application.put_env(:phoenix, :generators, conf_before)
       File.rm_rf!(base)
     end
   end
@@ -131,15 +121,15 @@ defmodule MixHelper do
   end
 
   def with_generator_env(app_name \\ :phoenix, new_env, fun) do
-    config_before = Application.fetch_env(app_name, :generators)
-    Application.put_env(app_name, :generators, new_env)
+    config_before = Application.get_env(app_name, :generators)
+    Application.put_env(app_name, :generators, Keyword.merge(config_before || [], new_env))
 
     try do
       fun.()
     after
       case config_before do
-        {:ok, config} -> Application.put_env(app_name, :generators, config)
-        :error -> Application.delete_env(app_name, :generators)
+        nil -> Application.delete_env(app_name, :generators)
+        config -> Application.put_env(app_name, :generators, config)
       end
     end
   end
