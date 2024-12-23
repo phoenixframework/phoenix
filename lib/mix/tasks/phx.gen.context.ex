@@ -24,9 +24,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
     * a context module in `accounts.ex`, serving as the API boundary
     * a schema in `accounts/user.ex`, with a `users` table
-
-  A migration file for the repository and test files for the context
-  will also be generated.
+    * a migration for the schema in `priv/repo/migrations`
+    * a context test module in `test/my_app/accounts_test.exs`
+    * a context test helper module in `test/support/fixtures/accounts_fixtures.ex`
 
   ## Generating without a schema
 
@@ -45,7 +45,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   ## binary_id
 
   Generated migration can use `binary_id` for schema's primary key
-  and its references with option `--binary-id`.
+  with option `--binary-id`.
+
+      $ mix phx.gen.context Blog.Post posts title --binary-id
 
   ## Default options
 
@@ -54,8 +56,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
       config :your_app, :generators,
         migration: true,
-        binary_id: false,
         timestamp_type: :naive_datetime,
+        binary_id: false,
         sample_binary_id: "11111111-1111-1111-1111-111111111111"
 
   You can override those options per invocation by providing corresponding
@@ -76,7 +78,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   use Mix.Task
 
-  alias Mix.Phoenix.{Context, Schema}
+  alias Mix.Phoenix.{Context, Schema, TestData}
   alias Mix.Tasks.Phx.Gen
 
   @switches [
@@ -160,6 +162,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @doc false
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
     if schema.generate?, do: Gen.Schema.copy_new_files(schema, paths, binding)
+
     inject_schema_access(context, paths, binding)
     inject_tests(context, paths, binding)
     inject_test_fixture(context, paths, binding)
@@ -205,6 +208,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
     ensure_test_file_exists(context, paths, binding)
 
+    virtual_clearance = TestData.virtual_clearance(binding[:schema])
+    binding = Keyword.merge(binding, virtual_clearance: virtual_clearance)
+
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/test_cases.exs", binding)
     |> inject_eex_before_final_end(test_file, binding)
@@ -231,48 +237,37 @@ defmodule Mix.Tasks.Phx.Gen.Context do
        ) do
     ensure_test_fixtures_file_exists(context, paths, binding)
 
+    fixture = TestData.fixture(binding[:schema])
+    binding = Keyword.merge(binding, fixture: fixture)
+
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex", binding)
     |> Mix.Phoenix.prepend_newline()
     |> inject_eex_before_final_end(test_fixtures_file, binding)
 
-    maybe_print_unimplemented_fixture_functions(context)
+    maybe_print_unimplemented_fixture_functions(fixture, test_fixtures_file)
   end
 
-  defp maybe_print_unimplemented_fixture_functions(%Context{} = context) do
-    fixture_functions_needing_implementations =
+  defp maybe_print_unimplemented_fixture_functions(fixture, test_fixtures_file) do
+    unimplemented_fixture_functions =
       Enum.flat_map(
-        context.schema.fixture_unique_functions,
+        fixture.unique_functions,
         fn
           {_field, {_function_name, function_def, true}} -> [function_def]
           {_field, {_function_name, _function_def, false}} -> []
         end
       )
 
-    if Enum.any?(fixture_functions_needing_implementations) do
+    if Enum.any?(unimplemented_fixture_functions) do
       Mix.shell().info("""
 
       Some of the generated database columns are unique. Please provide
       unique implementations for the following fixture function(s) in
-      #{context.test_fixtures_file}:
+      #{test_fixtures_file}:
 
-      #{fixture_functions_needing_implementations |> Enum.map_join(&indent(&1, 2)) |> String.trim_trailing()}
+      #{unimplemented_fixture_functions |> Enum.join("\n") |> Mix.Phoenix.indent_text(spaces: 2)}
       """)
     end
-  end
-
-  defp indent(string, spaces) do
-    indent_string = String.duplicate(" ", spaces)
-
-    string
-    |> String.split("\n")
-    |> Enum.map_join(fn line ->
-      if String.trim(line) == "" do
-        "\n"
-      else
-        indent_string <> line <> "\n"
-      end
-    end)
   end
 
   defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
