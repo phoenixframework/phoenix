@@ -113,13 +113,6 @@ defmodule Mix.Tasks.Phx.New do
 
   You can read more about umbrella projects using the
   official [Elixir guide](https://hexdocs.pm/elixir/dependencies-and-umbrella-projects.html#umbrella-projects)
-
-  ## Reserved Names
-
-  The application name cannot be any of the following reserved names:
-
-    * server
-    * table
   """
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
@@ -345,7 +338,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp validate_not_reserved(name) when name in @reserved_app_names do
-    Mix.raise("Application name cannot be '#{name}' as it is reserved")
+    Mix.raise("Application name cannot be #{inspect(name)} as it is reserved")
   end
 
   defp validate_not_reserved(_name), do: :ok

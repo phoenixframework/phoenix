@@ -810,11 +810,11 @@ defmodule Mix.Tasks.Phx.NewTest do
   end
 
   test "new with reserved name" do
-    assert_raise Mix.Error, ~r/Application name cannot be 'server' as it is reserved/, fn ->
+    assert_raise Mix.Error, ~r/Application name cannot be "server" as it is reserved/, fn ->
       Mix.Tasks.Phx.New.run(["server"])
     end
 
-    assert_raise Mix.Error, ~r/Application name cannot be 'table' as it is reserved/, fn ->
+    assert_raise Mix.Error, ~r/Application name cannot be "table" as it is reserved/, fn ->
       Mix.Tasks.Phx.New.run(["table"])
     end
   end
