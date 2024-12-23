@@ -68,6 +68,7 @@ jobs:
     - name: Run installer test
       run: |
         cd installer
+        mix deps.get
         mix test
       if: ${{ matrix.installer }}
 
