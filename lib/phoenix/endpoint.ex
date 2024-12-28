@@ -74,7 +74,7 @@ defmodule Phoenix.Endpoint do
       instances of the same app at the same time with code reloading in
       development, as they will race each other and only one will effectively
       recompile the files. In such cases, tweak your config files so code
-      reloading is enabled in only one of the apps or set the MIX_BUILD
+      reloading is enabled in only one of the apps or set the `MIX_BUILD_PATH`
       environment variable to give them distinct build directories
 
     * `:debug_errors` - when `true`, uses `Plug.Debugger` functionality for

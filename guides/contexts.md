@@ -73,7 +73,7 @@ Phoenix generated the web files as expected in `lib/hello_web/`. We can also see
 
 With the new route in place, Phoenix reminds us to update our repo by running `mix ecto.migrate`, but first we need to make a few tweaks to the generated migration in `priv/repo/migrations/*_create_products.exs`:
 
-```elixir
+```diff
   def change do
     create table(:products) do
       add :title, :string
@@ -498,8 +498,9 @@ Next, let's expose our new feature to the web by adding the category input to ou
       |> Ecto.Changeset.get_change(:categories, [])
       |> Enum.map(& &1.data.id)
 
-    for cat <- Hello.Catalog.list_categories(),
-        do: [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    for cat <- Hello.Catalog.list_categories() do
+      [key: cat.title, value: cat.id, selected: cat.id in existing_ids]
+    end
   end
 ```
 
@@ -524,10 +525,9 @@ We added a `category_select` above our save button. Now let's try it out. Next, 
 <.list>
   ...
 + <:item title="Categories">
-+   <%= for cat <- @product.categories do %>
-+     <%= cat.title %>
-+     <br/>
-+   <% end %>
++   <ul>
++     <li :for={cat <- @product.categories}>{cat.title}</li>
++   </ul>
 + </:item>
 </.list>
 ```
@@ -605,12 +605,11 @@ Would you like to proceed? [Yn] y
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
-
 ```
 
 We generated a new resource inside our `ShoppingCart` named `CartItem`. This schema and table will hold references to a cart and product, along with the price at the time we added the item to our cart, and the quantity the user wishes to purchase. Let's touch up the generated migration file in `priv/repo/migrations/*_create_cart_items.ex`:
 
-```elixir
+```diff
     create table(:cart_items) do
 -     add :price_when_carted, :decimal
 +     add :price_when_carted, :decimal, precision: 15, scale: 6, null: false
@@ -664,7 +663,7 @@ Our `Catalog.Product` resource serves to keep the responsibilities of representi
 
 Now that we know where our data dependencies exist, let's add our schema associations so we can tie shopping cart items to products. First, let's make a quick change to our cart schema in `lib/hello/shopping_cart/cart.ex` to associate a cart to its items:
 
-```elixir
+```diff
   schema "carts" do
     field :user_uuid, Ecto.UUID
 
@@ -676,7 +675,7 @@ Now that we know where our data dependencies exist, let's add our schema associa
 
 Now that our cart is associated to the items we place in it, let's set up the cart item associations inside `lib/hello/shopping_cart/cart_item.ex`:
 
-```elixir
+```diff
   schema "cart_items" do
     field :price_when_carted, :decimal
     field :quantity, :integer
@@ -708,7 +707,7 @@ As we mentioned before, the context generators are only a starting point for our
 
 We won't focus on a real user authentication system at this point, but by the time we're done, you'll be able to naturally integrate one with what we've written here. To simulate a current user session, open up your `lib/hello_web/router.ex` and key this in:
 
-```elixir
+```diff
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -797,7 +796,7 @@ We defined a new `CartItemController` with the create and delete actions that we
 
 Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
-```elixir
+```diff
 +  alias Hello.Catalog
 -  alias Hello.ShoppingCart.Cart
 +  alias Hello.ShoppingCart.{Cart, CartItem}
@@ -937,34 +936,28 @@ We created a view to render our `show.html` template and aliased our `ShoppingCa
 Next we can create the template at `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```heex
-<%= if @cart.items == [] do %>
-  <.header>
-    My Cart
-    <:subtitle>Your cart is empty</:subtitle>
-  </.header>
-<% else %>
-  <.header>
-    My Cart
-  </.header>
+<.header>
+  My Cart
+  <:subtitle :if={@cart.items == []}>Your cart is empty</:subtitle>
+</.header>
 
+<div :if={@cart.items !== []}>
   <.simple_form :let={f} for={@changeset} action={~p"/cart"}>
-    <.inputs_for :let={item_form} field={f[:items]}>
-	<% item = item_form.data %>
+    <.inputs_for :let={%{data: item} = item_form} field={f[:items]}>
       <.input field={item_form[:quantity]} type="number" label={item.product.title} />
-      <%= currency_to_str(ShoppingCart.total_item_price(item)) %>
+      {currency_to_str(ShoppingCart.total_item_price(item))}
     </.inputs_for>
     <:actions>
       <.button>Update cart</.button>
     </:actions>
   </.simple_form>
-
-  <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
-<% end %>
+  <b>Total</b>: {currency_to_str(ShoppingCart.total_cart_price(@cart))}
+</div>
 
 <.back navigate={~p"/products"}>Back to products</.back>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `simple_form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](`Phoenix.Component.inputs_for/1`) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
+We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `simple_form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
 
 We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
 
@@ -1034,7 +1027,7 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
   end
 ```
 
-We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](`Phoenix.Component.inputs_for/1`) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
+We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
 
 For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transaction/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
 
@@ -1067,7 +1060,7 @@ Remember to update your repository by running migrations:
 
 We generated an `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
 
-```elixir
+```diff
   def change do
     create table(:orders) do
       add :user_uuid, :uuid
@@ -1104,7 +1097,7 @@ Remember to update your repository by running migrations:
 
 We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and inject supporting functions into our orders context. Like before, let's modify the migration in `priv/repo/migrations/*_create_order_line_items.exs` and make the following decimal field changes:
 
-```elixir
+```diff
   def change do
     create table(:order_line_items) do
 -     add :price, :decimal
@@ -1123,7 +1116,7 @@ We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and
 
 With our migration in place, let's wire up our orders and line items associations in `lib/hello/orders/order.ex`:
 
-```elixir
+```diff
   schema "orders" do
     field :total_price, :decimal
     field :user_uuid, Ecto.UUID
@@ -1137,7 +1130,7 @@ With our migration in place, let's wire up our orders and line items association
 
 We used `has_many :line_items` to associate orders and line items, just like we've seen before. Next, we used the `:through` feature of `has_many`, which allows us to instruct ecto how to associate resources across another relationship. In this case, we can associate products of an order by finding all products through associated line items. Next, let's wire up the association in the other direction in `lib/hello/orders/line_item.ex`:
 
-```elixir
+```diff
   schema "order_line_items" do
     field :price, :decimal
     field :quantity, :integer
@@ -1153,7 +1146,7 @@ We used `has_many :line_items` to associate orders and line items, just like we'
 
 We used `belongs_to` to associate line items to orders and products. With our associations in place, we can start integrating the web interface into our order process. Open up your router `lib/hello_web/router.ex` and add the following line:
 
-```elixir
+```diff
   scope "/", HelloWeb do
     pipe_through :browser
 
@@ -1299,20 +1292,20 @@ Next we can create the template at `lib/hello_web/controllers/order_html/show.ht
 <.header>
   Thank you for your order!
   <:subtitle>
-     <strong>User uuid: </strong><%= @order.user_uuid %>
+     <strong>User uuid: </strong>{@order.user_uuid}
   </:subtitle>
 </.header>
 
 <.table id="items" rows={@order.line_items}>
-  <:col :let={item} label="Title"><%= item.product.title %></:col>
-  <:col :let={item} label="Quantity"><%= item.quantity %></:col>
+  <:col :let={item} label="Title">{item.product.title}</:col>
+  <:col :let={item} label="Quantity">{item.quantity}</:col>
   <:col :let={item} label="Price">
-    <%= HelloWeb.CartHTML.currency_to_str(item.price) %>
+    {HelloWeb.CartHTML.currency_to_str(item.price)}
   </:col>
 </.table>
 
 <strong>Total price:</strong>
-<%= HelloWeb.CartHTML.currency_to_str(@order.total_price) %>
+{HelloWeb.CartHTML.currency_to_str(@order.total_price)}
 
 <.back navigate={~p"/products"}>Back to products</.back>
 ```
@@ -1324,11 +1317,11 @@ Our last addition will be to add the "complete order" button to our cart page to
 ```diff
   <.header>
     My Cart
-+    <:actions>
-+      <.link href={~p"/orders"} method="post">
-+        <.button>Complete order</.button>
-+      </.link>
-+    </:actions>
++   <:actions>
++     <.link href={~p"/orders"} method="post">
++       <.button>Complete order</.button>
++     </.link>
++   </:actions>
   </.header>
 ```
 
