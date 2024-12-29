@@ -42,7 +42,11 @@ defmodule Phoenix.MixProject do
       aliases: aliases(),
       source_url: @scm_url,
       homepage_url: "https://www.phoenixframework.org",
-      description: "Peace of mind from prototype to production"
+      description: "Peace of mind from prototype to production",
+      test_ignore_filters: [
+        &String.starts_with?(&1, "test/fixtures/"),
+        &String.starts_with?(&1, "test/support/")
+      ]
     ]
   end
 
