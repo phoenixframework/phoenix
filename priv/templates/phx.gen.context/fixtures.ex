@@ -1,17 +1,16 @@
-<%= for {attr, {_function_name, function_def, _needs_impl?}} <- schema.fixture_unique_functions do %>  @doc """
-  Generate a unique <%= schema.singular %> <%= attr %>.
+<%= for {attr_name, {_, function_def, _}} <- fixture.unique_functions do %>  @doc """
+  Generate a unique <%= schema.singular %> <%= attr_name %>.
   """
 <%= function_def %>
 <% end %>  @doc """
   Generate a <%= schema.singular %>.
   """
   def <%= schema.singular %>_fixture(attrs \\ %{}) do
-    {:ok, <%= schema.singular %>} =
+<%= schema.sample_values.references_assigns |> Mix.Phoenix.indent_text(spaces: 4, bottom: 2) %>    {:ok, <%= schema.singular %>} =
       attrs
-      |> Enum.into(%{
-<%= schema.fixture_params |> Enum.map(fn {key, code} -> "        #{key}: #{code}" end) |> Enum.join(",\n") %>
+      |> Enum.into(%{<%= fixture.attrs %>
       })
-      |> <%= inspect context.module %>.create_<%= schema.singular %>()
+      |> <%= inspect(context.module) %>.create_<%= schema.singular %>()
 
     <%= schema.singular %>
   end
