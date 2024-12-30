@@ -219,8 +219,17 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp mix_compile_unless_stale_config(compilers, compile_args, timestamp, path) do
     manifests = Mix.Tasks.Compile.Elixir.manifests()
-    configs = Mix.Project.config_files()
     config = Mix.Project.config()
+    build_path = Mix.Project.build_path(config)
+
+    # Stop if lock or config files change.
+    # We don't check for mix.exs because changes there that require recompilation
+    # are often related to deps or configs anyway.
+    # We also explicitly remove checks for entries in _build because reporting
+    # them is confusing and they are mostly used for internal Mix book-keeping.
+    configs =
+      [config[:lockfile] | Mix.Project.config_files()]
+      |> Enum.reject(&String.starts_with?(&1, build_path))
 
     case Mix.Utils.extract_stale(configs, manifests) do
       [] ->
