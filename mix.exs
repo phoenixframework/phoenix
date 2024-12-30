@@ -86,9 +86,9 @@ defmodule Phoenix.MixProject do
       {:phoenix_template, "~> 1.0"},
       {:websock_adapter, "~> 0.5.3"},
 
-      # TODO drop phoenix_view as an optional dependency in Phoenix v2.0
+      # TODO Drop phoenix_view as an optional dependency in Phoenix v2.0
       {:phoenix_view, "~> 2.0", optional: true},
-      # TODO drop castore when we require OTP 25+
+      # TODO Drop castore when we require OTP 25+ / Elixir v1.17+
       {:castore, ">= 0.0.0"},
 
       # Optional deps
