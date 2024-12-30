@@ -191,23 +191,27 @@ defmodule Phoenix.CodeReloader.Server do
     defp purge_protocols(_path), do: :ok
   end
 
-  defp warn_missing_mix_listener do
-    listeners_supported? = Version.match?(System.version(), ">= 1.18.0-dev")
+  if Version.match?(System.version(), ">= 1.18.0-dev") do
+    defp warn_missing_mix_listener do
+      if Mix.Project.get() != Phoenix.MixProject do
+        IO.warn("""
+        a Mix listener expected by Phoenix.CodeReloader is missing.
 
-    if listeners_supported? do
-      IO.warn("""
-      a Mix listener expected by Phoenix.CodeReloader is missing.
+        Please add the listener to your mix.exs configuration, like so:
 
-      Please add the listener to your mix.exs configuration, like so:
+            def project do
+              [
+                ...,
+                listeners: [Phoenix.CodeReloader]
+              ]
+            end
 
-          def project do
-            [
-              ...,
-              listeners: [Phoenix.CodeReloader]
-            ]
-          end
-
-      """)
+        """)
+      end
+    end
+  else
+    defp warn_missing_mix_listener do
+      :ok
     end
   end
 
@@ -299,8 +303,17 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp mix_compile_unless_stale_config(compilers, compile_args, timestamp, path, purge_fallback?) do
     manifests = Mix.Tasks.Compile.Elixir.manifests()
-    configs = Mix.Project.config_files()
     config = Mix.Project.config()
+    build_path = Mix.Project.build_path(config)
+
+    # Stop if lock or config files change.
+    # We don't check for mix.exs because changes there that require recompilation
+    # are often related to deps or configs anyway.
+    # We also explicitly remove checks for entries in _build because reporting
+    # them is confusing and they are mostly used for internal Mix book-keeping.
+    configs =
+      [config[:lockfile] | Mix.Project.config_files()]
+      |> Enum.reject(&String.starts_with?(&1, build_path))
 
     case Mix.Utils.extract_stale(configs, manifests) do
       [] ->
