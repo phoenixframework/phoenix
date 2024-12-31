@@ -303,6 +303,9 @@ defmodule Phoenix.Presence do
         metas: [%{device: "Desktop"}, %{device: "Mobile"}]
       }
 
+      iex> MyPresence.get_by_key("room:1", "untracked_user")
+      nil
+
   Like `c:list/1`, the presence metadata is passed to the `fetch`
   callback of your presence module to fetch any additional information.
   """
