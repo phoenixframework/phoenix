@@ -182,15 +182,6 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  if Version.match?(System.version(), "< 1.15.0-dev") do
-    defp purge_protocols(path) do
-      purge_modules(path)
-      Code.delete_path(path)
-    end
-  else
-    defp purge_protocols(_path), do: :ok
-  end
-
   if Version.match?(System.version(), ">= 1.18.0-dev") do
     defp warn_missing_mix_listener do
       if Mix.Project.get() != Phoenix.MixProject do
@@ -225,11 +216,6 @@ defmodule Phoenix.CodeReloader.Server do
        ) do
     config = Mix.Project.config()
     path = Mix.Project.consolidation_path(config)
-
-    # TODO: Remove this conditional when requiring Elixir v1.15+
-    if config[:consolidate_protocols] do
-      purge_protocols(path)
-    end
 
     mix_compile_deps(
       Mix.Dep.cached(),
@@ -364,7 +350,7 @@ defmodule Phoenix.CodeReloader.Server do
         exit({:shutdown, 1})
 
       result == :ok && config[:consolidate_protocols] ->
-        # TODO: Calling compile.protocols may no longer be required from Elixir v1.18
+        # TODO: Calling compile.protocols is no longer be required from Elixir v1.19
         Mix.Task.reenable("compile.protocols")
         Mix.Task.run("compile.protocols", [])
         :ok

@@ -45,7 +45,6 @@ defmodule Phoenix.Socket.PoolSupervisor do
 
   @impl true
   def init({endpoint, name, partitions}) do
-    # TODO: Use persistent term on Elixir v1.12+
     ref = :ets.new(name, [:public, read_concurrency: true])
     :ets.insert(ref, {:partitions, partitions})
     Phoenix.Config.permanent(endpoint, {:socket, name}, ref)
@@ -115,8 +114,7 @@ defmodule Phoenix.Socket.PoolDrainer do
     end
 
     for {pids, index} <-
-      collection |> Stream.concat() |> Stream.chunk_every(size) |> Stream.with_index(1) do
-
+          collection |> Stream.concat() |> Stream.chunk_every(size) |> Stream.with_index(1) do
       spawn(fn ->
         for pid <- pids do
           send(pid, %Phoenix.Socket.Broadcast{event: "phx_drain"})

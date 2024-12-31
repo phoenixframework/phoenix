@@ -523,15 +523,7 @@ defmodule Phoenix.Router do
       """
       def call(conn, _opts) do
         %{method: method, path_info: path_info, host: host} = conn = prepare(conn)
-
-        # TODO: Remove try/catch on Elixir v1.13 as decode no longer raises
-        decoded =
-          try do
-            Enum.map(path_info, &URI.decode/1)
-          rescue
-            ArgumentError ->
-              raise MalformedURIError, "malformed URI path: #{inspect(conn.request_path)}"
-          end
+        decoded = Enum.map(path_info, &URI.decode/1)
 
         case __match_route__(decoded, method, host) do
           {metadata, prepare, pipeline, plug_opts} ->
