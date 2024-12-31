@@ -107,7 +107,6 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
       $ mix phx.gen.schema Blog.Post posts --migration-dir /path/to/directory
 
-
   ## prefix
 
   By default migrations and schemas are generated without a prefix.
@@ -147,7 +146,11 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   instead of a `NaiveDateTime`. This can also be set to `:utc_datetime_usec` for
   microsecond precision.
 
+  ## Format
+  #{Mix.Phoenix.override_format_instruction()}
+
   """
+
   use Mix.Task
 
   alias Mix.Phoenix.Schema
@@ -169,6 +172,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
     schema
     |> copy_new_files(paths, schema: schema)
+    |> format_files()
     |> print_shell_instructions()
   end
 
@@ -206,40 +210,54 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
 
   @doc false
+  def files_to_be_generated(%Schema{generate?: false}), do: []
+
   def files_to_be_generated(%Schema{} = schema) do
     [{:eex, "schema.ex", schema.file}]
   end
 
   @doc false
-  def copy_new_files(%Schema{context_app: ctx_app, repo: repo, opts: opts} = schema, paths, binding) do
-    files = files_to_be_generated(schema)
+  def copy_new_files(%Schema{generate?: false} = schema, _, _), do: schema
+
+  def copy_new_files(%Schema{} = schema, paths, binding) do
+    migration_file =
+      if schema.migration?, do: [{:eex, "migration.exs", migration_path(schema)}], else: []
+
+    files = files_to_be_generated(schema) ++ migration_file
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.schema", binding, files)
-
-    if schema.migration? do
-      migration_dir =
-        cond do
-          migration_dir = opts[:migration_dir] ->
-            migration_dir
-
-          opts[:repo] ->
-            repo_name = repo |> Module.split() |> List.last() |> Macro.underscore()
-            Mix.Phoenix.context_app_path(ctx_app, "priv/#{repo_name}/migrations/")
-
-          true ->
-            Mix.Phoenix.context_app_path(ctx_app, "priv/repo/migrations/")
-        end
-
-      migration_path = Path.join(migration_dir, "#{timestamp()}_create_#{schema.table}.exs")
-
-      Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", binding, [
-        {:eex, "migration.exs", migration_path},
-      ]
-    end
 
     schema
   end
 
+  defp migration_path(%Schema{context_app: ctx_app, repo: repo, opts: opts, table: table}) do
+    migration_dir =
+      cond do
+        migration_dir = opts[:migration_dir] ->
+          migration_dir
+
+        opts[:repo] ->
+          repo_name = repo |> Module.split() |> List.last() |> Macro.underscore()
+          Mix.Phoenix.context_app_path(ctx_app, "priv/#{repo_name}/migrations/")
+
+        true ->
+          Mix.Phoenix.context_app_path(ctx_app, "priv/repo/migrations/")
+      end
+
+    Path.join(migration_dir, "#{timestamp()}_create_#{table}.exs")
+  end
+
+  defp format_files(%Schema{} = schema) do
+    files_to_format(schema) |> Mix.Phoenix.maybe_format()
+    schema
+  end
+
   @doc false
+  def files_to_format(%Schema{generate?: false}), do: []
+  def files_to_format(%Schema{} = schema), do: [schema.file, migration_path(schema)]
+
+  @doc false
+  def print_shell_instructions(%Schema{generate?: false}), do: :ok
+
   def print_shell_instructions(%Schema{} = schema) do
     if schema.migration? do
       Mix.shell().info """
@@ -262,6 +280,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
         args
     end
   end
+
   def validate_args!(_, help) do
     help.raise_with_help "Invalid arguments"
   end

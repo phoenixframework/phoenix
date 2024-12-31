@@ -65,6 +65,43 @@ defmodule Mix.Phoenix do
   defp to_app_source(app, source_dir) when is_atom(app),
     do: Application.app_dir(app, source_dir)
 
+  @default_format_extensions [".ex", ".exs", ".heex"]
+  @doc """
+  Conditionally run `mix format` for generated files.
+  By default files with extensions `#{inspect(@default_format_extensions)}` are formatted.
+  It can be adjusted with generators config `format_extensions`, and turned off with value `[]`.
+  If no files pass condition, formatting is not performed.
+  """
+  def maybe_format(files) when is_list(files) do
+    format_extensions =
+      Application.get_env(otp_app(), :generators, [])
+      |> Keyword.get(:format_extensions, @default_format_extensions)
+
+    files = Enum.filter(files, &String.ends_with?(&1, format_extensions))
+    if files != [], do: Mix.Task.run("format", files)
+  end
+
+  @doc """
+  Format docs with override instruction.
+  """
+  def override_format_instruction do
+    """
+
+    Files with generated content (new and modified) are formatted with `mix format`.
+
+    By default files with extensions `#{inspect(@default_format_extensions)}` are formatted.
+    List of extensions can be changed via generators config:
+
+        config :your_app, :generators,
+          format_extensions: [".ex", ".exs"]
+
+    Formatting can be turned off by setting empty list:
+
+        config :your_app, :generators,
+          format_extensions: []
+    """
+  end
+
   @doc """
   Inflects path, scope, alias and more from the given name.
 
