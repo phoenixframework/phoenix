@@ -293,15 +293,17 @@
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
     end
 
-    test "deletes all tokens for the given <%= schema.singular %>", %{<%= schema.singular %>: <%= schema.singular %>} do
+    test "deletes all tokens except confirmation for the given <%= schema.singular %>", %{<%= schema.singular %>: <%= schema.singular %>} do
       _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      _ = <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, & &1)
+      _ = <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, & &1)
 
       {:ok, _} =
         <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{
           password: "new valid password"
         })
 
-      refute Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
+      assert [%<%= inspect schema.alias %>Token{context: "confirm"}] = Repo.all(<%= inspect schema.alias %>Token.by_<%= schema.singular %>_query(<%= schema.singular %>))
     end
   end
 
@@ -488,10 +490,13 @@
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
     end
 
-    test "deletes all tokens for the given <%= schema.singular %>", %{<%= schema.singular %>: <%= schema.singular %>} do
+    test "deletes all tokens except confirmation for the given <%= schema.singular %>", %{<%= schema.singular %>: <%= schema.singular %>} do
       _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      _ = <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, & &1)
+      _ = <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, & &1)
+
       {:ok, _} = <%= inspect context.alias %>.reset_<%= schema.singular %>_password(<%= schema.singular %>, %{password: "new valid password"})
-      refute Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
+      assert [%<%= inspect schema.alias %>Token{context: "confirm"}] = Repo.all(<%= inspect schema.alias %>Token.by_<%= schema.singular %>_query(<%= schema.singular %>))
     end
   end
 
