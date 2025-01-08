@@ -189,8 +189,8 @@ defmodule Phoenix.Presence do
 
   """
 
-  @type presences :: %{String.t() => %{metas: [map()]}}
-  @type presence :: %{key: String.t(), meta: map()}
+  @type presence :: %{metas: [map()]}
+  @type presences :: %{String.t() => presence}
   @type topic :: String.t()
 
   @doc """
@@ -297,12 +297,19 @@ defmodule Phoenix.Presence do
   devices, could return:
 
       iex> MyPresence.get_by_key("room:1", "user1")
-      [%{name: "User 1", metas: [%{device: "Desktop"}, %{device: "Mobile"}]}]
+      %{
+        name: "User 1",
+        additional_info: %{},
+        metas: [%{device: "Desktop"}, %{device: "Mobile"}]
+      }
+
+      iex> MyPresence.get_by_key("room:1", "untracked_user")
+      nil
 
   Like `c:list/1`, the presence metadata is passed to the `fetch`
   callback of your presence module to fetch any additional information.
   """
-  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: [presence]
+  @callback get_by_key(socket_or_topic :: Phoenix.Socket.t() | topic, key :: String.t()) :: presence | nil
 
   @doc """
   Extend presence information with additional data.
@@ -540,8 +547,7 @@ defmodule Phoenix.Presence do
     string_key = to_string(key)
 
     case Phoenix.Tracker.get_by_key(module, topic, key) do
-      [] ->
-        []
+      [] -> nil
 
       [_ | _] = pid_metas ->
         metas = Enum.map(pid_metas, fn {_pid, meta} -> meta end)
