@@ -13,17 +13,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - elixir: 1.11.4
-            otp: 24.3
-
-          - elixir: 1.12.3
-            otp: 24.3
-
-          - elixir: 1.14.5
-            otp: 25.3.2.9
-
-          - elixir: 1.15.x
-            otp: 25.x
+          - elixir: 1.15.8
+            otp: 24.3.4.17
 
           - elixir: 1.17.3
             otp: 27.2
@@ -33,43 +24,43 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up Elixir
-      uses: erlef/setup-beam@v1
-      with:
-        elixir-version: ${{ matrix.elixir }}
-        otp-version: ${{ matrix.otp }}
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
 
-    - name: Restore deps and _build cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          deps
-          _build
-        key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
-        restore-keys: |
-          deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+      - name: Restore deps and _build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
 
-    - name: Install dependencies
-      run: mix deps.get --only test
+      - name: Install dependencies
+        run: mix deps.get --only test
 
-    - name: Remove compiled application files
-      run: mix clean
+      - name: Remove compiled application files
+        run: mix clean
 
-    - name: Compile & lint dependencies
-      run: mix compile --warnings-as-errors
-      if: ${{ matrix.lint }}
+      - name: Compile & lint dependencies
+        run: mix compile --warnings-as-errors
+        if: ${{ matrix.lint }}
 
-    - name: Run tests
-      run: mix test
+      - name: Run tests
+        run: mix test
 
-    - name: Run installer test
-      run: |
-        cd installer
-        mix test
-      if: ${{ matrix.installer }}
+      - name: Run installer test
+        run: |
+          cd installer
+          mix test
+        if: ${{ matrix.installer }}
 
   npm_test:
     name: npm test
