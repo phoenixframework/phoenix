@@ -53,7 +53,7 @@ export default class Ajax {
 
     try {
       return JSON.parse(resp)
-    } catch (e){
+    } catch {
       console && console.log("failed to parse JSON response", resp)
       return null
     }
