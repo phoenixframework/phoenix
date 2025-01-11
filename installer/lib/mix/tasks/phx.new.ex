@@ -143,6 +143,8 @@ defmodule Mix.Tasks.Phx.New do
     adapter: :string
   ]
 
+  @reserved_app_names ~w(server table)
+
   @impl true
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("Phoenix installer v#{@version}")
@@ -329,7 +331,22 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp check_app_name!(name, from_app_flag) do
-    unless name =~ Regex.recompile!(~r/^[a-z][a-z0-9_]*$/) do
+    with :ok <- validate_not_reserved(name),
+         :ok <- validate_app_name_format(name, from_app_flag) do
+      :ok
+    end
+  end
+
+  defp validate_not_reserved(name) when name in @reserved_app_names do
+    Mix.raise("Application name cannot be #{inspect(name)} as it is reserved")
+  end
+
+  defp validate_not_reserved(_name), do: :ok
+
+  defp validate_app_name_format(name, from_app_flag) do
+    if name =~ ~r/^[a-z][a-z0-9_]*$/ do
+      :ok
+    else
       extra =
         if !from_app_flag do
           ". The application name is inferred from the path, if you'd like to " <>
