@@ -18,7 +18,7 @@ For Windows PowerShell:
 > curl.exe -fsSO https://new.phoenixframework.org/myapp.bat; .\myapp.bat
 ```
 
-The above will install Erlang, Elixir, and Phoenix, and generate a fresh Phoenix application. It will also automatically pick one of PostgreSQL or MySQL as the database, and fallback to SQLite if none of them are available. Once the command above, it will open up a Phoenix application, with the steps necessary to complete your installation.
+The above will install Erlang, Elixir, and Phoenix, and generate a fresh Phoenix application. It will also automatically pick one of PostgreSQL or MySQL as the database, and fallback to SQLite if none of them are available. Once the command above completes, it will open up a Phoenix application, with the steps necessary to complete your installation.
 
 > Your Phoenix application name is taken from the path.
 
