@@ -2,4 +2,12 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/*
+ * Make LiveView wrapper divs transparent for layout.
+ * This makes it possible to use LiveViews as flex children for example.
+ */
+
+
+[data-phx-root-id] { display: contents }
+
 /* This file is for your main application CSS */
