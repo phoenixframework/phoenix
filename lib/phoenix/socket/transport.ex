@@ -3,15 +3,17 @@ defmodule Phoenix.Socket.Transport do
   Outlines the Socket <-> Transport communication.
 
   Each transport, such as websockets and longpolling, must interact
-  with a socket. This module defines said behaviour.
+  with a socket. This module defines the functions a transport will
+  invoke on a given socket implementation.
 
   `Phoenix.Socket` is just one possible implementation of a socket
   that multiplexes events over multiple channels. If you implement
-  this behaviour, then a transport can directly invoke your
+  this behaviour, then existing transports can use your new socket
   implementation, without passing through channels.
 
-  This module also provides convenience functions for implementing
-  transports.
+  This module also provides guidelines and convenience functions for
+  implementing transports. Albeit its primary goal is to aid in the
+  definition of custom sockets.
 
   ## Example
 
@@ -60,7 +62,8 @@ defmodule Phoenix.Socket.Transport do
 
   Sockets are operated by a transport. When a transport is defined,
   it usually receives a socket module and the module will be invoked
-  when certain events happen at the transport level.
+  when certain events happen at the transport level. The functions
+  a transport can invoke are the callbacks defined in this module.
 
   Whenever the transport receives a new connection, it should invoke
   the `c:connect/1` callback with a map of metadata. Different sockets
@@ -81,15 +84,16 @@ defmodule Phoenix.Socket.Transport do
   reason `:closed` can be used to specify that the client terminated
   the connection.
 
-  ## Booting
+  ### Booting
 
-  Whenever your endpoint starts, it will automatically invoke the
-  `child_spec/1` on each listed socket and start that specification
-  under the endpoint supervisor.
+  When you list a socket under `Phoenix.Endpoint.socket/3`, Phoenix
+  will automatically start the socket module under its supervision tree,
+  however Phoenix does not manage any transport.
 
-  Since the socket supervision tree is started by the endpoint,
-  any custom transport must be started after the endpoint in a
-  supervision tree.
+  Whenever your endpoint starts, Phoenix invokes the `child_spec/1` on
+  each listed socket and start that specification under the endpoint
+  supervisor. Since the socket supervision tree is started by the endpoint,
+  any custom transport must be started after the endpoint.
   """
 
   @type state :: term()
