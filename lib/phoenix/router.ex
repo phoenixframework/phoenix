@@ -364,7 +364,6 @@ defmodule Phoenix.Router do
   defp prelude(opts) do
     quote do
       Module.register_attribute(__MODULE__, :phoenix_routes, accumulate: true)
-      @phoenix_forwards %{}
       # TODO: Require :helpers to be explicit given
       @phoenix_helpers Keyword.get(unquote(opts), :helpers, true)
 
@@ -541,8 +540,7 @@ defmodule Phoenix.Router do
   @doc false
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse()
-    forwards = env.module |> Module.get_attribute(:phoenix_forwards)
-    routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1, forwards)})
+    routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
 
     helpers =
       if Module.get_attribute(env.module, :phoenix_helpers) do
@@ -575,13 +573,6 @@ defmodule Phoenix.Router do
         @doc false
         def __match_route__(_path_info, _verb, _host) do
           :error
-        end
-      end
-
-    forwards =
-      for {plug, script_name} <- forwards do
-        quote do
-          def __forward__(unquote(plug)), do: unquote(script_name)
         end
       end
 
@@ -623,26 +614,32 @@ defmodule Phoenix.Router do
       unquote(verify_catch_all)
       unquote(matches)
       unquote(match_catch_all)
-      unquote(forwards)
       unquote(forward_catch_all)
     end
   end
 
   defp build_verify(path, routes_per_path) do
     routes = Map.get(routes_per_path, path)
-
-    forward_plug =
-      Enum.find_value(routes, fn
-        %{kind: :forward, plug: plug} -> plug
-        _ -> nil
-      end)
-
     warn_on_verify? = Enum.all?(routes, & &1.warn_on_verify?)
 
-    quote generated: true do
-      def __verify_route__(unquote(path)) do
-        {unquote(forward_plug), unquote(warn_on_verify?)}
-      end
+    case Enum.find(routes, &(&1.kind == :forward)) do
+      %{metadata: %{forward: forward}, plug: plug} ->
+        quote generated: true do
+          def __forward__(unquote(plug)) do
+            unquote(forward)
+          end
+
+          def __verify_route__(unquote(path)) do
+            {{unquote(plug), unquote(forward)}, unquote(warn_on_verify?)}
+          end
+        end
+
+      _ ->
+        quote generated: true do
+          def __verify_route__(unquote(path)) do
+            {nil, unquote(warn_on_verify?)}
+          end
+        end
     end
   end
 
@@ -1199,15 +1196,24 @@ defmodule Phoenix.Router do
   @doc """
   Forwards a request at the given path to a plug.
 
-  All paths that match the forwarded prefix will be sent to
-  the forwarded plug. This is useful for sharing a router between
+  This is commonly used to forward all subroutes to another Plug.
+  For example:
+
+      forward "/admin", SomeLib.AdminDashboard
+
+  The above will allow `SomeLib.AdminDashboard` to handle `/admin`,
+  `/admin/foo`, `/admin/bar/baz`, and so on. Furthermore,
+  `SomeLib.AdminDashboard` does not to be aware of the prefix it
+  is mounted in. From its point of view, the routes above are simply
+  handled as `/`, `/foo`, and `/bar/baz`.
+
+  A common use case for `forward` is for sharing a router between
   applications or even breaking a big router into smaller ones.
+  However, in other for route generation to route accordingly, you
+  can only forward to a given `Phoenix.Router` once.
+
   The router pipelines will be invoked prior to forwarding the
   connection.
-
-  However, we don't advise forwarding to another endpoint.
-  The reason is that plugs defined by your app and the forwarded
-  endpoint would be invoked twice, which may lead to errors.
 
   ## Examples
 
