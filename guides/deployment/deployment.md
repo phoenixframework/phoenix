@@ -14,6 +14,29 @@ As an example of deploying to other infrastructures, we also discuss four differ
 
 Let's explore those steps above one by one.
 
+#### Stickiness, Clustering, and the Long-Polling Transport {: .warning}
+
+Phoenix supports two types of transports for its Socket implementation: WebSocket, and Long-Polling. When generating a Phoenix project, you can see the default configuration set in the generated `endpoint.ex` file:
+
+```elixir
+socket "/live", Phoenix.LiveView.Socket,
+  websocket: [connect_info: [session: @session_options]],
+  longpoll: [connect_info: [session: @session_options]]
+```
+
+This configuration tells Phoenix that both the WebSocket and the Long-Polling options are available, and based on the client's network conditions, Phoenix will first attempt to connect to the WebSocket, falling back to the Long-Poll option after the configured timeout found in the generated `app.js` file:
+
+```javascript
+let liveSocket = new LiveSocket("/live", Socket, {
+  longPollFallbackMs: 2500,
+  params: {_csrf_token: csrfToken}
+})
+```
+
+This automatic fallback comes with an important caveat: if you want Long-Polling to work properly, your application must either utilize the BEAM's clustering capabilities, your `Phoenix.PubSub` server must use an adapter that can communicate across nodes (such as `Phoenix.PubSub.Redis`), or your deployment option must implement sticky sessions - ensuring that all requests for a specific session go to the same machine.
+
+The reason for this is simple. While a WebSocket is a long-lived open connection to the same machine, long-polling works by opening a request to the server, waiting for a timeout or until the open request is fulfilled, and repeating this process. In order to preserve the state of the user's connected socket and to preserve the behaviour of a socket being long-lived, the user's process is kept alive, and each long-poll request attempts to find the user's stateful process. If the stateful process is not reachable, every request will create a new process and a new state, thereby breaking the fact that the socket is long-lived and stateful.
+
 ## Handling of your application secrets
 
 All Phoenix applications have data that must be kept secure, for example, the username and password for your production database, and the secret Phoenix uses to sign and encrypt important information. The general recommendation is to keep those in environment variables and load them into your application. This is done in `config/runtime.exs` (formerly `config/prod.secret.exs` or `config/releases.exs`), which is responsible for loading secrets and configuration from environment variables.
