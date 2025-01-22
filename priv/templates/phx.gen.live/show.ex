@@ -28,7 +28,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    {:ok, socket
+    {:ok,
+     socket
      |> assign(:page_title, "Show <%= schema.human_singular %>")
      |> assign(:<%= schema.singular %>, <%= inspect context.alias %>.get_<%= schema.singular %>!(id))}
   end
