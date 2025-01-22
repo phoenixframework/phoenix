@@ -33,7 +33,13 @@ let liveSocket = new LiveSocket("/live", Socket, {
 })
 ```
 
-This automatic fallback comes with an important caveat: if you want Long-Polling to work properly, your application must either utilize the BEAM's clustering capabilities, your `Phoenix.PubSub` server must use an adapter that can communicate across nodes (such as `Phoenix.PubSub.Redis`), or your deployment option must implement sticky sessions - ensuring that all requests for a specific session go to the same machine.
+This automatic fallback comes with an important caveat. If you want Long-Polling to work properly, your application must either:
+
+1. Utilize the Erlang VM's clustering capabilities, so the default `Phoenix.PubSub` adapter can broadcast messages across nodes
+
+2. Choose a different `Phoenix.PubSub` adapter (such as `Phoenix.PubSub.Redis`)
+
+3. Or your deployment option must implement sticky sessions - ensuring that all requests for a specific session go to the same machine
 
 The reason for this is simple. While a WebSocket is a long-lived open connection to the same machine, long-polling works by opening a request to the server, waiting for a timeout or until the open request is fulfilled, and repeating this process. In order to preserve the state of the user's connected socket and to preserve the behaviour of a socket being long-lived, the user's process is kept alive, and each long-poll request attempts to find the user's stateful process. If the stateful process is not reachable, every request will create a new process and a new state, thereby breaking the fact that the socket is long-lived and stateful.
 
