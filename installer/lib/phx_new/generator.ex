@@ -242,7 +242,7 @@ defmodule Phx.New.Generator do
       dev: dev
     ]
 
-    %Project{project | binding: binding}
+    %{project | binding: binding}
   end
 
   defp namespaced?(project) do

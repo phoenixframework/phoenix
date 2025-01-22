@@ -100,9 +100,9 @@ defmodule Phx.New.Single do
 
   def prepare_project(%Project{app: app, base_path: base_path} = project) when not is_nil(app) do
     if in_umbrella?(base_path) do
-      %Project{project | in_umbrella?: true, project_path: Path.dirname(Path.dirname(base_path))}
+      %{project | in_umbrella?: true, project_path: Path.dirname(Path.dirname(base_path))}
     else
-      %Project{project | in_umbrella?: false, project_path: base_path}
+      %{project | in_umbrella?: false, project_path: base_path}
     end
     |> put_app()
     |> put_root_app()
@@ -110,11 +110,11 @@ defmodule Phx.New.Single do
   end
 
   defp put_app(%Project{base_path: base_path} = project) do
-    %Project{project | app_path: base_path}
+    %{project | app_path: base_path}
   end
 
   defp put_root_app(%Project{app: app, opts: opts} = project) do
-    %Project{
+    %{
       project
       | root_app: app,
         root_mod: Module.concat([opts[:module] || Macro.camelize(app)])
@@ -122,7 +122,7 @@ defmodule Phx.New.Single do
   end
 
   defp put_web_app(%Project{app: app} = project) do
-    %Project{
+    %{
       project
       | web_app: app,
         lib_web_name: "#{app}_web",
