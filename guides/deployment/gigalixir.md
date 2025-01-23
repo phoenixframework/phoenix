@@ -180,7 +180,7 @@ ssl_opts: [verify: :verify_none]
 ## Deploy Time!
 
 Our project is now ready to be deployed on Gigalixir.
-Be sure you have everything commited to git and run the following command:
+Be sure you have everything committed to git and run the following command:
 
 ```console
 $ git push gigalixir
