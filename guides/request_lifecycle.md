@@ -277,7 +277,7 @@ To do that, we'll use the special HEEx tags for executing Elixir expressions: `{
 
 Remember our templates are written in HEEx (HTML+EEx). HEEx is a superset of EEx, and thereby supports the EEx `<%= %>` interpolation syntax for interpolating arbitrary blocks of code. In general, the HEEx `{...}` interpolation syntax is preferred anytime there is HTML-aware intepolation to be done – such as within attributes or inline values with a body.
 
-The only times `EEx` `<%= %>` interpolation is necessary is for interpolationg arbitrary blocks of markup, such as branching logic that inects separate markup trees, or for interpolating values within `<script>` or `<style>` tags.
+The only times `EEx` `<%= %>` interpolation is necessary is for interpolating arbitrary blocks of markup, such as branching logic that injects separate markup trees, or for interpolating values within `<script>` or `<style>` tags.
 
 This is what the `hello_html/show.html.heex` template should look like:
 

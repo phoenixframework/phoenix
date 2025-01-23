@@ -182,32 +182,27 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  if Version.match?(System.version(), "< 1.15.0-dev") do
-    defp purge_protocols(path) do
-      purge_modules(path)
-      Code.delete_path(path)
+  if Version.match?(System.version(), ">= 1.18.0-dev") do
+    defp warn_missing_mix_listener do
+      if Mix.Project.get() != Phoenix.MixProject do
+        IO.warn("""
+        a Mix listener expected by Phoenix.CodeReloader is missing.
+
+        Please add the listener to your mix.exs configuration, like so:
+
+            def project do
+              [
+                ...,
+                listeners: [Phoenix.CodeReloader]
+              ]
+            end
+
+        """)
+      end
     end
   else
-    defp purge_protocols(_path), do: :ok
-  end
-
-  defp warn_missing_mix_listener do
-    listeners_supported? = Version.match?(System.version(), ">= 1.18.0-dev")
-
-    if listeners_supported? do
-      IO.warn("""
-      a Mix listener expected by Phoenix.CodeReloader is missing.
-
-      Please add the listener to your mix.exs configuration, like so:
-
-          def project do
-            [
-              ...,
-              listeners: [Phoenix.CodeReloader]
-            ]
-          end
-
-      """)
+    defp warn_missing_mix_listener do
+      :ok
     end
   end
 
@@ -221,11 +216,6 @@ defmodule Phoenix.CodeReloader.Server do
        ) do
     config = Mix.Project.config()
     path = Mix.Project.consolidation_path(config)
-
-    # TODO: Remove this conditional when requiring Elixir v1.15+
-    if config[:consolidate_protocols] do
-      purge_protocols(path)
-    end
 
     mix_compile_deps(
       Mix.Dep.cached(),
@@ -299,8 +289,17 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp mix_compile_unless_stale_config(compilers, compile_args, timestamp, path, purge_fallback?) do
     manifests = Mix.Tasks.Compile.Elixir.manifests()
-    configs = Mix.Project.config_files()
     config = Mix.Project.config()
+    build_path = Mix.Project.build_path(config)
+
+    # Stop if lock or config files change.
+    # We don't check for mix.exs because changes there that require recompilation
+    # are often related to deps or configs anyway.
+    # We also explicitly remove checks for entries in _build because reporting
+    # them is confusing and they are mostly used for internal Mix book-keeping.
+    configs =
+      [config[:lockfile] | Mix.Project.config_files()]
+      |> Enum.reject(&String.starts_with?(&1, build_path))
 
     case Mix.Utils.extract_stale(configs, manifests) do
       [] ->
@@ -351,7 +350,7 @@ defmodule Phoenix.CodeReloader.Server do
         exit({:shutdown, 1})
 
       result == :ok && config[:consolidate_protocols] ->
-        # TODO: Calling compile.protocols may no longer be required from Elixir v1.18
+        # TODO: Calling compile.protocols is no longer be required from Elixir v1.19
         Mix.Task.reenable("compile.protocols")
         Mix.Task.run("compile.protocols", [])
         :ok

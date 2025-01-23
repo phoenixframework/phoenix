@@ -11,7 +11,7 @@ defmodule Phoenix.Router.Route do
 
     * `:verb` - the HTTP verb as an atom
     * `:line` - the line the route was defined
-    * `:kind` - the kind of route, one of `:match`, `:forward`
+    * `:kind` - the kind of route, either `:match` or `:forward`
     * `:path` - the normalized path as string
     * `:hosts` - the list of request hosts or host prefixes
     * `:plug` - the plug module
@@ -25,9 +25,22 @@ defmodule Phoenix.Router.Route do
     * `:warn_on_verify?` - whether or not to warn on route verification
   """
 
-  defstruct [:verb, :line, :kind, :path, :hosts, :plug, :plug_opts,
-             :helper, :private, :pipe_through, :assigns, :metadata,
-             :trailing_slash?, :warn_on_verify?]
+  defstruct [
+    :verb,
+    :line,
+    :kind,
+    :path,
+    :hosts,
+    :plug,
+    :plug_opts,
+    :helper,
+    :private,
+    :pipe_through,
+    :assigns,
+    :metadata,
+    :trailing_slash?,
+    :warn_on_verify?
+  ]
 
   @type t :: %Route{}
 
@@ -47,29 +60,71 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, plug, options and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(non_neg_integer, :match | :forward, atom, String.t, String.t | nil, atom, atom, atom | nil, list(atom), map, map, map, boolean, boolean) :: t
-  def build(line, kind, verb, path, hosts, plug, plug_opts, helper, pipe_through, private, assigns, metadata, trailing_slash?, warn_on_verify?)
+  @spec build(
+          non_neg_integer,
+          :match | :forward,
+          atom,
+          String.t(),
+          String.t() | nil,
+          atom,
+          atom,
+          atom | nil,
+          list(atom),
+          map,
+          map,
+          map,
+          boolean,
+          boolean
+        ) :: t
+  def build(
+        line,
+        kind,
+        verb,
+        path,
+        hosts,
+        plug,
+        plug_opts,
+        helper,
+        pipe_through,
+        private,
+        assigns,
+        metadata,
+        trailing_slash?,
+        warn_on_verify?
+      )
       when is_atom(verb) and is_list(hosts) and
-           is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
-           is_list(pipe_through) and is_map(private) and is_map(assigns) and
-           is_map(metadata) and kind in [:match, :forward] and
-           is_boolean(trailing_slash?) do
-    %Route{kind: kind, verb: verb, path: path, hosts: hosts, private: private,
-           plug: plug, plug_opts: plug_opts, helper: helper,
-           pipe_through: pipe_through, assigns: assigns, line: line, metadata: metadata,
-           trailing_slash?: trailing_slash?, warn_on_verify?: warn_on_verify?}
+             is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
+             is_list(pipe_through) and is_map(private) and is_map(assigns) and
+             is_map(metadata) and kind in [:match, :forward] and
+             is_boolean(trailing_slash?) do
+    %Route{
+      kind: kind,
+      verb: verb,
+      path: path,
+      hosts: hosts,
+      private: private,
+      plug: plug,
+      plug_opts: plug_opts,
+      helper: helper,
+      pipe_through: pipe_through,
+      assigns: assigns,
+      line: line,
+      metadata: metadata,
+      trailing_slash?: trailing_slash?,
+      warn_on_verify?: warn_on_verify?
+    }
   end
 
   @doc """
   Builds the compiled expressions used by the route.
   """
-  def exprs(route, forwards) do
+  def exprs(route) do
     {path, binding} = build_path_and_binding(route)
 
     %{
       path: path,
       binding: binding,
-      dispatch: build_dispatch(route, forwards),
+      dispatch: build_dispatch(route),
       hosts: build_host_match(route.hosts),
       path_params: build_path_params(binding),
       prepare: build_prepare(route),
@@ -78,6 +133,7 @@ defmodule Phoenix.Router.Route do
   end
 
   def build_host_match([]), do: [Plug.Router.Utils.build_host_match(nil)]
+
   def build_host_match([_ | _] = hosts) do
     for host <- hosts, do: Plug.Router.Utils.build_host_match(host)
   end
@@ -91,7 +147,7 @@ defmodule Phoenix.Router.Route do
     {_params, segments} =
       case route.kind do
         :forward -> Plug.Router.Utils.build_path_match(path <> "/*_forward_path_info")
-        :match   -> Plug.Router.Utils.build_path_match(path)
+        :match -> Plug.Router.Utils.build_path_match(path)
       end
 
     rewrite_segments(segments)
@@ -101,7 +157,8 @@ defmodule Phoenix.Router.Route do
   defp rewrite_segments(segments) do
     {segments, {binding, _counter}} =
       Macro.prewalk(segments, {[], 0}, fn
-        {name, _meta, nil}, {binding, counter} when is_atom(name) and name != :_forward_path_info ->
+        {name, _meta, nil}, {binding, counter}
+        when is_atom(name) and name != :_forward_path_info ->
           var = Macro.var(:"arg#{counter}", __MODULE__)
           {var, {[{Atom.to_string(name), var} | binding], counter + 1}}
 
@@ -140,19 +197,22 @@ defmodule Phoenix.Router.Route do
     {[{key, var}], [{key, merge}]}
   end
 
-  defp build_dispatch(%Route{kind: :match, plug: plug, plug_opts: plug_opts}, _forwards) do
+  defp build_dispatch(%Route{kind: :match, plug: plug, plug_opts: plug_opts}) do
     quote do
       {unquote(plug), unquote(Macro.escape(plug_opts))}
     end
   end
 
-  defp build_dispatch(%Route{kind: :forward, plug: plug, plug_opts: plug_opts}, forwards) do
-    segments = Map.fetch!(forwards, plug)
-
+  defp build_dispatch(%Route{
+         kind: :forward,
+         plug: plug,
+         plug_opts: plug_opts,
+         metadata: metadata
+       }) do
     quote do
       {
         Phoenix.Router.Route,
-        {unquote(segments), unquote(plug), unquote(Macro.escape(plug_opts))}
+        {unquote(metadata.forward), unquote(plug), unquote(Macro.escape(plug_opts))}
       }
     end
   end
@@ -160,7 +220,9 @@ defmodule Phoenix.Router.Route do
   defp build_params() do
     params = Macro.var(:params, :conn)
     path_params = Macro.var(:path_params, :conn)
-    merge_params = quote(do: Phoenix.Router.Route.merge_params(unquote(params), unquote(path_params)))
+
+    merge_params =
+      quote(do: Phoenix.Router.Route.merge_params(unquote(params), unquote(path_params)))
 
     {
       [{:params, params}],

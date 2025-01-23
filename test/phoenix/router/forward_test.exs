@@ -81,28 +81,15 @@ defmodule Phoenix.Router.ForwardTest do
   end
 
   test "forward with dynamic segments raises" do
-    router = quote do
-      defmodule BadRouter do
-        use Phoenix.Router
-        forward "/api/:version", ApiRouter
+    router =
+      quote do
+        defmodule BadRouter do
+          use Phoenix.Router
+          forward "/api/:version", ApiRouter
+        end
       end
-    end
 
     assert_raise ArgumentError, ~r{dynamic segment "/api/:version" not allowed}, fn ->
-      Code.eval_quoted(router)
-    end
-  end
-
-  test "forward with non-unique plugs raises" do
-    router = quote do
-      defmodule BadRouter do
-        use Phoenix.Router
-        forward "/api/v1", ApiRouter
-        forward "/api/v2", ApiRouter
-      end
-    end
-
-    assert_raise ArgumentError, ~r{Phoenix.Router.ForwardTest.ApiRouter has already been forwarded}, fn ->
       Code.eval_quoted(router)
     end
   end
@@ -146,9 +133,11 @@ defmodule Phoenix.Router.ForwardTest do
 
   test "forwards raises if using the plug to arguments" do
     error_message = ~r/expect a module/
+
     assert_raise(ArgumentError, error_message, fn ->
       defmodule BrokenRouter do
         use Phoenix.Router
+
         scope "/" do
           forward "/health", to: HealthController
         end

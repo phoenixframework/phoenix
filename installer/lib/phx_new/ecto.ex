@@ -21,7 +21,7 @@ defmodule Phx.New.Ecto do
     app_path = Path.expand(project.base_path)
     project_path = Path.dirname(Path.dirname(app_path))
 
-    %Project{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
+    %{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
   end
 
   def generate(%Project{} = project) do

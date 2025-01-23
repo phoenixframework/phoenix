@@ -9,20 +9,20 @@
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
 #   - https://hub.docker.com/_/debian?tab=tags&page=1&name=<%= debian %>-<%= debian_vsn %>-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:<%= elixir_vsn %>-erlang-<%= otp_vsn %>-debian-<%= debian %>-<%= debian_vsn %>-slim
+#   - Ex: docker.io/hexpm/elixir:<%= elixir_vsn %>-erlang-<%= otp_vsn %>-debian-<%= debian %>-<%= debian_vsn %>-slim
 #
 ARG ELIXIR_VERSION=<%= elixir_vsn %>
 ARG OTP_VERSION=<%= otp_vsn %>
 ARG DEBIAN_VERSION=<%= debian %>-<%= debian_vsn %>-slim
 
-ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
-ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
+ARG BUILDER_IMAGE="docker.io/hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
+ARG RUNNER_IMAGE="docker.io/debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} AS builder
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git \
-    && apt-get clean && rm -f /var/lib/apt/lists/*_*
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential git \
+    && rm -rf /var/lib/apt/lists/*
 
 # prepare build dir
 WORKDIR /app
@@ -69,9 +69,9 @@ RUN mix release
 # the compiled release and other runtime necessities
 FROM ${RUNNER_IMAGE}
 
-RUN apt-get update -y && \
-  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
-  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends libstdc++6 openssl libncurses5 locales ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
