@@ -110,7 +110,7 @@ defmodule <%= inspect auth_module %> do
     end
   end
 
-  @doc """
+  <%= if live? do %>@doc """
   Handles mounting and authenticating the current_<%= schema.singular %> in LiveViews.
 
   ## `on_mount` arguments
@@ -182,7 +182,7 @@ defmodule <%= inspect auth_module %> do
     end)
   end
 
-  @doc """
+  <% end %>@doc """
   Used for routes that require the <%= schema.singular %> to not be authenticated.
   """
   def redirect_if_<%= schema.singular %>_is_authenticated(conn, _opts) do
