@@ -37,7 +37,6 @@ defmodule Phx.New.MixProject do
         links: %{"GitHub" => @scm_url},
         files: ~w(lib templates mix.exs README.md)
       ],
-      preferred_cli_env: [docs: :docs],
       source_url: @scm_url,
       docs: docs(),
       homepage_url: "https://www.phoenixframework.org",
@@ -48,6 +47,10 @@ defmodule Phx.New.MixProject do
       with Phoenix dependencies.
       """
     ]
+  end
+
+  def cli do
+    [preferred_envs: [docs: :docs]]
   end
 
   def application do
