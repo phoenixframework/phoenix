@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb.CoreComponents"
         assert file =~ ~S|aria-label={gettext("close")}|
-        assert file =~ ~S|<.flash kind={:info} title={gettext("Success!")} flash={@flash} />|
+        assert file =~ ~S|gettext("Attempting to reconnect")|
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
@@ -567,7 +567,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
         assert file =~ ~S|aria-label="close"|
-        assert file =~ ~S|<.flash kind={:info} title="Success!" flash={@flash} />|
+        assert file =~ ~S|Attempting to reconnect|
+        refute file =~ ~S|gettext("Attempting to reconnect")|
       end)
     end)
   end
