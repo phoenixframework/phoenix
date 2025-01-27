@@ -85,6 +85,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         phx-connected={hide("#client-error")}
         hidden
       >
+        <span class="font-bold"><%= maybe_eex_gettext.("We can't find the internet!", @gettext)%></span>
         <%= maybe_eex_gettext.("Attempting to reconnect", @gettext) %>
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
       </.flash>
@@ -96,6 +97,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         phx-connected={hide("#server-error")}
         hidden
       >
+        <span class="font-bold"><%= maybe_eex_gettext.("Something went wrong!", @gettext)%></span>
         <%= maybe_eex_gettext.("Hang in there while we get back on track", @gettext) %>
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
       </.flash>
