@@ -29,6 +29,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   """
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
+  attr :title, :string, default: nil
   attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
@@ -53,7 +54,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <div class="flex gap-2">
         <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-5 w-5 shrink-0" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-5 w-5 shrink-0" />
-        <p class="text-sm leading-5">{msg}</p>
+        <div class="text-sm leading-5">
+          <p :if={@title} class="font-semibold">{@title}</p>
+          <p>{msg}</p>
+        </div>
         <div class="flex-1" />
         <button type="button" class="group flex self-start" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
           <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
@@ -64,7 +68,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   @doc """
-  Shows the flash group with standard content.
+  Shows the flash group with standard titles and content.
 
   ## Examples
 
@@ -81,11 +85,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.flash
         id="client-error"
         kind={:error}
+        title=<%= maybe_heex_attr_gettext.("We can't find the internet", @gettext) %>
         phx-disconnected={show(".phx-client-error #client-error")}
         phx-connected={hide("#client-error")}
         hidden
       >
-        <span class="font-semibold"><%= maybe_eex_gettext.("We can't find the internet!", @gettext)%></span>
         <%= maybe_eex_gettext.("Attempting to reconnect", @gettext) %>
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
       </.flash>
@@ -93,11 +97,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.flash
         id="server-error"
         kind={:error}
+        title=<%= maybe_heex_attr_gettext.("Something went wrong!", @gettext) %>
         phx-disconnected={show(".phx-server-error #server-error")}
         phx-connected={hide("#server-error")}
         hidden
       >
-        <span class="font-semibold"><%= maybe_eex_gettext.("Something went wrong!", @gettext)%></span>
         <%= maybe_eex_gettext.("Hang in there while we get back on track", @gettext) %>
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
       </.flash>
