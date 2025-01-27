@@ -29,7 +29,6 @@ defmodule <%= @web_namespace %>.CoreComponents do
   """
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
-  attr :title, :string, default: nil
   attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
@@ -46,26 +45,26 @@ defmodule <%= @web_namespace %>.CoreComponents do
       role="alert"
       class={[
         "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
-        @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
+        @kind == :info && "bg-sky-50 text-sky-800 shadow-md ring-sky-500 fill-sky-900",
         @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
       ]}
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        {@title}
-      </p>
-      <p class="mt-2 text-sm leading-5">{msg}</p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
-      </button>
+      <div class="flex gap-2">
+        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-5 w-5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-5 w-5 shrink-0" />
+        <p class="text-sm leading-5">{msg}</p>
+        <div class="flex-1" />
+        <button type="button" class="group flex self-start" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
+          <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
+        </button>
+      </div>
     </div>
     """
   end
 
   @doc """
-  Shows the flash group with standard titles and content.
+  Shows the flash group with standard content.
 
   ## Examples
 
@@ -77,12 +76,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def flash_group(assigns) do
     ~H"""
     <div id={@id} aria-live="polite">
-      <.flash kind={:info} title=<%= maybe_heex_attr_gettext.("Success!", @gettext) %> flash={@flash} />
-      <.flash kind={:error} title=<%= maybe_heex_attr_gettext.("Error!", @gettext) %> flash={@flash} />
+      <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
       <.flash
         id="client-error"
         kind={:error}
-        title=<%= maybe_heex_attr_gettext.("We can't find the internet", @gettext) %>
         phx-disconnected={show(".phx-client-error #client-error")}
         phx-connected={hide("#client-error")}
         hidden
@@ -94,7 +92,6 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.flash
         id="server-error"
         kind={:error}
-        title=<%= maybe_heex_attr_gettext.("Something went wrong!", @gettext) %>
         phx-disconnected={show(".phx-server-error #server-error")}
         phx-connected={hide("#server-error")}
         hidden
