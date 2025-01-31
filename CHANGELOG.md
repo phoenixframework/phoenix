@@ -46,6 +46,12 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.19 (2024-01-31)
+
+### Enhancements
+  * [phx.new] - bind to `0.0.0.0` in `dev.exs` if phx.new is being run inside a docker container.
+    This exposes the container's phoenix server to the host so that it is accessible over port forwarding.
+
 ## 1.7.18 (2024-12-10)
 
 ### Enhancements

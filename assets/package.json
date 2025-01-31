@@ -1,6 +1,6 @@
 {
   "name": "phoenix",
-  "version": "1.7.18",
+  "version": "1.7.19",
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
   "main": "./assets/js/phoenix/index.js",
