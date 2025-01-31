@@ -1,5 +1,6 @@
 defmodule <%= @web_namespace %>.Router do
   use <%= @web_namespace %>, :router<%= if @html do %>
+  import <%= @web_nampespace %>.ScopeHook, only: [assign_scope: 1]
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -8,6 +9,7 @@ defmodule <%= @web_namespace %>.Router do
     plug :put_root_layout, html: {<%= @web_namespace %>.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :assign_scope
   end<% end %>
 
   pipeline :api do
@@ -18,6 +20,14 @@ defmodule <%= @web_namespace %>.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    live_session :default,
+      on_mount: [
+        # {<%= @web_namespace %>.UserAuth, :ensure_authenticated},
+        # {<%= @web_namespace %>.UserAuth, :mount_current_user}
+        <%= @web_namespace %>.ScopeHook
+      ] do
+      # LiveView routes
+    end
   end
 
   # Other scopes may use custom stacks.
