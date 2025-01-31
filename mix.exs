@@ -88,8 +88,6 @@ defmodule Phoenix.MixProject do
 
       # TODO Drop phoenix_view as an optional dependency in Phoenix v2.0
       {:phoenix_view, "~> 2.0", optional: true},
-      # TODO Drop castore when we require OTP 25+ / Elixir v1.17+
-      {:castore, ">= 0.0.0"},
 
       # Optional deps
       {:plug_cowboy, "~> 2.7", optional: true},
