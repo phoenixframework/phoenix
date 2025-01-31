@@ -182,6 +182,17 @@ defmodule Phx.New.Generator do
     phoenix_path = phoenix_path(project, dev, false)
     phoenix_path_umbrella_root = phoenix_path(project, dev, true)
 
+    # detect if we're inside a docker env, but if we're in github actions,
+    # we want to treat it like regular env for end-user testing purposes
+    inside_docker_env? =
+      Keyword.get_lazy(opts, :inside_docker_env, fn ->
+        if System.get_env("GITHUB_ACTIONS") do
+          false
+        else
+          File.exists?("/.dockerenv")
+        end
+      end)
+
     # We lowercase the database name because according to the
     # SQL spec, they are case insensitive unless quoted, which
     # means creating a database like FoO is the same as foo in
@@ -243,7 +254,8 @@ defmodule Phx.New.Generator do
       dev: dev,
       from_elixir_install: from_elixir_install,
       elixir_install_otp_bin_path: from_elixir_install && elixir_install_otp_bin_path(),
-      elixir_install_bin_path: from_elixir_install && elixir_install_bin_path()
+      elixir_install_bin_path: from_elixir_install && elixir_install_bin_path(),
+      inside_docker_env?: inside_docker_env?
     ]
 
     %Project{project | binding: binding}
