@@ -449,7 +449,7 @@ defmodule Phx.New.Generator do
   defp phoenix_js_path(path), do: "../../#{path}/"
 
   defp random_string(length),
-    do: :crypto.strong_rand_bytes(length) |> Base.encode64() |> binary_part(0, length)
+    do: :crypto.strong_rand_bytes(length) |> Base.encode64(padding: false) |> binary_part(0, length)
 
   # In the context of a HEEx attribute value, transforms a given message into a
   # dynamic `gettext` call or a fixed-value string attribute, depending on the

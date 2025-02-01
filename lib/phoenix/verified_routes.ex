@@ -30,8 +30,7 @@ defmodule Phoenix.VerifiedRoutes do
   use `~p"/posts/#{post}"` rather than `~p"/posts/#{post.slug}"` throughout your
   application. See the `Phoenix.Param` documentation for more details.
 
-  Query strings are also supported in verified routes, either in traditional query
-  string form:
+  Finally, query strings are also supported in verified routes, either in traditional form:
 
       ~p"/posts?page=#{page}"
 
@@ -42,6 +41,36 @@ defmodule Phoenix.VerifiedRoutes do
 
   Like path segments, query strings params are proper URL encoded and may be interpolated
   directly into the ~p string.
+
+  ## What about named routes?
+
+  Many web frameworks, and early versions of Phoenix, provided a feature called "named routes".
+  The idea is that, when you define routes in your web applications, you could give them names
+  too. In Phoenix that was done as follows:
+
+      get "/login", SessionController, :create, as: :login
+
+  And now you could generate the route usnig the `login_path` function.
+
+  Named routes exist to avoid hardcoding routes in your templates, if you wrote `<a href="/login">`
+  and then changed your router, the link would point to a page that no longer exist. By using
+  `login_path`, we make sure it always points to a valid URL in our router. However, named routes
+  come with the downsides of indirection: when you look at the code, it is not immediately clear
+  which URL will be generated. Furthermore, if you have an existing URL and you want to add it
+  to a template, you need to do a reverse lookup and find its name in the router. At the end of
+  the day, named routes are arbitrary names that need to be memorized by developers, adding
+  cognitive overhead.
+
+  Verified routes tackle this problem by allowing the routes to be written as we would read them
+  in a browser, but using the `~p` sigil to guarantee they actually exist at compilation time.
+  They remove the indirection of named routes while keeping their guarantees.
+
+  In any case, if part of your application requires features similar to named routes, then
+  remember you can still leverage Elixir features to achieve the same result. For example,
+  you can define several functions as named routes to be reused across modules:
+
+      def login_path, do: ~p"/login"
+      def user_home_path(user), do: ~p"/users/#{user.username}"
 
   ## Options
 

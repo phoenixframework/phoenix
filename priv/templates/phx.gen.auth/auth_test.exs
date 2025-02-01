@@ -1,8 +1,8 @@
 defmodule <%= inspect auth_module %>Test do
   use <%= inspect context.web_module %>.ConnCase<%= test_case_options %>
 
-  alias Phoenix.LiveView
-  alias <%= inspect context.module %>
+  <%= if live? do %>alias Phoenix.LiveView
+  <% end %>alias <%= inspect context.module %>
   alias <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Auth
   import <%= inspect context.module %>Fixtures
 
@@ -117,7 +117,7 @@ defmodule <%= inspect auth_module %>Test do
     end
   end
 
-  describe "on_mount :mount_current_<%= schema.singular %>" do
+  <%= if live? do %>describe "on_mount :mount_current_<%= schema.singular %>" do
     test "assigns current_<%= schema.singular %> based on a valid <%= schema.singular %>_token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
@@ -212,7 +212,7 @@ defmodule <%= inspect auth_module %>Test do
     end
   end
 
-  describe "redirect_if_<%= schema.singular %>_is_authenticated/2" do
+  <% end %>describe "redirect_if_<%= schema.singular %>_is_authenticated/2" do
     test "redirects if <%= schema.singular %> is authenticated", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = conn |> assign(:current_<%= schema.singular %>, <%= schema.singular %>) |> <%= inspect schema.alias %>Auth.redirect_if_<%= schema.singular %>_is_authenticated([])
       assert conn.halted

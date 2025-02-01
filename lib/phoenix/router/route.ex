@@ -177,15 +177,9 @@ defmodule Phoenix.Router.Route do
     match_all = match_params ++ match_private ++ match_assigns
     merge_all = merge_params ++ merge_private ++ merge_assigns
 
-    if merge_all != [] do
-      quote do
-        %{unquote_splicing(match_all)} = var!(conn, :conn)
-        %{var!(conn, :conn) | unquote_splicing(merge_all)}
-      end
-    else
-      quote do
-        var!(conn, :conn)
-      end
+    quote do
+      %{unquote_splicing(match_all)} = var!(conn, :conn)
+      %{var!(conn, :conn) | unquote_splicing(merge_all)}
     end
   end
 

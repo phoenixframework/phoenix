@@ -828,7 +828,7 @@ defmodule Phoenix.Endpoint do
       if so, the level
 
     * `:check_origin` - if the transport should check the origin of requests when
-      the `origin` header is present. May be `true`, `false`, a list of hosts that
+      the `origin` header is present. May be `true`, `false`, a list of URIs that
       are allowed, or a function provided as MFA tuple. Defaults to `:check_origin`
       setting at endpoint configuration.
 
@@ -839,8 +839,8 @@ defmodule Phoenix.Endpoint do
       Only use in development, when the host is truly unknown or when
       serving clients that do not send the `origin` header, such as mobile apps.
 
-      You can also specify a list of explicitly allowed origins. Wildcards are
-      supported.
+      You can also specify a list of explicitly allowed origins. Each origin may include
+      scheme, host, and port. Wildcards are supported.
 
           check_origin: [
             "https://example.com",
