@@ -179,8 +179,8 @@ defmodule Phoenix.VerifiedRoutes do
       end
 
   Finally, for even more complex use cases, where the whole URL needs to localized,
-  see projects such as [Routex](https://github.com/BartOtten/routex) and
-  [CLDR.Routes](https://github.com/elixir-cldr/cldr_routes).
+  see projects such as [`routex`](https://github.com/BartOtten/routex) and
+  [`ex_cldr_routes`](https://github.com/elixir-cldr/cldr_routes).
   '''
   @doc false
   defstruct router: nil,
