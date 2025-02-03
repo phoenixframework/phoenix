@@ -148,7 +148,7 @@ defmodule Phoenix.VerifiedRoutes do
   of this approach is that you don't have to change the routes in your application and
   verified routes works as is.
 
-  Some applications, however, like to the locale as part of the URL prefix:
+  Some applications, however, like to add the locale as part of the URL prefix:
 
       scope "/:locale" do
         get "/posts"
