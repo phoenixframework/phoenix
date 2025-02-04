@@ -76,7 +76,7 @@ defmodule Phoenix.SocketTest do
     test "merges keyword lists" do
       socket = %Phoenix.Socket{}
       socket = assign(socket, %{foo: :bar, abc: :def})
-      socket = assign(socket, [foo: :baz])
+      socket = assign(socket, foo: :baz)
       assert socket.assigns[:foo] == :baz
       assert socket.assigns[:abc] == :def
     end
@@ -109,7 +109,8 @@ defmodule Phoenix.SocketTest do
       ]
 
       assert DrainerSpecSocket.drainer_spec(drainer: drainer_spec, endpoint: Endpoint) ==
-               {Phoenix.Socket.PoolDrainer, {Endpoint, DrainerSpecSocket, drainer_spec}}
+               {Phoenix.Socket.PoolDrainer,
+                {Endpoint, DrainerSpecSocket, [endpoint: Endpoint, drainer: drainer_spec]}}
     end
 
     test "loads dynamic drainer config" do
@@ -119,7 +120,8 @@ defmodule Phoenix.SocketTest do
                drainer: {DrainerSpecSocket, :dynamic_drainer_config, []},
                endpoint: Endpoint
              ) ==
-               {Phoenix.Socket.PoolDrainer, {Endpoint, DrainerSpecSocket, drainer_spec}}
+               {Phoenix.Socket.PoolDrainer,
+                {Endpoint, DrainerSpecSocket, [endpoint: Endpoint, drainer: drainer_spec]}}
     end
 
     test "returns ignore if drainer is set to false" do
