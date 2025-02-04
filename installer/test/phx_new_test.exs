@@ -149,6 +149,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/config/dev.exs", fn file ->
         assert file =~ "esbuild: {Esbuild,"
         assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
+        assert file =~ "http: [ip: {127, 0, 0, 1}, port: 4000]"
       end)
 
       # tailwind
@@ -818,5 +819,14 @@ defmodule Mix.Tasks.Phx.NewTest do
     assert_raise Mix.Error, ~r/Application name cannot be "table" as it is reserved/, fn ->
       Mix.Tasks.Phx.New.run(["table"])
     end
+  end
+
+  test "new from inside docker machine (simulated)" do
+    in_tmp("new without defaults", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--inside-docker-env"])
+      assert_file("phx_blog/config/dev.exs", fn file ->
+        assert file =~ "http: [ip: {0, 0, 0, 0}, port: 4000]"
+      end)
+    end)
   end
 end
