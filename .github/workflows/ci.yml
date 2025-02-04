@@ -9,6 +9,7 @@ jobs:
 
     env:
       MIX_ENV: test
+      PHX_CI: true
 
     strategy:
       matrix:

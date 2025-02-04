@@ -186,7 +186,7 @@ defmodule Phx.New.Generator do
     # we want to treat it like regular env for end-user testing purposes
     inside_docker_env? =
       Keyword.get_lazy(opts, :inside_docker_env, fn ->
-        if System.get_env("GITHUB_ACTIONS") do
+        if System.get_env("PHX_CI") do
           false
         else
           File.exists?("/.dockerenv")
