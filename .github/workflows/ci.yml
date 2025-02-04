@@ -118,6 +118,7 @@ jobs:
       image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-${{ matrix.suffix }}
       env:
         ELIXIR_ASSERT_TIMEOUT: 10000
+        PHX_CI: true
     services:
       postgres:
         image: postgres
