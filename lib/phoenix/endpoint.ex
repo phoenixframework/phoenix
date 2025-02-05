@@ -690,8 +690,43 @@ defmodule Phoenix.Endpoint do
 
   defp socket_paths(endpoint, path, socket, opts) do
     paths = []
-    websocket = Keyword.get(opts, :websocket, true)
-    longpoll = Keyword.get(opts, :longpoll, false)
+
+    common_config = [
+      :path,
+      :serializer,
+      :transport_log,
+      :check_origin,
+      :check_csrf,
+      :code_reloader,
+      :connect_info
+    ]
+
+    websocket =
+      opts
+      |> Keyword.get(:websocket, true)
+      |> maybe_validate_keys(
+        common_config ++
+          [
+            :timeout,
+            :max_frame_size,
+            :fullsweep_after,
+            :compress,
+            :subprotocols,
+            :error_handler
+          ]
+      )
+
+    longpoll =
+      opts
+      |> Keyword.get(:longpoll, true)
+      |> maybe_validate_keys(
+        common_config ++
+          [
+            :window_ms,
+            :pubsub_timeout_ms,
+            :crypto
+          ]
+      )
 
     paths =
       if websocket do
@@ -744,6 +779,9 @@ defmodule Phoenix.Endpoint do
 
     {conn_ast, path}
   end
+
+  defp maybe_validate_keys(true, _), do: true
+  defp maybe_validate_keys(opts, keys) when is_list(opts), do: Keyword.validate!(opts, keys)
 
   ## API
 
