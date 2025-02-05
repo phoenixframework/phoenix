@@ -46,6 +46,11 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.20
+
+### Enhancements
+  * Add `[:phoenix, :socket_drain]` telemetry event to track socket draining and use it for logging
+
 ## 1.7.19 (2025-01-31)
 
 ### Enhancements
