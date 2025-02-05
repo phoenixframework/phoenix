@@ -58,6 +58,11 @@ defmodule Phoenix.Logger do
       * Metadata: `%{endpoint: atom, transport: atom, params: term, connect_info: map, vsn: binary, user_socket: atom, result: :ok | :error, serializer: atom, log: Logger.level | false}`
       * Disable logging: `use Phoenix.Socket, log: false` or `socket "/foo", MySocket, websocket: [log: false]` in your endpoint
 
+    * `[:phoenix, :socket_drain]` - dispatched by `Phoenix.Socket` when using the `:drainer` option
+      * Measurement: `%{count: integer, total: integer, index: integer, rounds: integer}`
+      * Metadata: `%{endpoint: atom, socket: atom, intervasl: integer, log: Logger.level | false}`
+      * Disable logging: `use Phoenix.Socket, log: false` in your endpoint or pass `:log` option in the `:drainer` option
+
     * `[:phoenix, :channel_joined]` - dispatched at the end of a channel join
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{result: :ok | :error, params: term, socket: Phoenix.Socket.t}`
@@ -134,6 +139,7 @@ defmodule Phoenix.Logger do
       [:phoenix, :router_dispatch, :start] => &__MODULE__.phoenix_router_dispatch_start/4,
       [:phoenix, :error_rendered] => &__MODULE__.phoenix_error_rendered/4,
       [:phoenix, :socket_connected] => &__MODULE__.phoenix_socket_connected/4,
+      [:phoenix, :socket_drain] => &__MODULE__.phoenix_socket_drain/4,
       [:phoenix, :channel_joined] => &__MODULE__.phoenix_channel_joined/4,
       [:phoenix, :channel_handled_in] => &__MODULE__.phoenix_channel_handled_in/4
     }
@@ -338,6 +344,22 @@ defmodule Phoenix.Logger do
 
   defp connect_result(:ok), do: "CONNECTED TO "
   defp connect_result(:error), do: "REFUSED CONNECTION TO "
+
+  @doc false
+  def phoenix_socket_drain(_, _, %{log: false}, _), do: :ok
+
+  def phoenix_socket_drain(_, %{count: count, total: total, index: index, rounds: rounds}, %{log: level} = meta, _) do
+    Logger.log(level, fn ->
+      %{socket: socket, interval: interval} = meta
+
+      [
+        "DRAINING #{count} of #{total} total connection(s) for socket ",
+        inspect(socket),
+        " every #{interval}ms - ",
+        "round #{index} of #{rounds}"
+      ]
+    end)
+  end
 
   ## Event: [:phoenix, :channel_joined]
 

@@ -784,6 +784,8 @@ defmodule Phoenix.Endpoint do
         batch to terminate. Defaults to 2000ms.
       * `:shutdown` - The maximum amount of time in milliseconds allowed
         to drain all batches. Defaults to 30000ms.
+      * `:log` - the log level for drain actions. Defaults the `:log` option
+        passed to `use Phoenix.Socket` or `:info`. Set it to `false` to disable logging.
 
       For example, if you have 150k connections, the default values will
       split them into 15 batches of 10k connections. Each batch takes
