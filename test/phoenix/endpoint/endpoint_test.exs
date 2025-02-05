@@ -370,4 +370,22 @@ defmodule Phoenix.Endpoint.EndpointTest do
       Endpoint.static_integrity("//invalid_path")
     end
   end
+
+  test "validates websocket and longpoll socket options" do
+    assert_raise ArgumentError, ~r/unknown keys \[:invalid\]/, fn ->
+      defmodule MyInvalidSocketEndpoint1 do
+        use Phoenix.Endpoint, otp_app: :phoenix
+
+        socket "/ws", UserSocket, websocket: [path: "/ws", check_origin: false, invalid: true]
+      end
+    end
+
+    assert_raise ArgumentError, ~r/unknown keys \[:drainer\]/, fn ->
+      defmodule MyInvalidSocketEndpoint2 do
+        use Phoenix.Endpoint, otp_app: :phoenix
+
+        socket "/ws", UserSocket, longpoll: [path: "/ws", check_origin: false, drainer: []]
+      end
+    end
+  end
 end

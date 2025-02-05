@@ -67,7 +67,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
       custom: :value
 
     socket "/custom/:socket_var", UserSocket,
-      longpoll: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200],
+      longpoll: [path: ":path_var/path", check_origin: ["//example.com"], pubsub_timeout_ms: 200],
       custom: :value
   end
 
