@@ -16,13 +16,13 @@ If you want to import JavaScript dependencies, you have at least three options t
 
 1. Vendor those dependencies inside your project and import them in your "assets/js/app.js" using a relative path:
 
-   ```js
+   ```javascript
    import topbar from "../vendor/topbar"
    ```
 
 2. Call `npm install topbar --prefix assets` will create `package.json` and `package-lock.json` inside your assets directory and `esbuild` will be able to automatically pick them up:
 
-   ```js
+   ```javascript
    import topbar from "topbar"
    ```
 
@@ -35,7 +35,7 @@ If you want to import JavaScript dependencies, you have at least three options t
 
    Run `mix deps.get` to fetch the dependency and then import it:
 
-   ```js
+   ```javascript
    import topbar from "topbar"
    ```
 
@@ -94,7 +94,7 @@ $ yarn add ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view
 
 Next, add a custom JavaScript build script. We'll call the example `assets/build.js`:
 
-```js
+```javascript
 const esbuild = require("esbuild");
 
 const args = process.argv.slice(2);
