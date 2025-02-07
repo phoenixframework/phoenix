@@ -773,7 +773,7 @@ defmodule Phoenix.Endpoint do
 
         quote do
           params = %{unquote_splicing(params)}
-          %Plug.Conn{conn | path_params: params, params: params}
+          %{conn | path_params: params, params: params}
         end
       end
 
