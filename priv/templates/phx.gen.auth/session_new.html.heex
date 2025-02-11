@@ -1,37 +1,71 @@
 <div class="mx-auto max-w-sm">
   <.header class="text-center">
-    Log in to account
+    <p>Log in</p>
     <:subtitle>
-      Don't have an account?
-      <.link navigate={~p"<%= schema.route_prefix %>/register"} class="font-semibold text-brand hover:underline">
-        Sign up
-      </.link>
-      for an account now.
+      <%%= if @current_<%= schema.singular %> do %>
+        You need to reauthenticate to perform sensitive actions on your account.
+      <%% else %>
+        Don't have an account? <.link
+          navigate={~p"<%= schema.route_prefix %>/register"}
+          class="font-semibold text-brand hover:underline"
+          phx-no-format
+        >Sign up</.link> for an account now.
+      <%% end %>
     </:subtitle>
   </.header>
 
-  <.simple_form :let={f} for={@conn.params["<%= schema.singular %>"]} as={:<%= schema.singular %>} action={~p"<%= schema.route_prefix %>/log-in"}>
-    <.error :if={@error_message}>{@error_message}</.error>
-
-    <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
+  <.simple_form :let={f} for={@form} as={:<%= schema.singular %>} id="login_form_magic" action={~p"<%= schema.route_prefix %>/log-in"}>
     <.input
-      field={f[:password]}
-      type="password"
-      label="Password"
-      autocomplete="current-password"
+      readonly={!!@current_<%= schema.singular %>}
+      field={f[:email]}
+      type="email"
+      label="Email"
+      autocomplete="username"
       required
     />
-
-    <:actions :let={f}>
-      <.input field={f[:remember_me]} type="checkbox" label="Keep me logged in" />
-      <.link href={~p"<%= schema.route_prefix %>/reset-password"} class="text-sm font-semibold">
-        Forgot your password?
-      </.link>
-    </:actions>
-    <:actions>
-      <.button phx-disable-with="Logging in..." class="w-full">
-        Log in <span aria-hidden="true">→</span>
-      </.button>
-    </:actions>
+    <.button class="w-full">
+      Log in with email <span aria-hidden="true">→</span>
+    </.button>
   </.simple_form>
+
+  <div class="flex items-center mt-8 -mb-6 text-sm">
+    <hr class="flex-grow border-t-2 border-gray-300" />
+    <span class="mx-2 text-gray-500">or</span>
+    <hr class="flex-grow border-t-2 border-gray-300" />
+  </div>
+
+  <.simple_form
+    :let={f}
+    for={@form}
+    as={:<%= schema.singular %>}
+    id="login_form_password"
+    action={~p"<%= schema.route_prefix %>/log-in"}
+  >
+    <.error :if={@error_message}>{@error_message}</.error>
+    <.input
+      readonly={!!@current_<%= schema.singular %>}
+      field={f[:email]}
+      type="email"
+      label="Email"
+      autocomplete="username"
+      required
+    />
+    <.input field={f[:password]} type="password" label="Password" autocomplete="current-password" />
+    <.input
+      :if={!@current_<%= schema.singular %>}
+      field={f[:remember_me]}
+      type="checkbox"
+      label="Keep me logged in"
+    />
+    <.button class="w-full">
+      Log in <span aria-hidden="true">→</span>
+    </.button>
+  </.simple_form>
+
+  <div :if={local_mail_adapter?()} class="mt-8 p-4 border text-center">
+    <p>You are running the local mail adapter.</p>
+    <p>
+      To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
+    </p>
+  </div>
 </div>

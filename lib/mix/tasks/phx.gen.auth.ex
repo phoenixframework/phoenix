@@ -298,34 +298,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             "#{singular}_live",
             "login_test.exs"
           ],
-          "reset_password_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "reset_password.ex"
-          ],
-          "reset_password_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "reset_password_test.exs"
-          ],
-          "forgot_password_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "forgot_password.ex"
-          ],
-          "forgot_password_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "forgot_password_test.exs"
-          ],
           "settings_live.ex": [web_pre, "live", web_path, "#{singular}_live", "settings.ex"],
           "settings_live_test.exs": [
             web_test_pre,
@@ -347,20 +319,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             web_path,
             "#{singular}_live",
             "confirmation_test.exs"
-          ],
-          "confirmation_instructions_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "confirmation_instructions.ex"
-          ],
-          "confirmation_instructions_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "confirmation_instructions_test.exs"
           ]
         ]
 
@@ -368,24 +326,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
       _ ->
         non_live_files = [
-          "confirmation_html.ex": [controller_pre, "#{singular}_confirmation_html.ex"],
-          "confirmation_new.html.heex": [
-            controller_pre,
-            "#{singular}_confirmation_html",
-            "new.html.heex"
-          ],
-          "confirmation_edit.html.heex": [
-            controller_pre,
-            "#{singular}_confirmation_html",
-            "edit.html.heex"
-          ],
-          "confirmation_controller.ex": [controller_pre, "#{singular}_confirmation_controller.ex"],
-          "confirmation_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_confirmation_controller_test.exs"
-          ],
           "registration_new.html.heex": [
             controller_pre,
             "#{singular}_registration_html",
@@ -399,29 +339,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             "#{singular}_registration_controller_test.exs"
           ],
           "registration_html.ex": [controller_pre, "#{singular}_registration_html.ex"],
-          "reset_password_html.ex": [controller_pre, "#{singular}_reset_password_html.ex"],
-          "reset_password_controller.ex": [
-            controller_pre,
-            "#{singular}_reset_password_controller.ex"
-          ],
-          "reset_password_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_reset_password_controller_test.exs"
-          ],
-          "reset_password_edit.html.heex": [
-            controller_pre,
-            "#{singular}_reset_password_html",
-            "edit.html.heex"
-          ],
-          "reset_password_new.html.heex": [
-            controller_pre,
-            "#{singular}_reset_password_html",
-            "new.html.heex"
-          ],
           "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
           "session_new.html.heex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
+          "session_confirm.html.heex": [controller_pre, "#{singular}_session_html", "confirm.html.heex"],
           "settings_html.ex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
           "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
           "settings_edit.html.heex": [

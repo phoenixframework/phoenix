@@ -1,0 +1,38 @@
+<div class="mx-auto max-w-sm">
+  <.header class="text-center">Welcome {@<%= schema.singular %>.email}</.header>
+
+  <.simple_form
+    :if={!@<%= schema.singular %>.confirmed_at}
+    for={@form}
+    id="confirmation_form"
+    action={~p"<%= schema.route_prefix %>/log-in?_action=confirmed"}
+  >
+    <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
+    <.input
+      :if={!@current_<%= schema.singular %>}
+      field={@form[:remember_me]}
+      type="checkbox"
+      label="Keep me logged in"
+    />
+    <:actions>
+      <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
+    </:actions>
+  </.simple_form>
+
+  <.simple_form :if={@<%= schema.singular %>.confirmed_at} for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log-in"}>
+    <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
+    <.input
+      :if={!@current_<%= schema.singular %>}
+      field={@form[:remember_me]}
+      type="checkbox"
+      label="Keep me logged in"
+    />
+    <:actions>
+      <.button phx-disable-with="Logging in..." class="w-full">Log in</.button>
+    </:actions>
+  </.simple_form>
+
+  <p :if={!@<%= schema.singular %>.confirmed_at} class="mt-8 p-4 border text-center">
+    Tip: If you prefer passwords, you can enable them in the <%= schema.singular %> settings.
+  </p>
+</div>

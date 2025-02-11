@@ -13,15 +13,6 @@
       <input type="hidden" name="action" value="update_email" />
 
       <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
-      <.input
-        field={f[:current_password]}
-        name="current_password"
-        type="password"
-        label="Current Password"
-        autocomplete="current-password"
-        required
-        id="current_password_for_email"
-      />
       <:actions>
         <.button phx-disable-with="Changing...">Change Email</.button>
       </:actions>
@@ -54,18 +45,10 @@
         autocomplete="new-password"
         required
       />
-
-      <.input
-        field={f[:current_password]}
-        name="current_password"
-        type="password"
-        label="Current password"
-        id="current_password_for_password"
-        autocomplete="current-password"
-        required
-      />
       <:actions>
-        <.button phx-disable-with="Changing...">Change Password</.button>
+        <.button phx-disable-with="Changing...">
+          Save Password
+        </.button>
       </:actions>
     </.simple_form>
   </div>
