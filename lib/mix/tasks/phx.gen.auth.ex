@@ -167,7 +167,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       router_scope: router_scope(context),
       web_path_prefix: web_path_prefix(schema),
       test_case_options: test_case_options(ecto_adapter),
-      live?: Keyword.fetch!(context.opts, :live)
+      live?: Keyword.fetch!(context.opts, :live),
+      datetime_module: datetime_module(schema)
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -790,6 +791,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp test_case_options(Ecto.Adapters.Postgres), do: ", async: true"
   defp test_case_options(adapter) when is_atom(adapter), do: ""
+
+  defp datetime_module(%{timestamp_type: :naive_datetime}), do: NaiveDateTime
+  defp datetime_module(%{timestamp_type: :utc_datetime}), do: DateTime
+  defp datetime_module(%{timestamp_type: :utc_datetime_usec}), do: DateTime
 
   defp put_live_option(schema) do
     opts =

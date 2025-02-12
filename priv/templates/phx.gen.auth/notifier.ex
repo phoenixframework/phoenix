@@ -49,7 +49,7 @@ defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Notifier do
   end
 
   defp deliver_magic_link_instructions(<%= schema.singular %>, url) do
-    deliver(<%= schema.singular %>.email, "Log in", """
+    deliver(<%= schema.singular %>.email, "Log in instructions", """
 
     ==============================
 

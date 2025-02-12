@@ -84,15 +84,15 @@
 
   describe "sudo_mode?/2" do
     test "validates the authenticated_at time" do
-      now = DateTime.utc_now()
+      now = <%= inspect datetime_module %>.utc_now()
 
-      assert <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: DateTime.utc_now()})
-      assert <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: DateTime.add(now, -19, :minute)})
-      refute <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: DateTime.add(now, -21, :minute)})
+      assert <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: <%= inspect datetime_module %>.utc_now()})
+      assert <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: <%= inspect datetime_module %>.add(now, -19, :minute)})
+      refute <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: <%= inspect datetime_module %>.add(now, -21, :minute)})
 
       # minute override
       refute <%= inspect context.alias %>.sudo_mode?(
-               %<%= inspect schema.alias %>{authenticated_at: DateTime.add(now, -11, :minute)},
+               %<%= inspect schema.alias %>{authenticated_at: <%= inspect datetime_module %>.add(now, -11, :minute)},
                -10
              )
 

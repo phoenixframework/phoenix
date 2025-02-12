@@ -27,7 +27,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert html =~ "If your email is in our system"
 
-      assert <%= inspect schema.repo %>.get_by!(<%= inspect context.module %>.<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id).context == "login"
+      assert <%= inspect schema.repo %>.get_by!(<%= inspect context.module %>.<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id).context ==
+               "login"
     end
 
     test "does not disclose if <%= schema.singular %> is registered", %{conn: conn} do

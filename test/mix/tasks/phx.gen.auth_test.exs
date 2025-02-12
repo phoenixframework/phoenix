@@ -109,7 +109,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "Mailer.deliver(email)"
         assert file =~ ~s|from({"MyApp", "contact@example.com"})|
         assert file =~ ~s|deliver(user.email, "Confirmation instructions",|
-        assert file =~ ~s|deliver(user.email, "Reset password instructions",|
+        assert file =~ ~s|deliver(user.email, "Log in instructions",|
         assert file =~ ~s|deliver(user.email, "Update email instructions",|
       end)
 
@@ -117,18 +117,9 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file("test/support/fixtures/accounts_fixtures.ex")
       assert_file("lib/my_app_web/user_auth.ex")
       assert_file("test/my_app_web/user_auth_test.exs")
-      assert_file("lib/my_app_web/controllers/user_confirmation_html.ex")
-      assert_file("lib/my_app_web/controllers/user_confirmation_html/new.html.heex")
-      assert_file("lib/my_app_web/controllers/user_confirmation_controller.ex")
-      assert_file("test/my_app_web/controllers/user_confirmation_controller_test.exs")
       assert_file("lib/my_app_web/controllers/user_registration_controller.ex")
       assert_file("lib/my_app_web/controllers/user_registration_html.ex")
       assert_file("test/my_app_web/controllers/user_registration_controller_test.exs")
-      assert_file("lib/my_app_web/controllers/user_reset_password_controller.ex")
-      assert_file("lib/my_app_web/controllers/user_reset_password_html/edit.html.heex")
-      assert_file("lib/my_app_web/controllers/user_reset_password_html/new.html.heex")
-      assert_file("lib/my_app_web/controllers/user_reset_password_html.ex")
-      assert_file("test/my_app_web/controllers/user_reset_password_controller_test.exs")
       assert_file("lib/my_app_web/controllers/user_session_controller.ex")
       assert_file("lib/my_app_web/controllers/user_session_html/new.html.heex")
       assert_file("test/my_app_web/controllers/user_session_controller_test.exs")
@@ -161,12 +152,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    get "/users/register", UserRegistrationController, :new
                    post "/users/register", UserRegistrationController, :create
-                   get "/users/log-in", UserSessionController, :new
-                   post "/users/log-in", UserSessionController, :create
-                   get "/users/reset-password", UserResetPasswordController, :new
-                   post "/users/reset-password", UserResetPasswordController, :create
-                   get "/users/reset-password/:token", UserResetPasswordController, :edit
-                   put "/users/reset-password/:token", UserResetPasswordController, :update
                  end
 
                  scope "/", MyAppWeb do
@@ -180,11 +165,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  scope "/", MyAppWeb do
                    pipe_through [:browser]
 
+                   get "/users/log-in", UserSessionController, :new
+                   get "/users/log-in/:token", UserSessionController, :confirm
+                   post "/users/log-in", UserSessionController, :create
                    delete "/users/log-out", UserSessionController, :delete
-                   get "/users/confirm", UserConfirmationController, :new
-                   post "/users/confirm", UserConfirmationController, :create
-                   get "/users/confirm/:token", UserConfirmationController, :edit
-                   post "/users/confirm/:token", UserConfirmationController, :update
                  end
                """
       end)
@@ -204,8 +188,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
-        assert file =~ "def register_and_log_in_user(%{conn: conn})"
-        assert file =~ "def log_in_user(conn, user)"
+        assert file =~ "def register_and_log_in_user(%{conn: conn} = context)"
+        assert file =~ "def log_in_user(conn, user, opts \\\\ [])"
       end)
 
       assert_received {:mix_shell, :info,
@@ -245,7 +229,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "Mailer.deliver(email)"
         assert file =~ ~s|from({"MyApp", "contact@example.com"})|
         assert file =~ ~s|deliver(user.email, "Confirmation instructions",|
-        assert file =~ ~s|deliver(user.email, "Reset password instructions",|
+        assert file =~ ~s|deliver(user.email, "Log in instructions",|
         assert file =~ ~s|deliver(user.email, "Update email instructions",|
       end)
 
@@ -253,16 +237,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file("test/my_app_web/live/user_live/registration_test.exs")
       assert_file("lib/my_app_web/live/user_live/login.ex")
       assert_file("test/my_app_web/live/user_live/login_test.exs")
-      assert_file("lib/my_app_web/live/user_live/reset_password.ex")
-      assert_file("test/my_app_web/live/user_live/reset_password_test.exs")
-      assert_file("lib/my_app_web/live/user_live/forgot_password.ex")
-      assert_file("test/my_app_web/live/user_live/forgot_password_test.exs")
       assert_file("lib/my_app_web/live/user_live/settings.ex")
       assert_file("test/my_app_web/live/user_live/settings_test.exs")
       assert_file("lib/my_app_web/live/user_live/confirmation.ex")
       assert_file("test/my_app_web/live/user_live/confirmation_test.exs")
-      assert_file("lib/my_app_web/live/user_live/confirmation_instructions.ex")
-      assert_file("test/my_app_web/live/user_live/confirmation_instructions_test.exs")
 
       assert_file("lib/my_app_web/user_auth.ex")
       assert_file("test/my_app_web/user_auth_test.exs")
@@ -286,20 +264,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ## Authentication routes
 
                  scope "/", MyAppWeb do
-                   pipe_through [:browser, :redirect_if_user_is_authenticated]
-
-                   live_session :redirect_if_user_is_authenticated,
-                     on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-                     live "/users/register", UserLive.Registration, :new
-                     live "/users/log-in", UserLive.Login, :new
-                     live "/users/reset-password", UserLive.ForgotPassword, :new
-                     live "/users/reset-password/:token", UserLive.ResetPassword, :edit
-                   end
-
-                   post "/users/log-in", UserSessionController, :create
-                 end
-
-                 scope "/", MyAppWeb do
                    pipe_through [:browser, :require_authenticated_user]
 
                    live_session :require_authenticated_user,
@@ -307,18 +271,22 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                      live "/users/settings", UserLive.Settings, :edit
                      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
                    end
+
+                   post "/users/update-password", UserSessionController, :update_password
                  end
 
                  scope "/", MyAppWeb do
                    pipe_through [:browser]
 
-                   delete "/users/log-out", UserSessionController, :delete
-
                    live_session :current_user,
                      on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
-                     live "/users/confirm/:token", UserLive.Confirmation, :edit
-                     live "/users/confirm", UserLive.ConfirmationInstructions, :new
+                     live "/users/register", UserLive.Registration, :new
+                     live "/users/log-in", UserLive.Login, :new
+                     live "/users/log-in/:token", UserLive.Confirmation, :new
                    end
+
+                   post "/users/log-in", UserSessionController, :create
+                   delete "/users/log-out", UserSessionController, :delete
                  end
                """
       end)
@@ -338,8 +306,8 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
-        assert file =~ "def register_and_log_in_user(%{conn: conn})"
-        assert file =~ "def log_in_user(conn, user)"
+        assert file =~ "def register_and_log_in_user(%{conn: conn} = context)"
+        assert file =~ "def log_in_user(conn, user, opts \\\\ [])"
       end)
 
       assert_received {:mix_shell, :info,
@@ -383,20 +351,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  ## Authentication routes
 
                  scope "/", MyAppWeb do
-                   pipe_through [:browser, :redirect_if_user_is_authenticated]
-
-                   live_session :redirect_if_user_is_authenticated,
-                     on_mount: [{MyAppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-                     live "/users/register", UserLive.Registration, :new
-                     live "/users/log-in", UserLive.Login, :new
-                     live "/users/reset-password", UserLive.ForgotPassword, :new
-                     live "/users/reset-password/:token", UserLive.ResetPassword, :edit
-                   end
-
-                   post "/users/log-in", UserSessionController, :create
-                 end
-
-                 scope "/", MyAppWeb do
                    pipe_through [:browser, :require_authenticated_user]
 
                    live_session :require_authenticated_user,
@@ -404,18 +358,22 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                      live "/users/settings", UserLive.Settings, :edit
                      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
                    end
+
+                   post "/users/update-password", UserSessionController, :update_password
                  end
 
                  scope "/", MyAppWeb do
                    pipe_through [:browser]
 
-                   delete "/users/log-out", UserSessionController, :delete
-
                    live_session :current_user,
                      on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
-                     live "/users/confirm/:token", UserLive.Confirmation, :edit
-                     live "/users/confirm", UserLive.ConfirmationInstructions, :new
+                     live "/users/register", UserLive.Registration, :new
+                     live "/users/log-in", UserLive.Login, :new
+                     live "/users/log-in/:token", UserLive.Confirmation, :new
                    end
+
+                   post "/users/log-in", UserSessionController, :create
+                   delete "/users/log-out", UserSessionController, :delete
                  end
                """
       end)
@@ -455,12 +413,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    get "/users/register", UserRegistrationController, :new
                    post "/users/register", UserRegistrationController, :create
-                   get "/users/log-in", UserSessionController, :new
-                   post "/users/log-in", UserSessionController, :create
-                   get "/users/reset-password", UserResetPasswordController, :new
-                   post "/users/reset-password", UserResetPasswordController, :create
-                   get "/users/reset-password/:token", UserResetPasswordController, :edit
-                   put "/users/reset-password/:token", UserResetPasswordController, :update
                  end
 
                  scope "/", MyAppWeb do
@@ -474,11 +426,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  scope "/", MyAppWeb do
                    pipe_through [:browser]
 
+                   get "/users/log-in", UserSessionController, :new
+                   get "/users/log-in/:token", UserSessionController, :confirm
+                   post "/users/log-in", UserSessionController, :create
                    delete "/users/log-out", UserSessionController, :delete
-                   get "/users/confirm", UserConfirmationController, :new
-                   post "/users/confirm", UserConfirmationController, :create
-                   get "/users/confirm/:token", UserConfirmationController, :edit
-                   post "/users/confirm/:token", UserConfirmationController, :update
                  end
                """
       end)
@@ -514,35 +465,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "defmodule MyAppWeb.Warehouse.UserAuthTest do"
       end)
 
-      assert_file("lib/my_app_web/controllers/warehouse/user_confirmation_html.ex", fn file ->
-        assert file =~ "defmodule MyAppWeb.Warehouse.UserConfirmationHTML do"
-      end)
-
-      assert_file("lib/my_app_web/controllers/warehouse/user_confirmation_html/new.html.heex", fn file ->
-        assert file =~
-                 ~S(<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/confirm"}>)
-
-        assert file =~
-                 ~r|<\.link.*href={~p"/warehouse/users/register"}.*>|s
-
-        assert file =~
-                 ~r|<\.link.*href={~p"/warehouse/users/log-in"}.*>|s
-      end)
-
-      assert_file(
-        "lib/my_app_web/controllers/warehouse/user_confirmation_controller.ex",
-        fn file ->
-          assert file =~ "defmodule MyAppWeb.Warehouse.UserConfirmationController do"
-        end
-      )
-
-      assert_file(
-        "test/my_app_web/controllers/warehouse/user_confirmation_controller_test.exs",
-        fn file ->
-          assert file =~ "defmodule MyAppWeb.Warehouse.UserConfirmationControllerTest do"
-        end
-      )
-
       assert_file("lib/my_app_web/components/layouts/root.html.heex", fn file ->
         assert file =~
                  ~r|<\.link.*href={~p"/warehouse/users/settings"}.*>|s
@@ -575,53 +497,26 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         end
       )
 
-      assert_file(
-        "lib/my_app_web/controllers/warehouse/user_reset_password_controller.ex",
-        fn file ->
-          assert file =~ "defmodule MyAppWeb.Warehouse.UserResetPasswordController do"
-        end
-      )
-
-      assert_file(
-        "lib/my_app_web/controllers/warehouse/user_reset_password_html/edit.html.heex",
-        fn file ->
-          assert file =~
-                   ~S|<.simple_form :let={f} for={@changeset} action={~p"/warehouse/users/reset-password/#{@token}"}>|
-        end
-      )
-
-      assert_file(
-        "lib/my_app_web/controllers/warehouse/user_reset_password_html/new.html.heex",
-        fn file ->
-          assert file =~
-                   ~S(<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/reset-password"}>)
-        end
-      )
-
-      assert_file("lib/my_app_web/controllers/warehouse/user_reset_password_html.ex", fn file ->
-        assert file =~ "defmodule MyAppWeb.Warehouse.UserResetPasswordHTML do"
-      end)
-
-      assert_file(
-        "test/my_app_web/controllers/warehouse/user_reset_password_controller_test.exs",
-        fn file ->
-          assert file =~ "defmodule MyAppWeb.Warehouse.UserResetPasswordControllerTest do"
-        end
-      )
-
       assert_file("lib/my_app_web/controllers/warehouse/user_session_controller.ex", fn file ->
         assert file =~ "defmodule MyAppWeb.Warehouse.UserSessionController do"
       end)
 
       assert_file("lib/my_app_web/controllers/warehouse/user_session_html/new.html.heex", fn file ->
         assert file =~
-                 ~S|<.simple_form :let={f} for={@conn.params["user"]} as={:user} action={~p"/warehouse/users/log-in"}>|
+                 ~S|<.simple_form :let={f} for={@form} as={:user} id="login_form_magic" action={~p"/warehouse/users/log-in"}>|
+
+        assert file =~ """
+          <.simple_form
+            :let={f}
+            for={@form}
+            as={:user}
+            id="login_form_password"
+            action={~p"/warehouse/users/log-in"}
+          >
+        """
 
         assert file =~
-                 ~S|<.link navigate={~p"/warehouse/users/register"}|
-
-        assert file =~
-                 ~S|<.link href={~p"/warehouse/users/reset-password"}|
+                 ~S|navigate={~p"/warehouse/users/register"}|
       end)
 
       assert_file(
@@ -677,12 +572,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
                    get "/users/register", UserRegistrationController, :new
                    post "/users/register", UserRegistrationController, :create
-                   get "/users/log-in", UserSessionController, :new
-                   post "/users/log-in", UserSessionController, :create
-                   get "/users/reset-password", UserResetPasswordController, :new
-                   post "/users/reset-password", UserResetPasswordController, :create
-                   get "/users/reset-password/:token", UserResetPasswordController, :edit
-                   put "/users/reset-password/:token", UserResetPasswordController, :update
                  end
 
                  scope "/warehouse", MyAppWeb.Warehouse, as: :warehouse do
@@ -696,18 +585,17 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  scope "/warehouse", MyAppWeb.Warehouse, as: :warehouse do
                    pipe_through [:browser]
 
+                   get "/users/log-in", UserSessionController, :new
+                   get "/users/log-in/:token", UserSessionController, :confirm
+                   post "/users/log-in", UserSessionController, :create
                    delete "/users/log-out", UserSessionController, :delete
-                   get "/users/confirm", UserConfirmationController, :new
-                   post "/users/confirm", UserConfirmationController, :create
-                   get "/users/confirm/:token", UserConfirmationController, :edit
-                   post "/users/confirm/:token", UserConfirmationController, :update
                  end
                """
       end)
 
       assert_file("test/support/conn_case.ex", fn file ->
-        assert file =~ "def register_and_log_in_user(%{conn: conn})"
-        assert file =~ "def log_in_user(conn, user)"
+        assert file =~ "def register_and_log_in_user(%{conn: conn} = context)"
+        assert file =~ "def log_in_user(conn, user, opts \\\\ [])"
       end)
     end)
   end
@@ -736,21 +624,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         end)
 
         assert_file(
-          "test/my_app_web/controllers/user_confirmation_controller_test.exs",
-          fn file ->
-            assert file =~ ~r/use MyAppWeb\.ConnCase, async: true$/m
-          end
-        )
-
-        assert_file(
           "test/my_app_web/controllers/user_registration_controller_test.exs",
-          fn file ->
-            assert file =~ ~r/use MyAppWeb\.ConnCase, async: true$/m
-          end
-        )
-
-        assert_file(
-          "test/my_app_web/controllers/user_reset_password_controller_test.exs",
           fn file ->
             assert file =~ ~r/use MyAppWeb\.ConnCase, async: true$/m
           end
@@ -789,21 +663,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         end)
 
         assert_file(
-          "test/my_app_web/controllers/user_confirmation_controller_test.exs",
-          fn file ->
-            assert file =~ ~r/use MyAppWeb\.ConnCase$/m
-          end
-        )
-
-        assert_file(
           "test/my_app_web/controllers/user_registration_controller_test.exs",
-          fn file ->
-            assert file =~ ~r/use MyAppWeb\.ConnCase$/m
-          end
-        )
-
-        assert_file(
-          "test/my_app_web/controllers/user_reset_password_controller_test.exs",
           fn file ->
             assert file =~ ~r/use MyAppWeb\.ConnCase$/m
           end
@@ -842,21 +702,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         end)
 
         assert_file(
-          "test/my_app_web/controllers/user_confirmation_controller_test.exs",
-          fn file ->
-            assert file =~ ~r/use MyAppWeb\.ConnCase$/m
-          end
-        )
-
-        assert_file(
           "test/my_app_web/controllers/user_registration_controller_test.exs",
-          fn file ->
-            assert file =~ ~r/use MyAppWeb\.ConnCase$/m
-          end
-        )
-
-        assert_file(
-          "test/my_app_web/controllers/user_reset_password_controller_test.exs",
           fn file ->
             assert file =~ ~r/use MyAppWeb\.ConnCase$/m
           end
@@ -895,21 +741,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         end)
 
         assert_file(
-          "test/my_app_web/controllers/user_confirmation_controller_test.exs",
-          fn file ->
-            assert file =~ ~r/use MyAppWeb\.ConnCase$/m
-          end
-        )
-
-        assert_file(
           "test/my_app_web/controllers/user_registration_controller_test.exs",
-          fn file ->
-            assert file =~ ~r/use MyAppWeb\.ConnCase$/m
-          end
-        )
-
-        assert_file(
-          "test/my_app_web/controllers/user_reset_password_controller_test.exs",
           fn file ->
             assert file =~ ~r/use MyAppWeb\.ConnCase$/m
           end
@@ -1118,28 +950,12 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file("apps/my_app/test/support/fixtures/accounts_fixtures.ex")
         assert_file("apps/my_app/lib/my_app_web/user_auth.ex")
         assert_file("apps/my_app/test/my_app_web/user_auth_test.exs")
-        assert_file("apps/my_app/lib/my_app_web/controllers/user_confirmation_html.ex")
-        assert_file("apps/my_app/lib/my_app_web/controllers/user_confirmation_html/new.html.heex")
-        assert_file("apps/my_app/lib/my_app_web/controllers/user_confirmation_controller.ex")
-
-        assert_file(
-          "apps/my_app/test/my_app_web/controllers/user_confirmation_controller_test.exs"
-        )
 
         assert_file("apps/my_app/lib/my_app_web/controllers/user_registration_controller.ex")
         assert_file("apps/my_app/lib/my_app_web/controllers/user_registration_html.ex")
 
         assert_file(
           "apps/my_app/test/my_app_web/controllers/user_registration_controller_test.exs"
-        )
-
-        assert_file("apps/my_app/lib/my_app_web/controllers/user_reset_password_controller.ex")
-        assert_file("apps/my_app/lib/my_app_web/controllers/user_reset_password_html/edit.html.heex")
-        assert_file("apps/my_app/lib/my_app_web/controllers/user_reset_password_html/new.html.heex")
-        assert_file("apps/my_app/lib/my_app_web/controllers/user_reset_password_html.ex")
-
-        assert_file(
-          "apps/my_app/test/my_app_web/controllers/user_reset_password_controller_test.exs"
         )
 
         assert_file("apps/my_app/lib/my_app_web/controllers/user_session_controller.ex")
@@ -1176,31 +992,12 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert_file("apps/my_app/test/support/fixtures/accounts_fixtures.ex")
         assert_file("apps/my_app_web/lib/my_app_web/user_auth.ex")
         assert_file("apps/my_app_web/test/my_app_web/user_auth_test.exs")
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_confirmation_html.ex")
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_confirmation_html/new.html.heex")
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_confirmation_controller.ex")
-
-        assert_file(
-          "apps/my_app_web/test/my_app_web/controllers/user_confirmation_controller_test.exs"
-        )
 
         assert_file("apps/my_app_web/lib/my_app_web/controllers/user_registration_controller.ex")
         assert_file("apps/my_app_web/lib/my_app_web/controllers/user_registration_html.ex")
 
         assert_file(
           "apps/my_app_web/test/my_app_web/controllers/user_registration_controller_test.exs"
-        )
-
-        assert_file(
-          "apps/my_app_web/lib/my_app_web/controllers/user_reset_password_controller.ex"
-        )
-
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_reset_password_html/edit.html.heex")
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_reset_password_html/new.html.heex")
-        assert_file("apps/my_app_web/lib/my_app_web/controllers/user_reset_password_html.ex")
-
-        assert_file(
-          "apps/my_app_web/test/my_app_web/controllers/user_reset_password_controller_test.exs"
         )
 
         assert_file("apps/my_app_web/lib/my_app_web/controllers/user_session_controller.ex")

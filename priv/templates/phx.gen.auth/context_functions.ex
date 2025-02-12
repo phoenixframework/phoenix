@@ -82,8 +82,8 @@
   """
   def sudo_mode?(<%= schema.singular %>, minutes \\ -20)
 
-  def sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: ts}, minutes) when is_struct(ts, DateTime) do
-    DateTime.after?(ts, DateTime.utc_now() |> DateTime.add(minutes, :minute))
+  def sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: ts}, minutes) when is_struct(ts, <%= inspect datetime_module %>) do
+    <%= inspect datetime_module %>.after?(ts, <%= inspect datetime_module %>.utc_now() |> <%= inspect datetime_module %>.add(minutes, :minute))
   end
 
   def sudo_mode?(_<%= schema.singular %>, _minutes), do: false
