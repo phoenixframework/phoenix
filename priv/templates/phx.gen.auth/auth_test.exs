@@ -14,7 +14,7 @@ defmodule <%= inspect auth_module %>Test do
       |> Map.replace!(:secret_key_base, <%= inspect endpoint_module %>.config(:secret_key_base))
       |> init_test_session(%{})
 
-    %{<%= schema.singular %>: %{<%= schema.singular %>_fixture() | authenticated_at: DateTime.utc_now()}, conn: conn}
+    %{<%= schema.singular %>: %{<%= schema.singular %>_fixture() | authenticated_at: <%= inspect datetime_module %>.utc_now()}, conn: conn}
   end
 
   describe "log_in_<%= schema.singular %>/3" do
