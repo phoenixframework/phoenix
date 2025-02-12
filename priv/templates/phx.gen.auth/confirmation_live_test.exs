@@ -21,7 +21,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert html =~ "Confirm my account"
     end
 
-    test "renders log in page for confirmed <%= schema.singular %>", %{conn: conn, confirmed_<%= schema.singular %>: <%= schema.singular %>} do
+    test "renders login page for confirmed <%= schema.singular %>", %{conn: conn, confirmed_<%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
           <%= inspect context.alias %>.deliver_login_instructions(<%= schema.singular %>, url)
