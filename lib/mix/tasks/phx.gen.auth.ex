@@ -342,7 +342,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           "registration_html.ex": [controller_pre, "#{singular}_registration_html.ex"],
           "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
           "session_new.html.heex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
-          "session_confirm.html.heex": [controller_pre, "#{singular}_session_html", "confirm.html.heex"],
+          "session_confirm.html.heex": [
+            controller_pre,
+            "#{singular}_session_html",
+            "confirm.html.heex"
+          ],
           "settings_html.ex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
           "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
           "settings_edit.html.heex": [
