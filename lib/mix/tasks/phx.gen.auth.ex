@@ -26,6 +26,32 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   to authentication views without necessarily triggering a new HTTP request
   each time (which would result in a full page load).
 
+  ## Security considerations
+
+  By default, `mix phx.gen.auth` generates an authentication solution that allows registration
+  using email and magic links only. Users must verify their email address after registration
+  by clicking a magic link, which both logs them in and confirms their email.
+  This email confirmation is crucial for preventing session fixation attacks.
+
+  If you allow users to immediately log in after registering, either by registering with a password,
+  or by directly logging them in after only providing an email address, the following attack is possible:
+
+  1. An attacker registers a new account with the email address of their target, anticipating
+     that the target creates an account at a later point in time.
+  2. The attacker sets a password (either when registering, or in the settings).
+  3. The target registers an account and sees that their email address is already in use.
+  4. The target logs in by magic link, but does not change the existing password.
+  5. The attacker maintains access using the password they previously set.
+
+  This is why the default implementation raises whenever a user tries to log in by magic link
+  when there is already a password set. You can safely remove this check if you do not allow
+  unconfirmed users to log in. In that case, registering with email and password is still secure.
+
+  If you want to allow unconfirmed users to log in, you need to ensure that they need to reset
+  their password when they first sign in by magic link. To do this, you can add a required password
+  field to the confirmation LiveView / template and re-use the password change functionality from
+  the settings page.
+
   ## Password hashing
 
   The password hashing mechanism defaults to `bcrypt` for
