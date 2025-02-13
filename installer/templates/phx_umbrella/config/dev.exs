@@ -7,7 +7,8 @@ config :logger, :default_formatter, format: "[$level] $message\n"
 config :phoenix, :plug_init_mode, :runtime<%= if @html do %>
 
 config :phoenix_live_view,
-  # Include HEEx debug annotations as HTML comments in rendered markup
+  # Include HEEx debug annotations as HTML comments in rendered markup.
+  # Changing this configuration will require mix clean and a full recompile.
   debug_heex_annotations: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true<% end %><%= if @mailer do %>
