@@ -15,7 +15,12 @@ let arrayBufferToBase64 = (buffer) => {
 
 export default class LongPoll {
 
-  constructor(endPoint){
+  constructor(endPoint, protocols){
+    // we only support subprotocols for authToken
+    // ["phoenix", "base64url.bearer.authorization.phx.BASE64_ENCODED_TOKEN"]
+    if (protocols.length === 2 && protocols[1].startsWith("base64url.bearer.authorization.phx.")) {
+      this.authToken = atob(protocols[1].slice("base64url.bearer.authorization.phx.".length))
+    }
     this.endPoint = null
     this.token = null
     this.skipHeartbeat = true
@@ -58,7 +63,11 @@ export default class LongPoll {
   isActive(){ return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting }
 
   poll(){
-    this.ajax("GET", "application/json", null, () => this.ontimeout(), resp => {
+    const headers = {"Accept": "application/json"}
+    if (this.authToken) {
+      headers["Authorization"] = `Bearer ${this.authToken}`
+    }
+    this.ajax("GET", headers, null, () => this.ontimeout(), resp => {
       if(resp){
         var {status, token, messages} = resp
         this.token = token
@@ -160,13 +169,13 @@ export default class LongPoll {
     }
   }
 
-  ajax(method, contentType, body, onCallerTimeout, callback){
+  ajax(method, headers, body, onCallerTimeout, callback){
     let req
     let ontimeout = () => {
       this.reqs.delete(req)
       onCallerTimeout()
     }
-    req = Ajax.request(method, this.endpointURL(), contentType, body, this.timeout, ontimeout, resp => {
+    req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, resp => {
       this.reqs.delete(req)
       if(this.isActive()){ callback(resp) }
     })
