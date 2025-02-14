@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   to authentication views without necessarily triggering a new HTTP request
   each time (which would result in a full page load).
 
-  ## Security considerations
+  ## Mixing magic link and password registration
 
   `mix phx.gen.auth` generates email based authentication, which assumes the user who
   owns the email address has control over the account. Therefore, it is extremely

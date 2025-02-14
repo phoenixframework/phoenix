@@ -213,7 +213,7 @@
 
   3. The <%= schema.singular %> has not confirmed their email but a password is set.
      This cannot happen in the default implementation but may be the
-     source of security pitfalls. See the "Security considerations" section of
+     source of security pitfalls. See the "Mixing magic link and password registration" section of
      `mix help phx.gen.auth`.
   """
   def login_<%= schema.singular %>_by_magic_link(token) do
@@ -227,7 +227,7 @@
 
         This cannot happen with the default implementation, which indicates that you
         might have adapted the code to a different use case. Please make sure to read the
-        "Security considerations" section of `mix help phx.gen.auth`.
+        "Mixing magic link and password registration" section of `mix help phx.gen.auth`.
         """
 
       {%<%= inspect schema.alias %>{confirmed_at: nil} = <%= schema.singular %>, _token} ->
