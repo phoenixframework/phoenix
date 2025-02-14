@@ -289,7 +289,7 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp mix_compile_unless_stale_config(compilers, compile_args, timestamp, path, purge_fallback?) do
     manifests = Mix.Tasks.Compile.Elixir.manifests()
-    configs = Mix.Project.config_files() |> dbg
+    configs = Mix.Project.config_files()
     config = Mix.Project.config()
 
     case Mix.Utils.extract_stale(configs, manifests) do
