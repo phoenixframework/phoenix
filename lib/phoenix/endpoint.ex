@@ -780,8 +780,8 @@ defmodule Phoenix.Endpoint do
     {conn_ast, path}
   end
 
-  defp maybe_validate_keys(true, _), do: true
   defp maybe_validate_keys(opts, keys) when is_list(opts), do: Keyword.validate!(opts, keys)
+  defp maybe_validate_keys(other, _), do: other
 
   ## API
 
