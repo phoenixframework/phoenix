@@ -433,4 +433,10 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       end
     end
   end
+
+  test "raises on schema named form" do
+    assert_raise Mix.Error, ~r/cannot use form as the schema name because it conflicts with the LiveView assigns/, fn ->
+      Mix.Tasks.Phx.Gen.Live.run(~w(Blog Form forms title:string))
+    end
+  end
 end
