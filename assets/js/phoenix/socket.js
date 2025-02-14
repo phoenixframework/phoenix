@@ -352,7 +352,7 @@ export default class Socket {
     // Sec-WebSocket-Protocol based token
     // (longpoll uses Authorization header instead)
     if (this.authToken) {
-      protocols.push(`base64url.bearer.authorization.phx.${btoa(this.authToken).replace("=", "")}`)
+      protocols.push(`base64url.bearer.authorization.phx.${btoa(this.authToken).replace(/=/g, "")}`)
     }
     this.conn = new this.transport(this.endPointURL(), protocols)
     this.conn.binaryType = this.binaryType
