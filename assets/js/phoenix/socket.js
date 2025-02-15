@@ -6,7 +6,8 @@ import {
   DEFAULT_VSN,
   SOCKET_STATES,
   TRANSPORTS,
-  WS_CLOSE_NORMAL
+  WS_CLOSE_NORMAL,
+  AUTH_TOKEN_PREFIX
 } from "./constants"
 
 import {
@@ -352,7 +353,7 @@ export default class Socket {
     // Sec-WebSocket-Protocol based token
     // (longpoll uses Authorization header instead)
     if (this.authToken) {
-      protocols.push(`base64url.bearer.authorization.phx.${btoa(this.authToken).replace(/=/g, "")}`)
+      protocols.push(`${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`)
     }
     this.conn = new this.transport(this.endPointURL(), protocols)
     this.conn.binaryType = this.binaryType

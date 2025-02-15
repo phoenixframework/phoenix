@@ -846,8 +846,7 @@ defmodule Phoenix.Endpoint do
         * the websocket transport, this enables a token to be passed through the `Sec-WebSocket-Protocol` header.
         * the longpoll transport, this allows the token to be passed through the `Authorization` header.
 
-      The token is available in the `connect_info` as `:auth_token`, which must be separately enabled in the
-      corresponding `websocket` or `longpoll` configurations.
+      The token is available in the `connect_info` as `:auth_token`.
 
       Custom transports might implement their own mechanism.
 

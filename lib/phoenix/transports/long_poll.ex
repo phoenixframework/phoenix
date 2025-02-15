@@ -268,12 +268,12 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   defp maybe_auth_token_from_header(conn, true) do
-    case Plug.Conn.get_req_header(conn, "authorization") do
+    case Plug.Conn.get_req_header(conn, "x-phoenix-authtoken") do
       [] ->
         conn
 
-      ["Bearer " <> token | _] ->
-        Plug.Conn.put_private(conn, :__phoenix_transport_auth_token, token)
+      [token | _] ->
+        Plug.Conn.put_private(conn, :phoenix_transport_auth_token, token)
     end
   end
 

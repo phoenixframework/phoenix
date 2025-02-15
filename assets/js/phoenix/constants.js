@@ -27,3 +27,4 @@ export const TRANSPORTS = {
 export const XHR_STATES = {
   complete: 4
 }
+export const AUTH_TOKEN_PREFIX = "base64url.bearer.phx."

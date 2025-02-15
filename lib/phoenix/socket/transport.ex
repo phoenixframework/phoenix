@@ -260,6 +260,14 @@ defmodule Phoenix.Socket.Transport do
     {connect_info, config} = Keyword.pop(config, :connect_info, [])
 
     connect_info =
+      if config[:auth_token] do
+        # auth_token is included by default when enabled
+        [:auth_token | connect_info]
+      else
+        connect_info
+      end
+
+    connect_info =
       Enum.map(connect_info, fn
         key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers, :auth_token] ->
           key
@@ -486,7 +494,7 @@ defmodule Phoenix.Socket.Transport do
           {:session, connect_session(conn, endpoint, session, opts)}
 
         :auth_token ->
-          {:auth_token, conn.private[:__phoenix_transport_auth_token]}
+          {:auth_token, conn.private[:phoenix_transport_auth_token]}
 
         {key, val} ->
           {key, val}

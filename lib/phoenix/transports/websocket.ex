@@ -17,7 +17,7 @@ defmodule Phoenix.Transports.WebSocket do
 
   @connect_info_opts [:check_csrf]
 
-  @auth_token_prefix "base64url.bearer.authorization.phx."
+  @auth_token_prefix "base64url.bearer.phx."
 
   import Plug.Conn
 
@@ -112,7 +112,7 @@ defmodule Phoenix.Transports.WebSocket do
             token = Base.decode64!(encoded_token, padding: false)
 
             conn
-            |> put_private(:__phoenix_transport_auth_token, token)
+            |> put_private(:phoenix_transport_auth_token, token)
             |> set_actual_subprotocols(actual_subprotocols)
 
           _ ->

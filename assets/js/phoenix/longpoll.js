@@ -1,6 +1,7 @@
 import {
   SOCKET_STATES,
-  TRANSPORTS
+  TRANSPORTS,
+  AUTH_TOKEN_PREFIX
 } from "./constants"
 
 import Ajax from "./ajax"
@@ -17,9 +18,9 @@ export default class LongPoll {
 
   constructor(endPoint, protocols){
     // we only support subprotocols for authToken
-    // ["phoenix", "base64url.bearer.authorization.phx.BASE64_ENCODED_TOKEN"]
-    if (protocols.length === 2 && protocols[1].startsWith("base64url.bearer.authorization.phx.")) {
-      this.authToken = atob(protocols[1].slice("base64url.bearer.authorization.phx.".length))
+    // ["phoenix", "base64url.bearer.phx.BASE64_ENCODED_TOKEN"]
+    if (protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)) {
+      this.authToken = atob(protocols[1].slice(AUTH_TOKEN_PREFIX.length))
     }
     this.endPoint = null
     this.token = null
@@ -64,8 +65,8 @@ export default class LongPoll {
 
   poll(){
     const headers = {"Accept": "application/json"}
-    if (this.authToken) {
-      headers["Authorization"] = `Bearer ${this.authToken}`
+    if(this.authToken){
+      headers["X-Phoenix-AuthToken"] = this.authToken
     }
     this.ajax("GET", headers, null, () => this.ontimeout(), resp => {
       if(resp){
