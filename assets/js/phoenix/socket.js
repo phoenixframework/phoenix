@@ -6,8 +6,7 @@ import {
   DEFAULT_VSN,
   SOCKET_STATES,
   TRANSPORTS,
-  WS_CLOSE_NORMAL,
-  AUTH_TOKEN_PREFIX
+  WS_CLOSE_NORMAL
 } from "./constants"
 
 import {
@@ -17,6 +16,7 @@ import {
 import Ajax from "./ajax"
 import Channel from "./channel"
 import LongPoll from "./longpoll"
+import Transport, { WebSocketTransport, WrapperTransport } from "./transport"
 import Serializer from "./serializer"
 import Timer from "./timer"
 
@@ -28,11 +28,12 @@ import Timer from "./timer"
  *                                               `"wss://example.com"`
  *                                               `"/socket"` (inherited host & protocol)
  * @param {Object} [opts] - Optional configuration
- * @param {Function} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
+ * @param {Function} [opts.transport] - The Transport, for example WebSocket or Phoenix.LongPoll.
  *
  * Defaults to WebSocket with automatic LongPoll fallback if WebSocket is not defined.
  * To fallback to LongPoll when WebSocket attempts fail, use `longPollFallbackMs: 2500`.
  *
+ * @param {Object} [opts.transportOpts] - Extra options to pass to the transport. Useful for custom transport implementations.
  * @param {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
  * before falling back to the LongPoll transport. Disabled by default.
  *
@@ -117,7 +118,8 @@ export default class Socket {
     this.sendBuffer = []
     this.ref = 0
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
-    this.transport = opts.transport || global.WebSocket || LongPoll
+    this.transport = this.initializeTransport(opts)
+    this.transportOpts = opts.transportOpts || {}
     this.primaryPassedHealthCheck = false
     this.longPollFallbackMs = opts.longPollFallbackMs
     this.fallbackTimer = null
@@ -346,18 +348,35 @@ export default class Socket {
    * @private
    */
 
+  initializeTransport(opts) {
+    if (opts.transport && Transport.isTransport(opts.transport)) {
+      return opts.transport
+    } else if (opts.transport) {
+      // legacy transport (WebSocket or WebSocket compatible class)
+      return new WrapperTransport(opts.transport)
+    } else {
+      // no transport specified, use WebSocket if available, otherwise LongPoll
+      return global.WebSocket ? WebSocketTransport : LongPoll
+    }
+  }
+
   transportConnect(){
     this.connectClock++
     this.closeWasClean = false
-    let protocols = ["phoenix"]
-    // Sec-WebSocket-Protocol based token
-    // (longpoll uses Authorization header instead)
-    if (this.authToken) {
-      protocols.push(`${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`)
+    
+    const options = {
+      authToken: this.authToken,
+      ...this.transportOpts
     }
-    this.conn = new this.transport(this.endPointURL(), protocols)
-    this.conn.binaryType = this.binaryType
-    this.conn.timeout = this.longpollerTimeout
+
+    if (this.transport === LongPoll) {
+      // special options for longpoll
+      options.timeout = this.longpollerTimeout
+    } else {
+      options.binaryType = this.binaryType
+    }
+    
+    this.conn = new this.transport(this.endPointURL(), options)
     this.conn.onopen = () => this.onConnOpen()
     this.conn.onerror = error => this.onConnError(error)
     this.conn.onmessage = event => this.onConnMessage(event)

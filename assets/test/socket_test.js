@@ -2,6 +2,7 @@ import {jest} from "@jest/globals"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
+import { WebSocketTransport } from "../js/phoenix/transport"
 
 let socket
 
@@ -34,7 +35,7 @@ describe("with transports", function (){
       expect(socket.ref).toBe(0)
       expect(socket.endPoint).toBe("/socket/websocket")
       expect(socket.stateChangeCallbacks).toEqual({open: [], close: [], error: [], message: []})
-      expect(socket.transport).toBe(WebSocket)
+      expect(socket.transport).toBe(WebSocketTransport)
       expect(socket.timeout).toBe(10000)
       expect(socket.longpollerTimeout).toBe(20000)
       expect(socket.heartbeatIntervalMs).toBe(30000)
@@ -69,7 +70,7 @@ describe("with transports", function (){
       expect(socket.timeout).toBe(40000)
       expect(socket.longpollerTimeout).toBe(50000)
       expect(socket.heartbeatIntervalMs).toBe(60000)
-      expect(socket.transport).toBe(customTransport)
+      expect(socket.transport.prototype instanceof WebSocketTransport).toBe(true)
       expect(socket.logger).toBe(customLogger)
       expect(socket.params()).toEqual({one: "two"})
     })
@@ -78,7 +79,7 @@ describe("with transports", function (){
       it("defaults to Websocket transport if available", function (done){
         let mockServer = new WebSocketServer("wss://example.com/")
         socket = new Socket("/socket")
-        expect(socket.transport).toBe(WebSocket)
+        expect(socket.transport).toBe(WebSocketTransport)
         mockServer.stop(() => done())
       })
     })
@@ -90,7 +91,7 @@ describe("with transports", function (){
         const replaceSpy = jest.spyOn(socket, "replaceTransport")
         mockServer = new WebSocketServer("wss://example.test/")
         mockServer.stop(() => {
-          expect(socket.transport).toBe(WebSocket)
+          expect(socket.transport).toBe(WebSocketTransport)
           socket.onError((_reason) => {
             setTimeout(() => {
               expect(replaceSpy).toHaveBeenCalledWith(LongPoll)
@@ -163,7 +164,8 @@ describe("with transports", function (){
     it("establishes websocket connection with endpoint", function (){
       socket.connect()
       const conn = socket.conn
-      expect(conn instanceof WebSocket).toBeTruthy()
+      expect(conn instanceof WebSocketTransport).toBeTruthy()
+      expect(conn.ws instanceof WebSocket).toBeTruthy()
       expect(conn.url).toBe(socket.endPointURL())
     })
 
@@ -402,6 +404,7 @@ describe("with transports", function (){
     it("sends data to connection when connected", function (){
       socket.connect()
       socket.conn.readyState = 1 // open
+      socket.conn.ws.readyState = 1 // open
 
       const sendSpy = jest.spyOn(socket.conn, "send")
 
@@ -459,6 +462,7 @@ describe("with transports", function (){
       jest.useFakeTimers()
       let closed = false
       socket.conn.readyState = 1 // open
+      socket.conn.ws.readyState = 1 // open
       socket.conn.close = () => closed = true
       socket.sendHeartbeat()
       expect(closed).toBe(false)
@@ -475,6 +479,7 @@ describe("with transports", function (){
 
     it("pushes heartbeat data when connected", function (){
       socket.conn.readyState = 1 // open
+      socket.conn.ws.readyState = 1 // open
 
       const sendSpy = jest.spyOn(socket.conn, "send")
       const data = "[null,\"1\",\"phoenix\",\"heartbeat\",{}]"
@@ -502,6 +507,7 @@ describe("with transports", function (){
 
     it("calls callbacks in buffer when connected", function (){
       socket.conn.readyState = 1 // open
+      socket.conn.ws.readyState = 1 // open
       const spy1 = jest.fn()
       const spy2 = jest.fn()
       socket.sendBuffer.push(spy1)
@@ -515,6 +521,7 @@ describe("with transports", function (){
 
     it("empties sendBuffer", function (){
       socket.conn.readyState = 1 // open
+      socket.conn.ws.readyState = 1 // open
       socket.sendBuffer.push(() => { })
 
       socket.flushSendBuffer()
@@ -543,6 +550,7 @@ describe("with transports", function (){
 
     it("flushes the send buffer", function (){
       socket.conn.readyState = 1 // open
+      socket.conn.ws.readyState = 1 // open
       const spy = jest.fn()
       socket.sendBuffer.push(spy)
 
@@ -739,7 +747,7 @@ describe("with transports", function (){
 
       socket.onConnError("error")
 
-      expect(transport).toBe(WebSocket)
+      expect(transport).toBe(WebSocketTransport)
       expect(connectionsCount).toBe(1)
       expect(triggerSpy).toHaveBeenCalledWith("phx_error")
     })

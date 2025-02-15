@@ -1,9 +1,9 @@
 import {
   SOCKET_STATES,
-  TRANSPORTS,
-  AUTH_TOKEN_PREFIX
+  TRANSPORTS
 } from "./constants"
 
+import Transport from "./transport"
 import Ajax from "./ajax"
 
 let arrayBufferToBase64 = (buffer) => {
@@ -14,14 +14,9 @@ let arrayBufferToBase64 = (buffer) => {
   return btoa(binary)
 }
 
-export default class LongPoll {
-
-  constructor(endPoint, protocols){
-    // we only support subprotocols for authToken
-    // ["phoenix", "base64url.bearer.phx.BASE64_ENCODED_TOKEN"]
-    if (protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)) {
-      this.authToken = atob(protocols[1].slice(AUTH_TOKEN_PREFIX.length))
-    }
+export default class LongPoll extends Transport {
+  constructor(endPoint, options){
+    super(endPoint, options)
     this.endPoint = null
     this.token = null
     this.skipHeartbeat = true
@@ -30,12 +25,9 @@ export default class LongPoll {
     this.currentBatch = null
     this.currentBatchTimer = null
     this.batchBuffer = []
-    this.onopen = function (){ } // noop
-    this.onerror = function (){ } // noop
-    this.onmessage = function (){ } // noop
-    this.onclose = function (){ } // noop
     this.pollEndpoint = this.normalizeEndpoint(endPoint)
-    this.readyState = SOCKET_STATES.connecting
+    this.authToken = options.authToken
+    this.timeout = options.timeout
     // we must wait for the caller to finish setting up our callbacks and timeout properties
     setTimeout(() => this.poll(), 0)
   }
@@ -57,7 +49,7 @@ export default class LongPoll {
   }
 
   ontimeout(){
-    this.onerror("timeout")
+    this.triggerError("timeout")
     this.closeAndRetry(1005, "timeout", false)
   }
 
@@ -97,7 +89,7 @@ export default class LongPoll {
             //
             // In order to emulate this behaviour, we need to make sure each
             // onmessage handler is run within its own macrotask.
-            setTimeout(() => this.onmessage({data: msg}), 0)
+            setTimeout(() => this.triggerMessage({data: msg}), 0)
           })
           this.poll()
           break
@@ -105,17 +97,16 @@ export default class LongPoll {
           this.poll()
           break
         case 410:
-          this.readyState = SOCKET_STATES.open
-          this.onopen({})
+          this.triggerOpen({})
           this.poll()
           break
         case 403:
-          this.onerror(403)
+          this.triggerError(403)
           this.close(1008, "forbidden", false)
           break
         case 0:
         case 500:
-          this.onerror(500)
+          this.triggerError(500)
           this.closeAndRetry(1011, "internal server error", 500)
           break
         default: throw new Error(`unhandled poll status ${status}`)
@@ -144,10 +135,10 @@ export default class LongPoll {
 
   batchSend(messages){
     this.awaitingBatchAck = true
-    this.ajax("POST", "application/x-ndjson", messages.join("\n"), () => this.onerror("timeout"), resp => {
+    this.ajax("POST", "application/x-ndjson", messages.join("\n"), () => this.triggerError("timeout"), resp => {
       this.awaitingBatchAck = false
       if(!resp || resp.status !== 200){
-        this.onerror(resp && resp.status)
+        this.triggerError(resp && resp.status)
         this.closeAndRetry(1011, "internal server error", false)
       } else if(this.batchBuffer.length > 0){
         this.batchSend(this.batchBuffer)
@@ -158,15 +149,14 @@ export default class LongPoll {
 
   close(code, reason, wasClean){
     for(let req of this.reqs){ req.abort() }
-    this.readyState = SOCKET_STATES.closed
     let opts = Object.assign({code: 1000, reason: undefined, wasClean: true}, {code, reason, wasClean})
     this.batchBuffer = []
     clearTimeout(this.currentBatchTimer)
     this.currentBatchTimer = null
     if(typeof(CloseEvent) !== "undefined"){
-      this.onclose(new CloseEvent("close", opts))
+      this.triggerClose(new CloseEvent("close", opts))
     } else {
-      this.onclose(opts)
+      this.triggerClose(opts)
     }
   }
 
