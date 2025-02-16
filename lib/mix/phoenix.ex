@@ -374,13 +374,43 @@ defmodule Mix.Phoenix do
     end
   end
 
-  def to_text(data) do
-    inspect(data, limit: :infinity, printable_limit: :infinity)
+  @doc """
+  Indent text with `spaces`, and gaps (empty lines) on `top` and `bottom`.
+
+  ## Options
+
+    * `:spaces` - Number of spaces to indent each line with.
+      It adds extra indentation, preserving current spaces at the beginning of a line.
+      Default: `0`.
+
+    * `:top` - Total number of empty lines before not empty text result. Default: `0`.
+
+    * `:bottom` - Total number of empty lines after not empty text result. Default: `0`.
+
+    * `:new_line` - Value to separate lines in resulting text. Default: `"\\n"`.
+  """
+  def indent_text(text_or_lines, opts \\ [])
+
+  def indent_text(text, opts) when is_binary(text) and is_list(opts),
+    do: indent_text(text |> String.split("\n"), opts)
+
+  def indent_text(lines, opts) when is_list(lines) and is_list(opts) do
+    indent = String.duplicate(" ", Keyword.get(opts, :spaces, 0))
+    gap_top = String.duplicate("\n", Keyword.get(opts, :top, 0))
+    gap_bottom = String.duplicate("\n", Keyword.get(opts, :bottom, 0))
+    new_line = Keyword.get(opts, :new_line, "\n")
+
+    text =
+      lines
+      |> Enum.map(&String.trim_trailing/1)
+      |> Enum.map_join(new_line, &if(&1 == "", do: &1, else: indent <> &1))
+      |> String.replace(~r/\A(#{new_line})+/, "")
+      |> String.trim_trailing()
+
+    if text == "", do: "", else: gap_top <> text <> gap_bottom
   end
 
-  def prepend_newline(string) do
-    "\n" <> string
-  end
+  def prepend_newline(string) when is_binary(string), do: "\n" <> string
 
   @doc """
   Ensures user's LiveView is compatible with the current generators.
