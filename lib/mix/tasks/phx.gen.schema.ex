@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   The following types are supported:
 
-  #{for attr <- Mix.Phoenix.Schema.valid_types(), do: "  * `#{inspect attr}`\n"}
+  #{for attr <- Mix.Phoenix.Schema.valid_types(), do: "  * `#{inspect(attr)}`\n"}
     * `:datetime` - An alias for `:naive_datetime`
 
   The generator also supports references, which we will properly
@@ -152,14 +152,24 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   alias Mix.Phoenix.Schema
 
-  @switches [migration: :boolean, binary_id: :boolean, table: :string, web: :string,
-    context_app: :string, prefix: :string, repo: :string, migration_dir: :string,
-    primary_key: :string]
+  @switches [
+    migration: :boolean,
+    binary_id: :boolean,
+    table: :string,
+    web: :string,
+    context_app: :string,
+    prefix: :string,
+    repo: :string,
+    migration_dir: :string,
+    primary_key: :string
+  ]
 
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.schema must be invoked from within your *_web application root directory"
+      Mix.raise(
+        "mix phx.gen.schema must be invoked from within your *_web application root directory"
+      )
     end
 
     schema = build(args, [])
@@ -201,17 +211,26 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
 
   defp put_context_app(opts, nil), do: opts
+
   defp put_context_app(opts, string) do
     Keyword.put(opts, :context_app, String.to_atom(string))
   end
 
   @doc false
+  def files_to_be_generated(%Schema{generate?: false}), do: []
+
   def files_to_be_generated(%Schema{} = schema) do
     [{:eex, "schema.ex", schema.file}]
   end
 
   @doc false
-  def copy_new_files(%Schema{context_app: ctx_app, repo: repo, opts: opts} = schema, paths, binding) do
+  def copy_new_files(%Schema{generate?: false} = schema, _, _), do: schema
+
+  def copy_new_files(
+        %Schema{context_app: ctx_app, repo: repo, opts: opts} = schema,
+        paths,
+        binding
+      ) do
     files = files_to_be_generated(schema)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.schema", binding, files)
 
@@ -231,23 +250,25 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
       migration_path = Path.join(migration_dir, "#{timestamp()}_create_#{schema.table}.exs")
 
-      Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", binding, [
-        {:eex, "migration.exs", migration_path},
-      ]
+      Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.schema", binding, [
+        {:eex, "migration.exs", migration_path}
+      ])
     end
 
     schema
   end
 
   @doc false
+  def print_shell_instructions(%Schema{generate?: false}), do: :ok
+
   def print_shell_instructions(%Schema{} = schema) do
     if schema.migration? do
-      Mix.shell().info """
+      Mix.shell().info("""
 
       Remember to update your repository by running migrations:
 
           $ mix ecto.migrate
-      """
+      """)
     end
   end
 
@@ -255,21 +276,28 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   def validate_args!([schema, plural | _] = args, help) do
     cond do
       not Schema.valid?(schema) ->
-        help.raise_with_help "Expected the schema argument, #{inspect schema}, to be a valid module name"
+        help.raise_with_help(
+          "Expected the schema argument, #{inspect(schema)}, to be a valid module name"
+        )
+
       String.contains?(plural, ":") or plural != Phoenix.Naming.underscore(plural) ->
-        help.raise_with_help "Expected the plural argument, #{inspect plural}, to be all lowercase using snake_case convention"
+        help.raise_with_help(
+          "Expected the plural argument, #{inspect(plural)}, to be all lowercase using snake_case convention"
+        )
+
       true ->
         args
     end
   end
+
   def validate_args!(_, help) do
-    help.raise_with_help "Invalid arguments"
+    help.raise_with_help("Invalid arguments")
   end
 
   @doc false
-  @spec raise_with_help(String.t) :: no_return()
+  @spec raise_with_help(String.t()) :: no_return()
   def raise_with_help(msg) do
-    Mix.raise """
+    Mix.raise("""
     #{msg}
 
     mix phx.gen.schema expects both a module name and
@@ -277,13 +305,14 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     any number of attributes:
 
         mix phx.gen.schema Blog.Post blog_posts title:string
-    """
+    """)
   end
 
   defp timestamp do
     {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
     "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
   end
-  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
+
+  defp pad(i) when i < 10, do: <<?0, ?0 + i>>
   defp pad(i), do: to_string(i)
 end

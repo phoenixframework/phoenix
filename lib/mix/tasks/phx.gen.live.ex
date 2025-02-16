@@ -120,7 +120,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
     Gen.Context.prompt_for_code_injection(context)
 
-    binding = [context: context, schema: schema, inputs: inputs(schema)]
+    binding = [context: context, schema: schema]
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
@@ -144,16 +144,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   defp prompt_for_conflicts(context) do
     context
     |> files_to_be_generated()
-    |> Kernel.++(context_files(context))
+    |> Kernel.++(Gen.Context.files_to_be_generated(context))
     |> Mix.Phoenix.prompt_for_conflicts()
-  end
-
-  defp context_files(%Context{generate?: true} = context) do
-    Gen.Context.files_to_be_generated(context)
-  end
-
-  defp context_files(%Context{generate?: false}) do
-    []
   end
 
   defp files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
@@ -175,18 +167,19 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   end
 
   defp copy_new_files(%Context{} = context, binding, paths) do
-    files = files_to_be_generated(context)
+    Gen.Context.copy_new_files(context, paths, binding)
 
     binding =
       Keyword.merge(binding,
+        inputs: inputs(context.schema),
         assigns: %{
           web_namespace: inspect(context.web_module),
           gettext: true
         }
       )
 
+    files = files_to_be_generated(context)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.live", binding, files)
-    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
 
     context
   end
@@ -262,7 +255,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       """)
     end
 
-    if context.generate?, do: Gen.Context.print_shell_instructions(context)
+    Gen.Context.print_shell_instructions(context)
     maybe_print_upgrade_info()
   end
 
