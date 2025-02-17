@@ -211,8 +211,6 @@ defmodule Phx.New.Generator do
         :error -> adapter_config
       end
 
-    version = @phoenix_version
-
     binding = [
       app_name: project.app,
       app_module: inspect(project.app_mod),
@@ -222,10 +220,10 @@ defmodule Phx.New.Generator do
       web_app_name: project.web_app,
       endpoint_module: inspect(Module.concat(project.web_namespace, Endpoint)),
       web_namespace: inspect(project.web_namespace),
-      phoenix_dep: phoenix_dep(phoenix_path, version),
-      phoenix_dep_umbrella_root: phoenix_dep(phoenix_path_umbrella_root, version),
+      phoenix_dep: phoenix_dep(phoenix_path),
+      phoenix_dep_umbrella_root: phoenix_dep(phoenix_path_umbrella_root),
       phoenix_js_path: phoenix_js_path(phoenix_path),
-      phoenix_version: version,
+      phoenix_version: @phoenix_version,
       pubsub_server: pubsub_server,
       secret_key_base_dev: random_string(64),
       secret_key_base_test: random_string(64),
@@ -255,7 +253,7 @@ defmodule Phx.New.Generator do
       from_elixir_install: from_elixir_install,
       elixir_install_otp_bin_path: from_elixir_install && elixir_install_otp_bin_path(),
       elixir_install_bin_path: from_elixir_install && elixir_install_bin_path(),
-      inside_docker_env?: inside_docker_env?,
+      inside_docker_env?: inside_docker_env?
     ]
 
     %{project | binding: binding}
@@ -470,20 +468,25 @@ defmodule Phx.New.Generator do
   defp phoenix_path_prefix(%Project{in_umbrella?: true}, true = _umbrella_root?), do: ".."
   defp phoenix_path_prefix(%Project{in_umbrella?: true}, false = _umbrella_root?), do: "../../../"
 
-  defp phoenix_dep("deps/phoenix", %{pre: ["dev"]}),
-    do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+  if @phoenix_version.pre == ["dev"] do
+    defp phoenix_dep("deps/phoenix") do
+      ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+    end
+  else
+    defp phoenix_dep("deps/phoenix") do
+      ~s[{:phoenix, "~> #{unquote(to_string(@phoenix_version))}"}]
+    end
+  end
 
-  defp phoenix_dep("deps/phoenix", version),
-    do: ~s[{:phoenix, "~> #{version}"}]
-
-  defp phoenix_dep(path, _version),
+  defp phoenix_dep(path),
     do: ~s[{:phoenix, path: #{inspect(path)}, override: true}]
 
   defp phoenix_js_path("deps/phoenix"), do: "phoenix"
   defp phoenix_js_path(path), do: "../../#{path}/"
 
-  defp random_string(length),
-    do: :crypto.strong_rand_bytes(length) |> Base.encode64(padding: false) |> binary_part(0, length)
+  defp random_string(length) do
+    :crypto.strong_rand_bytes(length) |> Base.encode64(padding: false) |> binary_part(0, length)
+  end
 
   # In the context of a HEEx attribute value, transforms a given message into a
   # dynamic `gettext` call or a fixed-value string attribute, depending on the
