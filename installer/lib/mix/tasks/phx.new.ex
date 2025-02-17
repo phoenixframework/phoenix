@@ -432,12 +432,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp maybe_warn_outdated(latest_version) do
-    current_version =
-      Application.spec(:phx_new)[:vsn]
-      |> to_string()
-      |> Version.parse!()
-
-    if Version.compare(current_version, latest_version) == :lt do
+    if Version.compare(@version, latest_version) == :lt do
       Mix.shell().info([
         :yellow,
         "A new version of phx.new is available:",
@@ -448,7 +443,7 @@ defmodule Mix.Tasks.Phx.New do
         "\n",
         "You are currently running ",
         :red,
-        "v#{current_version}",
+        "v#{@version}",
         :reset,
         ".\n",
         "To update, run:\n\n",
@@ -457,28 +452,66 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  defp get_latest_version(package) do
-    Task.async(fn ->
-      # ignore any errors to not prevent the generators from running
-      # due to any issues while checking the version
-      try do
-        with {:ok, {200, _headers, package}} <-
-               :hex_repo.get_package(:hex_core.default_config(), package) do
-          versions =
-            for release <- package.releases,
-                version = Version.parse!(release.version),
-                # ignore pre-releases like release candidates, etc.
-                version.pre == [] do
-              version
-            end
+  # we need to parse JSON, so we only check for new versions on Elixir 1.18+
+  if Version.match?(System.version(), "~> 1.18") do
+    defp get_latest_version(package) do
+      Task.async(fn ->
+        # ignore any errors to not prevent the generators from running
+        # due to any issues while checking the version
+        try do
+          with {:ok, package} <- get_package(package) |> dbg do
+            versions =
+              for release <- package["releases"],
+                  version = Version.parse!(release["version"]),
+                  # ignore pre-releases like release candidates, etc.
+                  version.pre == [] do
+                version
+              end
 
-          Enum.max(versions, Version)
+            Enum.max(versions, Version)
+          end
+        rescue
+          e -> {:error, e}
+        catch
+          :exit, _ -> {:error, :exit}
         end
-      rescue
-        e -> {:error, e}
-      catch
-        :exit, _ -> {:error, :exit}
+      end)
+    end
+
+    defp get_package(name) do
+      http_options =
+        [
+          ssl: [
+            verify: :verify_peer,
+            cacerts: :public_key.cacerts_get(),
+            depth: 2,
+            customize_hostname_check: [
+              match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+            ],
+            versions: [:"tlsv1.2", :"tlsv1.3"]
+          ]
+        ]
+
+      options = [body_format: :binary]
+
+      case :httpc.request(
+             :get,
+             {~c"https://hex.pm/api/packages/#{name}",
+              [{~c"user-agent", ~c"Mix.Tasks.Phx.New/#{@version}"}]},
+             http_options,
+             options
+           ) do
+        {:ok, {{_, 200, _}, _headers, body}} ->
+          {:ok, JSON.decode!(body)}
+
+        {:ok, {{_, status, _}, _, _}} ->
+          {:error, status}
+
+        {:error, reason} ->
+          {:error, reason}
       end
-    end)
+    end
+  else
+    defp get_latest_version(_), do: nil
   end
 end
