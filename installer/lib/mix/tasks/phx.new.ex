@@ -459,7 +459,7 @@ defmodule Mix.Tasks.Phx.New do
         # ignore any errors to not prevent the generators from running
         # due to any issues while checking the version
         try do
-          with {:ok, package} <- get_package(package) |> dbg do
+          with {:ok, package} <- get_package(package) do
             versions =
               for release <- package["releases"],
                   version = Version.parse!(release["version"]),
