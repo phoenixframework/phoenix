@@ -15,7 +15,7 @@ jobs:
       matrix:
         include:
           - elixir: 1.15.8
-            otp: 24.3.4.17
+            otp: 25.3.2.9
 
           - elixir: 1.17.3
             otp: 27.2
@@ -107,7 +107,7 @@ jobs:
         include:
           # look for correct alpine image here: https://hub.docker.com/r/hexpm/elixir/tags
           - elixir: 1.15.8
-            otp: 24.3.4.17
+            otp: 25.3.2.9
             suffix: "alpine-3.20.3"
 
           - elixir: 1.17.3
