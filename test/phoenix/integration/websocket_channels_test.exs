@@ -591,7 +591,11 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
           WebsocketClient.close(sock)
 
           assert_receive {:DOWN, _, :process, ^channel, shutdown}
-                         when shutdown in [:shutdown, {:shutdown, :closed}]
+                         when shutdown in [
+                                :shutdown,
+                                {:shutdown, :closed},
+                                {:shutdown, :local_closed}
+                              ]
         end
 
         test "refuses websocket events that haven't joined" do
@@ -666,10 +670,11 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
           assert_receive {:DOWN, _, :process, ^sock, :normal}
           assert_receive {:DOWN, _, :process, ^chan1, shutdown}
-          # shutdown for cowboy, {:shutdown, :closed} for cowboy 2
-          assert shutdown in [:shutdown, {:shutdown, :closed}]
+          # :shutdown for cowboy, {:shutdown, :closed} for cowboy 2, {:shutdown, :disconnected}
+          # for bandit
+          assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :disconnected}]
           assert_receive {:DOWN, _, :process, ^chan2, shutdown}
-          assert shutdown in [:shutdown, {:shutdown, :closed}]
+          assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :disconnected}]
         end
 
         test "duplicate join event closes existing channel" do
