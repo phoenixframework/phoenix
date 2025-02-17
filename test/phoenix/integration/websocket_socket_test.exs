@@ -69,7 +69,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     def init(state), do: {:ok, state}
 
     def handle_in({"ping:start", _}, state) do
-      {:reply, :ok, :ping, state}
+      {:reply, :ok, {:ping, <<>>}, state}
     end
 
     def handle_in({"ping:start:" <> payload, _}, state) do
