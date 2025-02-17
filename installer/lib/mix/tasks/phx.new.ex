@@ -69,6 +69,8 @@ defmodule Mix.Tasks.Phx.New do
 
     * `-v`, `--version` - prints the Phoenix installer version
 
+    * `--no-version-check` - skip the version check for the latest phx_new version
+
   When passing the `--no-ecto` flag, Phoenix generators such as
   `phx.gen.html`, `phx.gen.json`, `phx.gen.live`, and `phx.gen.context`
   may no longer work as expected as they generate context files that rely
@@ -142,7 +144,8 @@ defmodule Mix.Tasks.Phx.New do
     mailer: :boolean,
     adapter: :string,
     inside_docker_env: :boolean,
-    from_elixir_install: :boolean
+    from_elixir_install: :boolean,
+    version_check: :boolean
   ]
 
   @reserved_app_names ~w(server table)
@@ -155,17 +158,40 @@ defmodule Mix.Tasks.Phx.New do
   def run(argv) do
     elixir_version_check!()
 
-    case OptionParser.parse!(argv, strict: @switches) do
-      {_opts, []} ->
-        Mix.Tasks.Help.run(["phx.new"])
+    {opts, argv} = OptionParser.parse!(argv, strict: @switches)
 
-      {opts, [base_path | _]} ->
-        if opts[:umbrella] do
-          generate(base_path, Umbrella, :project_path, opts)
-        else
-          generate(base_path, Single, :base_path, opts)
-        end
+    version_task =
+      if Keyword.get(opts, :version_check, true) do
+        get_latest_version("phx_new")
+      end
+
+    result =
+      case {opts, argv} do
+        {_opts, []} ->
+          Mix.Tasks.Help.run(["phx.new"])
+
+        {opts, [base_path | _]} ->
+          if opts[:umbrella] do
+            generate(base_path, Umbrella, :project_path, opts)
+          else
+            generate(base_path, Single, :base_path, opts)
+          end
+      end
+
+    if version_task do
+      try do
+        # if we get anything else than a `Version`, we'll get a MatchError
+        # and fail silently
+        %Version{} = latest_version = Task.await(version_task, 3_000)
+        maybe_warn_outdated(latest_version)
+      rescue
+        _ -> :ok
+      catch
+        :exit, _ -> :ok
+      end
     end
+
+    result
   end
 
   @doc false
@@ -403,5 +429,89 @@ defmodule Mix.Tasks.Phx.New do
           "You have #{System.version()}. Please update accordingly"
       )
     end
+  end
+
+  defp maybe_warn_outdated(latest_version) do
+    if Version.compare(@version, latest_version) == :lt do
+      Mix.shell().info([
+        :yellow,
+        "A new version of phx.new is available:",
+        :green,
+        " v#{latest_version}",
+        :reset,
+        ".",
+        "\n",
+        "You are currently running ",
+        :red,
+        "v#{@version}",
+        :reset,
+        ".\n",
+        "To update, run:\n\n",
+        "    $ mix local.phx\n"
+      ])
+    end
+  end
+
+  # we need to parse JSON, so we only check for new versions on Elixir 1.18+
+  if Version.match?(System.version(), "~> 1.18") do
+    defp get_latest_version(package) do
+      Task.async(fn ->
+        # ignore any errors to not prevent the generators from running
+        # due to any issues while checking the version
+        try do
+          with {:ok, package} <- get_package(package) do
+            versions =
+              for release <- package["releases"],
+                  version = Version.parse!(release["version"]),
+                  # ignore pre-releases like release candidates, etc.
+                  version.pre == [] do
+                version
+              end
+
+            Enum.max(versions, Version)
+          end
+        rescue
+          e -> {:error, e}
+        catch
+          :exit, _ -> {:error, :exit}
+        end
+      end)
+    end
+
+    defp get_package(name) do
+      http_options =
+        [
+          ssl: [
+            verify: :verify_peer,
+            cacerts: :public_key.cacerts_get(),
+            depth: 2,
+            customize_hostname_check: [
+              match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+            ],
+            versions: [:"tlsv1.2", :"tlsv1.3"]
+          ]
+        ]
+
+      options = [body_format: :binary]
+
+      case :httpc.request(
+             :get,
+             {~c"https://hex.pm/api/packages/#{name}",
+              [{~c"user-agent", ~c"Mix.Tasks.Phx.New/#{@version}"}]},
+             http_options,
+             options
+           ) do
+        {:ok, {{_, 200, _}, _headers, body}} ->
+          {:ok, JSON.decode!(body)}
+
+        {:ok, {{_, status, _}, _, _}} ->
+          {:error, status}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+    end
+  else
+    defp get_latest_version(_), do: nil
   end
 end

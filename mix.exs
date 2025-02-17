@@ -91,6 +91,7 @@ defmodule Phoenix.MixProject do
 
       # Optional deps
       {:plug_cowboy, "~> 2.7", optional: true},
+      {:bandit, "~> 1.0", optional: true},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)
