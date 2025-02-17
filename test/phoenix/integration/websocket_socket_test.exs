@@ -2,7 +2,10 @@ Code.require_file("../../support/websocket_client.exs", __DIR__)
 Code.require_file("../../support/http_client.exs", __DIR__)
 
 defmodule Phoenix.Integration.WebSocketTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case,
+    async: false,
+    parameterize: [%{adapter: Bandit.PhoenixAdapter}, %{adapter: Phoenix.Endpoint.Cowboy2Adapter}]
+
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.{HTTPClient, WebsocketClient}
@@ -18,7 +21,8 @@ defmodule Phoenix.Integration.WebSocketTest do
     https: false,
     http: [port: @port],
     debug_errors: false,
-    server: true
+    server: true,
+    drainer: false
   )
 
   defmodule UserSocket do
@@ -68,9 +72,11 @@ defmodule Phoenix.Integration.WebSocketTest do
     def handle_in({"ping:start", _}, state) do
       {:reply, :ok, :ping, state}
     end
+
     def handle_in({"ping:start:" <> payload, _}, state) do
       {:reply, :ok, {:ping, payload}, state}
     end
+
     def handle_info(_, state), do: {:ok, state}
 
     def handle_control({payload, opts}, state) do
@@ -96,12 +102,13 @@ defmodule Phoenix.Integration.WebSocketTest do
       websocket: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200],
       custom: :value
 
-    socket "/ws/ping", PingSocket,
-      websocket: true
+    socket "/ws/ping", PingSocket, websocket: true
   end
 
-  setup_all do
-    capture_log(fn -> Endpoint.start_link() end)
+  setup_all %{adapter: adapter} do
+    config = Application.get_env(:phoenix, Endpoint)
+    Application.put_env(:phoenix, Endpoint, Keyword.merge(config, adapter: adapter))
+    capture_log(fn -> start_supervised!(Endpoint) end)
     :ok
   end
 
@@ -119,23 +126,25 @@ defmodule Phoenix.Integration.WebSocketTest do
       assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
 
       headers = [{"origin", "http://notallowed.com"}]
+
       assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
-        WebsocketClient.connect(self(), @path, :noop, headers)
+               WebsocketClient.connect(self(), @path, :noop, headers)
     end)
   end
 
   test "refuses unallowed Websocket subprotocols" do
     assert capture_log(fn ->
-      headers = [{"sec-websocket-protocol", "sip"}]
-      assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
+             headers = [{"sec-websocket-protocol", "sip"}]
+             assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
 
-      headers = []
-      assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
+             headers = []
+             assert {:ok, _} = WebsocketClient.connect(self(), @path, :noop, headers)
 
-      headers = [{"sec-websocket-protocol", "mqtt"}]
-      assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
-        WebsocketClient.connect(self(), @path, :noop, headers)
-    end) =~ "Could not check Websocket subprotocols"
+             headers = [{"sec-websocket-protocol", "mqtt"}]
+
+             assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
+                      WebsocketClient.connect(self(), @path, :noop, headers)
+           end) =~ "Could not check Websocket subprotocols"
   end
 
   test "returns params with sync request" do

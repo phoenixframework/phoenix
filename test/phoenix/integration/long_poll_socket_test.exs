@@ -1,7 +1,9 @@
 Code.require_file("../../support/http_client.exs", __DIR__)
 
 defmodule Phoenix.Integration.LongPollSocketTest do
-  use ExUnit.Case
+  use ExUnit.Case,
+    parameterize: [%{adapter: Bandit.PhoenixAdapter}, %{adapter: Phoenix.Endpoint.Cowboy2Adapter}]
+
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.HTTPClient
@@ -19,6 +21,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     debug_errors: false,
     secret_key_base: String.duplicate("abcdefgh", 8),
     server: true,
+    drainer: false,
     pubsub_server: __MODULE__
   )
 
@@ -71,9 +74,11 @@ defmodule Phoenix.Integration.LongPollSocketTest do
       custom: :value
   end
 
-  setup_all do
-    capture_log(fn -> start_supervised! Endpoint end)
-    start_supervised! {Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size}
+  setup_all %{adapter: adapter} do
+    config = Application.get_env(:phoenix, Endpoint)
+    Application.put_env(:phoenix, Endpoint, Keyword.merge(config, adapter: adapter))
+    capture_log(fn -> start_supervised!(Endpoint) end)
+    start_supervised!({Phoenix.PubSub, name: __MODULE__, pool_size: @pool_size})
     :ok
   end
 
