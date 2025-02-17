@@ -21,12 +21,12 @@ $ mix test
 ................
 
 Finished in 0.6 seconds
-19 tests, 0 failures
+21 tests, 0 failures
 
 Randomized with seed 638414
 ```
 
-Great. We've got nineteen tests and they are all passing!
+Great. We've got twenty-one tests and they are all passing!
 
 ## Testing posts
 
@@ -41,18 +41,9 @@ defmodule Hello.BlogTest do
   describe "posts" do
     alias Hello.Blog.Post
 
-    @valid_attrs %{body: "some body", title: "some title"}
-    @update_attrs %{body: "some updated body", title: "some updated title"}
+    import Hello.BlogFixtures
+
     @invalid_attrs %{body: nil, title: nil}
-
-    def post_fixture(attrs \\ %{}) do
-      {:ok, post} =
-        attrs
-        |> Enum.into(@valid_attrs)
-        |> Blog.create_post()
-
-      post
-    end
 
     test "list_posts/0 returns all posts" do
       post = post_fixture()
@@ -78,7 +69,9 @@ The tests defined for our context are very straight-forward. They call the funct
 
 ```elixir
 test "create_post/1 with valid data creates a post" do
-  assert {:ok, %Post{} = post} = Blog.create_post(@valid_attrs)
+  valid_attrs = %{body: "some body", title: "some title"}
+
+  assert {:ok, %Post{} = post} = Blog.create_post(valid_attrs)
   assert post.body == "some body"
   assert post.title == "some title"
 end
@@ -106,9 +99,13 @@ defmodule Hello.DataCase do
   end
 
   setup tags do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Demo.Repo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+    Hello.DataCase.setup_sandbox(tags)
     :ok
+  end
+
+  def setup_sandbox(tags) do
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Hello.Repo, shared: not tags[:async])
+    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
   end
 
   def errors_on(changeset) do

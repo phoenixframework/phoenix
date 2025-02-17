@@ -1,16 +1,28 @@
 # mix phx.gen.auth
 
-The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your Phoenix app. This simple generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
+> This guide assumes that you have gone through the [introductory guides](overview.html) and have a Phoenix application [up and running](up_and_running.html).
+
+The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your Phoenix app. This generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
 
 ## Getting started
 
-Let's start by running the following command from the root of our app (or `apps/my_app_web` in an umbrella app):
+> Before running this command, consider committing your work as it generates multiple files.
+
+Let's start by running the following command from the root of our app:
 
 ```console
 $ mix phx.gen.auth Accounts User users
+
+An authentication system can be created in two different ways:
+- Using Phoenix.LiveView (default)
+- Using Phoenix.Controller only
+
+Do you want to create a LiveView based authentication system? [Y/n] Y
 ```
 
-This creates an `Accounts` context with an `Accounts.User` schema module. The final argument is the plural version of the schema module, which is used for generating database table names and route helpers. The `mix phx.gen.auth` generator is similar to `mix phx.gen.html` except it does not accept a list of additional fields to add to the schema, and it generates many more context functions.
+The authentication generators support Phoenix LiveView, for enhanced UX, so we'll answer `Y` here. You may also answer `n` for a controller based authentication system.
+
+Either approach will create an `Accounts` context with an `Accounts.User` schema module. The final argument is the plural version of the schema module, which is used for generating database table names and route paths. The `mix phx.gen.auth` generator is similar to `mix phx.gen.html` except it does not accept a list of additional fields to add to the schema, and it generates many more context functions.
 
 Since this generator installed additional dependencies in `mix.exs`, let's fetch those:
 
@@ -18,10 +30,10 @@ Since this generator installed additional dependencies in `mix.exs`, let's fetch
 $ mix deps.get
 ```
 
-Now we need to verify the database connection details for the development and test environments in `config/` so the migrator and tests can run properly. Then run the following to create the database:
+Now run the pending repository migrations:
 
 ```console
-$ mix ecto.setup
+$ mix ecto.migrate
 ```
 
 Let's run the tests to make sure our new authentication system works as expected.
@@ -30,7 +42,7 @@ Let's run the tests to make sure our new authentication system works as expected
 $ mix test
 ```
 
-And finally, let's start our Phoenix server and try it out.
+And finally, let's start our Phoenix server and try it out (note the new `Register` and `Log in` links at the top right of the default page).
 
 ```console
 $ mix phx.server
@@ -84,7 +96,7 @@ Note that whenever the password changes (either via reset password or directly),
 
 ### User Enumeration attacks
 
-A user enumeration attack allows someone to check if an email is registered in the application. The generated authentication code does not attempt to protect from such checks. For instance, when you register an account, if the email is already registered, the code will notify the user the email is already registered.
+A user enumeration attack allows someone to check if an email is registered in the application. The generated authentication code does not attempt to protect from such attacks. For instance, when you register an account, if the email is already registered, the code will notify the user the email is already registered.
 
 If your application is sensitive to enumeration attacks, you need to implement your own workflows, which tends to be very different from most applications, as you need to carefully balance security and user experience.
 
@@ -108,6 +120,7 @@ Check out `mix phx.gen.auth` for more details, such as using a different passwor
 
 The following links have more information regarding the motivation and design of the code this generates.
 
+  * Berenice Medel's blog post on generating LiveViews for authentication (rather than conventional Controllers & Views) - [Bringing Phoenix Authentication to Life](https://fly.io/phoenix-files/phx-gen-auth/)
   * José Valim's blog post - [An upcoming authentication solution for Phoenix](https://dashbit.co/blog/a-new-authentication-solution-for-phoenix)
   * The [original `phx_gen_auth` repo][phx_gen_auth repo] (for Phoenix 1.5 applications) - This is a great resource to see discussions around decisions that have been made in earlier versions of the project.
   * [Original pull request on bare Phoenix app][auth PR]

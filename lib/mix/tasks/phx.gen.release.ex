@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   running `mix release`.
 
   To skip generating the migration-related files, use the `--no-ecto` flag. To
-  force these migration-related files to be generated, the use `--ecto` flag.
+  force these migration-related files to be generated, use the `--ecto` flag.
 
   ## Docker
 
@@ -29,11 +29,13 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     * `.dockerignore` - A docker ignore file with standard elixir defaults
 
-  For extended release configuration, the `mix release.init`task can be used
+  For extended release configuration, the `mix release.init` task can be used
   in addition to this task. See the `Mix.Release` docs for more details.
   """
 
   use Mix.Task
+
+  require Logger
 
   @doc false
   def run(args) do
@@ -54,8 +56,6 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     binding = [
       app_namespace: app_namespace,
       otp_app: app,
-      elixir_vsn: System.version(),
-      otp_vsn: otp_vsn(),
       assets_dir_exists?: File.dir?("assets")
     ]
 
@@ -73,10 +73,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     end
 
     if opts.docker do
-      Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
-        {:eex, "Dockerfile.eex", "Dockerfile"},
-        {:eex, "dockerignore.eex", ".dockerignore"}
-      ])
+      gen_docker(binding)
     end
 
     File.chmod!("rel/overlays/bin/server", 0o755)
@@ -110,13 +107,13 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         _build/dev/rel/#{app}/bin/#{app}
     """)
 
-    if opts.ecto do
+    if opts.ecto and opts.socket_db_adaptor_installed do
       post_install_instructions("config/runtime.exs", ~r/ECTO_IPV6/, """
-      [warn] Conditional IPV6 support missing from runtime configuration.
+      [warn] Conditional IPv6 support missing from runtime configuration.
 
       Add the following to your config/runtime.exs:
 
-          maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+          maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
           config :#{app}, #{app_namespace}.Repo,
             ...,
@@ -152,6 +149,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> OptionParser.parse!(strict: [ecto: :boolean, docker: :boolean])
     |> elem(0)
     |> Keyword.put_new_lazy(:ecto, &ecto_sql_installed?/0)
+    |> Keyword.put_new_lazy(:socket_db_adaptor_installed, &socket_db_adaptor_installed?/0)
     |> Keyword.put_new(:docker, false)
     |> Map.new()
   end
@@ -189,6 +187,133 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     end
   end
 
+  defp ecto_sql_installed?, do: Mix.Project.deps_paths() |> Map.has_key?(:ecto_sql)
+
+  defp socket_db_adaptor_installed? do
+    Mix.Project.deps_paths(depth: 1)
+    |> Map.take([:tds, :myxql, :postgrex])
+    |> map_size() > 0
+  end
+
+  @debian "bookworm"
+  defp elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
+    url =
+      "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"
+
+    fetch_body!(url)
+    |> Phoenix.json_library().decode!()
+    |> Map.fetch!("results")
+    |> Enum.find_value(:error, fn %{"name" => name} ->
+      if String.ends_with?(name, "-slim") do
+        elixir_vsn = name |> String.split("-") |> List.first()
+        %{"vsn" => vsn} = Regex.named_captures(~r/.*debian-#{@debian}-(?<vsn>.*)-slim/, name)
+        {:ok, elixir_vsn, vsn}
+      end
+    end)
+  end
+
+  defp gen_docker(binding) do
+    wanted_elixir_vsn =
+      case Version.parse!(System.version()) do
+        %{major: major, minor: minor, pre: ["dev"]} -> "#{major}.#{minor - 1}.0"
+        _ -> System.version()
+      end
+
+    otp_vsn = otp_vsn()
+
+    vsns =
+      case elixir_and_debian_vsn(wanted_elixir_vsn, otp_vsn) do
+        {:ok, elixir_vsn, debian_vsn} ->
+          {:ok, elixir_vsn, debian_vsn}
+
+        :error ->
+          case elixir_and_debian_vsn("", otp_vsn) do
+            {:ok, elixir_vsn, debian_vsn} ->
+              Logger.warning(
+                "Docker image for Elixir #{wanted_elixir_vsn} not found, defaulting to Elixir #{elixir_vsn}"
+              )
+
+              {:ok, elixir_vsn, debian_vsn}
+
+            :error ->
+              :error
+          end
+      end
+
+    case vsns do
+      {:ok, elixir_vsn, debian_vsn} ->
+        binding =
+          Keyword.merge(binding,
+            debian: @debian,
+            debian_vsn: debian_vsn,
+            elixir_vsn: elixir_vsn,
+            otp_vsn: otp_vsn
+          )
+
+        Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
+          {:eex, "Dockerfile.eex", "Dockerfile"},
+          {:eex, "dockerignore.eex", ".dockerignore"}
+        ])
+
+      :error ->
+        raise """
+        unable to fetch supported Docker image for Elixir #{wanted_elixir_vsn} and Erlang #{otp_vsn}.
+        Please check https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=#{otp_vsn}\
+        for a suitable Elixir version
+        """
+    end
+  end
+
+  defp ensure_app!(app) do
+    if function_exported?(Mix, :ensure_application!, 1) do
+      apply(Mix, :ensure_application!, [app])
+    else
+      {:ok, _} = Application.ensure_all_started(app)
+    end
+  end
+
+  defp fetch_body!(url) do
+    url = String.to_charlist(url)
+    Logger.debug("Fetching latest image information from #{url}")
+    ensure_app!(:inets)
+    ensure_app!(:ssl)
+
+    if proxy = System.get_env("HTTP_PROXY") || System.get_env("http_proxy") do
+      Logger.debug("Using HTTP_PROXY: #{proxy}")
+      %{host: host, port: port} = URI.parse(proxy)
+      :httpc.set_options([{:proxy, {{String.to_charlist(host), port}, []}}])
+    end
+
+    if proxy = System.get_env("HTTPS_PROXY") || System.get_env("https_proxy") do
+      Logger.debug("Using HTTPS_PROXY: #{proxy}")
+      %{host: host, port: port} = URI.parse(proxy)
+      :httpc.set_options([{:https_proxy, {{String.to_charlist(host), port}, []}}])
+    end
+
+    # https://erlef.github.io/security-wg/secure_coding_and_deployment_hardening/inets
+    http_options = [
+      ssl: [
+        verify: :verify_peer,
+        cacerts: :public_key.cacerts_get(),
+        depth: 3,
+        customize_hostname_check: [
+          match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+        ],
+        versions: protocol_versions()
+      ]
+    ]
+
+    case :httpc.request(:get, {url, []}, http_options, body_format: :binary) do
+      {:ok, {{_, 200, _}, _headers, body}} -> body
+      other -> raise "couldn't fetch #{url}: #{inspect(other)}"
+    end
+  end
+
+  defp protocol_versions do
+    otp_major_vsn = :erlang.system_info(:otp_release) |> List.to_integer()
+    if otp_major_vsn < 25, do: [:"tlsv1.2"], else: [:"tlsv1.2", :"tlsv1.3"]
+  end
+
   def otp_vsn do
     major = to_string(:erlang.system_info(:otp_release))
     path = Path.join([:code.root_dir(), "releases", major, "OTP_VERSION"])
@@ -202,6 +327,4 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         "#{major}.0"
     end
   end
-
-  defp ecto_sql_installed?, do: Mix.Project.deps_paths() |> Map.has_key?(:ecto_sql)
 end

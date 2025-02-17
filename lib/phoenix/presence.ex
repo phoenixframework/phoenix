@@ -284,14 +284,14 @@ defmodule Phoenix.Presence do
   a `:phx_ref_prev` key will be present containing the previous
   `:phx_ref` value.
   """
-  @callback list(Phoenix.Socket.t() | topic) :: presences
+  @callback list(socket_or_topic :: Phoenix.Socket.t() | topic) :: presences
 
   @doc """
   Returns the map of presence metadata for a socket/topic-key pair.
 
   ## Examples
 
-  Uses the same data format as `c:list/1`, but only
+  Uses the same data format as each presence in `c:list/1`, but only
   returns metadata for the presences under a topic and key pair. For example,
   a user with key `"user1"`, connected to the same chat room `"room:1"` from two
   devices, could return:
@@ -302,7 +302,7 @@ defmodule Phoenix.Presence do
   Like `c:list/1`, the presence metadata is passed to the `fetch`
   callback of your presence module to fetch any additional information.
   """
-  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: presences
+  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: [presence]
 
   @doc """
   Extend presence information with additional data.
@@ -504,7 +504,7 @@ defmodule Phoenix.Presence do
   def handle_info({task_ref, {:phoenix, ref, computed_diffs}}, state) do
     %{current_task: current_task} = state
     {^ref, %Task{ref: ^task_ref} = task} = current_task
-    {:exit, _} = Task.shutdown(task)
+    Task.shutdown(task)
 
     Enum.each(computed_diffs, fn {topic, presence_diff} ->
       Phoenix.Channel.Server.local_broadcast(

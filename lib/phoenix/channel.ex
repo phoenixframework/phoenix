@@ -5,6 +5,8 @@ defmodule Phoenix.Channel do
   Channels provide a means for bidirectional communication from clients that
   integrate with the `Phoenix.PubSub` layer for soft-realtime functionality.
 
+  For a conceptual overview, see the [Channels guide](channels.html).
+
   ## Topics & Callbacks
 
   Every time you join a channel, you need to choose which particular topic you
@@ -30,6 +32,11 @@ defmodule Phoenix.Channel do
         {:ok, socket}
       end
 
+  The first argument is the topic, the second argument is a map payload given by
+  the client, and the third argument is an instance of `Phoenix.Socket`. The
+  `socket` to all channel callbacks, so check its module and documentation to
+  learn its fields and the different ways to interact with it.
+
   ## Authorization
 
   Clients must join a channel to send and receive PubSub events on that channel.
@@ -44,43 +51,50 @@ defmodule Phoenix.Channel do
 
   After a client has successfully joined a channel, incoming events from the
   client are routed through the channel's `handle_in/3` callbacks. Within these
-  callbacks, you can perform any action. Typically you'll either forward a
-  message to all listeners with `broadcast!/3`, or push a message directly down
-  the socket with `push/3`. Incoming callbacks must return the `socket` to
-  maintain ephemeral state.
+  callbacks, you can perform any action. Incoming callbacks must return the
+  `socket` to maintain ephemeral state.
 
-  Here's an example of receiving an incoming `"new_msg"` event from one client,
-  and broadcasting the message to all topic subscribers for this socket.
+  Typically you'll either forward a message to all listeners with
+  `broadcast!/3` or reply directly to a client event for request/response style
+  messaging.
+
+  General message payloads are received as maps:
 
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast!(socket, "new_msg", %{uid: uid, body: body})
-        {:noreply, socket}
+        ...
+        {:reply, :ok, socket}
       end
 
-  General message payloads are received as maps, and binary data payloads are
-  passed as a `{:binary, data}` tuple:
+  Binary data payloads are passed as a `{:binary, data}` tuple:
 
       def handle_in("file_chunk", {:binary, chunk}, socket) do
         ...
         {:reply, :ok, socket}
       end
 
-  You can also push a message directly down the socket, in the form of a map,
-  or a tagged `{:binary, data}` tuple:
+  ## Broadcasts
 
-      # client asks for their current rank, push sent directly as a new event.
-      def handle_in("current_rank", _, socket) do
-        push(socket, "current_rank", %{val: Game.get_rank(socket.assigns[:user])})
-        push(socket, "photo", {:binary, File.read!(socket.assigns.photo_path)})
+  You can broadcast events from anywhere in your application to a topic by
+  the `broadcast` function in the endpoint:
+
+      MyAppWeb.Endpoint.broadcast!("room:13", "new_message", %{content: "hello"})
+
+  It is also possible to broadcast directly from channels. Here's an example of
+  receiving an incoming `"new_msg"` event from one client, and broadcasting the
+  message to all topic subscribers for this socket.
+
+      def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
+        broadcast!(socket, "new_msg", %{uid: uid, body: body})
         {:noreply, socket}
       end
 
   ## Replies
 
-  In addition to pushing messages out when you receive a `handle_in` event,
-  you can also reply directly to a client event for request/response style
-  messaging. This is useful when a client must know the result of an operation
-  or to simply ack messages.
+  Replies are useful for acknowledging a client's message or responding with
+  the results of an operation. A reply is sent only to the client connected to
+  the current channel process. Behind the scenes, they include the client
+  message `ref`, which allows the client to correlate the reply it receives
+  with the message it sent.
 
   For example, imagine creating a resource and replying with the created record:
 
@@ -97,7 +111,7 @@ defmodule Phoenix.Channel do
         end
       end
 
-  Alternatively, you may just want to ack the status of the operation:
+  Or you may just want to confirm that the operation succeeded:
 
       def handle_in("create:post", attrs, socket) do
         changeset = Post.changeset(%Post{}, attrs)
@@ -110,9 +124,52 @@ defmodule Phoenix.Channel do
         end
       end
 
-  Like binary pushes, binary data is also supported with replies via a `{:binary, data}` tuple:
+  Binary data is also supported with replies via a `{:binary, data}` tuple:
 
       {:reply, {:ok, {:binary, bin}}, socket}
+
+  If you don't want to send a reply to the client, you can return:
+
+      {:noreply, socket}
+
+  One situation when you might do this is if you need to reply later; see
+  `reply/2`.
+
+  ## Pushes
+
+  Calling `push/3` allows you to send a message to the client which is not a
+  reply to a specific client message. Because it is not a reply, a pushed
+  message does not contain a client message `ref`; there is no prior client
+  message to relate it to.
+
+  Possible use cases include notifying a client that:
+  - You've auto-saved the user's document
+  - The user's game is ending soon
+  - The IoT device's settings should be updated
+
+  For example, you could `push/3` a message to the client in `handle_info/3`
+  after receiving a `PubSub` message relevant to them.
+
+      alias Phoenix.Socket.Broadcast
+      def handle_info(%Broadcast{topic: _, event: event, payload: payload}, socket) do
+        push(socket, event, payload)
+        {:noreply, socket}
+      end
+
+  Push data can be given in the form of a map or a tagged `{:binary, data}`
+  tuple:
+
+      # client asks for their current rank. reply contains it, and client
+      # is also pushed a leader board and a badge image
+      def handle_in("current_rank", _, socket) do
+        push(socket, "leaders", %{leaders: Game.get_leaders(socket.assigns.game_id)})
+        push(socket, "badge", {:binary, File.read!(socket.assigns.badge_path)})
+        {:reply, %{val: Game.get_rank(socket.assigns[:user])}, socket}
+      end
+
+  Note that in this example, `push/3` is called from `handle_in/3`; in this way
+  you can essentially reply N times to a single message from the client. See
+  `reply/2` for why this may be desirable.
 
   ## Intercepting Outgoing Events
 
@@ -143,30 +200,6 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-  ## Broadcasting to an external topic
-
-  In some cases, you will want to broadcast messages without the context of
-  a `socket`. This could be for broadcasting from within your channel to an
-  external topic, or broadcasting from elsewhere in your application like a
-  controller or another process. Such can be done via your endpoint:
-
-      # within channel
-      def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
-        ...
-        broadcast_from!(socket, "new_msg", %{uid: uid, body: body})
-        MyAppWeb.Endpoint.broadcast_from!(self(), "room:superadmin",
-          "new_msg", %{uid: uid, body: body})
-        {:noreply, socket}
-      end
-
-      # within controller
-      def create(conn, params) do
-        ...
-        MyAppWeb.Endpoint.broadcast!("room:" <> rid, "new_msg", %{uid: uid, body: body})
-        MyAppWeb.Endpoint.broadcast!("room:superadmin", "new_msg", %{uid: uid, body: body})
-        redirect(conn, to: "/")
-      end
-
   ## Terminate
 
   On termination, the channel callback `terminate/2` will be invoked with
@@ -182,12 +215,12 @@ defmodule Phoenix.Channel do
   `terminate/2`, however, won't be invoked in case of errors nor in
   case of exits. This is the same behaviour as you find in Elixir
   abstractions like `GenServer` and others. Similar to `GenServer`,
-  it would also be possible `:trap_exit` to guarantee that `terminate/2`
+  it would also be possible to `:trap_exit` to guarantee that `terminate/2`
   is invoked. This practice is not encouraged though.
 
-  Typically speaking, if you want to clean something up, it is better to
+  Generally speaking, if you want to clean something up, it is better to
   monitor your channel process and do the clean up from another process.
-  All channel callbacks including `join/3` are called from within the
+  All channel callbacks, including `join/3`, are called from within the
   channel process. Therefore, `self()` in any of them returns the PID to
   be monitored.
 
@@ -278,29 +311,32 @@ defmodule Phoenix.Channel do
 
   ## Shutdown
 
-  You can configure the shutdown of each channel used when your application
-  is shutting down by setting the `:shutdown` value on use:
+  You can configure the shutdown behavior of each channel used when your
+  application is shutting down by setting the `:shutdown` value on use:
 
       use Phoenix.Channel, shutdown: 5_000
 
-  It defaults to 5_000.
+  It defaults to 5_000. The supported values are described under the
+  in the `Supervisor` module docs.
 
   ## Logging
 
   By default, channel `"join"` and `"handle_in"` events are logged, using
-  the level `:info` and `:debug`, respectively. Logs can be customized per
-  event type or disabled by setting the `:log_join` and `:log_handle_in`
-  options when using `Phoenix.Channel`. For example, the following
-  configuration logs join events as `:info`, but disables logging for
+  the level `:info` and `:debug`, respectively. You can change the level used
+  for each event, or disable logs, per event type by setting the `:log_join`
+  and `:log_handle_in` options when using `Phoenix.Channel`. For example, the
+  following configuration logs join events as `:info`, but disables logging for
   incoming events:
 
       use Phoenix.Channel, log_join: :info, log_handle_in: false
 
+  Note that changing an event type's level doesn't affect what is logged,
+  unless you set it to `false`, it affects the associated level.
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
 
-  @type payload :: map | {:binary, binary}
+  @type payload :: map | term | {:binary, binary}
   @type reply :: status :: atom | {status :: atom, response :: payload}
   @type socket_ref ::
           {transport_pid :: Pid, serializer :: module, topic :: binary, ref :: binary,
@@ -311,6 +347,8 @@ defmodule Phoenix.Channel do
 
   To authorize a socket, return `{:ok, socket}` or `{:ok, reply, socket}`. To
   refuse authorization, return `{:error, reason}`.
+
+  Payloads are serialized before sending with the configured serializer.
 
   ## Example
 
@@ -331,12 +369,13 @@ defmodule Phoenix.Channel do
   @doc """
   Handle incoming `event`s.
 
+  Payloads are serialized before sending with the configured serializer.
+
   ## Example
 
       def handle_in("ping", payload, socket) do
         {:reply, {:ok, payload}, socket}
       end
-
   """
   @callback handle_in(event :: String.t(), payload :: payload, socket :: Socket.t()) ::
               {:noreply, Socket.t()}
@@ -564,10 +603,18 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Sends event to the socket.
+  Sends an event directly to the connected client without requiring a prior
+  message from the client.
 
   The event's message must be a serializable map or a tagged `{:binary, data}`
   tuple where `data` is binary data.
+
+  Note that unlike some in client libraries, this server-side `push/3` does not
+  return a reference. If you need to get a reply from the client and to
+  correlate that reply with the message you pushed, you'll need to include a
+  unique identifier in the message, track it in the Channel's state, have the
+  client include it in its reply, and examine the ref when the reply comes to
+  `handle_in/3`.
 
   ## Examples
 
@@ -586,17 +633,29 @@ defmodule Phoenix.Channel do
   @doc """
   Replies asynchronously to a socket push.
 
-  Useful when you need to reply to a push that can't otherwise be handled using
-  the `{:reply, {status, payload}, socket}` return from your `handle_in`
-  callbacks. `reply/2` will be used in the rare cases you need to perform work in
-  another process and reply when finished by generating a reference to the push
-  with `socket_ref/1`.
+  The usual way of replying to a client's message is to return a tuple from `handle_in/3`
+  like:
 
-  *Note*: In such cases, a `socket_ref` should be generated and
-  passed to the external process, so the `socket` itself is not leaked outside
-  the channel. The `socket` holds information such as assigns and transport
-  configuration, so it's important to not copy this information outside of the
-  channel that owns it.
+      {:reply, {status, payload}, socket}
+
+  But sometimes you need to reply to a push asynchronously - that is, after
+  your `handle_in/3` callback completes. For example, you might need to perform
+  work in another process and reply when it's finished.
+
+  You can do this by generating a reference to the socket with `socket_ref/1`
+  and calling `reply/2` with that ref when you're ready to reply.
+
+  *Note*: A `socket_ref` is required so the `socket` itself is not leaked
+  outside the channel. The `socket` holds information such as assigns and
+  transport configuration, so it's important to not copy this information
+  outside of the channel that owns it.
+
+  Technically, `reply/2` will allow you to reply multiple times to the same
+  client message, and each reply will include the client message `ref`. But the
+  client may expect only one reply; in that case, `push/3` would be preferable
+  for the additional messages.
+
+  Payloads are serialized before sending with the configured serializer.
 
   ## Examples
 

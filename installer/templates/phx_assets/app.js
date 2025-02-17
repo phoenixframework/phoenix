@@ -1,7 +1,3 @@
-// We import the CSS which is extracted to its own file by esbuild.
-// Remove this line if you add your own CSS build pipeline (e.g postcss).
-import "../css/app.css"
-
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
 // import "./user_socket.js"
@@ -26,13 +22,16 @@ import "phoenix_html"
 <%= @live_comment %>import {LiveSocket} from "phoenix_live_view"
 <%= @live_comment %>import topbar from "../vendor/topbar"
 
-<%= @live_comment %>let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-<%= @live_comment %>let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+<%= @live_comment %>const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+<%= @live_comment %>const liveSocket = new LiveSocket("/live", Socket, {
+<%= @live_comment %>  longPollFallbackMs: 2500,
+<%= @live_comment %>  params: {_csrf_token: csrfToken}
+<%= @live_comment %>})
 
 // Show progress bar on live navigation and form submits
 <%= @live_comment %>topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
-<%= @live_comment %>window.addEventListener("phx:page-loading-start", info => topbar.show())
-<%= @live_comment %>window.addEventListener("phx:page-loading-stop", info => topbar.hide())
+<%= @live_comment %>window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
+<%= @live_comment %>window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
 // connect if there are any LiveViews on the page
 <%= @live_comment %>liveSocket.connect()
@@ -42,4 +41,39 @@ import "phoenix_html"
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 <%= @live_comment %>window.liveSocket = liveSocket
+
+// The lines below enable quality of life phoenix_live_reload
+// development features:
+//
+//     1. stream server logs to the browser console
+//     2. click on elements to jump to their definitions in your code editor
+//
+<%= @live_comment %>if (process.env.NODE_ENV === "development") {
+<%= @live_comment %>  window.addEventListener("phx:live_reload:attached", ({detail: reloader}) => {
+<%= @live_comment %>    // Enable server log streaming to client.
+<%= @live_comment %>    // Disable with reloader.disableServerLogs()
+<%= @live_comment %>    reloader.enableServerLogs()
+<%= @live_comment %>
+<%= @live_comment %>    // Open configured PLUG_EDITOR at file:line of the clicked element's HEEx component
+<%= @live_comment %>    //
+<%= @live_comment %>    //   * click with "c" key pressed to open at caller location
+<%= @live_comment %>    //   * click with "d" key pressed to open at function component definition location
+<%= @live_comment %>    let keyDown
+<%= @live_comment %>    window.addEventListener("keydown", e => keyDown = e.key)
+<%= @live_comment %>    window.addEventListener("keyup", e => keyDown = null)
+<%= @live_comment %>    window.addEventListener("click", e => {
+<%= @live_comment %>      if(keyDown === "c"){
+<%= @live_comment %>        e.preventDefault()
+<%= @live_comment %>        e.stopImmediatePropagation()
+<%= @live_comment %>        reloader.openEditorAtCaller(e.target)
+<%= @live_comment %>      } else if(keyDown === "d"){
+<%= @live_comment %>        e.preventDefault()
+<%= @live_comment %>        e.stopImmediatePropagation()
+<%= @live_comment %>        reloader.openEditorAtDef(e.target)
+<%= @live_comment %>      }
+<%= @live_comment %>    }, true)
+<%= @live_comment %>
+<%= @live_comment %>    window.liveReloader = reloader
+<%= @live_comment %>  })
+<%= @live_comment %>}
 <% end %>

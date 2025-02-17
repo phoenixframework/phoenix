@@ -48,7 +48,6 @@ defmodule Mix.Tasks.Phx.New.Ecto do
   @shortdoc "Creates a new Ecto project within an umbrella project"
 
   use Mix.Task
-  import Phx.New.Generator
 
   @impl true
   def run([]) do
@@ -56,8 +55,8 @@ defmodule Mix.Tasks.Phx.New.Ecto do
   end
 
   def run([path | _] = args) do
-    unless in_umbrella?(path) do
-      Mix.raise "The ecto task can only be run within an umbrella's apps directory"
+    unless Phx.New.Generator.in_umbrella?(path) do
+      Mix.raise("The ecto task can only be run within an umbrella's apps directory")
     end
 
     Mix.Tasks.Phx.New.run(args ++ ["--no-assets", "--ecto"], Phx.New.Ecto, :app_path)

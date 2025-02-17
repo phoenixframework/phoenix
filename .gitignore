@@ -3,6 +3,7 @@
 /doc/
 /node_modules/
 /tmp/
+/cover/
 
 /assets/node_modules/
 
@@ -11,9 +12,12 @@
 /installer/deps/
 /installer/doc/
 /installer/phx_new-*.ez
+/installer/tmp/
 
 /integration_test/_build/
 /integration_test/deps/
 
 erl_crash.dump
 phoenix-*.ez
+
+.DS_Store

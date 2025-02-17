@@ -5,8 +5,15 @@ defmodule Phoenix.DigesterTest do
   @fake_now 32_132_173
   @hash_regex ~S"[a-fA-F\d]{32}"
 
+  defmodule DigestTestCompressor do
+    @behaviour Phoenix.Digester.Compressor
+    def compress_file(_file_path, _content), do: :error
+    def file_extensions, do: [".digest_test"]
+  end
+
   setup do
     File.rm_rf!(@output_path)
+    on_exit(fn -> File.rm_rf!(@output_path) end)
     :ok
   end
 
@@ -84,6 +91,8 @@ defmodule Phoenix.DigesterTest do
 
       assert json["digests"][key]["sha512"] ==
                "93pY5dBa8nHHi0Zfj75O/vXCBXb+UvEVCyU7Yd3pzOJ7o1wkYBWbvs3pVXhBChEmo8MDANT11vsggo2+bnYqoQ=="
+    after
+      File.rm_rf!("tmp/digest")
     end
 
     test "excludes compiled files" do
@@ -127,6 +136,8 @@ defmodule Phoenix.DigesterTest do
       assert_in_delta json["digests"]["foo-1198fd3c7ecf0e8f4a33a6e4fc5ae168.css"]["mtime"],
                       now(),
                       2
+    after
+      File.rm_rf!("tmp/digest")
     end
 
     test "excludes files that no longer exist from cache manifest" do
@@ -144,6 +155,8 @@ defmodule Phoenix.DigesterTest do
 
       json = Path.join(input_path, "cache_manifest.json") |> json_read!()
       assert json["digests"] == %{}
+    after
+      File.rm_rf!("tmp/digest")
     end
 
     test "digests and compress nested files" do
@@ -166,38 +179,46 @@ defmodule Phoenix.DigesterTest do
       input_path = Path.join("tmp", "phoenix_digest_twice")
       input_file = Path.join(input_path, "file.js")
 
-      File.rm_rf!(input_path)
-      File.mkdir_p!(input_path)
-      File.mkdir_p!(@output_path)
+      try do
+        File.rm_rf!(input_path)
+        File.mkdir_p!(input_path)
+        File.mkdir_p!(@output_path)
 
-      File.write!(input_file, "console.log('test');")
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
+        File.write!(input_file, "console.log('test');")
+        assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
-      json1 = Path.join(@output_path, "cache_manifest.json") |> json_read!()
-      assert Enum.count(json1["digests"]) == 1
+        json1 = Path.join(@output_path, "cache_manifest.json") |> json_read!()
+        assert Enum.count(json1["digests"]) == 1
 
-      File.write!(input_file, "console.log('test2');")
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
+        File.write!(input_file, "console.log('test2');")
+        assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
 
-      json2 = Path.join(@output_path, "cache_manifest.json") |> json_read!()
-      assert Enum.count(json2["digests"]) == 2
+        json2 = Path.join(@output_path, "cache_manifest.json") |> json_read!()
+        assert Enum.count(json2["digests"]) == 2
+      after
+        File.rm_rf!(input_path)
+      end
     end
 
     test "doesn't duplicate files when digesting and compressing twice" do
       input_path = Path.join("tmp", "phoenix_digest_twice")
       input_file = Path.join(input_path, "file.js")
 
-      File.rm_rf!(input_path)
-      File.mkdir_p!(input_path)
-      File.write!(input_file, "console.log('test');")
+      try do
+        File.rm_rf!(input_path)
+        File.mkdir_p!(input_path)
+        File.write!(input_file, "console.log('test');")
 
-      assert :ok = Phoenix.Digester.compile(input_path, input_path, true)
-      assert :ok = Phoenix.Digester.compile(input_path, input_path, true)
+        assert :ok = Phoenix.Digester.compile(input_path, input_path, true)
+        assert :ok = Phoenix.Digester.compile(input_path, input_path, true)
 
-      output_files = assets_files(input_path)
-      refute "file.js.gz.gz" in output_files
-      refute "cache_manifest.json.gz" in output_files
-      refute Enum.any?(output_files, &(&1 =~ ~r/file-#{@hash_regex}.[\w|\d]*.[-#{@hash_regex}/))
+        output_files = assets_files(input_path)
+        refute "file.js.gz.gz" in output_files
+        refute "cache_manifest.json.gz" in output_files
+        refute Enum.any?(output_files, &(&1 =~ ~r/file-#{@hash_regex}.[\w|\d]*.[-#{@hash_regex}/))
+      after
+        File.rm_rf!(input_path)
+      end
     end
 
     test "digests only absolute and relative asset paths found within stylesheets with vsn" do
@@ -270,7 +291,7 @@ defmodule Phoenix.DigesterTest do
 
       digested_js_map_filename =
         assets_files(@output_path)
-        |> Enum.find(&(&1 =~ ~r"app.js-#{@hash_regex}.map"))
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.js.map"))
 
       digested_js_filename =
         assets_files(@output_path)
@@ -291,7 +312,7 @@ defmodule Phoenix.DigesterTest do
 
       digested_js_map_filename =
         assets_files(@output_path)
-        |> Enum.find(&(&1 =~ ~r"app.js-#{@hash_regex}.map"))
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.js.map"))
 
       digested_js_filename =
         assets_files(@output_path)
@@ -317,6 +338,15 @@ defmodule Phoenix.DigesterTest do
       assert undigested_css =~ ~r"\.\./images/relative\.png"
       refute undigested_css =~ ~r"/phoenix-#{@hash_regex}\.png"
       refute undigested_css =~ ~r"\.\./images/relative-#{@hash_regex}\.png"
+    end
+
+    test "digested sourcemaps and their asset share the same hash" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
+
+      json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
+
+      assert json["latest"]["app.js.map"] == json["latest"]["app.js"] <> ".map"
     end
   end
 
@@ -432,6 +462,31 @@ defmodule Phoenix.DigesterTest do
       json = Path.join(@output_path, "cache_manifest.json") |> json_read!()
       refute json["digests"]["app-1.css"]
     end
+
+    test "removes compressed versions from all static compressors" do
+      add_digest_test_compressor()
+      manifest_path = "test/fixtures/digest/cleaner/cache_manifest.json"
+      File.mkdir_p!(@output_path)
+      File.cp(manifest_path, "#{@output_path}/cache_manifest.json")
+      File.touch("#{@output_path}/app.css")
+      File.touch("#{@output_path}/app-1.css")
+      File.touch("#{@output_path}/app-1.css.gz")
+      File.touch("#{@output_path}/app-1.css.digest_test")
+      File.touch("#{@output_path}/manifest.json")
+      File.touch("#{@output_path}/manifest.json.gz")
+      File.touch("#{@output_path}/manifest.json.digest_test")
+
+      assert :ok = Phoenix.Digester.clean(@output_path, 1, 10, @fake_now)
+      output_files = assets_files(@output_path)
+
+      assert "app.css" in output_files
+      assert "manifest.json" in output_files
+      assert "manifest.json.gz" in output_files
+      assert "manifest.json.digest_test" in output_files
+      refute "app-1.css" in output_files
+      refute "app-1.css.gz" in output_files
+      refute "app-1.css.digest_test" in output_files
+    end
   end
 
   describe "clean_all" do
@@ -477,6 +532,30 @@ defmodule Phoenix.DigesterTest do
       assert "manifest.json.gz" in output_files
       refute "cache_manifest.json" in output_files
     end
+
+    test "removes compressed versions from all static compressors" do
+      add_digest_test_compressor()
+      manifest_path = "test/fixtures/digest/cleaner/cache_manifest.json"
+      File.mkdir_p!(@output_path)
+      File.cp(manifest_path, "#{@output_path}/cache_manifest.json")
+      File.touch("#{@output_path}/app.css")
+      File.touch("#{@output_path}/app.css.gz")
+      File.touch("#{@output_path}/app.css.digest_test")
+      File.touch("#{@output_path}/manifest.json")
+      File.touch("#{@output_path}/manifest.json.gz")
+      File.touch("#{@output_path}/manifest.json.digest_test")
+
+      assert :ok = Phoenix.Digester.clean_all(@output_path)
+      output_files = assets_files(@output_path)
+
+      assert "app.css" in output_files
+      refute "app.css.gz" in output_files
+      refute "app.css.digest_test" in output_files
+      assert "manifest.json" in output_files
+      assert "manifest.json.gz" in output_files
+      assert "manifest.json.digest_test" in output_files
+      refute "cache_manifest.json" in output_files
+    end
   end
 
   defp assets_files(path) do
@@ -495,5 +574,11 @@ defmodule Phoenix.DigesterTest do
     path
     |> File.read!()
     |> Phoenix.json_library().decode!()
+  end
+
+  defp add_digest_test_compressor() do
+    compressors = Application.fetch_env!(:phoenix, :static_compressors)
+    Application.put_env(:phoenix, :static_compressors, [DigestTestCompressor | compressors])
+    on_exit(fn -> Application.put_env(:phoenix, :static_compressors, compressors) end)
   end
 end

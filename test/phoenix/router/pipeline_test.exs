@@ -160,7 +160,7 @@ defmodule Phoenix.Router.PipelineTest do
   end
 
   test "pipeline raises on conflict" do
-    assert_raise ArgumentError, ~r{there is an import from Kernel with the same nam}, fn ->
+    assert_raise ArgumentError, ~r{there is an import from Kernel with the same name}, fn ->
       defmodule ConflictingPipeline do
         use Phoenix.Router, otp_app: :phoenix
         pipeline :raise do

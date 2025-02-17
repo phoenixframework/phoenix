@@ -27,25 +27,7 @@ This allows all tests to be run with the following command
 
     $ mix test --include database
 
-
-## Alternative ways to run the integration tests
-
-Phoenix uses Earthly as part of the CI process. It is possible to use earthly to test changes to integration tests locally.  It is also possible to run the CI process locally, which is helpful when debugging CI failures.  
-
-[Installation Instructions](https://docs.earthly.dev/installation)
-
-To run integration tests against all supported Elixir and OTP versions:
-
-    $ earthly -P +all-integration-test
- 
-
-To test a specific version:
-
-    $ earthly -P --build-arg ELIXIR=1.11.2 --build-arg OTP=21.3.8.18 +integration-test
-
-To run the entire CI process locally, including unit and integration tests:
-
-    $ earthly -P +all
+Or alternatively, with docker and docker compose installed, you can just run `./docker.sh`.
 
 ## How tests are written
 

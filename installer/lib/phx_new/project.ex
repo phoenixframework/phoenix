@@ -16,19 +16,21 @@ defmodule Phx.New.Project do
             opts: :unset,
             in_umbrella?: false,
             binding: [],
-            generators: []
+            generators: [timestamp_type: :utc_datetime]
 
   def new(project_path, opts) do
     project_path = Path.expand(project_path)
     app = opts[:app] || Path.basename(project_path)
     app_mod = Module.concat([opts[:module] || Macro.camelize(app)])
 
-    %Project{base_path: project_path,
-             app: app,
-             app_mod: app_mod,
-             root_app: app,
-             root_mod: app_mod,
-             opts: opts}
+    %Project{
+      base_path: project_path,
+      app: app,
+      app_mod: app_mod,
+      root_app: app,
+      root_mod: app_mod,
+      opts: opts
+    }
   end
 
   def ecto?(%Project{binding: binding}) do
@@ -51,8 +53,12 @@ defmodule Phx.New.Project do
     Keyword.fetch!(binding, :dashboard)
   end
 
-  def assets?(%Project{binding: binding}) do
-    Keyword.fetch!(binding, :assets)
+  def javascript?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :javascript)
+  end
+
+  def css?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :css)
   end
 
   def mailer?(%Project{binding: binding}) do
@@ -65,7 +71,6 @@ defmodule Phx.New.Project do
 
   def join_path(%Project{} = project, location, path)
       when location in [:project, :app, :web] do
-
     project
     |> Map.fetch!(:"#{location}_path")
     |> Path.join(path)
@@ -74,7 +79,7 @@ defmodule Phx.New.Project do
 
   defp expand_path_with_bindings(path, %Project{} = project) do
     Regex.replace(Regex.recompile!(~r/:[a-zA-Z0-9_]+/), path, fn ":" <> key, _ ->
-        project |> Map.fetch!(:"#{key}") |> to_string()
+      project |> Map.fetch!(:"#{key}") |> to_string()
     end)
   end
 end

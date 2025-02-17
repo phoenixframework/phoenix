@@ -1,10 +1,11 @@
 Code.require_file("../../support/websocket_client.exs", __DIR__)
+Code.require_file("../../support/http_client.exs", __DIR__)
 
 defmodule Phoenix.Integration.WebSocketTest do
   use ExUnit.Case, async: true
   import ExUnit.CaptureLog
 
-  alias Phoenix.Integration.WebsocketClient
+  alias Phoenix.Integration.{HTTPClient, WebsocketClient}
   alias __MODULE__.Endpoint
 
   @moduletag :capture_log
@@ -25,7 +26,7 @@ defmodule Phoenix.Integration.WebSocketTest do
 
     def child_spec(opts) do
       :value = Keyword.fetch!(opts, :custom)
-      Supervisor.child_spec({Task, fn -> :ok end}, [])
+      :ignore
     end
 
     def connect(map) do
@@ -60,7 +61,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   defmodule PingSocket do
     @behaviour Phoenix.Socket.Transport
 
-    def child_spec(_opts), do: Supervisor.child_spec({Task, fn -> :ok end}, [id: :ping])
+    def child_spec(_opts), do: :ignore
     def connect(_), do: {:ok, %{}}
     def init(state), do: {:ok, state}
 
@@ -102,6 +103,14 @@ defmodule Phoenix.Integration.WebSocketTest do
   setup_all do
     capture_log(fn -> Endpoint.start_link() end)
     :ok
+  end
+
+  test "handles invalid upgrade requests" do
+    capture_log(fn ->
+      path = String.replace_prefix(@path, "ws", "http")
+      assert {:ok, %{body: body, status: 400}} = HTTPClient.request(:get, path, %{})
+      assert body =~ "'connection' header must contain 'upgrade'"
+    end)
   end
 
   test "refuses unallowed origins" do

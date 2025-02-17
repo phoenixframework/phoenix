@@ -3,16 +3,11 @@ defmodule Phoenix.CodeReloaderTest do
   use RouterHelper
 
   defmodule Endpoint do
-    def config(:reloadable_compilers) do
-      [:gettext, :unknown_compiler, :elixir]
-    end
-
-    def config(:reloadable_apps) do
-      nil
-    end
+    def config(:reloadable_compilers), do: [:unknown_compiler, :elixir]
+    def config(:reloadable_apps), do: nil
   end
 
-  def reload(_) do
+  def reload(_, _) do
     {:error, "oops"}
   end
 
@@ -43,20 +38,26 @@ defmodule Phoenix.CodeReloaderTest do
     :erlang.trace(pid, true, [:receive])
 
     opts = Phoenix.CodeReloader.init([])
-    conn = conn(:get, "/")
-           |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
-           |> Phoenix.CodeReloader.call(opts)
+
+    conn =
+      conn(:get, "/")
+      |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
+      |> Phoenix.CodeReloader.call(opts)
+
     assert conn.state == :unset
 
-    assert_receive {:trace, ^pid, :receive, {_, _, {:reload!, Endpoint}}}
+    assert_receive {:trace, ^pid, :receive, {_, _, {:reload!, Endpoint, _}}}
   end
 
   test "renders compilation error on failure" do
-    opts = Phoenix.CodeReloader.init(reloader: &__MODULE__.reload/1)
-    conn = conn(:get, "/")
-           |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
-           |> Phoenix.CodeReloader.call(opts)
-    assert conn.state  == :sent
+    opts = Phoenix.CodeReloader.init(reloader: &__MODULE__.reload/2)
+
+    conn =
+      conn(:get, "/")
+      |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
+      |> Phoenix.CodeReloader.call(opts)
+
+    assert conn.state == :sent
     assert conn.status == 500
     assert conn.resp_body =~ "oops"
     assert conn.resp_body =~ "CompileError"

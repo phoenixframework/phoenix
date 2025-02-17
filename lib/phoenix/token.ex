@@ -1,12 +1,18 @@
 defmodule Phoenix.Token do
   @moduledoc """
-  Tokens provide a way to generate and verify bearer
-  tokens for use in Channels or API authentication.
+  Conveniences to sign/encrypt data inside tokens
+  for use in Channels, API authentication, and more.
 
-  The data stored in the token is signed to prevent tampering
-  but not encrypted. This means it is safe to store identification
-  information (such as user IDs) but should not be used to store
-  confidential information (such as credit card numbers).
+  The data stored in the token is signed to prevent tampering, and is
+  optionally encrypted. This means that, so long as the
+  key (see below) remains secret, you can be assured that the data
+  stored in the token has not been tampered with by a third party.
+  However, unless the token is encrypted, it is not safe to use this
+  token to store private information, such as a user's sensitive
+  identification data, as it can be trivially decoded. If the
+  token is encrypted, its contents will be kept secret from the
+  client, but it is still a best practice to encode as little secret
+  information as possible, to minimize the impact of key leakage.
 
   ## Example
 
@@ -24,23 +30,24 @@ defmodule Phoenix.Token do
   `endpoint`. We guarantee the token will only be valid for one day
   by setting a max age (recommended).
 
-  The first argument to both `sign/4` and `verify/4` can be one of:
+  The first argument to `sign/4`, `verify/4`, `encrypt/4`, and
+  `decrypt/4` can be one of:
 
     * the module name of a Phoenix endpoint (shown above) - where
       the secret key base is extracted from the endpoint
     * `Plug.Conn` - where the secret key base is extracted from the
       endpoint stored in the connection
-    * `Phoenix.Socket` - where the secret key base is extracted from
-      the endpoint stored in the socket
+    * `Phoenix.Socket` or `Phoenix.LiveView.Socket` - where the secret
+      key base is extracted from the endpoint stored in the socket
     * a string, representing the secret key base itself. A key base
       with at least 20 randomly generated characters should be used
       to provide adequate entropy
 
   The second argument is a [cryptographic salt](https://en.wikipedia.org/wiki/Salt_(cryptography))
-  which must be the same in both calls to `sign/4` and `verify/4`.
-  For instance, it may be called "user auth" and treated as namespace
-  when generating a token that will be used to authenticate users on
-  channels or on your APIs.
+  which must be the same in both calls to `sign/4` and `verify/4`, or
+  both calls to `encrypt/4` and `decrypt/4`. For instance, it may be
+  called "user auth" and treated as namespace when generating a token
+  that will be used to authenticate users on channels or on your APIs.
 
   The third argument can be any term (string, int, list, etc.)
   that you wish to codify into the token. Upon valid verification,
@@ -52,8 +59,9 @@ defmodule Phoenix.Token do
 
   One is via the meta tag:
 
-      <%= tag :meta, name: "channel_token",
-                     content: Phoenix.Token.sign(@conn, "user auth", @current_user.id) %>
+  ```heex
+  <meta name="channel_token" content={Phoenix.Token.sign(@conn, "user auth", @current_user.id)}>
+  ```
 
   Or an endpoint that returns it:
 
@@ -92,14 +100,18 @@ defmodule Phoenix.Token do
 
   require Logger
 
-  @type context :: Plug.Conn.t() | Phoenix.Socket.t() | atom | binary
+  @type context ::
+          Plug.Conn.t()
+          | %{required(:endpoint) => atom, optional(atom()) => any()}
+          | atom
+          | binary
 
   @type shared_opt ::
           {:key_iterations, pos_integer}
           | {:key_length, pos_integer}
           | {:key_digest, :sha256 | :sha384 | :sha512}
 
-  @type max_age_opt :: {:max_age, pos_integer}
+  @type max_age_opt :: {:max_age, pos_integer | :infinity}
   @type signed_at_opt :: {:signed_at, pos_integer}
 
   @doc """
@@ -114,10 +126,12 @@ defmodule Phoenix.Token do
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:signed_at` - set the timestamp of the token in seconds.
-      Defaults to `System.system_time(:second)`
+      Defaults to `System.os_time(:millisecond)`
+    * `:max_age` - the default maximum age of the token. Defaults to
+      86400 seconds (1 day) and it may be overridden on `verify/4`.
 
   """
-  @spec sign(context, binary, term, [shared_opt | signed_at_opt]) :: binary
+  @spec sign(context, binary, term, [shared_opt | max_age_opt | signed_at_opt]) :: binary
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     context
     |> get_key_base()
@@ -125,7 +139,9 @@ defmodule Phoenix.Token do
   end
 
   @doc """
-  Encodes, encrypts, and signs data into a token you can send to clients.
+  Encodes, encrypts, and signs data into a token you can send to
+  clients. Its usage is identical to that of `sign/4`, but the data
+  is extracted using `decrypt/4`, rather than `verify/4`.
 
   ## Options
 
@@ -136,10 +152,12 @@ defmodule Phoenix.Token do
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:signed_at` - set the timestamp of the token in seconds.
-      Defaults to `System.system_time(:second)`
+      Defaults to `System.os_time(:millisecond)`
+    * `:max_age` - the default maximum age of the token. Defaults to
+      86400 seconds (1 day) and it may be overridden on `decrypt/4`.
 
   """
-  @spec encrypt(context, binary, term, [shared_opt | signed_at_opt]) :: binary
+  @spec encrypt(context, binary, term, [shared_opt | max_age_opt | signed_at_opt]) :: binary
   def encrypt(context, secret, data, opts \\ []) when is_binary(secret) do
     context
     |> get_key_base()
@@ -196,9 +214,8 @@ defmodule Phoenix.Token do
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:max_age` - verifies the token only if it has been generated
-      "max age" ago in seconds. A reasonable value is 1 day (86400
-      seconds)
-
+      "max age" ago in seconds. Defaults to the max age signed in the
+      token by `sign/4`.
   """
   @spec verify(context, binary, binary, [shared_opt | max_age_opt]) ::
           {:ok, term} | {:error, :expired | :invalid | :missing}
@@ -211,6 +228,8 @@ defmodule Phoenix.Token do
   @doc """
   Decrypts the original data from the token and verifies its integrity.
 
+  Its usage is identical to `verify/4` but for encrypted tokens.
+
   ## Options
 
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
@@ -221,7 +240,7 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:max_age` - verifies the token only if it has been generated
       "max age" ago in seconds. Defaults to the max age signed in the
-      token (86400)
+      token by `encrypt/4`.
   """
   @spec decrypt(context, binary, binary, [shared_opt | max_age_opt]) :: term()
   def decrypt(context, secret, token, opts \\ []) when is_binary(secret) do
@@ -235,8 +254,8 @@ defmodule Phoenix.Token do
   defp get_key_base(%Plug.Conn{} = conn),
     do: conn |> Phoenix.Controller.endpoint_module() |> get_endpoint_key_base()
 
-  defp get_key_base(%Phoenix.Socket{} = socket),
-    do: get_endpoint_key_base(socket.endpoint)
+  defp get_key_base(%_{endpoint: endpoint}),
+    do: get_endpoint_key_base(endpoint)
 
   defp get_key_base(endpoint) when is_atom(endpoint),
     do: get_endpoint_key_base(endpoint)

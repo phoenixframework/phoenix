@@ -16,12 +16,12 @@ Heroku is a great platform and Elixir performs well on it. However, you may run 
   - Heroku [limits the number of simultaneous connections](https://devcenter.heroku.com/articles/http-routing#request-concurrency) as well as the [duration of each connection](https://devcenter.heroku.com/articles/limits#http-timeouts). It is common to use Elixir for real-time apps which need lots of concurrent, persistent connections, and Phoenix is capable of [handling over 2 million connections on a single server](https://www.phoenixframework.org/blog/the-road-to-2-million-websocket-connections).
 
 - Distributed clustering is not possible.
-  - Heroku [firewalls dynos off from one another](https://devcenter.heroku.com/articles/dynos#networking). This means things like [distributed Phoenix channels](https://dockyard.com/blog/2016/01/28/running-elixir-and-phoenix-projects-on-a-cluster-of-nodes) and [distributed tasks](https://elixir-lang.org/getting-started/mix-otp/distributed-tasks.html) will need to rely on something like Redis instead of Elixir's built-in distribution.
+  - Heroku [firewalls dynos off from one another](https://devcenter.heroku.com/articles/dynos#networking). This means things like [distributed Phoenix channels](https://dockyard.com/blog/2016/01/28/running-elixir-and-phoenix-projects-on-a-cluster-of-nodes) and [distributed tasks](https://hexdocs.pm/elixir/distributed-tasks.html) will need to rely on something like Redis instead of Elixir's built-in distribution.
 
-- In-memory state such as those in [Agents](https://elixir-lang.org/getting-started/mix-otp/agent.html), [GenServers](https://elixir-lang.org/getting-started/mix-otp/genserver.html), and [ETS](https://elixir-lang.org/getting-started/mix-otp/ets.html) will be lost every 24 hours.
+- In-memory state such as those in [Agents](https://hexdocs.pm/elixir/agents.html), [GenServers](https://hexdocs.pm/elixir/genservers.html), and [ETS](https://hexdocs.pm/elixir/erlang-term-storage.html) will be lost every 24 hours.
   - Heroku [restarts dynos](https://devcenter.heroku.com/articles/dynos#restarting) every 24 hours regardless of whether the node is healthy.
 
-- [The built-in observer](https://elixir-lang.org/getting-started/debugging.html#observer) can't be used with Heroku.
+- [The built-in observer](https://hexdocs.pm/elixir/debugging.html#observer) can't be used with Heroku.
   - Heroku does allow for connection into your dyno, but you won't be able to use the observer to watch the state of your dyno.
 
 If you are just getting started, or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
@@ -52,13 +52,13 @@ $ git add .
 $ git commit -m "Initial commit"
 ```
 
-Heroku offers some great information on how it is using Git [here](https://devcenter.heroku.com/articles/git#tracking-your-app-in-git).
+Heroku offers some great information on how it is using Git [here](https://devcenter.heroku.com/articles/git#prerequisites-install-git-and-the-heroku-cli).
 
 ## Signing up for Heroku
 
 Signing up to Heroku is very simple, just head over to [https://signup.heroku.com/](https://signup.heroku.com/) and fill in the form.
 
-The Free plan will give us one web [dyno](https://devcenter.heroku.com/articles/dynos#dynos) and one worker dyno, as well as a PostgreSQL and Redis instance for free.
+The Free plan will give us one web [dyno](https://devcenter.heroku.com/articles/dynos) and one worker dyno, as well as a PostgreSQL and Redis instance for free.
 
 These are meant to be used for testing and development, and come with some limitations. In order to run a production application, please consider upgrading to a paid plan.
 
@@ -95,13 +95,13 @@ https://mysterious-meadow-6277.herokuapp.com/ | https://git.heroku.com/mysteriou
 
 The buildpack uses a predefined Elixir and Erlang version, but to avoid surprises when deploying, it is best to explicitly list the Elixir and Erlang version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `elixir_buildpack.config` in the root directory of your project with your target version of Elixir and Erlang:
 
-```
+```console
 # Elixir version
-elixir_version=1.12.2
+elixir_version=1.15.0
 
 # Erlang version
 # https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
-erlang_version=24.0.3
+erlang_version=25.3
 
 # Invoke assets.deploy defined in your mix.exs to deploy assets with esbuild
 # Note we nuke the esbuild executable from the image
@@ -110,19 +110,19 @@ hook_post_compile="eval mix assets.deploy && rm -f _build/esbuild*"
 
 Finally, let's tell the build pack how to start our webserver. Create a file named `Procfile` at the root of your project:
 
-```
+```console
 web: mix phx.server
 ```
 
 ### Optional: Node, npm, and the Phoenix Static buildpack
 
-By default, Phoenix uses `esbuild` and manages all assets for you. However, if you are using `node` and `npm`, you will need to install the [Phoenix Static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) to handle them:
+By default, Phoenix uses `esbuild` and manages all assets for you. However, if you are using `node` and `npm`, you will need to install the [Phoenix Static buildpack](https://github.com/gigalixir/gigalixir-buildpack-phoenix-static) to handle them:
 
 ```console
-$ heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
+$ heroku buildpacks:add https://github.com/gigalixir/gigalixir-buildpack-phoenix-static.git
 Buildpack added. Next release on mysterious-meadow-6277 will use:
   1. https://github.com/HashNuke/heroku-buildpack-elixir.git
-  2. https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
+  2. https://github.com/gigalixir/gigalixir-heroku-buildpack-phoenix-static.git
 ```
 
 When using this buildpack, you want to delegate all asset bundling to `npm`. So you must remove the `hook_post_compile` configuration from your `elixir_buildpack.config` and move it to the deploy script of your `assets/package.json`. Something like this:
@@ -139,33 +139,46 @@ When using this buildpack, you want to delegate all asset bundling to `npm`. So 
 
 The Phoenix Static buildpack uses a predefined Node.js version, but to avoid surprises when deploying, it is best to explicitly list the Node.js version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node.js:
 
-```
+```text
 # Node.js version
 node_version=10.20.1
 ```
 
-Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
+Please refer to the [configuration section](https://github.com/gigalixir/gigalixir-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gigalixir/gigalixir-buildpack-phoenix-static/blob/master/compile).
 
 Finally, note that since we are using multiple buildpacks, you might run into an issue where the sequence is out of order (the Elixir buildpack needs to run before the Phoenix Static buildpack). [Heroku's docs](https://devcenter.heroku.com/articles/using-multiple-buildpacks-for-an-app) explain this better, but you will need to make sure the Phoenix Static buildpack comes last.
 
 ## Making our Project ready for Heroku
 
-Every new Phoenix project ships with a config file `config/runtime.exs` (formerly `config/prod.secret.exs`) which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices, so the only work left for us to do is to configure URLs and SSL.
+Every new Phoenix project ships with a config file `config/runtime.exs` (formerly `config/prod.secret.exs`) which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices ([12-factor apps](https://12factor.net/)), so the only work left for us to do is to configure URLs and SSL.
 
-First let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Also, bind to the port requested by Heroku in the [`$PORT` environment variable](https://devcenter.heroku.com/articles/runtime-principles#web-servers). Find the url line in your `config/prod.exs`:
-
-```elixir
-url: [host: "example.com", port: 80],
-```
-
-... and replace it with this (don't forget to replace `mysterious-meadow-6277` with your application name):
+First let's tell Phoenix to only use the SSL version of the website. Find the endpoint config in your `config/prod.exs`:
 
 ```elixir
-url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
-force_ssl: [rewrite_on: [:x_forwarded_proto]],
+config :scaffold, ScaffoldWeb.Endpoint,
+  url: [port: 443, scheme: "https"],
 ```
 
-Then open up your `config/runtime.exs` (formerly `config/prod.secret.exs`) and uncomment the `# ssl: true,` line in your repository configuration. It will look like this:
+... and add `force_ssl`
+
+```elixir
+config :scaffold, ScaffoldWeb.Endpoint,
+  url: [port: 443, scheme: "https"],
+  force_ssl: [rewrite_on: [:x_forwarded_proto]],
+```
+
+`force_ssl` need to be set here because it is a _compile_ time config. It will not work when set from `runtime.exs`.
+
+Then in your `config/runtime.exs` (formerly `config/prod.secret.exs`):
+
+... add `host`
+
+```elixir
+config :scaffold, ScaffoldWeb.Endpoint,
+  url: [host: host, port: 443, scheme: "https"]
+```
+
+and uncomment the `# ssl: true,` line in your repository configuration. It will look like this:
 
 ```elixir
 config :hello, Hello.Repo,
@@ -187,6 +200,12 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
+Also set the host in Heroku:
+
+```console
+$ heroku config:set PHX_HOST="mysterious-meadow-6277.herokuapp.com"
+```
+
 This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55-second timeout window.
 
 ## Creating Environment Variables in Heroku
@@ -194,7 +213,7 @@ This ensures that any idle connections are closed by Phoenix before they reach H
 The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql). We can create the database via the Heroku toolbelt:
 
 ```console
-$ heroku addons:create heroku-postgresql:hobby-dev
+$ heroku addons:create heroku-postgresql:mini
 ```
 
 Now we set the `POOL_SIZE` config var:
@@ -203,7 +222,7 @@ Now we set the `POOL_SIZE` config var:
 $ heroku config:set POOL_SIZE=18
 ```
 
-This value should be just under the number of available connections, leaving a couple open for migrations and mix tasks. The hobby-dev database allows 20 connections, so we set this number to 18. If additional dynos will share the database, reduce the `POOL_SIZE` to give each dyno an equal share.
+This value should be just under the number of available connections, leaving a couple open for migrations and mix tasks. The mini database allows 20 connections, so we set this number to 18. If additional dynos will share the database, reduce the `POOL_SIZE` to give each dyno an equal share.
 
 When running a mix task later (after we have pushed the project to Heroku) you will also want to limit its pool size like so:
 
@@ -244,7 +263,7 @@ $ git commit -a -m "Use production config from Heroku ENV variables and decrease
 And deploy:
 
 ```console
-$ git push heroku master
+$ git push heroku main
 Counting objects: 55, done.
 Delta compression using up to 8 threads.
 Compressing objects: 100% (49/49), done.
@@ -374,9 +393,11 @@ $ heroku run "POOL_SIZE=2 mix ecto.migrate"
 Heroku gives you the ability to connect to your dyno with an IEx shell which allows running Elixir code such as database queries.
 
 - Modify the `web` process in your Procfile to run a named node:
-  ```
+
+  ```text
   web: elixir --sname server -S mix phx.server
   ```
+
 - Redeploy to Heroku
 - Connect to the dyno with `heroku ps:exec` (if you have several applications on the same repository you will need to specify the app name or the remote name with `--app APP_NAME` or `--remote REMOTE_NAME`)
 - Launch an iex session with `iex --sname console --remsh server`
@@ -409,7 +430,7 @@ To https://git.heroku.com/mysterious-meadow-6277.git
 
 This has to do with stale dependencies which are not getting recompiled properly. It's possible to force Heroku to recompile all dependencies on each deploy, which should fix this problem. The way to do it is to add a new file called `elixir_buildpack.config` at the root of the application. The file should contain this line:
 
-```
+```text
 always_rebuild=true
 ```
 

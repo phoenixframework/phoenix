@@ -7,6 +7,8 @@ defmodule Phoenix.TokenTest do
     :ok
   end
 
+  defstruct [:endpoint]
+
   defmodule TokenEndpoint do
     def config(:secret_key_base), do: "abc123"
   end
@@ -29,6 +31,10 @@ defmodule Phoenix.TokenTest do
       id = 1
       token = Token.sign(socket(), "id", id)
       assert Token.verify(socket(), "id", token) == {:ok, id}
+
+      id = 1
+      token = Token.sign(%__MODULE__{endpoint: TokenEndpoint}, "id", id)
+      assert Token.verify(%__MODULE__{endpoint: TokenEndpoint}, "id", token) == {:ok, id}
     end
 
     test "fails on missing token" do
@@ -81,12 +87,6 @@ defmodule Phoenix.TokenTest do
     test "passes key_digest options to key generator" do
       signed1 = Token.sign(conn(), "id", 1, signed_at: 0, key_digest: :sha256)
       signed2 = Token.sign(conn(), "id", 1, signed_at: 0, key_digest: :sha512)
-      assert signed1 != signed2
-    end
-
-    test "passes key_length options to key generator" do
-      signed1 = Token.sign(conn(), "id", 1, signed_at: 0, key_length: 16)
-      signed2 = Token.sign(conn(), "id", 1, signed_at: 0, key_length: 32)
       assert signed1 != signed2
     end
 
@@ -177,12 +177,6 @@ defmodule Phoenix.TokenTest do
     test "passes key_digest options to key generator" do
       signed1 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_digest: :sha256)
       signed2 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_digest: :sha512)
-      assert signed1 != signed2
-    end
-
-    test "passes key_length options to key generator" do
-      signed1 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_length: 16)
-      signed2 = Token.encrypt(conn(), "secret", 1, signed_at: 0, key_length: 32)
       assert signed1 != signed2
     end
   end

@@ -46,18 +46,6 @@ defmodule Phoenix.Controller.ControllerTest do
     assert status_message_from_template("whatever.html") == "Internal Server Error"
   end
 
-  test "put_layout_formats/2 and layout_formats/1" do
-    conn = conn(:get, "/")
-    assert layout_formats(conn) == ~w(html)
-
-    conn = put_layout_formats conn, ~w(json xml)
-    assert layout_formats(conn) == ~w(json xml)
-
-    assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_layout_formats sent_conn(), ~w(json)
-    end
-  end
-
   test "put_layout/2 and layout/1" do
     conn = conn(:get, "/")
     assert layout(conn) == false
@@ -80,6 +68,29 @@ defmodule Phoenix.Controller.ControllerTest do
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
       put_layout sent_conn(), {AppView, :print}
+    end
+  end
+
+  test "put_layout/2 and layout/1 with formats" do
+    conn = conn(:get, "/") |> put_format("html")
+    assert layout(conn) == false
+
+    conn = put_layout(conn, html: {AppView, :app})
+    assert layout(conn) == {AppView, :app}
+
+    conn = put_layout(conn, html: :print)
+    assert layout(conn) == {AppView, :print}
+
+    conn = put_layout(conn, html: {AppView, :app}, print: {AppView, :print})
+
+    conn = put_format(conn, "html")
+    assert layout(conn) == {AppView, :app}
+
+    conn = put_format(conn, "print")
+    assert layout(conn) == {AppView, :print}
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_layout(sent_conn(), {AppView, :print})
     end
   end
 
@@ -108,6 +119,29 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
+  test "put_root_layout/2 and root_layout/1 with formats" do
+    conn = conn(:get, "/") |> put_format("html")
+    assert root_layout(conn) == false
+
+    conn = put_root_layout(conn, html: {AppView, :app})
+    assert root_layout(conn) == {AppView, :app}
+
+    conn = put_root_layout(conn, html: :print)
+    assert root_layout(conn) == {AppView, :print}
+
+    conn = put_root_layout(conn, html: {AppView, :app}, print: {AppView, :print})
+
+    conn = put_format(conn, "html")
+    assert root_layout(conn) == {AppView, :app}
+
+    conn = put_format(conn, "print")
+    assert root_layout(conn) == {AppView, :print}
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_root_layout(sent_conn(), {AppView, :print})
+    end
+  end
+
   test "put_new_layout/2" do
     conn = put_new_layout(conn(:get, "/"), false)
     assert layout(conn) == false
@@ -124,6 +158,27 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
+  test "put_new_layout/2 with formats" do
+    conn = put_new_layout(conn(:get, "/"), html: false, json: false)
+    conn = put_format(conn, "html")
+    assert layout(conn) == false
+    conn = put_new_layout(conn, html: {AppView, :app})
+    assert layout(conn) == false
+
+    conn = put_new_layout(conn(:get, "/"), html: {AppView, :app}, json: false)
+    conn = put_format(conn, "html")
+    assert layout(conn) == {AppView, :app}
+    conn = put_new_layout(conn, false)
+    assert layout(conn) == false
+
+    conn = put_format(conn, "json")
+    assert layout(conn) == false
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_new_layout(sent_conn(), {AppView, :app})
+    end
+  end
+
   test "put_view/2 and put_new_view/2" do
     conn = put_new_view(conn(:get, "/"), Hello)
     assert view_module(conn) == Hello
@@ -137,6 +192,49 @@ defmodule Phoenix.Controller.ControllerTest do
     end
     assert_raise Plug.Conn.AlreadySentError, fn ->
       put_view sent_conn(), Hello
+    end
+  end
+
+  test "put_view/2 and put_new_view/2 with formats" do
+    conn =
+      conn(:get, "/")
+      |> put_format("print")
+      |> put_new_view(html: Hello, json: HelloJSON)
+
+    assert view_module(conn, "html") == Hello
+
+    assert_raise RuntimeError, ~r/no view was found for the format: "print"/, fn ->
+      view_module(conn)
+    end
+
+    conn =
+      conn(:get, "/")
+      |> put_format("html")
+      |> put_new_view(html: Hello, json: HelloJSON)
+
+    conn = put_format(conn, "html")
+    assert view_module(conn) == Hello
+
+    conn = put_new_view(conn, html: World)
+    assert view_module(conn) == Hello
+    conn = put_view(conn, html: World)
+    assert view_module(conn) == World
+
+    conn = put_format(conn, "json")
+    assert view_module(conn) == HelloJSON
+    assert view_module(conn, "json") == HelloJSON
+
+    conn = put_format(conn, "json")
+    conn = put_new_view(conn, Hello)
+    assert view_module(conn) == Hello
+    assert view_module(conn, "json") == Hello
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_new_view sent_conn(), html: Hello
+    end
+
+    assert_raise Plug.Conn.AlreadySentError, fn ->
+      put_view sent_conn(), html: Hello
     end
   end
 
@@ -280,6 +378,18 @@ defmodule Phoenix.Controller.ControllerTest do
       assert_raise ArgumentError, ~r/unsafe/, fn ->
         redirect(conn(:get, "/"), to: "/\\example.com")
       end
+
+      assert_raise ArgumentError, ~r/expects a path/, fn ->
+        redirect(conn(:get, "/"), to: "//\\example.com")
+      end
+
+      assert_raise ArgumentError, ~r/unsafe/, fn ->
+        redirect(conn(:get, "/"), to: "/%09/example.com")
+      end
+
+      assert_raise ArgumentError, ~r/unsafe/, fn ->
+        redirect(conn(:get, "/"), to: "/\t/example.com")
+      end
     end
 
     test "with :external" do
@@ -420,9 +530,31 @@ defmodule Phoenix.Controller.ControllerTest do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "hello world.json")
       assert conn.status == 200
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello+world.json\""]
+             ["attachment; filename=\"hello%20world.json\"; filename*=utf-8''hello%20world.json"]
       assert get_resp_header(conn, "content-type") ==
              ["application/json"]
+      assert conn.resp_body ==
+             "world"
+    end
+
+    test "sends file for download for filename with unreserved characters" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "hello, world.json")
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["attachment; filename=\"hello%2C%20world.json\"; filename*=utf-8''hello%2C%20world.json"]
+      assert get_resp_header(conn, "content-type") ==
+             ["application/json"]
+      assert conn.resp_body ==
+             "world"
+    end
+
+    test "sends file supports UTF-8" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "测 试.txt")
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["attachment; filename=\"%E6%B5%8B%20%E8%AF%95.txt\"; filename*=utf-8''%E6%B5%8B%20%E8%AF%95.txt"]
+      assert get_resp_header(conn, "content-type") ==
+             ["text/plain"]
       assert conn.resp_body ==
              "world"
     end
@@ -473,10 +605,10 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     test "sends binary for download with :filename" do
-      conn = send_download(conn(:get, "/"), {:binary, "world"}, filename: "hello world.json")
+      conn = send_download(conn(:get, "/"), {:binary, "world"}, filename: "hello.json")
       assert conn.status == 200
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello+world.json\""]
+             ["attachment; filename=\"hello.json\""]
       assert get_resp_header(conn, "content-type") ==
              ["application/json"]
       assert conn.resp_body ==
@@ -602,19 +734,31 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   test "__view__ returns the view module based on controller module" do
-    assert Phoenix.Controller.__view__(MyApp.UserController) == MyApp.UserView
-    assert Phoenix.Controller.__view__(MyApp.Admin.UserController) == MyApp.Admin.UserView
+    assert Phoenix.Controller.__view__(MyApp.UserController, []) == MyApp.UserView
+    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, []) == MyApp.Admin.UserView
+    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, :json]) ==
+      [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserJSON]
+    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, json: "View"]) ==
+      [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserView]
   end
 
   test "__layout__ returns the layout module based on controller module" do
     assert Phoenix.Controller.__layout__(UserController, []) ==
-           LayoutView
+           {LayoutView, :app}
     assert Phoenix.Controller.__layout__(MyApp.UserController, []) ==
-           MyApp.LayoutView
+           {MyApp.LayoutView, :app}
     assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, []) ==
-           MyApp.LayoutView
+           {MyApp.LayoutView, :app}
     assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, namespace: MyApp.Admin) ==
-           MyApp.Admin.LayoutView
+           {MyApp.Admin.LayoutView, :app}
+
+    opts = [layouts: [html: MyApp.LayoutHTML]]
+    assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, opts) ==
+           [html: {MyApp.LayoutHTML, :app}]
+
+    opts = [layouts: [html: {MyApp.LayoutHTML, :application}]]
+    assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, opts) ==
+           [html: {MyApp.LayoutHTML, :application}]
   end
 
   defp sent_conn do
@@ -655,7 +799,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
     test "current_path/2 allows custom nested query params" do
       conn = build_conn_for_path("/")
-      assert current_path(conn, %{foo: %{bar: [:baz], baz: :qux}}) == "/?foo[bar][]=baz&foo[baz]=qux"
+      assert current_path(conn, [foo: [bar: [:baz], baz: :qux]]) == "/?foo[bar][]=baz&foo[baz]=qux"
     end
 
     test "current_url/1 with root path includes trailing slash" do

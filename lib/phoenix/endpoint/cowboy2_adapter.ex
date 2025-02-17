@@ -31,7 +31,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
   options, you will need to manually wire the Phoenix endpoint by
   adding the following rule:
 
-      {:_, Phoenix.Endpoint.Cowboy2Handler, {MyAppWeb.Endpoint, []}}
+      {:_, Plug.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
 
   For example:
 
@@ -39,7 +39,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
         http: [dispatch: [
                 {:_, [
                     {"/foo", MyAppWeb.CustomHandler, []},
-                    {:_, Phoenix.Endpoint.Cowboy2Handler, {MyAppWeb.Endpoint, []}}
+                    {:_, Plug.Cowboy.Handler, {MyAppWeb.Endpoint, []}}
                   ]}]]
 
   It is also important to specify your handlers first, otherwise
@@ -63,27 +63,33 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
 
         # Ranch options are read from the top, so we keep the user opts first.
         opts = :proplists.delete(:port, opts) ++ [port: port_to_integer(port), otp_app: otp_app]
-        child_spec(scheme, endpoint, opts)
+        child_spec(scheme, endpoint, opts, config[:code_reloader])
       end
 
     {refs, child_specs} = Enum.unzip(refs_and_specs)
 
-    if drainer = (refs != [] && Keyword.get(config, :drainer, [])) do
+    if drainer = refs != [] && Keyword.get(config, :drainer, []) do
       child_specs ++ [{Plug.Cowboy.Drainer, Keyword.put_new(drainer, :refs, refs)}]
     else
       child_specs
     end
   end
 
-  defp child_spec(scheme, endpoint, config) do
+  defp child_spec(scheme, endpoint, config, code_reloader?) do
     if scheme == :https do
       Application.ensure_all_started(:ssl)
     end
 
-    dispatches = [{:_, Phoenix.Endpoint.Cowboy2Handler, {endpoint, endpoint.init([])}}]
-    config = Keyword.put_new(config, :dispatch, [{:_, dispatches}])
-    ref = Module.concat(endpoint, scheme |> Atom.to_string() |> String.upcase())
-    spec = Plug.Cowboy.child_spec(ref: ref, scheme: scheme, plug: {endpoint, []}, options: config)
+    ref = make_ref(endpoint, scheme)
+
+    plug =
+      if code_reloader? do
+        {Phoenix.Endpoint.SyncCodeReloadPlug, {endpoint, []}}
+      else
+        {endpoint, []}
+      end
+
+    spec = Plug.Cowboy.child_spec(ref: ref, scheme: scheme, plug: plug, options: config)
     spec = update_in(spec.start, &{__MODULE__, :start_link, [scheme, endpoint, &1]})
     {ref, spec}
   end
@@ -112,7 +118,7 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
 
   defp info(scheme, endpoint, ref) do
     server = "cowboy #{Application.spec(:cowboy)[:vsn]}"
-    "Running #{inspect endpoint} with #{server} at #{bound_address(scheme, ref)}"
+    "Running #{inspect(endpoint)} with #{server} at #{bound_address(scheme, ref)}"
   end
 
   defp bound_address(scheme, ref) do
@@ -123,10 +129,27 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
       {addr, port} ->
         "#{:inet.ntoa(addr)}:#{port} (#{scheme})"
     end
+  rescue
+    _ -> scheme
   end
 
   # TODO: Remove this once {:system, env_var} deprecation is removed
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
+
+  def server_info(endpoint, scheme) do
+    address =
+      endpoint
+      |> make_ref(scheme)
+      |> :ranch.get_addr()
+
+    {:ok, address}
+  rescue
+    e -> {:error, Exception.message(e)}
+  end
+
+  defp make_ref(endpoint, scheme) do
+    Module.concat(endpoint, scheme |> Atom.to_string() |> String.upcase())
+  end
 end

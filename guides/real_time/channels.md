@@ -145,6 +145,7 @@ Topics are string identifiers - names that the various layers use in order to ma
 ### Messages
 
 The `Phoenix.Socket.Message` module defines a struct with the following keys which denotes a valid message. From the [Phoenix.Socket.Message docs](https://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
+
 - `topic` - The string topic or `"topic:subtopic"` pair namespace, such as `"messages"` or `"messages:123"`
 - `event` - The string event name, for example `"phx_join"`
 - `payload` - The message payload
@@ -164,11 +165,11 @@ If your deployment environment does not support distributed Elixir or direct com
 ### Client Libraries
 
 Any networked device can connect to Phoenix Channels as long as it has a client library.
-The following libraries exist today, and new ones are always welcome.
+The following libraries exist today, and new ones are always welcome; to write your own, see our how-to guide [Writing a Channels Client](writing_a_channels_client.md).
 
 #### Official
 
-Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [multiple js files](https://github.com/phoenixframework/phoenix/blob/master/assets/js/phoenix/).
+Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [multiple js files](https://github.com/phoenixframework/phoenix/blob/main/assets/js/phoenix/).
 
 #### 3rd Party
 
@@ -182,6 +183,7 @@ Phoenix ships with a JavaScript client that is available when generating a new P
   - [PhoenixSharp](https://github.com/Mazyod/PhoenixSharp)
 + Elixir
   - [phoenix_gen_socket_client](https://github.com/Aircloak/phoenix_gen_socket_client)
+  - [slipstream](https://hexdocs.pm/slipstream/Slipstream.html)
 + GDScript (Godot Game Engine)
   - [GodotPhoenixChannels](https://github.com/alfredbaudisch/GodotPhoenixChannels)
 
@@ -276,7 +278,7 @@ import "./user_socket.js"
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
-In `lib/hello_web/templates/page/index.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
+In `lib/hello_web/controllers/page_html/home.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
 ```heex
 <div id="messages" role="log" aria-live="polite"></div>
@@ -383,7 +385,7 @@ That's all there is to our basic chat app. Fire up multiple browser tabs and you
 
 When we connect, we'll often need to authenticate the client. Fortunately, this is a 4-step process with [Phoenix.Token](https://hexdocs.pm/phoenix/Phoenix.Token.html).
 
-**Step 1 - Assign a Token in the Connection**
+### Step 1 - Assign a Token in the Connection
 
 Let's say we have an authentication plug in our app called `OurAuth`. When `OurAuth` authenticates a user, it sets a value for the `:current_user` key in `conn.assigns`. Since the `current_user` exists, we can simply assign the user's token in the connection for use in the layout. We can wrap that behavior up in a private function plug, `put_user_token/2`. This could also be put in its own module as well. To make this all work, we just add `OurAuth` and `put_user_token/2` to the browser pipeline.
 
@@ -406,18 +408,18 @@ end
 
 Now our `conn.assigns` contains the `current_user` and `user_token`.
 
-**Step 2 - Pass the Token to the JavaScript**
+### Step 2 - Pass the Token to the JavaScript
 
-Next, we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
+Next, we need to pass this token to JavaScript. We can do so inside a script tag in `lib/hello_web/components/layouts/root.html.heex` right above the app.js script, as follows:
 
 ```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
-<script src={Routes.static_path(@conn, "/assets/app.js")}></script>
+<script src={~p"/assets/app.js"}></script>
 ```
 
-**Step 3 - Pass the Token to the Socket Constructor and Verify**
+### Step 3 - Pass the Token to the Socket Constructor and Verify
 
-We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `web/channels/user_socket.ex`, as follows:
+We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/3` function. To do so, edit `lib/hello_web/channels/user_socket.ex`, as follows:
 
 ```elixir
 def connect(%{"token" => token}, socket, _connect_info) do
@@ -439,7 +441,7 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 
 We used `Phoenix.Token.verify/4` to verify the user token provided by the client. `Phoenix.Token.verify/4` returns either `{:ok, user_id}` or `{:error, reason}`. We can pattern match on that return in a `case` statement. With a verified token, we set the user's id as the value to `:current_user` in the socket. Otherwise, we return `:error`.
 
-**Step 4 - Connect to the socket in JavaScript**
+### Step 4 - Connect to the socket in JavaScript
 
 With authentication set up, we can connect to sockets and channels from JavaScript.
 
@@ -459,7 +461,7 @@ channel.join()
 export default socket
 ```
 
-Note that token authentication is preferable since it's transport agnostic and well-suited for long running-connections like channels, as opposed to using sessions or authentication approaches.
+Note that token authentication is preferable since it's transport agnostic and well-suited for long running-connections like channels, as opposed to using sessions or other authentication approaches.
 
 ## Fault Tolerance and Reliability Guarantees
 
@@ -480,5 +482,3 @@ Phoenix uses an at-most-once strategy when sending messages to clients. If the c
 ## Example Application
 
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
-
-You can also see a live demo at <https://phoenixchat.herokuapp.com/>.

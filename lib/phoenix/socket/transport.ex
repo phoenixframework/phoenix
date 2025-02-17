@@ -2,51 +2,18 @@ defmodule Phoenix.Socket.Transport do
   @moduledoc """
   Outlines the Socket <-> Transport communication.
 
-  This module specifies a behaviour that all sockets must implement.
+  Each transport, such as websockets and longpolling, must interact
+  with a socket. This module defines the functions a transport will
+  invoke on a given socket implementation.
+
   `Phoenix.Socket` is just one possible implementation of a socket
-  that multiplexes events over multiple channels. Developers can
-  implement their own sockets as long as they implement the behaviour
-  outlined here.
+  that multiplexes events over multiple channels. If you implement
+  this behaviour, then existing transports can use your new socket
+  implementation, without passing through channels.
 
-  Developers interested in implementing custom transports must invoke
-  the socket API defined in this module. This module also provides
-  many conveniences that invokes the underlying socket API to make
-  it easier to build custom transports.
-
-  ## Booting sockets
-
-  Whenever your endpoint starts, it will automatically invoke the
-  `child_spec/1` on each listed socket and start that specification
-  under the endpoint supervisor.
-
-  Since the socket supervision tree is started by the endpoint,
-  any custom transport must be started after the endpoint in a
-  supervision tree.
-
-  ## Operating sockets
-
-  Sockets are operated by a transport. When a transport is defined,
-  it usually receives a socket module and the module will be invoked
-  when certain events happen at the transport level.
-
-  Whenever the transport receives a new connection, it should invoke
-  the `c:connect/1` callback with a map of metadata. Different sockets
-  may require different metadatas.
-
-  If the connection is accepted, the transport can move the connection
-  to another process, if so desires, or keep using the same process. The
-  process responsible for managing the socket should then call `c:init/1`.
-
-  For each message received from the client, the transport must call
-  `c:handle_in/2` on the socket. For each informational message the
-  transport receives, it should call `c:handle_info/2` on the socket.
-
-  Transports can optionally implement `c:handle_control/2` for handling
-  control frames such as `:ping` and `:pong`.
-
-  On termination, `c:terminate/2` must be called. A special atom with
-  reason `:closed` can be used to specify that the client terminated
-  the connection.
+  This module also provides guidelines and convenience functions for
+  implementing transports. Albeit its primary goal is to aid in the
+  definition of custom sockets.
 
   ## Example
 
@@ -56,8 +23,8 @@ defmodule Phoenix.Socket.Transport do
         @behaviour Phoenix.Socket.Transport
 
         def child_spec(opts) do
-          # We won't spawn any process, so let's return a dummy task
-          %{id: __MODULE__, start: {Task, :start_link, [fn -> :ok end]}, restart: :transient}
+          # We won't spawn any process, so let's ignore the child spec
+          :ignore
         end
 
         def connect(state) do
@@ -91,13 +58,42 @@ defmodule Phoenix.Socket.Transport do
   You can now interact with the socket under `/socket/websocket`
   and `/socket/longpoll`.
 
-  ## Security
+  ## Custom transports
 
-  This module also provides functions to enable a secure environment
-  on transports that, at some point, have access to a `Plug.Conn`.
+  Sockets are operated by a transport. When a transport is defined,
+  it usually receives a socket module and the module will be invoked
+  when certain events happen at the transport level. The functions
+  a transport can invoke are the callbacks defined in this module.
 
-  The functionality provided by this module helps in performing "origin"
-  header checks and ensuring only SSL connections are allowed.
+  Whenever the transport receives a new connection, it should invoke
+  the `c:connect/1` callback with a map of metadata. Different sockets
+  may require different metadata.
+
+  If the connection is accepted, the transport can move the connection
+  to another process, if so desires, or keep using the same process. The
+  process responsible for managing the socket should then call `c:init/1`.
+
+  For each message received from the client, the transport must call
+  `c:handle_in/2` on the socket. For each informational message the
+  transport receives, it should call `c:handle_info/2` on the socket.
+
+  Transports can optionally implement `c:handle_control/2` for handling
+  control frames such as `:ping` and `:pong`.
+
+  On termination, `c:terminate/2` must be called. A special atom with
+  reason `:closed` can be used to specify that the client terminated
+  the connection.
+
+  ### Booting
+
+  When you list a socket under `Phoenix.Endpoint.socket/3`, Phoenix
+  will automatically start the socket module under its supervision tree,
+  however Phoenix does not manage any transport.
+
+  Whenever your endpoint starts, Phoenix invokes the `child_spec/1` on
+  each listed socket and start that specification under the endpoint
+  supervisor. Since the socket supervision tree is started by the endpoint,
+  any custom transport must be started after the endpoint.
   """
 
   @type state :: term()
@@ -123,16 +119,33 @@ defmodule Phoenix.Socket.Transport do
       socket "/my_app", MyApp.Socket, shutdown: 5000
 
   means `child_spec([shutdown: 5000])` will be invoked.
+
+  `:ignore` means no child spec is necessary for this socket.
   """
-  @callback child_spec(keyword) :: :supervisor.child_spec
+  @callback child_spec(keyword) :: :supervisor.child_spec() | :ignore
+
+  @doc """
+  Returns a child specification for terminating the socket.
+
+  This is a process that is started late in the supervision
+  tree with the specific goal of draining connections on
+  application shutdown.
+
+  Similar to `child_spec/1`, it receives the socket options
+  from the endpoint.
+  """
+  @callback drainer_spec(keyword) :: :supervisor.child_spec() | :ignore
 
   @doc """
   Connects to the socket.
 
   The transport passes a map of metadata and the socket
-  returns `{:ok, state}` or `:error`. The state must be
-  stored by the transport and returned in all future
-  operations.
+  returns `{:ok, state}`, `{:error, reason}` or `:error`.
+  The state must be stored by the transport and returned
+  in all future operations. When `{:error, reason}` is
+  returned, some transports - such as WebSockets - allow
+  customizing the response based on `reason` via a custom
+  `:error_handler`.
 
   This function is used for authorization purposes and it
   may be invoked outside of the process that effectively
@@ -150,7 +163,7 @@ defmodule Phoenix.Socket.Transport do
       serializers and their requirements
 
   """
-  @callback connect(transport_info :: map) :: {:ok, state} | :error
+  @callback connect(transport_info :: map) :: {:ok, state} | {:error, term()} | :error
 
   @doc """
   Initializes the socket state.
@@ -190,7 +203,7 @@ defmodule Phoenix.Socket.Transport do
     * `{:reply, status, reply, state}` - continues the socket with reply
     * `{:stop, reason, state}` - stops the socket
 
-  Control frames only supported when using websockets.
+  Control frames are only supported when using websockets.
 
   The `options` contains an `opcode` key, this will be either `:ping` or
   `:pong`.
@@ -231,7 +244,7 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback terminate(reason :: term, state) :: :ok
 
-  @optional_callbacks handle_control: 2
+  @optional_callbacks handle_control: 2, drainer_spec: 1
 
   require Logger
 
@@ -266,14 +279,17 @@ defmodule Phoenix.Socket.Transport do
     [connect_info: connect_info] ++ config
   end
 
+  # The original session_config is returned in addition to init value so we can
+  # access special config like :csrf_token_key downstream.
   defp init_session(session_config) when is_list(session_config) do
     key = Keyword.fetch!(session_config, :key)
     store = Plug.Session.Store.get(Keyword.fetch!(session_config, :store))
     init = store.init(Keyword.drop(session_config, [:store, :key]))
-    {key, store, init}
+    csrf_token_key = Keyword.get(session_config, :csrf_token_key, "_csrf_token")
+    {key, store, {csrf_token_key, init}}
   end
 
-  defp init_session({_, _, _} = mfa)  do
+  defp init_session({_, _, _} = mfa) do
     {:mfa, mfa}
   end
 
@@ -281,39 +297,11 @@ defmodule Phoenix.Socket.Transport do
   Runs the code reloader if enabled.
   """
   def code_reload(conn, endpoint, opts) do
-    reload? = Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader))
-    reload? && Phoenix.CodeReloader.reload(endpoint)
-    conn
-  end
-
-  @doc """
-  Forces SSL in the socket connection.
-
-  Uses the endpoint configuration to decide so. It is a
-  noop if the connection has been halted.
-  """
-  def force_ssl(%{halted: true} = conn, _socket, _endpoint, _opts) do
-    conn
-  end
-
-  def force_ssl(conn, socket, endpoint, opts) do
-    if force_ssl = force_ssl_config(socket, endpoint, opts) do
-      Plug.SSL.call(conn, force_ssl)
-    else
-      conn
+    if Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader)) do
+      Phoenix.CodeReloader.reload(endpoint)
     end
-  end
 
-  defp force_ssl_config(socket, endpoint, opts) do
-    Phoenix.Config.cache(endpoint, {:force_ssl, socket}, fn _ ->
-      opts =
-        if force_ssl = Keyword.get(opts, :force_ssl, endpoint.config(:force_ssl)) do
-          force_ssl
-          |> Keyword.put_new(:host, {endpoint, :host, []})
-          |> Plug.SSL.init()
-        end
-      {:cache, opts}
-    end)
+    conn
   end
 
   @doc """
@@ -346,7 +334,7 @@ defmodule Phoenix.Socket.Transport do
 
   def check_origin(conn, handler, endpoint, opts, sender) do
     import Plug.Conn
-    origin       = conn |> get_req_header("origin") |> List.first()
+    origin = conn |> get_req_header("origin") |> List.first()
     check_origin = check_origin_config(handler, endpoint, opts)
 
     cond do
@@ -357,7 +345,7 @@ defmodule Phoenix.Socket.Transport do
         conn
 
       true ->
-        Logger.error """
+        Logger.error("""
         Could not check origin for Phoenix.Socket transport.
 
         Origin of the request: #{origin}
@@ -379,7 +367,8 @@ defmodule Phoenix.Socket.Transport do
                 check_origin: ["https://example.com",
                                "//another.com:888", "//other.com"]
 
-        """
+        """)
+
         resp(conn, :forbidden, "")
         |> sender.()
         |> halt()
@@ -409,7 +398,9 @@ defmodule Phoenix.Socket.Transport do
 
       [subprotocols_header | _] ->
         request_subprotocols = subprotocols_header |> Plug.Conn.Utils.list()
-        subprotocol = Enum.find(subprotocols, fn elem -> Enum.find(request_subprotocols, &(&1 == elem)) end)
+
+        subprotocol =
+          Enum.find(subprotocols, fn elem -> Enum.find(request_subprotocols, &(&1 == elem)) end)
 
         if subprotocol do
           Plug.Conn.put_resp_header(conn, "sec-websocket-protocol", subprotocol)
@@ -420,6 +411,37 @@ defmodule Phoenix.Socket.Transport do
   end
 
   def check_subprotocols(conn, subprotocols), do: subprotocols_error_response(conn, subprotocols)
+
+  defp subprotocols_error_response(conn, subprotocols) do
+    import Plug.Conn
+    request_headers = get_req_header(conn, "sec-websocket-protocol")
+
+    Logger.error("""
+    Could not check Websocket subprotocols for Phoenix.Socket transport.
+
+    Subprotocols of the request: #{inspect(request_headers)}
+    Configured supported subprotocols: #{inspect(subprotocols)}
+
+    This happens when you are attempting a socket connection to
+    a different subprotocols than the one configured in your endpoint
+    or when you incorrectly configured supported subprotocols.
+
+    To fix this issue, you may either:
+
+      1. update websocket: [subprotocols: [..]] to your actual subprotocols
+         in your endpoint socket configuration.
+
+      2. check the correctness of the `sec-websocket-protocol` request header
+         sent from the client.
+
+      3. remove `websocket` option from your endpoint socket configuration
+         if you don't use Websocket subprotocols.
+    """)
+
+    resp(conn, :forbidden, "")
+    |> send_resp()
+    |> halt()
+  end
 
   @doc """
   Extracts connection information from `conn` and returns a map.
@@ -440,8 +462,9 @@ defmodule Phoenix.Socket.Transport do
 
     * `:user_agent` - the value of the "user-agent" request header
 
+  The CSRF check can be disabled by setting the `:check_csrf` option to `false`.
   """
-  def connect_info(conn, endpoint, keys) do
+  def connect_info(conn, endpoint, keys, opts \\ []) do
     for key <- keys, into: %{} do
       case key do
         :peer_data ->
@@ -460,7 +483,7 @@ defmodule Phoenix.Socket.Transport do
           {:user_agent, fetch_user_agent(conn)}
 
         {:session, session} ->
-          {:session, connect_session(conn, endpoint, session)}
+          {:session, connect_session(conn, endpoint, session, opts)}
 
         {key, val} ->
           {key, val}
@@ -468,61 +491,29 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {key, store, store_config}) do
+  defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}, opts) do
     conn = Plug.Conn.fetch_cookies(conn)
+    check_csrf = Keyword.get(opts, :check_csrf, true)
 
-    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
-         cookie when is_binary(cookie) <- conn.cookies[key],
+    with cookie when is_binary(cookie) <- conn.cookies[key],
          conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
-         {_, session} <- store.get(conn, cookie, store_config),
-         csrf_state when is_binary(csrf_state) <- Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
-         true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
+         {_, session} <- store.get(conn, cookie, init),
+         true <- not check_csrf or csrf_token_valid?(conn, session, csrf_token_key) do
       session
     else
       _ -> nil
     end
   end
 
-  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}) do
+  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}, opts) do
     case apply(module, function, args) do
       session_config when is_list(session_config) ->
-        connect_session(conn, endpoint, init_session(session_config))
+        connect_session(conn, endpoint, init_session(session_config), opts)
 
       other ->
         raise ArgumentError,
-          "the MFA given to `session_config` must return a keyword list, got: #{inspect other}"
+              "the MFA given to `session_config` must return a keyword list, got: #{inspect(other)}"
     end
-  end
-
-  defp subprotocols_error_response(conn, subprotocols) do
-    import Plug.Conn
-    request_headers = get_req_header(conn, "sec-websocket-protocol")
-
-    Logger.error """
-    Could not check Websocket subprotocols for Phoenix.Socket transport.
-
-    Subprotocols of the request: #{inspect(request_headers)}
-    Configured supported subprotocols: #{inspect(subprotocols)}
-
-    This happens when you are attempting a socket connection to
-    a different subprotocols than the one configured in your endpoint
-    or when you incorrectly configured supported subprotocols.
-
-    To fix this issue, you may either:
-
-      1. update websocket: [subprotocols: [..]] to your actual subprotocols
-         in your endpoint socket configuration.
-
-      2. check the correctness of the `sec-websocket-protocol` request header
-         sent from the client.
-
-      3. remove `websocket` option from your endpoint socket configuration
-         if you don't use Websocket subprotocols.
-    """
-
-    resp(conn, :forbidden, "")
-    |> send_resp()
-    |> halt()
   end
 
   defp fetch_x_headers(conn) do
@@ -533,8 +524,8 @@ defmodule Phoenix.Socket.Transport do
 
   defp fetch_trace_context_headers(conn) do
     for {header, _} = pair <- conn.req_headers,
-      header in ["traceparent", "tracestate"],
-      do: pair
+        header in ["traceparent", "tracestate"],
+        do: pair
   end
 
   defp fetch_uri(conn) do
@@ -551,6 +542,14 @@ defmodule Phoenix.Socket.Transport do
   defp fetch_user_agent(conn) do
     with {_, value} <- List.keyfind(conn.req_headers, "user-agent", 0) do
       value
+    end
+  end
+
+  defp csrf_token_valid?(conn, session, csrf_token_key) do
+    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
+         csrf_state when is_binary(csrf_state) <-
+           Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]) do
+       Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token)
     end
   end
 
@@ -571,7 +570,8 @@ defmodule Phoenix.Socket.Transport do
             :conn
 
           invalid ->
-            raise ArgumentError, ":check_origin expects a boolean, list of hosts, :conn, or MFA tuple, got: #{inspect(invalid)}"
+            raise ArgumentError,
+                  ":check_origin expects a boolean, list of hosts, :conn, or MFA tuple, got: #{inspect(invalid)}"
         end
 
       {:cache, check_origin}
@@ -582,9 +582,9 @@ defmodule Phoenix.Socket.Transport do
     case URI.parse(origin) do
       %{host: nil} ->
         raise ArgumentError,
-          "invalid :check_origin option: #{inspect origin}. " <>
-          "Expected an origin with a host that is parsable by URI.parse/1. For example: " <>
-          "[\"https://example.com\", \"//another.com:888\", \"//other.com\"]"
+              "invalid :check_origin option: #{inspect(origin)}. " <>
+                "Expected an origin with a host that is parsable by URI.parse/1. For example: " <>
+                "[\"https://example.com\", \"//another.com:888\", \"//other.com\"]"
 
       %{scheme: scheme, port: port, host: host} ->
         {scheme, host, port}
@@ -602,8 +602,10 @@ defmodule Phoenix.Socket.Transport do
 
   defp origin_allowed?(_check_origin, %{host: nil}, _endpoint, _conn),
     do: false
+
   defp origin_allowed?(true, uri, endpoint, _conn),
     do: compare?(uri.host, host_to_binary(endpoint.config(:url)[:host]))
+
   defp origin_allowed?(check_origin, uri, _endpoint, _conn) when is_list(check_origin),
     do: origin_allowed?(uri, check_origin)
 
@@ -612,8 +614,8 @@ defmodule Phoenix.Socket.Transport do
 
     Enum.any?(allowed_origins, fn {allowed_scheme, allowed_host, allowed_port} ->
       compare?(origin_scheme, allowed_scheme) and
-      compare?(origin_port, allowed_port) and
-      compare_host?(origin_host, allowed_host)
+        compare?(origin_port, allowed_port) and
+        compare_host?(origin_host, allowed_host)
     end)
   end
 
@@ -623,8 +625,10 @@ defmodule Phoenix.Socket.Transport do
 
   defp compare_host?(_request_host, nil),
     do: true
+
   defp compare_host?(request_host, "*." <> allowed_host),
-    do: String.ends_with?(request_host, allowed_host)
+    do: request_host == allowed_host or String.ends_with?(request_host, "." <> allowed_host)
+
   defp compare_host?(request_host, allowed_host),
     do: request_host == allowed_host
 

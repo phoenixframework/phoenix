@@ -1,12 +1,20 @@
 defmodule Phoenix.Router.Scope do
-  alias Phoenix.Router.{Scope, Route}
+  alias Phoenix.Router.Scope
   @moduledoc false
 
   @stack :phoenix_router_scopes
   @pipes :phoenix_pipeline_scopes
   @top :phoenix_top_scopes
 
-  defstruct path: [], alias: [], as: [], pipes: [], host: nil, private: %{}, assigns: %{}, log: :debug, trailing_slash?: false
+  defstruct path: [],
+            alias: [],
+            as: [],
+            pipes: [],
+            hosts: [],
+            private: %{},
+            assigns: %{},
+            log: :debug,
+            trailing_slash?: false
 
   @doc """
   Initializes the scope.
@@ -21,50 +29,90 @@ defmodule Phoenix.Router.Scope do
   Builds a route based on the top of the stack.
   """
   def route(line, module, kind, verb, path, plug, plug_opts, opts) do
-    top = get_top(module)
-    path    = validate_path(path)
-    private = Keyword.get(opts, :private, %{})
-    assigns = Keyword.get(opts, :assigns, %{})
-    as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
-    alias?  = Keyword.get(opts, :alias, true)
-    trailing_slash? = Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
-
-    if to_string(as) == "static"  do
-      raise ArgumentError, "`static` is a reserved route prefix generated from #{inspect plug} or `:as` option"
+    unless is_atom(plug) do
+      raise ArgumentError, "routes expect a module plug as second argument, got: #{inspect(plug)}"
     end
 
-    {path, alias, as, private, assigns} =
-      join(top, path, plug, alias?, as, private, assigns)
+    top = get_top(module)
+    path = validate_path(path)
+    private = Keyword.get(opts, :private, %{})
+    assigns = Keyword.get(opts, :assigns, %{})
+    as = Keyword.get_lazy(opts, :as, fn -> Phoenix.Naming.resource_name(plug, "Controller") end)
+    alias? = Keyword.get(opts, :alias, true)
+    trailing_slash? = Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
+    warn_on_verify? = Keyword.get(opts, :warn_on_verify, false)
+
+    if to_string(as) == "static" do
+      raise ArgumentError,
+            "`static` is a reserved route prefix generated from #{inspect(plug)} or `:as` option"
+    end
+
+    {path, alias, as, private, assigns} = join(top, path, plug, alias?, as, private, assigns)
 
     metadata =
       opts
       |> Keyword.get(:metadata, %{})
       |> Map.put(:log, Keyword.get(opts, :log, top.log))
 
-    Phoenix.Router.Route.build(line, kind, verb, path, top.host, alias, plug_opts, as, top.pipes, private, assigns, metadata, trailing_slash?)
+    metadata =
+      if kind == :forward do
+        Map.put(metadata, :forward, validate_forward!(path, plug))
+      else
+        metadata
+      end
+
+    Phoenix.Router.Route.build(
+      line,
+      kind,
+      verb,
+      path,
+      top.hosts,
+      alias,
+      plug_opts,
+      as,
+      top.pipes,
+      private,
+      assigns,
+      metadata,
+      trailing_slash?,
+      warn_on_verify?
+    )
+  end
+
+  defp validate_forward!(path, plug) when is_atom(plug) do
+    case Plug.Router.Utils.build_path_match(path) do
+      {[], path_segments} ->
+        path_segments
+
+      _ ->
+        raise ArgumentError,
+              "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead"
+    end
+  end
+
+  defp validate_forward!(_, plug) do
+    raise ArgumentError, "forward expects a module as the second argument, #{inspect(plug)} given"
   end
 
   @doc """
   Validates a path is a string and contains a leading prefix.
   """
   def validate_path("/" <> _ = path), do: path
-  def validate_path(path) when is_binary(path) do
-    IO.warn """
-    router paths should begin with a forward slash, got: #{inspect path}
-    #{Exception.format_stacktrace()}
-    """
 
+  def validate_path(path) when is_binary(path) do
+    IO.warn("router paths should begin with a forward slash, got: #{inspect(path)}")
     "/" <> path
   end
+
   def validate_path(path) do
-    raise ArgumentError, "router paths must be strings, got: #{inspect path}"
+    raise ArgumentError, "router paths must be strings, got: #{inspect(path)}"
   end
 
   @doc """
   Defines the given pipeline.
   """
   def pipeline(module, pipe) when is_atom(pipe) do
-    update_pipes module, &MapSet.put(&1, pipe)
+    update_pipes(module, &MapSet.put(&1, pipe))
   end
 
   @doc """
@@ -74,9 +122,9 @@ defmodule Phoenix.Router.Scope do
     new_pipes = List.wrap(new_pipes)
     %{pipes: pipes} = top = get_top(module)
 
-    if pipe = Enum.find(new_pipes, & &1 in pipes) do
+    if pipe = Enum.find(new_pipes, &(&1 in pipes)) do
       raise ArgumentError,
-            "duplicate pipe_through for #{inspect pipe}. " <>
+            "duplicate pipe_through for #{inspect(pipe)}. " <>
               "A plug may only be used once inside a scoped pipe_through"
     end
 
@@ -102,7 +150,13 @@ defmodule Phoenix.Router.Scope do
 
     alias = append_unless_false(top, opts, :alias, &Atom.to_string(&1))
     as = append_unless_false(top, opts, :as, & &1)
-    host = Keyword.get(opts, :host)
+
+    hosts =
+      case Keyword.fetch(opts, :host) do
+        {:ok, val} -> validate_hosts!(val)
+        :error -> top.hosts
+      end
+
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
 
@@ -112,13 +166,31 @@ defmodule Phoenix.Router.Scope do
       path: top.path ++ path,
       alias: alias,
       as: as,
-      host: host || top.host,
+      hosts: hosts,
       pipes: top.pipes,
       private: Map.merge(top.private, private),
       assigns: Map.merge(top.assigns, assigns),
       log: Keyword.get(opts, :log, top.log),
       trailing_slash?: Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
     })
+  end
+
+  defp validate_hosts!(nil), do: []
+  defp validate_hosts!(host) when is_binary(host), do: [host]
+
+  defp validate_hosts!(hosts) when is_list(hosts) do
+    for host <- hosts do
+      unless is_binary(host), do: raise_invalid_host(host)
+
+      host
+    end
+  end
+
+  defp validate_hosts!(invalid), do: raise_invalid_host(invalid)
+
+  defp raise_invalid_host(host) do
+    raise ArgumentError,
+          "expected router scope :host to be compile-time string or list of strings, got: #{inspect(host)}"
   end
 
   defp append_unless_false(top, opts, key, fun) do
@@ -140,26 +212,24 @@ defmodule Phoenix.Router.Scope do
   end
 
   @doc """
-  Add a forward to the router.
-  """
-  def register_forwards(module, path, plug) when is_atom(plug) do
-    plug = expand_alias(module, plug)
-    phoenix_forwards = Module.get_attribute(module, :phoenix_forwards)
-    path_segments = Route.forward_path_segments(path, plug, phoenix_forwards)
-    phoenix_forwards = Map.put(phoenix_forwards, plug, path_segments)
-    Module.put_attribute(module, :phoenix_forwards, phoenix_forwards)
-    plug
-  end
-
-  def register_forwards(_, _, plug) do
-    raise ArgumentError, "forward expects a module as the second argument, #{inspect plug} given"
-  end
-
-  @doc """
   Expands the alias in the current router scope.
   """
   def expand_alias(module, alias) do
     join_alias(get_top(module), alias)
+  end
+
+  @doc """
+  Returns the full path in the current router scope.
+  """
+  def full_path(module, path) do
+    split_path = String.split(path, "/", trim: true)
+    prefix = get_top(module).path
+
+    cond do
+      prefix == [] -> path
+      split_path == [] -> "/" <> Enum.join(prefix, "/")
+      true -> "/" <> Path.join(get_top(module).path ++ split_path)
+    end
   end
 
   defp join(top, path, alias, alias?, as, private, assigns) do
@@ -170,8 +240,8 @@ defmodule Phoenix.Router.Scope do
         alias
       end
 
-    {join_path(top, path), joined_alias, join_as(top, as),
-     Map.merge(top.private, private), Map.merge(top.assigns, assigns)}
+    {join_path(top, path), joined_alias, join_as(top, as), Map.merge(top.private, private),
+     Map.merge(top.assigns, assigns)}
   end
 
   defp join_path(top, path) do
@@ -179,7 +249,10 @@ defmodule Phoenix.Router.Scope do
   end
 
   defp join_alias(top, alias) when is_atom(alias) do
-    Module.concat(top.alias ++ [alias])
+    case Atom.to_string(alias) do
+      <<head, _::binary>> when head in ?a..?z -> alias
+      alias -> Module.concat(top.alias ++ [alias])
+    end
   end
 
   defp join_as(_top, nil), do: nil

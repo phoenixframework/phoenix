@@ -23,12 +23,19 @@ defmodule Phoenix.Socket.TransportTest do
       signing_salt: "change_me"
     ]
 
-    def session_config, do: @session_config
+    def session_config(overrides \\ []), do: Keyword.merge(@session_config, overrides)
 
     plug Plug.Session, @session_config
     plug :fetch_session
-    plug Plug.CSRFProtection
+    plug :put_csrf
     plug :put_session
+
+    defp put_csrf(conn, _opts) do
+      conn = Plug.Conn.fetch_query_params(conn)
+      session_key = Map.get(conn.query_params, "session_key", "_csrf_token")
+      opts = Plug.CSRFProtection.init(session_key: session_key)
+      Plug.CSRFProtection.call(conn, opts)
+    end
 
     defp put_session(conn, _) do
       conn
@@ -85,6 +92,12 @@ defmodule Phoenix.Socket.TransportTest do
       refute conn.halted
       conn = check_origin("https://org1.ex.com", check_origin: origins)
       refute conn.halted
+
+      conn = check_origin("https://ex.com", check_origin: origins)
+      refute conn.halted
+
+      conn = check_origin("https://org1.prefix-ex.com", check_origin: origins)
+      assert conn.halted
     end
 
     test "nested wildcard subdomains" do
@@ -92,6 +105,15 @@ defmodule Phoenix.Socket.TransportTest do
 
       conn = check_origin("http://org1.foo.example.com", check_origin: origins)
       refute conn.halted
+
+      conn = check_origin("http://foo.example.com", check_origin: origins)
+      refute conn.halted
+
+      conn = check_origin("http://bad.example.com", check_origin: origins)
+      assert conn.halted
+
+      conn = check_origin("http://org1.prefix-foo.example.com", check_origin: origins)
+      assert conn.halted
 
       conn = check_origin("http://org1.bar.example.com", check_origin: origins)
       assert conn.halted
@@ -132,7 +154,7 @@ defmodule Phoenix.Socket.TransportTest do
     end
 
     test "checks origin against :conn" do
-      conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: :http, port: 80}
+      conn = %{conn(:get, "/") | host: "example.com", scheme: :http, port: 80}
       refute check_origin(conn, "http://example.com", check_origin: :conn).halted
 
       assert check_origin(conn, "https://example.com", check_origin: :conn).halted
@@ -141,7 +163,7 @@ defmodule Phoenix.Socket.TransportTest do
       assert check_origin(conn, "http://www.example.com", check_origin: :conn).halted
       assert check_origin(conn, "http://www.another.com", check_origin: :conn).halted
 
-      conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: :https, port: 443}
+      conn = %{conn(:get, "/") | host: "example.com", scheme: :https, port: 443}
       refute check_origin(conn, "https://example.com", check_origin: :conn).halted
       assert check_origin(conn, "http://example.com", check_origin: :conn).halted
       assert check_origin(conn, "https://example.com:4000", check_origin: :conn).halted
@@ -254,29 +276,7 @@ defmodule Phoenix.Socket.TransportTest do
     end
   end
 
-  describe "force_ssl/4" do
-    test "forces SSL" do
-      # Halts
-      conn = Transport.force_ssl(conn(:get, "http://foo.com/"), make_ref(), Endpoint, [])
-      assert conn.halted
-      assert get_resp_header(conn, "location") == ["https://host.com/"]
-
-      # Disabled
-      conn = Transport.force_ssl(conn(:get, "http://foo.com/"), make_ref(), Endpoint, force_ssl: false)
-      refute conn.halted
-
-      # No-op when already halted
-      conn = Transport.force_ssl(conn(:get, "http://foo.com/") |> halt(), make_ref(), Endpoint, [])
-      assert conn.halted
-      assert get_resp_header(conn, "location") == []
-
-      # Valid
-      conn = Transport.force_ssl(conn(:get, "https://foo.com/"), make_ref(), Endpoint, [])
-      refute conn.halted
-    end
-  end
-
-  describe "connect_info/3" do
+  describe "connect_info/4" do
     defp load_connect_info(connect_info) do
       [connect_info: connect_info] = Transport.load_config(connect_info: connect_info)
       connect_info
@@ -294,6 +294,67 @@ defmodule Phoenix.Socket.TransportTest do
                |> put_req_cookie("_hello_key", session_cookie)
                |> fetch_query_params()
                |> Transport.connect_info(Endpoint, connect_info)
+    end
+
+    test "loads the session with custom :csrf_token_key" do
+      conn = conn(:get, "https://foo.com?session_key=_custom_csrf_token") |> Endpoint.call([])
+      csrf_token = conn.resp_body
+      session_cookie = conn.cookies["_hello_key"]
+
+      connect_info = load_connect_info(
+        session: {
+          Endpoint,
+          :session_config,
+          [[csrf_token_key: "_custom_csrf_token"]]
+        }
+      )
+
+      assert %{session: %{"from_session" => "123"}} =
+              conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+              |> put_req_cookie("_hello_key", session_cookie)
+              |> fetch_query_params()
+              |> Transport.connect_info(Endpoint, connect_info)
+
+      connect_info = load_connect_info(
+        session: {
+          Endpoint,
+          :session_config,
+          [[csrf_token_key: "bad_key"]]
+        }
+      )
+
+      assert %{session: nil} =
+              conn(:get, "https://foo.com/", _csrf_token: csrf_token)
+              |> put_req_cookie("_hello_key", session_cookie)
+              |> fetch_query_params()
+              |> Transport.connect_info(Endpoint, connect_info)
+    end
+
+    test "loads the session when CSRF is disabled despite CSRF token not being provided" do
+      conn = conn(:get, "https://foo.com/") |> Endpoint.call([])
+      session_cookie = conn.cookies["_hello_key"]
+
+      connect_info = load_connect_info(session: {Endpoint, :session_config, []})
+
+      assert %{session: %{"from_session" => "123"}} =
+        conn(:get, "https://foo.com/")
+        |> put_req_cookie("_hello_key", session_cookie)
+        |> fetch_query_params()
+        |> Transport.connect_info(Endpoint, connect_info, check_csrf: false)
+    end
+
+    test "doesn't load session when an invalid CSRF token is provided" do
+      conn = conn(:get, "https://foo.com/") |> Endpoint.call([])
+      invalid_csrf_token = "some invalid CSRF token"
+      session_cookie = conn.cookies["_hello_key"]
+
+      connect_info = load_connect_info(session: {Endpoint, :session_config, []})
+
+      assert %{session: nil} =
+        conn(:get, "https://foo.com/", _csrf_token: invalid_csrf_token)
+        |> put_req_cookie("_hello_key", session_cookie)
+        |> fetch_query_params()
+        |> Transport.connect_info(Endpoint, connect_info)
     end
   end
 end

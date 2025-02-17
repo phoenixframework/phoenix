@@ -5,6 +5,14 @@ import {
 
 import Ajax from "./ajax"
 
+let arrayBufferToBase64 = (buffer) => {
+  let binary = ""
+  let bytes = new Uint8Array(buffer)
+  let len = bytes.byteLength
+  for(let i = 0; i < len; i++){ binary += String.fromCharCode(bytes[i]) }
+  return btoa(binary)
+}
+
 export default class LongPoll {
 
   constructor(endPoint){
@@ -12,13 +20,18 @@ export default class LongPoll {
     this.token = null
     this.skipHeartbeat = true
     this.reqs = new Set()
+    this.awaitingBatchAck = false
+    this.currentBatch = null
+    this.currentBatchTimer = null
+    this.batchBuffer = []
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
     this.onclose = function (){ } // noop
     this.pollEndpoint = this.normalizeEndpoint(endPoint)
     this.readyState = SOCKET_STATES.connecting
-    this.poll()
+    // we must wait for the caller to finish setting up our callbacks and timeout properties
+    setTimeout(() => this.poll(), 0)
   }
 
   normalizeEndpoint(endPoint){
@@ -45,7 +58,7 @@ export default class LongPoll {
   isActive(){ return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting }
 
   poll(){
-    this.ajax("GET", null, () => this.ontimeout(), resp => {
+    this.ajax("GET", "application/json", null, () => this.ontimeout(), resp => {
       if(resp){
         var {status, token, messages} = resp
         this.token = token
@@ -73,7 +86,7 @@ export default class LongPoll {
             // next message event handler is run.
             //
             // In order to emulate this behaviour, we need to make sure each
-            // onmessage handler is run within it's own macrotask.
+            // onmessage handler is run within its own macrotask.
             setTimeout(() => this.onmessage({data: msg}), 0)
           })
           this.poll()
@@ -100,11 +113,35 @@ export default class LongPoll {
     })
   }
 
+  // we collect all pushes within the current event loop by
+  // setTimeout 0, which optimizes back-to-back procedural
+  // pushes against an empty buffer
+
   send(body){
-    this.ajax("POST", body, () => this.onerror("timeout"), resp => {
+    if(typeof(body) !== "string"){ body = arrayBufferToBase64(body) }
+    if(this.currentBatch){
+      this.currentBatch.push(body)
+    } else if(this.awaitingBatchAck){
+      this.batchBuffer.push(body)
+    } else {
+      this.currentBatch = [body]
+      this.currentBatchTimer = setTimeout(() => {
+        this.batchSend(this.currentBatch)
+        this.currentBatch = null
+      }, 0)
+    }
+  }
+
+  batchSend(messages){
+    this.awaitingBatchAck = true
+    this.ajax("POST", "application/x-ndjson", messages.join("\n"), () => this.onerror("timeout"), resp => {
+      this.awaitingBatchAck = false
       if(!resp || resp.status !== 200){
         this.onerror(resp && resp.status)
         this.closeAndRetry(1011, "internal server error", false)
+      } else if(this.batchBuffer.length > 0){
+        this.batchSend(this.batchBuffer)
+        this.batchBuffer = []
       }
     })
   }
@@ -113,6 +150,9 @@ export default class LongPoll {
     for(let req of this.reqs){ req.abort() }
     this.readyState = SOCKET_STATES.closed
     let opts = Object.assign({code: 1000, reason: undefined, wasClean: true}, {code, reason, wasClean})
+    this.batchBuffer = []
+    clearTimeout(this.currentBatchTimer)
+    this.currentBatchTimer = null
     if(typeof(CloseEvent) !== "undefined"){
       this.onclose(new CloseEvent("close", opts))
     } else {
@@ -120,13 +160,13 @@ export default class LongPoll {
     }
   }
 
-  ajax(method, body, onCallerTimeout, callback){
+  ajax(method, contentType, body, onCallerTimeout, callback){
     let req
     let ontimeout = () => {
       this.reqs.delete(req)
       onCallerTimeout()
     }
-    req = Ajax.request(method, this.endpointURL(), "application/json", body, this.timeout, ontimeout, resp => {
+    req = Ajax.request(method, this.endpointURL(), contentType, body, this.timeout, ontimeout, resp => {
       this.reqs.delete(req)
       if(this.isActive()){ callback(resp) }
     })

@@ -1,12 +1,15 @@
 # Deploying on Fly.io
 
+
+Fly.io maintains their own guide for Elixir/Phoenix here: [Fly.io/docs/elixir/getting-started/](https://fly.io/docs/elixir/getting-started/) we will keep this guide up but for the latest and greatest check with them!
+
 ## What we'll need
 
 The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://hexdocs.pm/phoenix/up_and_running.html).
 
 You can just:
 
-```
+```console
 $ mix phx.new my_app
 ```
 
@@ -85,7 +88,7 @@ $ fly deploy
 
 Note: On Apple Silicon (M1) computers, docker runs cross-platform builds using qemu which might not always work. If you get a segmentation fault error like the following:
 
-```
+```console
  => [build  7/17] RUN mix deps.get --only
  => => # qemu: uncaught target signal 11 (Segmentation fault) - core dumped
 ```
@@ -125,8 +128,7 @@ There are a couple prerequisites, we first need to establish an [SSH Shell](http
 This step sets up a root certificate for your account and then issues a certificate.
 
 ```console
-$ fly ssh establish
-$ fly ssh issue
+$ fly ssh issue --agent
 ```
 
 With SSH configured, let's open a console.
@@ -208,18 +210,17 @@ Our next step is to add the `topologies` configuration to `config/runtime.exs`.
 
 This configures `libcluster` to use the `DNSPoll` strategy and look for other deployed apps using the `$FLY_APP_NAME` on the `.internal` private network.
 
-
 #### Controlling the name for our node
 
 We need to control the naming of our Elixir nodes. To help them connect up, we'll name them using this pattern: `your-fly-app-name@the.ipv6.address.on.fly`. To do this, we'll generate the release config.
 
-```
+```console
 $ mix release.init
 ```
 
 Then edit the generated `rel/env.sh.eex` file and add the following lines:
 
-```
+```console
 ip=$(grep fly-local-6pn /etc/hosts | cut -f 1)
 export RELEASE_DISTRIBUTION=name
 export RELEASE_NODE=$FLY_APP_NAME@$ip
@@ -227,7 +228,7 @@ export RELEASE_NODE=$FLY_APP_NAME@$ip
 
 After making the change, deploy your app!
 
-```
+```console
 $ fly deploy
 ```
 
@@ -284,8 +285,7 @@ app[eb4119d3] sea [info] 21:50:21.924 [info] [libcluster:fly6pn] connected to :"
 But that's not as rewarding as seeing it from inside a node. From an IEx shell, we can ask the node we're connected to, what other nodes it can see.
 
 ```console
-$ fly ssh console
-$ /app/bin/my_app remote
+$ fly ssh console -C "/app/bin/my_app remote"
 ```
 
 ```elixir
@@ -344,8 +344,7 @@ cdf6c422 30      sea    run     running 1 total, 1 passing 0        6m47s ago
 Let's ensure they are clustered together.
 
 ```console
-$ fly ssh console
-$ /app/bin/my_app remote
+$ fly ssh console -C "/app/bin/my_app remote"
 ```
 
 ```elixir
@@ -391,14 +390,14 @@ $ fly scale count 2
 
 Refer to the [Fly.io Elixir documentation](https://fly.io/docs/getting-started/elixir) for additional information.
 
-[Working with Fly.io applications](https://fly.io/docs/getting-started/working-with-fly-apps/) covers things like:
+[The Fly.io docs](https://fly.io/docs/) covers things like:
 
-* Status and logs
-* Custom domains
-* Certificates
+* [Status](https://fly.io/docs/flyctl/status/) and [logs](https://fly.io/docs/monitoring/logging-overview/)
+* [Custom domains](https://fly.io/docs/networking/custom-domain/)
+* [Certificates](https://fly.io/docs/networking/custom-domain-api/)
 
 ## Troubleshooting
 
-See [Troubleshooting](https://fly.io/docs/getting-started/troubleshooting/#welcome-message)
+See [Troubleshooting](https://fly.io/docs/getting-started/troubleshooting/) and [Elixir Troubleshooting](https://fly.io/docs/elixir/the-basics/troubleshooting/)
 
 Visit the [Fly.io Community](https://community.fly.io/) to find solutions and ask questions.

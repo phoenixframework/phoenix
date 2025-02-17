@@ -1,3 +1,5 @@
+import Config
+
 # The secret key base is used to sign/encrypt cookies and other secrets.
 # A default value is used in config/dev.exs and config/test.exs but you
 # want to use a different value for prod and you most likely don't want
@@ -27,7 +29,39 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
 #     config :<%= @web_app_name %>, <%= @endpoint_module %>, server: true
 #
 # Then you can assemble a release by calling `mix release`.
-# See `mix help release` for more information.<%= if @mailer do %>
+# See `mix help release` for more information.
+
+# ## SSL Support
+#
+# To get SSL working, you will need to add the `https` key
+# to your endpoint configuration:
+#
+#     config :<%= @web_app_name %>, <%= @endpoint_module %>,
+#       https: [
+#         ...,
+#         port: 443,
+#         cipher_suite: :strong,
+#         keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
+#         certfile: System.get_env("SOME_APP_SSL_CERT_PATH")
+#       ]
+#
+# The `cipher_suite` is set to `:strong` to support only the
+# latest and more secure SSL ciphers. This means old browsers
+# and clients may not be supported. You can set it to
+# `:compatible` for wider support.
+#
+# `:keyfile` and `:certfile` expect an absolute path to the key
+# and cert in disk or a relative path inside priv, for example
+# "priv/ssl/server.key". For all supported SSL configuration
+# options, see https://hexdocs.pm/plug/Plug.SSL.html#configure/1
+#
+# We also recommend setting `force_ssl` in your config/prod.exs,
+# ensuring no data is ever sent via http, always redirecting to https:
+#
+#     config :<%= @web_app_name %>, <%= @endpoint_module %>,
+#       force_ssl: [hsts: true]
+#
+# Check `Plug.SSL` for all available options in `force_ssl`.<%= if @mailer do %>
 
 # ## Configuring the mailer
 #
@@ -41,7 +75,7 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
 #       domain: System.get_env("MAILGUN_DOMAIN")
 #
 # For this example you need include a HTTP client required by Swoosh API client.
-# Swoosh supports Hackney and Finch out of the box:
+# Swoosh supports Hackney, Req and Finch out of the box:
 #
 #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
 #

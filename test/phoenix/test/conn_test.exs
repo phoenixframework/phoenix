@@ -39,6 +39,7 @@ defmodule Phoenix.Test.ConnTest.Router do
   scope "/" do
     pipe_through :browser
     get "/stat", CatchAll, :stat, private: %{route: :stat}
+    forward "/redir", Phoenix.Test.ConnTest.RedirRouter
     forward "/", CatchAll
   end
 
@@ -177,6 +178,14 @@ defmodule Phoenix.Test.ConnTest do
         build_conn(:get, "http://localhost/", nil)
         |> recycle()
       assert conn.host == "localhost"
+    end
+
+    test "remote_ip is persisted" do
+      conn =
+        %{build_conn(:get, "http://localhost/", nil) | remote_ip: {192, 168, 0, 1}}
+        |> recycle()
+
+      assert conn.remote_ip == {192, 168, 0, 1}
     end
 
     test "cookies are persisted" do
@@ -427,12 +436,22 @@ defmodule Phoenix.Test.ConnTest do
     end
   end
 
-  describe "redirected_params/1" do
+  describe "redirected_params/2" do
     test "with matching route" do
       conn =
         build_conn(:get, "/")
         |> RedirRouter.call(RedirRouter.init([]))
         |> put_resp_header("location", "/posts/123")
+        |> send_resp(302, "foo")
+
+      assert redirected_params(conn) == %{id: "123"}
+    end
+
+    test "with matching forwarded route" do
+      conn =
+        build_conn(:get, "/redir")
+        |> Router.call(Router.init([]))
+        |> put_resp_header("location", "/redir/posts/123")
         |> send_resp(302, "foo")
 
       assert redirected_params(conn) == %{id: "123"}
@@ -459,6 +478,18 @@ defmodule Phoenix.Test.ConnTest do
         |> send_resp(200, "ok")
         |> redirected_params()
       end
+    end
+
+    test "with custom status code" do
+      Enum.each(300..308, fn status ->
+        conn =
+          build_conn(:get, "/")
+          |> RedirRouter.call(RedirRouter.init([]))
+          |> put_resp_header("location", "/posts/123")
+          |> send_resp(status, "foo")
+
+        assert redirected_params(conn, status) == %{id: "123"}
+      end)
     end
   end
 

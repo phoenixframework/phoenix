@@ -1,5 +1,8 @@
-<h1>Edit <%= schema.human_singular %></h1>
+<.header>
+  Edit <%= schema.human_singular %> {@<%= schema.singular %>.id}
+  <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
+</.header>
 
-<%%= render "form.html", Map.put(assigns, :action, Routes.<%= schema.route_helper %>_path(@conn, :update, @<%= schema.singular %>)) %>
+<.<%= schema.singular %>_form changeset={@changeset} action={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}"} />
 
-<span><.link href={Routes.<%= schema.route_helper %>_path(@conn, :index)}>Back</.link></span>
+<.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>

@@ -11,13 +11,10 @@ Use the issues tracker for:
 * [Bug reports](#bug-reports)
 * [Submitting pull requests](#pull-requests)
 
-Please **do not** use the issue tracker for personal support requests nor feature requests. Support requests should be sent to:
+For requesting help and discussing new features:
 
-* The [phoenix-talk mailing list](https://groups.google.com/group/phoenix-talk) (closed in favor of forum, but archive is still online)
-* [The Phoenix subforum on the Elixir forum](https://elixirforum.com/c/phoenix-forum)
+* [The Phoenix subforum on the Elixir Forum](https://elixirforum.com/c/phoenix-forum)
 * **[#elixir](irc://irc.libera.chat/elixir)** on [Libera](https://libera.chat/) IRC
-
-Development issues can be discussed on the [phoenix-core mailing list](https://groups.google.com/group/phoenix-core).
 
 We do our best to keep the issue tracker tidy and organized, making it useful
 for everyone. For example, we classify open issues per perceived difficulty,
@@ -26,7 +23,7 @@ making it easier for developers to [contribute to Phoenix](#pull-requests).
 ## Bug reports
 
 A bug is either a _demonstrable problem_ that is caused by the code in the repository,
-or indicate missing, unclear, or misleading documentation. Good bug reports are extremely 
+or indicates missing, unclear, or misleading documentation. Good bug reports are extremely
 helpful - thank you!
 
 Guidelines for bug reports:
@@ -35,7 +32,7 @@ Guidelines for bug reports:
    reported.
 
 2. **Check if the issue has been fixed** &mdash; try to reproduce it using the
-   `master` branch in the repository.
+   `main` branch in the repository.
 
 3. **Isolate and report the problem** &mdash; ideally create a reduced test
    case.
@@ -65,7 +62,7 @@ Example:
 
 ## Feature requests
 
-Feature requests are welcome and should be discussed on the [phoenix-core mailing list](https://groups.google.com/group/phoenix-core). But take a moment to find
+Feature requests are welcome and should be discussed on the [Phoenix subforum](https://elixirforum.com/c/phoenix-forum). But take a moment to find
 out whether your idea fits with the scope and aims of the project. It's up to *you*
 to make a strong case to convince the community of the merits of this feature.
 Please provide as much detail and context as possible.
@@ -75,7 +72,7 @@ Please provide as much detail and context as possible.
 Code documentation (`@doc`, `@moduledoc`, `@typedoc`) has a special convention:
 the first paragraph is considered to be a short summary.
 
-For functions, macros and callbacks say what it will do. For example write
+For functions, macros, and callbacks say what it will do. For example write
 something like:
 
 ```elixir
@@ -85,7 +82,7 @@ Marks the given value as HTML safe.
 def safe({:safe, value}), do: {:safe, value}
 ```
 
-For modules, protocols and types say what it is. For example write
+For modules, protocols, and types say what it is. For example write
 something like:
 
 ```elixir
@@ -134,8 +131,10 @@ in order to craft an excellent pull request:
    ```bash
    # Clone your fork of the repo into the current directory
    git clone https://github.com/<your-username>/phoenix
+
    # Navigate to the newly cloned directory
    cd phoenix
+
    # Assign the original repo to a remote called "upstream"
    git remote add upstream https://github.com/phoenixframework/phoenix
    ```
@@ -143,16 +142,16 @@ in order to craft an excellent pull request:
 2. If you cloned a while ago, get the latest changes from upstream, and update your fork:
 
    ```bash
-   git checkout master
-   git pull upstream master
+   git checkout main
+   git pull upstream main
    git push
    ```
 
-3. Create a new topic branch (off of `master`) to contain your feature, change,
+3. Create a new topic branch (off of `main`) to contain your feature, change,
    or fix.
 
-   **IMPORTANT**: Making changes in `master` is discouraged. You should always
-   keep your local `master` in sync with upstream `master` and make your
+   **IMPORTANT**: Making changes in `main` is discouraged. You should always
+   keep your local `main` in sync with upstream `main` and make your
    changes in topic branches.
 
    ```bash
@@ -181,17 +180,17 @@ in order to craft an excellent pull request:
     with a clear title and description.
 
 8. If you haven't updated your pull request for a while, you should consider
-   rebasing on master and resolving any conflicts.
+   rebasing on main and resolving any conflicts.
 
-   **IMPORTANT**: _Never ever_ merge upstream `master` into your branches. You
-   should always `git rebase` on `master` to bring your changes up to date when
+   **IMPORTANT**: _Never ever_ merge upstream `main` into your branches. You
+   should always `git rebase` on `main` to bring your changes up to date when
    necessary.
 
    ```bash
-   git checkout master
-   git pull upstream master
+   git checkout main
+   git pull upstream main
    git checkout <your-topic-branch>
-   git rebase master
+   git rebase main
    ```
 
 Thank you for your contributions!
@@ -216,9 +215,11 @@ complete, the better.
 
 For formatting the guides:
 
-- We use the "elixir" code fence for all module code.
-- We use the "console" code fence for iex and shell commands.
-- We use the "html" code fence for html templates, even if there is elixir code
+- We use the `elixir` code fence for all module code.
+- We use the `iex` for IEx sessions.
+- We use the `console` code fence for shell commands.
+- We use the `html` code fence for html templates, even if there is elixir code
   in the template.
 - We use backticks for filenames and directory paths.
 - We use backticks for module names, function names, and variable names.
+- Documentation line length should hard wrapped at around 100 characters if possible.

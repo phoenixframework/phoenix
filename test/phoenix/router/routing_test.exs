@@ -43,6 +43,7 @@ defmodule Phoenix.Router.RoutingTest do
     get "/", UserController, :index, as: :users
     get "/users/top", UserController, :top, as: :top
     get "/users/:id", UserController, :show, as: :users, metadata: %{access: :user}
+    match :*, "/users/fallback", UserController, :any
     get "/spaced users/:id", UserController, :show
     get "/profiles/profile-:id", UserController, :show
     get "/route_that_crashes", UserController, :crash
@@ -66,7 +67,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     get "/no_log", SomePlug, [], log: false
     get "/fun_log", SomePlug, [], log: {LogLevel, :log_level, []}
-    get "/override-plug-name", SomePlug, :action, metadata: %{log_module: PlugOverride}
+    get "/override-plug-name", SomePlug, :action, metadata: %{mfa: {LogLevel, :log_level, 1}}
     get "/users/:user_id/files/:id", UserController, :image
 
     scope "/halt-plug" do
@@ -233,6 +234,18 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.resp_body == "users any"
   end
 
+  test "different verbs with similar paths" do
+    conn = call(Router, :post, "/users/fallback")
+    assert conn.status == 200
+    assert conn.resp_body == "users any"
+
+    conn = call(Router, :get, "/users/123")
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "123"
+    assert conn.path_params["id"] == "123"
+  end
+
   describe "logging" do
     setup do
       Logger.enable(self())
@@ -270,7 +283,7 @@ defmodule Phoenix.Router.RoutingTest do
 
     test "overrides plug name that processes the route when set in metadata" do
       assert capture_log(fn -> call(Router, :get, "/override-plug-name") end) =~
-               "Processing with PlugOverride"
+               "Processing with Phoenix.Router.RoutingTest.LogLevel.log_level/1"
     end
 
     test "logs custom level when log is set to a 1-arity function" do
@@ -310,6 +323,7 @@ defmodule Phoenix.Router.RoutingTest do
         end,
         nil
       )
+      on_exit(fn -> :telemetry.detach(test_name) end)
     end
 
     test "phoenix.router_dispatch.start and .stop are emitted on success" do

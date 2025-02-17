@@ -1,18 +1,48 @@
 # Up and Running
 
-Let's get a Phoenix application up and running as quickly as possible.
+There are two mechanisms to start a new Phoenix application: the express option, supported on some OSes, and via `mix phx.new`. Let's check it out.
 
-Before we begin, please take a minute to read the [Installation Guide](installation.html). By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.
+## Phoenix Express
 
-We can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
+A single command will get you up and running in seconds:
+
+For macOS/Ubuntu:
+
+```bash
+$ curl https://new.phoenixframework.org/myapp | sh
+```
+
+For Windows PowerShell:
+
+```cmd
+> curl.exe -fsSO https://new.phoenixframework.org/myapp.bat; .\myapp.bat
+```
+
+The above will install Erlang, Elixir, and Phoenix, and generate a fresh Phoenix application. It will also automatically pick one of PostgreSQL or MySQL as the database, and fallback to SQLite if none of them are available. Once the command above completes, it will open up a Phoenix application, with the steps necessary to complete your installation.
+
+> Your Phoenix application name is taken from the path.
+
+If your operating system is not supported, or the command above fails, don't fret! You can still start your Phoenix application using `mix phx.new`.
+
+## Via `mix phx.new`
+
+In order to create a new Phoenix application, you will need to install Erlang, Elixir, and Phoenix. See the [Installation Guide](installation.html) for more information. If you share your application with someone, they will also need to follow the Installation Guide steps to set it all up.
+
+Once you are ready, you can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
 
 ```console
 $ mix phx.new hello
 ```
 
-> A note about [Ecto](ecto.html): Ecto allows our Phoenix application to communicate with a data store, such as PostgreSQL, MySQL, and others. If our application will not require this component we can skip this dependency by passing the `--no-ecto` flag to `mix phx.new`.
-
-> To learn more about `mix phx.new` you can read the [Mix Tasks Guide](mix_tasks.html#phoenix-specific-mix-tasks).
+> By default, `mix phx.new` includes a number of optional dependencies, for example:
+>
+> - [Ecto](ecto.html) for communicating with a data store, such as PostgreSQL, MySQL, and others. You can skip this with `--no-ecto`.
+>
+> - [Phoenix.HTML](https://hexdocs.pm/phoenix_html/Phoenix.HTML.html), [TailwindCSS](https://tailwindcss.com), and [Esbuild](https://esbuild.github.io) for HTML applications. You can skip them with the `--no-html` and `--no-assets` flags.
+>
+> - [Phoenix.LiveView](https://hexdocs.pm/phoenix_live_view/) for building realtime and interactive web applications. You can skip this with `--no-live`.
+>
+> Read the [Mix Tasks Guide](mix_tasks.html#phoenix-specific-mix-tasks) for the full list of things that can be excluded, among other options.
 
 ```console
 mix phx.new hello
@@ -33,6 +63,7 @@ When it's done, it will ask us if we want it to install our dependencies for us.
 ```console
 Fetch and install dependencies? [Yn] Y
 * running mix deps.get
+* running mix assets.setup
 * running mix deps.compile
 
 We are almost there! The following steps are missing:
@@ -79,7 +110,7 @@ And finally, we'll start the Phoenix server:
 
 ```console
 $ mix phx.server
-[info] Running HelloWeb.Endpoint with cowboy 2.9.0 at 127.0.0.1:4000 (http)
+[info] Running HelloWeb.Endpoint with Bandit 1.5.7 at 127.0.0.1:4000 (http)
 [info] Access HelloWeb.Endpoint at http://localhost:4000
 [watch] build finished, watching for changes...
 ...

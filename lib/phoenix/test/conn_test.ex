@@ -274,13 +274,17 @@ defmodule Phoenix.ConnTest do
   Gets the whole flash storage.
   """
   @spec get_flash(Conn.t) :: map
-  defdelegate get_flash(conn), to: Phoenix.Controller
+  @deprecated "get_flash/1 is deprecated. Use conn.assigns.flash instead"
+  def get_flash(conn), do: conn.assigns.flash
 
   @doc """
   Gets the given key from the flash storage.
   """
   @spec get_flash(Conn.t, term) :: term
-  defdelegate get_flash(conn, key), to: Phoenix.Controller
+  @deprecated "get_flash/2 is deprecated. Use Phoenix.Flash.get/2 instead"
+  def get_flash(conn, key) do
+    Phoenix.Flash.get(conn.assigns.flash, key)
+  end
 
   @doc """
   Puts the given value under key in the flash storage.
@@ -472,6 +476,7 @@ defmodule Phoenix.ConnTest do
   def recycle(conn, headers \\ ~w(accept accept-language authorization)) do
     build_conn()
     |> Map.put(:host, conn.host)
+    |> Map.put(:remote_ip, conn.remote_ip)
     |> Plug.Test.recycle_cookies(conn)
     |> Plug.Test.put_peer_data(Plug.Conn.get_peer_data(conn))
     |> copy_headers(conn.req_headers, headers)
@@ -572,23 +577,37 @@ defmodule Phoenix.ConnTest do
   Returns the matched params from the URL the connection was redirected to.
 
   Uses the provided `%Plug.Conn{}`s router matched in the previous request.
-  Raises if the response's location header is not set.
+  Raises if the response's location header is not set or if the response does
+  not match the redirect status code (defaults to 302).
 
   ## Examples
 
       assert redirected_to(conn) =~ "/posts/123"
       assert %{id: "123"} = redirected_params(conn)
+      assert %{id: "123"} = redirected_params(conn, 303)
   """
-  @spec redirected_params(Conn.t) :: map
-  def redirected_params(%Plug.Conn{} = conn) do
+  @spec redirected_params(Conn.t, status :: non_neg_integer) :: map
+  def redirected_params(%Plug.Conn{} = conn, status \\ 302) do
     router = Phoenix.Controller.router_module(conn)
-    %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
+    %URI{path: path, host: host} = conn |> redirected_to(status) |> URI.parse()
+    path = remove_script_name(conn, router, path)
 
     case Phoenix.Router.route_info(router, "GET", path, host || conn.host) do
       :error ->
         raise Phoenix.Router.NoRouteError, conn: conn, router: router
       %{path_params: path_params} ->
         Enum.into(path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
+    end
+  end
+
+  defp remove_script_name(conn, router, path) do
+    case conn.private[router] do
+      [_ | _] = list ->
+        script_name = "/" <> Enum.join(list, ",")
+        String.replace_leading(path, script_name, "")
+
+      _ ->
+        path
     end
   end
 
@@ -621,25 +640,38 @@ defmodule Phoenix.ConnTest do
 
   Useful for testing actions that you expect raise an error and have
   the response wrapped in an HTTP status, with content usually rendered
-  by your MyApp.ErrorView.
+  by your MyAppWeb.ErrorHTML view.
 
   The function accepts a status either as an integer HTTP status or
-  atom, such as `404` or `:not_found`. The list of allowed atoms is available
+  atom, such as `500` or `:internal_server_error`. The list of allowed atoms is available
   in `Plug.Conn.Status`. If an error is raised, a 3-tuple of the wrapped
   response is returned matching the status, headers, and body of the response:
 
-      {404, [{"content-type", "text/html"} | _], "Page not found"}
+      {500, [{"content-type", "text/html"} | _], "Internal Server Error"}
 
   ## Examples
 
-      assert_error_sent :not_found, fn ->
-        get(build_conn(), "/users/not-found")
+      assert_error_sent :internal_server_error, fn ->
+        get(build_conn(), "/broken/route")
       end
 
-      response = assert_error_sent 404, fn ->
-        get(build_conn(), "/users/not-found")
+      response = assert_error_sent 500, fn ->
+        get(build_conn(), "/broken/route")
       end
-      assert {404, [_h | _t], "Page not found"} = response
+      assert {500, [_h | _t], "Internal Server Error"} = response
+
+  This can also be used to test a route resulted in an error that was translated to a
+  specific response by the `Plug.Status` protocol, such as `Ecto.NoResultsError`:
+
+      assert_error_sent :not_found, fn ->
+        get(build_conn(), "/something-that-raises-no-results-error")
+      end
+
+  *Note*: for routes that don't raise an error, but instead return a status, you should test the
+  response directly:
+
+      conn = get(build_conn(), "/users/not-found")
+      assert response(conn, 404)
   """
   @spec assert_error_sent(integer | atom, function) :: {integer, list, term}
   def assert_error_sent(status_int_or_atom, func) do

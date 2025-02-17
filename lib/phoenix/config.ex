@@ -20,8 +20,8 @@ defmodule Phoenix.Config do
   @doc """
   Puts a given key-value pair in config.
   """
-  def put_new(module, key, value) do
-    :ets.insert_new(module, {key, value})
+  def put(module, key, value) do
+    :ets.insert(module, {key, value})
   end
 
   @doc """
@@ -52,7 +52,7 @@ defmodule Phoenix.Config do
       e ->
         case :ets.info(module) do
           :undefined ->
-            raise "could not find ets table for endpoint #{inspect(module)}. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time."
+            raise "could not find ets table for endpoint #{inspect(module)}. Make sure your endpoint is started and note you cannot access endpoint functions at compile-time"
 
           _ ->
             reraise e, __STACKTRACE__
@@ -152,6 +152,7 @@ defmodule Phoenix.Config do
         {:stop, :normal, :ok, {module, permanent}}
 
       true ->
+        clear_cache(module)
         {:reply, :ok, {module, permanent}}
     end
   end

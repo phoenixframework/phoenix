@@ -5,8 +5,9 @@
 # is restricted to this project.
 
 # General application configuration
-import Config<%= if @namespaced? || @ecto || @generators do %>
+import Config
 
+<%= if @namespaced? || @ecto || @generators do %>
 config :<%= @app_name %><%= if @namespaced? do %>,
   namespace: <%= @app_module %><% end %><%= if @ecto do %>,
   ecto_repos: [<%= @app_module %>.Repo]<% end %><%= if @generators do %>,
@@ -15,7 +16,11 @@ config :<%= @app_name %><%= if @namespaced? do %>,
 # Configures the endpoint
 config :<%= @app_name %>, <%= @endpoint_module %>,
   url: [host: "localhost"],
-  render_errors: [view: <%= @web_namespace %>.ErrorView, accepts: ~w(<%= if @html do %>html <% end %>json), layout: false],
+  adapter: <%= inspect @web_adapter_module %>,
+  render_errors: [
+    formats: [<%= if @html do%>html: <%= @web_namespace %>.ErrorHTML, <% end %>json: <%= @web_namespace %>.ErrorJSON],
+    layout: false
+  ],
   pubsub_server: <%= @app_module %>.PubSub,
   live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @mailer do %>
 
@@ -26,20 +31,32 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local<% end %><%= if @assets do %>
+config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local<% end %><%= if @javascript do %>
 
 # Configure esbuild (the version is required)
 config :esbuild,
-  version: "0.14.41",
-  default: [
+  version: "0.17.11",
+  <%= @app_name %>: [
     args:
-      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
-    cd: Path.expand("../assets", __DIR__),
+      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+    cd: Path.expand("..<%= if @in_umbrella, do: "/apps/#{@app_name}" %>/assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]<% end %><%= if @css do %>
+
+# Configure tailwind (the version is required)
+config :tailwind,
+  version: "3.4.3",
+  <%= @app_name %>: [
+    args: ~w(
+      --config=tailwind.config.js
+      --input=css/app.css
+      --output=../priv/static/assets/app.css
+    ),
+    cd: Path.expand("..<%= if @in_umbrella, do: "/apps/#{@app_name}" %>/assets", __DIR__),
   ]<% end %>
 
 # Configures Elixir's Logger
-config :logger, :console,
+config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 

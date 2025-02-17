@@ -29,7 +29,14 @@ import Timer from "./timer"
  * @param {Object} [opts] - Optional configuration
  * @param {Function} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
  *
- * Defaults to WebSocket with automatic LongPoll fallback.
+ * Defaults to WebSocket with automatic LongPoll fallback if WebSocket is not defined.
+ * To fallback to LongPoll when WebSocket attempts fail, use `longPollFallbackMs: 2500`.
+ *
+ * @param {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
+ * before falling back to the LongPoll transport. Disabled by default.
+ *
+ * @param {boolean} [opts.debug] - When true, enables debug logging. Default false.
+ *
  * @param {Function} [opts.encode] - The function to encode outgoing messages.
  *
  * Defaults to JSON encoder.
@@ -46,8 +53,8 @@ import Timer from "./timer"
  *
  * Defaults `DEFAULT_TIMEOUT`
  * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
- * @param {number} [opts.reconnectAfterMs] - The optional function that returns the millsec
- * socket reconnect interval.
+ * @param {Function} [opts.reconnectAfterMs] - The optional function that returns the
+ * socket reconnect interval, in milliseconds.
  *
  * Defaults to stepped backoff of:
  *
@@ -57,7 +64,7 @@ import Timer from "./timer"
  * }
  * ````
  *
- * @param {number} [opts.rejoinAfterMs] - The optional function that returns the millsec
+ * @param {Function} [opts.rejoinAfterMs] - The optional function that returns the millisec
  * rejoin interval for individual channels.
  *
  * ```javascript
@@ -86,6 +93,19 @@ import Timer from "./timer"
  * @param {vsn} [opts.vsn] - The serializer's protocol version to send on connect.
  *
  * Defaults to DEFAULT_VSN.
+ *
+ * @param {Object} [opts.sessionStorage] - An optional Storage compatible object
+ * Phoenix uses sessionStorage for longpoll fallback history. Overriding the store is
+ * useful when Phoenix won't have access to `sessionStorage`. For example, This could
+ * happen if a site loads a cross-domain channel in an iframe. Example usage:
+ *
+ *     class InMemoryStorage {
+ *       constructor() { this.storage = {} }
+ *       getItem(keyName) { return this.storage[keyName] || null }
+ *       removeItem(keyName) { delete this.storage[keyName] }
+ *       setItem(keyName, keyValue) { this.storage[keyName] = keyValue }
+ *     }
+ *
 */
 export default class Socket {
   constructor(endPoint, opts = {}){
@@ -95,6 +115,10 @@ export default class Socket {
     this.ref = 0
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
     this.transport = opts.transport || global.WebSocket || LongPoll
+    this.primaryPassedHealthCheck = false
+    this.longPollFallbackMs = opts.longPollFallbackMs
+    this.fallbackTimer = null
+    this.sessionStore = opts.sessionStorage || (global && global.sessionStorage)
     this.establishedConnections = 0
     this.defaultEncoder = Serializer.encode.bind(Serializer)
     this.defaultDecoder = Serializer.decode.bind(Serializer)
@@ -139,10 +163,14 @@ export default class Socket {
       }
     }
     this.logger = opts.logger || null
+    if(!this.logger && opts.debug){
+      this.logger = (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
+    }
     this.longpollerTimeout = opts.longpollerTimeout || 20000
     this.params = closure(opts.params || {})
     this.endPoint = `${endPoint}/${TRANSPORTS.websocket}`
     this.vsn = opts.vsn || DEFAULT_VSN
+    this.heartbeatTimeoutTimer = null
     this.heartbeatTimer = null
     this.pendingHeartbeatRef = null
     this.reconnectTimer = new Timer(() => {
@@ -164,8 +192,8 @@ export default class Socket {
   replaceTransport(newTransport){
     this.connectClock++
     this.closeWasClean = true
+    clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
-    this.sendBuffer = []
     if(this.conn){
       this.conn.close()
       this.conn = null
@@ -181,7 +209,7 @@ export default class Socket {
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
   /**
-   * The fully qualifed socket url
+   * The fully qualified socket url
    *
    * @returns {string}
    */
@@ -206,6 +234,7 @@ export default class Socket {
   disconnect(callback, code, reason){
     this.connectClock++
     this.closeWasClean = true
+    clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
     this.teardown(callback, code, reason)
   }
@@ -223,16 +252,11 @@ export default class Socket {
       this.params = closure(params)
     }
     if(this.conn){ return }
-
-    this.connectClock++
-    this.closeWasClean = false
-    this.conn = new this.transport(this.endPointURL())
-    this.conn.binaryType = this.binaryType
-    this.conn.timeout = this.longpollerTimeout
-    this.conn.onopen = () => this.onConnOpen()
-    this.conn.onerror = error => this.onConnError(error)
-    this.conn.onmessage = event => this.onConnMessage(event)
-    this.conn.onclose = event => this.onConnClose(event)
+    if(this.longPollFallbackMs && this.transport !== LongPoll){
+      this.connectWithFallback(LongPoll, this.longPollFallbackMs)
+    } else {
+      this.transportConnect()
+    }
   }
 
   /**
@@ -241,7 +265,7 @@ export default class Socket {
    * @param {string} msg
    * @param {Object} data
    */
-  log(kind, msg, data){ this.logger(kind, msg, data) }
+  log(kind, msg, data){ this.logger && this.logger(kind, msg, data) }
 
   /**
    * Returns true if a logger has been set on this socket.
@@ -317,8 +341,72 @@ export default class Socket {
   /**
    * @private
    */
+
+  transportConnect(){
+    this.connectClock++
+    this.closeWasClean = false
+    this.conn = new this.transport(this.endPointURL())
+    this.conn.binaryType = this.binaryType
+    this.conn.timeout = this.longpollerTimeout
+    this.conn.onopen = () => this.onConnOpen()
+    this.conn.onerror = error => this.onConnError(error)
+    this.conn.onmessage = event => this.onConnMessage(event)
+    this.conn.onclose = event => this.onConnClose(event)
+  }
+
+  getSession(key){ return this.sessionStore && this.sessionStore.getItem(key) }
+
+  storeSession(key, val){ this.sessionStore && this.sessionStore.setItem(key, val) }
+
+  connectWithFallback(fallbackTransport, fallbackThreshold = 2500){
+    clearTimeout(this.fallbackTimer)
+    let established = false
+    let primaryTransport = true
+    let openRef, errorRef
+    let fallback = (reason) => {
+      this.log("transport", `falling back to ${fallbackTransport.name}...`, reason)
+      this.off([openRef, errorRef])
+      primaryTransport = false
+      this.replaceTransport(fallbackTransport)
+      this.transportConnect()
+    }
+    if(this.getSession(`phx:fallback:${fallbackTransport.name}`)){ return fallback("memorized") }
+
+    this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
+
+    errorRef = this.onError(reason => {
+      this.log("transport", "error", reason)
+      if(primaryTransport && !established){
+        clearTimeout(this.fallbackTimer)
+        fallback(reason)
+      }
+    })
+    this.onOpen(() => {
+      established = true
+      if(!primaryTransport){
+        // only memorize LP if we never connected to primary
+        if(!this.primaryPassedHealthCheck){ this.storeSession(`phx:fallback:${fallbackTransport.name}`, "true") }
+        return this.log("transport", `established ${fallbackTransport.name} fallback`)
+      }
+      // if we've established primary, give the fallback a new period to attempt ping
+      clearTimeout(this.fallbackTimer)
+      this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
+      this.ping(rtt => {
+        this.log("transport", "connected to primary after", rtt)
+        this.primaryPassedHealthCheck = true
+        clearTimeout(this.fallbackTimer)
+      })
+    })
+    this.transportConnect()
+  }
+
+  clearHeartbeats(){
+    clearTimeout(this.heartbeatTimer)
+    clearTimeout(this.heartbeatTimeoutTimer)
+  }
+
   onConnOpen(){
-    if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
+    if(this.hasLogger()) this.log("transport", `${this.transport.name} connected to ${this.endPointURL()}`)
     this.closeWasClean = false
     this.establishedConnections++
     this.flushSendBuffer()
@@ -335,15 +423,17 @@ export default class Socket {
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
       if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
-      this.abnormalClose("heartbeat timeout")
+      this.triggerChanError()
+      this.closeWasClean = false
+      this.teardown(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout")
     }
   }
 
   resetHeartbeat(){
     if(this.conn && this.conn.skipHeartbeat){ return }
     this.pendingHeartbeatRef = null
-    clearTimeout(this.heartbeatTimer)
-    setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+    this.clearHeartbeats()
+    this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
   }
 
   teardown(callback, code, reason){
@@ -358,6 +448,9 @@ export default class Socket {
 
       this.waitForSocketClosed(() => {
         if(this.conn){
+          this.conn.onopen = function (){ } // noop
+          this.conn.onerror = function (){ } // noop
+          this.conn.onmessage = function (){ } // noop
           this.conn.onclose = function (){ } // noop
           this.conn = null
         }
@@ -393,7 +486,7 @@ export default class Socket {
     let closeCode = event && event.code
     if(this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
-    clearTimeout(this.heartbeatTimer)
+    this.clearHeartbeats()
     if(!this.closeWasClean && closeCode !== 1000){
       this.reconnectTimer.scheduleTimeout()
     }
@@ -450,7 +543,7 @@ export default class Socket {
    */
   remove(channel){
     this.off(channel.stateChangeRefs)
-    this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
+    this.channels = this.channels.filter(c => c !== channel)
   }
 
   /**
@@ -511,12 +604,7 @@ export default class Socket {
     if(this.pendingHeartbeatRef && !this.isConnected()){ return }
     this.pendingHeartbeatRef = this.makeRef()
     this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef})
-    this.heartbeatTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs)
-  }
-
-  abnormalClose(reason){
-    this.closeWasClean = false
-    if(this.isConnected()){ this.conn.close(WS_CLOSE_NORMAL, reason) }
+    this.heartbeatTimeoutTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs)
   }
 
   flushSendBuffer(){
@@ -530,9 +618,9 @@ export default class Socket {
     this.decode(rawMessage.data, msg => {
       let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){
-        clearTimeout(this.heartbeatTimer)
+        this.clearHeartbeats()
         this.pendingHeartbeatRef = null
-        setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+        this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
       }
 
       if(this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)

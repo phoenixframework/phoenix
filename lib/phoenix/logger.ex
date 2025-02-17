@@ -58,6 +58,11 @@ defmodule Phoenix.Logger do
       * Metadata: `%{endpoint: atom, transport: atom, params: term, connect_info: map, vsn: binary, user_socket: atom, result: :ok | :error, serializer: atom, log: Logger.level | false}`
       * Disable logging: `use Phoenix.Socket, log: false` or `socket "/foo", MySocket, websocket: [log: false]` in your endpoint
 
+    * `[:phoenix, :socket_drain]` - dispatched by `Phoenix.Socket` when using the `:drainer` option
+      * Measurement: `%{count: integer, total: integer, index: integer, rounds: integer}`
+      * Metadata: `%{endpoint: atom, socket: atom, intervasl: integer, log: Logger.level | false}`
+      * Disable logging: `use Phoenix.Socket, log: false` in your endpoint or pass `:log` option in the `:drainer` option
+
     * `[:phoenix, :channel_joined]` - dispatched at the end of a channel join
       * Measurement: `%{duration: native_time}`
       * Metadata: `%{result: :ok | :error, params: term, socket: Phoenix.Socket.t}`
@@ -134,6 +139,7 @@ defmodule Phoenix.Logger do
       [:phoenix, :router_dispatch, :start] => &__MODULE__.phoenix_router_dispatch_start/4,
       [:phoenix, :error_rendered] => &__MODULE__.phoenix_error_rendered/4,
       [:phoenix, :socket_connected] => &__MODULE__.phoenix_socket_connected/4,
+      [:phoenix, :socket_drain] => &__MODULE__.phoenix_socket_drain/4,
       [:phoenix, :channel_joined] => &__MODULE__.phoenix_channel_joined/4,
       [:phoenix, :channel_handled_in] => &__MODULE__.phoenix_channel_handled_in/4
     }
@@ -230,7 +236,7 @@ defmodule Phoenix.Logger do
       level ->
         Logger.log(level, fn ->
           %{status: status, state: state} = conn
-          status = Integer.to_string(status)
+          status = status_to_string(status)
           [connection_type(state), ?\s, status, " in ", duration(duration)]
         end)
     end
@@ -252,10 +258,14 @@ defmodule Phoenix.Logger do
         ?\s,
         error_banner(kind, reason),
         " to ",
-        Integer.to_string(status),
+        status_to_string(status),
         " response"
       ]
     end)
+  end
+
+  defp status_to_string(status) do
+    status |> Plug.Conn.Status.code() |> Integer.to_string()
   end
 
   defp error_banner(:error, %type{}), do: inspect(type)
@@ -269,7 +279,6 @@ defmodule Phoenix.Logger do
   def phoenix_router_dispatch_start(_, _, metadata, _) do
     %{log: level, conn: conn, plug: plug} = metadata
     level = log_level(level, conn)
-    log_module = metadata[:log_module] || plug
 
     Logger.log(level, fn ->
       %{
@@ -277,10 +286,16 @@ defmodule Phoenix.Logger do
         plug_opts: plug_opts
       } = metadata
 
+      log_mfa =
+        case metadata[:mfa] do
+          {mod, fun, arity} -> mfa(mod, fun, arity)
+          _ when is_atom(plug_opts) -> mfa(plug, plug_opts, 2)
+          _ -> inspect(plug)
+        end
+
       [
         "Processing with ",
-        inspect(log_module),
-        maybe_action(plug_opts),
+        log_mfa,
         ?\n,
         "  Parameters: ",
         params(conn.params),
@@ -291,8 +306,8 @@ defmodule Phoenix.Logger do
     end)
   end
 
-  defp maybe_action(action) when is_atom(action), do: [?., Atom.to_string(action), ?/, ?2]
-  defp maybe_action(_), do: []
+  defp mfa(mod, fun, arity),
+    do: [inspect(mod), ?., Atom.to_string(fun), ?/, arity + ?0]
 
   defp params(%Plug.Conn.Unfetched{}), do: "[UNFETCHED]"
   defp params(params), do: params |> filter_values() |> inspect()
@@ -329,6 +344,22 @@ defmodule Phoenix.Logger do
 
   defp connect_result(:ok), do: "CONNECTED TO "
   defp connect_result(:error), do: "REFUSED CONNECTION TO "
+
+  @doc false
+  def phoenix_socket_drain(_, _, %{log: false}, _), do: :ok
+
+  def phoenix_socket_drain(_, %{count: count, total: total, index: index, rounds: rounds}, %{log: level} = meta, _) do
+    Logger.log(level, fn ->
+      %{socket: socket, interval: interval} = meta
+
+      [
+        "DRAINING #{count} of #{total} total connection(s) for socket ",
+        inspect(socket),
+        " every #{interval}ms - ",
+        "round #{index} of #{rounds}"
+      ]
+    end)
+  end
 
   ## Event: [:phoenix, :channel_joined]
 
