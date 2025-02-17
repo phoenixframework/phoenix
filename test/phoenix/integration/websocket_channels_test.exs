@@ -121,6 +121,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         |> Map.update!(:trace_context_headers, &Map.new/1)
         |> Map.update!(:uri, &Map.from_struct/1)
         |> Map.update!(:x_headers, &Map.new/1)
+        |> Map.update!(:sec_websocket_headers, &Map.new/1)
 
       socket =
         socket
@@ -191,8 +192,9 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
           :peer_data,
           :uri,
           :user_agent,
+          :sec_websocket_headers,
           session: @session_config,
-          signing_salt: "salt"
+          signing_salt: "salt",
         ]
       ]
 
@@ -325,6 +327,35 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
           assert_receive %Message{
             event: "joined",
             payload: %{"connect_info" => %{"x_headers" => %{"x-application" => "Phoenix"}}}
+          }
+        end
+
+        test "transport sec-websocket-* headers are extracted to the socket connect_info" do
+          extra_headers = [
+            {"sec-websocket-protocol", "phoenix, 123"},
+            {"sec-websocket-extensions", "permessage-deflate; client_max_window_bits=15"}
+          ]
+
+          {:ok, sock} =
+            WebsocketClient.connect(
+              self(),
+              "ws://127.0.0.1:#{@port}/ws/connect_info/websocket?vsn=#{@vsn}",
+              @serializer,
+              extra_headers
+            )
+
+          WebsocketClient.join(sock, lobby(), %{})
+
+          assert_receive %Message{
+            event: "joined",
+            payload: %{
+              "connect_info" => %{
+                "sec_websocket_headers" => %{
+                  "sec-websocket-protocol" => "phoenix, 123",
+                  "sec-websocket-extensions" => "permessage-deflate; client_max_window_bits=15"
+                }
+              }
+            }
           }
         end
 
