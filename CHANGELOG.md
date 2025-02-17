@@ -50,6 +50,10 @@ future styling).
 
 ### Enhancements
   * Add `[:phoenix, :socket_drain]` telemetry event to track socket draining and use it for logging
+  * Address Elixir 1.18 warnings in phx.new
+
+### Bug fixes
+  * Fix code reloader error when `mix.lock` is touched without its content changing
 
 ## 1.7.19 (2025-01-31)
 
