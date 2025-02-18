@@ -2,11 +2,9 @@
   <%= schema.human_singular %> {@<%= schema.singular %>.id}
   <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
   <:actions>
-    <.button phx-click={JS.dispatch("click", to: {:inner, "a"})}>
-      <.link href={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
-        Edit <%= schema.singular %>
-      </.link>
-    </.button>
+    <.link class={button_classes()} href={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
+      Edit <%= schema.singular %>
+    </.link>
   </:actions>
 </.header>
 
