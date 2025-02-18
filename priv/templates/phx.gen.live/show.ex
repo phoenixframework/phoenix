@@ -10,9 +10,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <%= schema.human_singular %> {@<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>}
       <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
       <:actions>
-        <.link_button navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
+        <.link class={button_classes()} navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
           Edit <%= schema.singular %>
-        </.link_button>
+        </.link>
       </:actions>
     </.header>
 

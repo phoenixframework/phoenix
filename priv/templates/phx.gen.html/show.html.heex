@@ -2,9 +2,9 @@
   <%= schema.human_singular %> {@<%= schema.singular %>.id}
   <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
   <:actions>
-    <.link_button href={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
+    <.link class={button_classes()} href={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
       Edit <%= schema.singular %>
-    </.link_button>
+    </.link>
   </:actions>
 </.header>
 

@@ -1,9 +1,9 @@
 <.header>
   Listing <%= schema.human_plural %>
   <:actions>
-    <.link_button href={~p"<%= schema.route_prefix %>/new"}>
+    <.link class={button_classes()} href={~p"<%= schema.route_prefix %>/new"}>
       New <%= schema.human_singular %>
-    </.link_button>
+    </.link>
   </:actions>
 </.header>
 
