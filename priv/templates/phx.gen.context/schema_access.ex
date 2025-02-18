@@ -28,7 +28,7 @@
       ** (Ecto.NoResultsError)
 
   """
-  def get_<%= schema.singular %>!(id), do: Repo.get!(<%= inspect schema.alias %>, id)
+  def get_<%= schema.singular %>!(<%= primary_key %>), do: Repo.get!(<%= inspect schema.alias %>, <%= primary_key %>)
 
   @doc """
   Creates a <%= schema.singular %>.

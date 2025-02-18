@@ -20,21 +20,21 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
+  def show(conn, %{"<%= primary_key %>" => <%= primary_key %>}) do
+    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= primary_key %>)
     render(conn, :show, <%= schema.singular %>: <%= schema.singular %>)
   end
 
-  def update(conn, %{"id" => id, <%= inspect schema.singular %> => <%= schema.singular %>_params}) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
+  def update(conn, %{"<%= primary_key %>" => <%= primary_key %>, <%= inspect schema.singular %> => <%= schema.singular %>_params}) do
+    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= primary_key %>)
 
     with {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} <- <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params) do
       render(conn, :show, <%= schema.singular %>: <%= schema.singular %>)
     end
   end
 
-  def delete(conn, %{"id" => id}) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
+  def delete(conn, %{"<%= primary_key %>" => <%= primary_key %>}) do
+    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= primary_key %>)
 
     with {:ok, %<%= inspect schema.alias %>{}} <- <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>) do
       send_resp(conn, :no_content, "")

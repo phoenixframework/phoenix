@@ -354,4 +354,24 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       :code.delete(module)
     end)
   end
+
+  test "with custom primary key", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Json.run(~w(Blog Post posts title:string --primary-key post_id))
+
+      assert_file "lib/phoenix_web/controllers/post_controller.ex", fn file ->
+        refute file =~ ~s[%{"id" =>]
+        assert file =~ ~s[%{"post_id" =>]
+        assert file =~ "Blog.get_post!(post_id)"
+      end
+
+      assert_file "lib/phoenix_web/controllers/post_json.ex", fn file ->
+        assert file =~ "post_id: post.post_id,"
+      end
+
+      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+        assert file =~ ~s["post_id" => ^post_id,]
+      end
+    end)
+  end
 end

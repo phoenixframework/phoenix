@@ -74,6 +74,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
       assert_file "lib/phoenix_web/live/post_live/index.ex", fn file ->
         assert file =~ "defmodule PhoenixWeb.PostLive.Index"
+        refute file =~ "dom_id:"
       end
 
       assert_file "lib/phoenix_web/live/post_live/show.ex", fn file ->
@@ -430,6 +431,29 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert_file "test/phoenix/live/user_live_test.exs", fn file ->
           assert file =~ "defmodule Phoenix.UserLiveTest"
         end
+      end
+    end
+  end
+
+  test "with custom primary key", config do
+    in_tmp_live_project config.test, fn ->
+      Gen.Live.run(~w(Blog Post posts title:string --primary-key post_id))
+
+      assert_file "lib/phoenix_web/live/post_live/index.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.PostLive.Index"
+        assert file =~ ~S[dom_id: &"posts-#{&1.post_id}"]
+        assert file =~ ~s[JS.push("delete", value: %{post_id: post.post_id})]
+      end
+
+      assert_file "lib/phoenix_web/live/post_live/show.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.PostLive.Show"
+        assert file =~ ~s[def mount(%{"post_id" => post_id}, _session, socket)]
+        assert file =~ "Blog.get_post!(post_id)"
+      end
+
+      assert_file "lib/phoenix_web/live/post_live/form.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.PostLive.Form"
+        assert file =~ ~s[defp apply_action(socket, :edit, %{"post_id" => post_id}) do]
       end
     end
   end
