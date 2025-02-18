@@ -40,7 +40,7 @@ defmodule <%= @web_namespace %> do
     quote do
       use Phoenix.Controller,
         formats: [:html, :json],
-        layouts: [html: <%= @web_namespace %>.Layouts]<%= if @gettext do %>
+        layouts: [html: {<%= @web_namespace %>.Layouts, :app}]<%= if @gettext do %>
 
       use Gettext, backend: <%= @web_namespace %>.Gettext<% end %>
 
