@@ -367,6 +367,14 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     end)
   end
 
+  test "generates schema with no migration option", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Context.run(~w(Blog Post posts title:string --no-migration))
+
+      assert Path.wildcard("priv/repo/migrations/*") == []
+    end)
+  end
+
   test "generates context with no schema and repo option", config do
     in_tmp_project(config.test, fn ->
       Gen.Context.run(~w(Blog Post posts title:string --no-schema --repo=Foo.RepoX))
