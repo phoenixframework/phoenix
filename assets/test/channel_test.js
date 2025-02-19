@@ -7,7 +7,10 @@ const defaultRef = 1
 const defaultTimeout = 10000
 
 class WSMock {
-  constructor(){}
+  constructor(url, protocols){
+    this.url = url
+    this.protocols = protocols
+  }
   close(){}
   send(){}
 }
@@ -57,6 +60,14 @@ describe("with transport", function (){
       expect(joinPush.payload()).toEqual({one: "two"})
       expect(joinPush.event).toBe("phx_join")
       expect(joinPush.timeout).toBe(1234)
+    })
+
+    it("sets subprotocols when authToken is provided", function (){
+      const authToken = "1234"
+      const socket = new Socket("/socket", {authToken})
+      
+      socket.connect()
+      expect(socket.conn.protocols).toEqual(["phoenix", "base64url.bearer.phx.MTIzNA"])
     })
   })
 

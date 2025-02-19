@@ -708,7 +708,8 @@ defmodule Phoenix.Endpoint do
       :check_origin,
       :check_csrf,
       :code_reloader,
-      :connect_info
+      :connect_info,
+      :auth_token
     ]
 
     websocket =
@@ -740,6 +741,7 @@ defmodule Phoenix.Endpoint do
 
     paths =
       if websocket do
+        websocket = put_auth_token(websocket, opts[:auth_token])
         config = Phoenix.Socket.Transport.load_config(websocket, Phoenix.Transports.WebSocket)
         plug_init = {endpoint, socket, config}
         {conn_ast, match_path} = socket_path(path, config)
@@ -750,6 +752,7 @@ defmodule Phoenix.Endpoint do
 
     paths =
       if longpoll do
+        longpoll = put_auth_token(longpoll, opts[:auth_token])
         config = Phoenix.Socket.Transport.load_config(longpoll, Phoenix.Transports.LongPoll)
         plug_init = {endpoint, socket, config}
         {conn_ast, match_path} = socket_path(path, config)
@@ -760,6 +763,9 @@ defmodule Phoenix.Endpoint do
 
     paths
   end
+
+  defp put_auth_token(true, enabled), do: [auth_token: enabled]
+  defp put_auth_token(opts, enabled), do: Keyword.put(opts, :auth_token, enabled)
 
   defp socket_path(path, config) do
     end_path_fragment = Keyword.fetch!(config, :path)
@@ -843,6 +849,16 @@ defmodule Phoenix.Endpoint do
       accordingly. Finally, after the socket drainer runs, the lower level
       HTTP/HTTPS connection drainer will still run, and apply to all connections.
       Set it to `false` to disable draining.
+
+    * `auth_token` - a boolean that enables the use of the channels client's auth_token option.
+      The exact token exchange mechanism depends on the transport:
+
+        * the websocket transport, this enables a token to be passed through the `Sec-WebSocket-Protocol` header.
+        * the longpoll transport, this allows the token to be passed through the `Authorization` header.
+
+      The token is available in the `connect_info` as `:auth_token`.
+
+      Custom transports might implement their own mechanism.
 
   You can also pass the options below on `use Phoenix.Socket`.
   The values specified here override the value in `use Phoenix.Socket`.

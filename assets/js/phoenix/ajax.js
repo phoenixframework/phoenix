@@ -5,13 +5,13 @@ import {
 
 export default class Ajax {
 
-  static request(method, endPoint, accept, body, timeout, ontimeout, callback){
+  static request(method, endPoint, headers, body, timeout, ontimeout, callback){
     if(global.XDomainRequest){
       let req = new global.XDomainRequest() // IE8, IE9
       return this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
     } else {
       let req = new global.XMLHttpRequest() // IE7+, Firefox, Chrome, Opera, Safari
-      return this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
+      return this.xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback)
     }
   }
 
@@ -31,10 +31,12 @@ export default class Ajax {
     return req
   }
 
-  static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback){
+  static xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback){
     req.open(method, endPoint, true)
     req.timeout = timeout
-    req.setRequestHeader("Content-Type", accept)
+    for (let [key, value] of Object.entries(headers)) {
+      req.setRequestHeader(key, value)
+    }
     req.onerror = () => callback && callback(null)
     req.onreadystatechange = () => {
       if(req.readyState === XHR_STATES.complete && callback){
