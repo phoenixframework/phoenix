@@ -543,12 +543,12 @@ defmodule Phoenix.Controller do
 
   def put_view(%Plug.Conn{} = conn, module) do
     raise(AlreadySentError, """
-      The response was already sent.
+      the response was already sent.
 
-          Status code: `#{conn.status}`
-          Request path: `#{conn.request_path}`
-          Method: `#{conn.method}`
-          View module: `#{inspect(module)}`
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          View module: #{inspect(module)}
       """)
   end
 
@@ -589,12 +589,12 @@ defmodule Phoenix.Controller do
 
   def put_new_view(%Plug.Conn{} = conn, module) do
     raise(AlreadySentError, """
-      The response was already sent.
+      the response was already sent.
 
-          Status code: `#{conn.status}`
-          Request path: `#{conn.request_path}`
-          Method: `#{conn.method}`
-          View module: `#{inspect(module)}`
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          View module: #{inspect(module)}
       """)
   end
 
@@ -661,12 +661,12 @@ defmodule Phoenix.Controller do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
     else
       raise AlreadySentError, """
-      The response was already sent.
+      the response was already sent.
 
-          Status code: `#{conn.status}`
-          Request path: `#{conn.request_path}`
-          Method: `#{conn.method}`
-          Layout: `#{inspect(layout)}`
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          Layout: #{inspect(layout)}
       """
     end
   end
@@ -745,12 +745,12 @@ defmodule Phoenix.Controller do
       when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
     unless state in @unsent do
       raise(AlreadySentError, """
-      The response was already sent.
+      the response was already sent.
 
-          Status code: `#{conn.status}`
-          Request path: `#{conn.request_path}`
-          Method: `#{conn.method}`
-          Layout: `#{inspect(layout)}`
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          Layout: #{inspect(layout)}
       """)
     end
     put_private_layout(conn, :phoenix_layout, :new, layout)
@@ -794,12 +794,12 @@ defmodule Phoenix.Controller do
       put_private_layout(conn, :phoenix_root_layout, :replace, layout)
     else
       raise AlreadySentError, """
-      The response was already sent.
+      the response was already sent.
 
-          Status code: `#{conn.status}`
-          Request path: `#{conn.request_path}`
-          Method: `#{conn.method}`
-          Layout: `#{inspect(layout)}`
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          Layout: #{inspect(layout)}
       """
     end
   end
@@ -827,11 +827,11 @@ defmodule Phoenix.Controller do
 
   def put_layout_formats(%Plug.Conn{} = conn, _formats) do
     raise(AlreadySentError, """
-      The response was already sent.
+      the response was already sent.
 
-          Status code: `#{conn.status}`
-          Request path: `#{conn.request_path}`
-          Method: `#{conn.method}`
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
       """)
   end
 
