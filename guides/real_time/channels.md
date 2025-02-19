@@ -387,14 +387,14 @@ When we connect, we'll often need to authenticate the client. Fortunately, this 
 
 ### Step 1 - Enable the `auth_token` functionality in the socket
 
-Phoenix supports a transport agnostic way to pass an authentication token to the server. To enable this, we need to pass the `:auth_token` option to the socket declaration in our `Endpoint` module and configure the `connect_info` to include the `:auth_token` key.
+Phoenix supports a transport agnostic way to pass an authentication token to the server. To enable this, we need to pass the `:auth_token` option to the socket declaration in our `Endpoint` module.
 
 ```elixir
 defmodule HelloWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :hello
 
   socket "/socket", HelloWeb.UserSocket,
-    websocket: [connect_info: [:auth_token]],
+    websocket: true,
     longpoll: false,
     auth_token: true
 
