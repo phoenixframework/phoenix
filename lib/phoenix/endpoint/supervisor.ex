@@ -191,17 +191,6 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   @doc """
-  The endpoint configuration used at compile time.
-  """
-  def config(otp_app, endpoint) do
-    config(otp_app, endpoint, defaults(otp_app, endpoint))
-  end
-
-  defp config(otp_app, endpoint, defaults) do
-    Phoenix.Config.from_env(otp_app, endpoint, defaults)
-  end
-
-  @doc """
   Checks if Endpoint's web server has been configured to start.
   """
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
