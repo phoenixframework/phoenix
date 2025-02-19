@@ -16,13 +16,13 @@ If you want to import JavaScript dependencies, you have at least three options t
 
 1. Vendor those dependencies inside your project and import them in your "assets/js/app.js" using a relative path:
 
-   ```js
+   ```javascript
    import topbar from "../vendor/topbar"
    ```
 
 2. Call `npm install topbar --prefix assets` will create `package.json` and `package-lock.json` inside your assets directory and `esbuild` will be able to automatically pick them up:
 
-   ```js
+   ```javascript
    import topbar from "topbar"
    ```
 
@@ -35,7 +35,7 @@ If you want to import JavaScript dependencies, you have at least three options t
 
    Run `mix deps.get` to fetch the dependency and then import it:
 
-   ```js
+   ```javascript
    import topbar from "topbar"
    ```
 
@@ -67,7 +67,7 @@ error: Could not resolve "/images/bg.png" (mark it as external to exclude it fro
 Given the images are already managed by Phoenix, you need to mark all resources from `/images` (and also `/fonts`) as external, as the error message says. This is what Phoenix does by default for new apps since v1.6.1+. In your `config/config.exs`, you will find:
 
 ```elixir
-args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+args: ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
 ```
 
 If you need to reference other directories, you need to update the arguments above accordingly. Note running `mix phx.digest` will create digested files for all of the assets in `priv/static`, so your images and fonts are still cache-busted.
@@ -94,7 +94,7 @@ $ yarn add ../deps/phoenix ../deps/phoenix_html ../deps/phoenix_live_view
 
 Next, add a custom JavaScript build script. We'll call the example `assets/build.js`:
 
-```js
+```javascript
 const esbuild = require("esbuild");
 
 const args = process.argv.slice(2);
@@ -114,7 +114,7 @@ let opts = {
   entryPoints: ["js/app.js"],
   bundle: true,
   logLevel: "info",
-  target: "es2017",
+  target: "es2022",
   outdir: "../priv/static/assets",
   external: ["*.css", "fonts/*", "images/*"],
   nodePaths: ["../deps"],

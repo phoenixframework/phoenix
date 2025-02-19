@@ -668,7 +668,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
                            <%= if @current_user do %>
                              <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                               <%= @current_user.email %>
+                               {@current_user.email}
                              </li>
                              <li>
                                <.link
@@ -762,7 +762,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                          <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
                            <%= if @current_user do %>\r
                              <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
-                               <%= @current_user.email %>\r
+                               {@current_user.email}\r
                              </li>\r
                              <li>\r
                                <.link\r
@@ -819,9 +819,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
         </head>
         <body>
           <main class="container">
-            <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>
-            <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>
-            <%= @inner_content %>
+            <p class="alert alert-info" role="alert">{Phoenix.Flash.get(@conn, :info)}</p>
+            <p class="alert alert-danger" role="alert">{Phoenix.Flash.get(@conn, :error)}</p>
+            {@inner_content}
           </main>
         </body>
       </html>
@@ -840,7 +840,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
                      <%= if @current_user do %>
                        <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                         <%= @current_user.email %>
+                         {@current_user.email}
                        </li>
                        <li>
                          <.link
@@ -879,9 +879,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                      <% end %>
                    </ul>
                    <main class="container">
-                     <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>
-                     <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>
-                     <%= @inner_content %>
+                     <p class="alert alert-info" role="alert">{Phoenix.Flash.get(@conn, :info)}</p>
+                     <p class="alert alert-danger" role="alert">{Phoenix.Flash.get(@conn, :error)}</p>
+                     {@inner_content}
                    </main>
                  </body>
                </html>
@@ -899,9 +899,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
         </head>\r
         <body>\r
           <main class="container">\r
-            <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>\r
-            <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>\r
-            <%= @inner_content %>\r
+            <p class="alert alert-info" role="alert">{Phoenix.Flash.get(@conn, :info)}</p>\r
+            <p class="alert alert-danger" role="alert">{Phoenix.Flash.get(@conn, :error)}</p>\r
+            {@inner_content}\r
           </main>\r
         </body>\r
       </html>\r
@@ -920,7 +920,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
                      <%= if @current_user do %>\r
                        <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
-                         <%= @current_user.email %>\r
+                         {@current_user.email}\r
                        </li>\r
                        <li>\r
                          <.link\r
@@ -959,9 +959,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                      <% end %>\r
                    </ul>\r
                    <main class="container">\r
-                     <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>\r
-                     <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>\r
-                     <%= @inner_content %>\r
+                     <p class="alert alert-info" role="alert">{Phoenix.Flash.get(@conn, :info)}</p>\r
+                     <p class="alert alert-danger" role="alert">{Phoenix.Flash.get(@conn, :error)}</p>\r
+                     {@inner_content}\r
                    </main>\r
                  </body>\r
                </html>\r
@@ -981,7 +981,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
           <div class="my-header">
             <ul>
               <%= if @current_user do %>
-                <li><%= @current_user.email %></li>
+                <li>{@current_user.email}</li>
                 <li><.link href={~p"/users/settings"}>Settings</.link></li>
                 <li><.link href={~p"/users/log-out"} method="delete">Log out</.link></li>
               <% else %>
@@ -991,9 +991,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
             </ul>
           </div>
           <main class="container">
-            <p class="alert alert-info" role="alert"><%= Phoenix.Flash.get(@conn, :info) %></p>
-            <p class="alert alert-danger" role="alert"><%= Phoenix.Flash.get(@conn, :error) %></p>
-            <%= @inner_content %>
+            <p class="alert alert-info" role="alert">{Phoenix.Flash.get(@conn, :info)}</p>
+            <p class="alert alert-danger" role="alert">{Phoenix.Flash.get(@conn, :error)}</p>
+            {@inner_content}
           </main>
         </body>
       </html>

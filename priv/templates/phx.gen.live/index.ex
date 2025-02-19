@@ -9,11 +9,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <.header>
       Listing <%= schema.human_plural %>
       <:actions>
-        <.button phx-click={JS.dispatch("click", to: {:inner, "a"})}>
-          <.link navigate={~p"<%= schema.route_prefix %>/new"}>
-            New <%= schema.human_singular %>
-          </.link>
-        </.button>
+        <.link class={button_classes()} navigate={~p"<%= schema.route_prefix %>/new"}>
+          New <%= schema.human_singular %>
+        </.link>
       </:actions>
     </.header>
 
@@ -22,7 +20,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       rows={@streams.<%= schema.collection %>}
       row_click={fn {_id, <%= schema.singular %>} -> JS.navigate(~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}") end}
     ><%= for {k, _} <- schema.attrs do %>
-      <:col :let={{_id, <%= schema.singular %>}} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%%= <%= schema.singular %>.<%= k %> %></:col><% end %>
+      <:col :let={{_id, <%= schema.singular %>}} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{<%= schema.singular %>.<%= k %>}</:col><% end %>
       <:action :let={{_id, <%= schema.singular %>}}>
         <div class="sr-only">
           <.link navigate={~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>

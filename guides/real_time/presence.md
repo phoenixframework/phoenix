@@ -217,7 +217,7 @@ defmodule HelloWeb.OnlineLive do
   def render(assigns) do
     ~H"""
     <ul id="online_users" phx-update="stream">
-      <li :for={{dom_id, %{id: id, metas: metas}} <- @streams.presences} id={dom_id}><%= id %> (<%= length(metas) %>)</li>
+      <li :for={{dom_id, %{id: id, metas: metas}} <- @streams.presences} id={dom_id}>{id} ({length(metas)})</li>
     </ul>
     """
   end

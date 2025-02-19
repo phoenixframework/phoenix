@@ -46,20 +46,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
       role="alert"
       class={[
         "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
-        @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
+        @kind == :info && "bg-sky-50 text-sky-800 shadow-md ring-sky-500 fill-sky-900",
         @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
       ]}
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        <%%= @title %>
-      </p>
-      <p class="mt-2 text-sm leading-5"><%%= msg %></p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
-      </button>
+      <div class="flex gap-2">
+        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-5 w-5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-5 w-5 shrink-0" />
+        <div class="text-sm leading-5">
+          <p :if={@title} class="font-semibold">{@title}</p>
+          <p>{msg}</p>
+        </div>
+        <div class="flex-1" />
+        <button type="button" class="group flex self-start" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
+          <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
+        </button>
+      </div>
     </div>
     """
   end
@@ -77,8 +80,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def flash_group(assigns) do
     ~H"""
     <div id={@id} aria-live="polite">
-      <.flash kind={:info} title=<%= maybe_heex_attr_gettext.("Success!", @gettext) %> flash={@flash} />
-      <.flash kind={:error} title=<%= maybe_heex_attr_gettext.("Error!", @gettext) %> flash={@flash} />
+      <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
       <.flash
         id="client-error"
         kind={:error}
@@ -135,9 +138,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <.form :let={f} for={@for} {@as} {@rest}>
       <div class="mt-10 space-y-8 bg-white">
-        <%%= render_slot(@inner_block, f) %>
+        {render_slot(@inner_block, f)}
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
-          <%%= render_slot(action, f) %>
+          {render_slot(action, f)}
         </div>
       </div>
     </.form>
@@ -160,18 +163,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def button(assigns) do
     ~H"""
-    <button
-      type={@type}
-      class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
-        @class
-      ]}
-      {@rest}
-    >
-      <%%= render_slot(@inner_block) %>
+    <button type={@type} class={[button_classes(), @class]} {@rest}>
+      {render_slot(@inner_block)}
     </button>
     """
+  end
+
+  @doc """
+  Returns the default button classes.
+
+  ## Examples
+
+      <.link class={button_classes()} href={~p"/items/new"}>
+        New Item
+      </.link>
+  """
+  def button_classes do
+    "inline-block phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3 text-sm font-semibold leading-6 text-white active:text-white/80"
   end
 
   @doc """
@@ -253,9 +261,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
           class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
           {@rest}
         />
-        <%%= @label %>
+        {@label}
       </label>
-      <.error :for={msg <- @errors}><%%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -263,18 +271,22 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div>
-      <.label for={@id}><%%= @label %></.label>
+      <.label for={@id}>{@label}</.label>
       <select
         id={@id}
         name={@name}
-        class="mt-2 block w-full rounded-md border border-zinc-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class={[
+          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
+          @errors == [] && "border-zinc-300 focus:border-zinc-400",
+          @errors != [] && "border-rose-400 focus:border-rose-400"
+        ]}
         multiple={@multiple}
         {@rest}
       >
-        <option :if={@prompt} value=""><%%= @prompt %></option>
-        <%%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
+        <option :if={@prompt} value="">{@prompt}</option>
+        {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
-      <.error :for={msg <- @errors}><%%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -282,7 +294,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div>
-      <.label for={@id}><%%= @label %></.label>
+      <.label for={@id}>{@label}</.label>
       <textarea
         id={@id}
         name={@name}
@@ -292,8 +304,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
           @errors != [] && "border-rose-400 focus:border-rose-400"
         ]}
         {@rest}
-      ><%%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
-      <.error :for={msg <- @errors}><%%= msg %></.error>
+      >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -302,7 +314,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(assigns) do
     ~H"""
     <div>
-      <.label for={@id}><%%= @label %></.label>
+      <.label for={@id}>{@label}</.label>
       <input
         type={@type}
         name={@name}
@@ -315,7 +327,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         ]}
         {@rest}
       />
-      <.error :for={msg <- @errors}><%%= msg %></.error>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
@@ -329,7 +341,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def label(assigns) do
     ~H"""
     <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
-      <%%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </label>
     """
   end
@@ -343,7 +355,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <p class="mt-1.5 flex gap-1.5 text-sm leading-6 text-rose-600">
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
-      <%%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </p>
     """
   end
@@ -362,13 +374,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
         <h1 class="text-lg font-semibold leading-8 text-zinc-800">
-          <%%= render_slot(@inner_block) %>
+          {render_slot(@inner_block)}
         </h1>
         <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
-          <%%= render_slot(@subtitle) %>
+          {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none"><%%= render_slot(@actions) %></div>
+      <div class="flex-none">{render_slot(@actions)}</div>
     </header>
     """
   end
@@ -379,8 +391,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
   ## Examples
 
       <.table id="users" rows={@users}>
-        <:col :let={user} label="id"><%%= user.id %></:col>
-        <:col :let={user} label="username"><%%= user.username %></:col>
+        <:col :let={user} label="id">{user.id}</:col>
+        <:col :let={user} label="username">{user.username}</:col>
       </.table>
   """
   attr :id, :string, required: true
@@ -409,7 +421,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <table class="w-[40rem] mt-11 sm:w-full">
         <thead class="text-sm text-left leading-6 text-zinc-500">
           <tr>
-            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col[:label] %></th>
+            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal">{col[:label]}</th>
             <th :if={@action != []} class="relative p-0 pb-4">
               <span class="sr-only"><%= maybe_eex_gettext.("Actions", @gettext) %></span>
             </th>
@@ -429,7 +441,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
               <div class="block py-4 pr-6">
                 <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
                 <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
-                  <%%= render_slot(col, @row_item.(row)) %>
+                  {render_slot(col, @row_item.(row))}
                 </span>
               </div>
             </td>
@@ -440,7 +452,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
                 >
-                  <%%= render_slot(action, @row_item.(row)) %>
+                  {render_slot(action, @row_item.(row))}
                 </span>
               </div>
             </td>
@@ -457,8 +469,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
   ## Examples
 
       <.list>
-        <:item title="Title"><%%= @post.title %></:item>
-        <:item title="Views"><%%= @post.views %></:item>
+        <:item title="Title">{@post.title}</:item>
+        <:item title="Views">{@post.views}</:item>
       </.list>
   """
   slot :item, required: true do
@@ -470,8 +482,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
     <div class="mt-14">
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt class="w-1/4 flex-none text-zinc-500"><%%= item.title %></dt>
-          <dd class="text-zinc-700"><%%= render_slot(item) %></dd>
+          <dt class="w-1/4 flex-none text-zinc-500">{item.title}</dt>
+          <dd class="text-zinc-700">{render_slot(item)}</dd>
         </div>
       </dl>
     </div>
@@ -496,7 +508,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
       >
         <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
-        <%%= render_slot(@inner_block) %>
+        {render_slot(@inner_block)}
       </.link>
     </div>
     """

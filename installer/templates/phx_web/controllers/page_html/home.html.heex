@@ -37,7 +37,76 @@
       fill="#A41C42"
       fill-opacity=".2"
     />
-  </svg>
+  </svg><%= if @from_elixir_install do %>
+  <div class="sm:py-28 xl:py-32">
+    <div class="relative px-8">
+      <div class="relative space-y-6 bg-black/50 px-6 pt-1 pb-6 rounded-xl">
+        <span class="flex absolute h-6 w-6 -top-1 -left-2 -mt-1 -mr-1">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white">
+          </span>
+          <span class="relative inline-flex rounded-full h-6 w-6 bg-white/80"></span>
+        </span>
+        <h2 class="text-4xl text-white font-semibold">
+          Finish your Elixir setup!
+        </h2>
+        <p class="text-lg text-gray-300"><%= if match?({:win32, _}, :os.type()) do %>
+          Elixir has been installed to
+          <code class="text-[1rem] px-2 py-1 rounded-md bg-black/50">
+            %USERPROFILE%\.elixir-install
+          </code>
+          and activated in your current shell. <br />
+          <br /> Add to your
+          <code class="text-[1rem] px-2 py-1 rounded-md bg-black/50">%PROFILE</code>
+          or similar to ensure it is always activated:<% else %>
+          Elixir has been installed to
+          <code class="text-[1rem] px-2 py-1 rounded-md bg-black/50">~/.elixir-install</code>
+          and activated in your current shell. <br />
+          <br /> Add to your
+          <code class="text-[1rem] px-2 py-1 rounded-md bg-black/50">~/.bashrc</code>
+          or similar to ensure it is always activated:<% end %>
+        </p>
+        <div class="relative text-md text-gray-300 p-2 rounded-md bg-black/50">
+          <button
+            class="absolute -right-2 -top-2 p-1 bg-white/70 hover:bg-white rounded-full"
+            onclick="navigator.clipboard.writeText(document.getElementById('setup-elixir').innerText)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-5 stroke-black/80"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"
+              />
+            </svg>
+          </button>
+          <%= if match?({:win32, _}, :os.type()) do %><code
+            id="setup-elixir"
+            class="block px-1 overflow-x-auto whitespace-pre"
+            phx-no-format
+          ># If you are using powershell, add:
+
+$env:PATH = "$env:USERPROFILE\<%= @elixir_install_otp_bin_path %>;$env:PATH"
+$env:PATH = "$env:USERPROFILE\<%= @elixir_install_bin_path %>;$env:PATH"
+
+# If you are using cmd, add:
+
+set PATH=%%USERPROFILE%%\<%= @elixir_install_otp_bin_path %>;%%PATH%%
+set PATH=%%USERPROFILE%%\<%= @elixir_install_bin_path %>;%%PATH%%</code><% else %><code
+            id="setup-elixir"
+            class="block px-1 overflow-x-auto whitespace-pre"
+            phx-no-format
+          >export PATH=$HOME/<%= @elixir_install_otp_bin_path %>:$PATH
+export PATH=$HOME/<%= @elixir_install_bin_path %>:$PATH</code><% end %>
+        </div>
+      </div>
+    </div>
+  </div><% end %>
 </div>
 <div class="px-4 py-10 sm:px-6 sm:py-28 lg:px-8 xl:px-28 xl:py-32">
   <div class="mx-auto max-w-xl lg:mx-0">
@@ -50,7 +119,7 @@
     <h1 class="text-brand mt-10 flex items-center text-sm font-semibold leading-6">
       Phoenix Framework
       <small class="bg-brand/5 text-[0.8125rem] ml-3 rounded-full px-2 font-medium leading-6">
-        v<%%= Application.spec(:phoenix, :vsn) %>
+        v{Application.spec(:phoenix, :vsn)}
       </small>
     </h1>
     <p class="text-[2rem] mt-4 font-semibold leading-10 tracking-tighter text-zinc-900 text-balance">

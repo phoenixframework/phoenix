@@ -34,7 +34,9 @@ The Security Working Group of the Erlang Ecosystem Foundation also publishes in-
 
 ## Screencasts/Courses
 
-  * [Free Bootcamp: Fullstack Elixir and Phoenix (by TechSchool - updated regularly)](https://techschool.dev/en/bootcamps/fullstack-elixir-and-phoenix)
+  * [Free Bootcamp: Fullstack Elixir and Phoenix (by TechSchool - 2024)](https://techschool.dev/en/bootcamps/fullstack-elixir-and-phoenix)
+
+  * [Learn Phoenix LiveView (by George Arrowsmith - 2024)](https://phoenixliveview.com)
 
   * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2023)](https://pragmaticstudio.com/courses/phoenix-liveview)
 

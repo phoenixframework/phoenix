@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
         assert file =~ "defmodule PhxBlogWeb.CoreComponents"
         assert file =~ ~S|aria-label={gettext("close")}|
-        assert file =~ ~S|<.flash kind={:info} title={gettext("Success!")} flash={@flash} />|
+        assert file =~ ~S|gettext("Attempting to reconnect")|
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
@@ -149,6 +149,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/config/dev.exs", fn file ->
         assert file =~ "esbuild: {Esbuild,"
         assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
+        assert file =~ "http: [ip: {127, 0, 0, 1}, port: 4000]"
       end)
 
       # tailwind
@@ -567,7 +568,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
         assert file =~ ~S|aria-label="close"|
-        assert file =~ ~S|<.flash kind={:info} title="Success!" flash={@flash} />|
+        assert file =~ ~S|Attempting to reconnect|
+        refute file =~ ~S|gettext("Attempting to reconnect")|
       end)
     end)
   end
@@ -806,6 +808,25 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp("new without args", fn ->
       assert capture_io(fn -> Mix.Tasks.Phx.New.run([]) end) =~
                "Creates a new Phoenix project."
+    end)
+  end
+
+  test "new with reserved name" do
+    assert_raise Mix.Error, ~r/Application name cannot be "server" as it is reserved/, fn ->
+      Mix.Tasks.Phx.New.run(["server"])
+    end
+
+    assert_raise Mix.Error, ~r/Application name cannot be "table" as it is reserved/, fn ->
+      Mix.Tasks.Phx.New.run(["table"])
+    end
+  end
+
+  test "new from inside docker machine (simulated)" do
+    in_tmp("new without defaults", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--inside-docker-env"])
+      assert_file("phx_blog/config/dev.exs", fn file ->
+        assert file =~ "http: [ip: {0, 0, 0, 0}, port: 4000]"
+      end)
     end)
   end
 end

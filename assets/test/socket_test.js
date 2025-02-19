@@ -843,7 +843,8 @@ describe("with transports", function (){
       }
 
       const result = socket.ping(rtt => {
-        expect(rtt >= latency).toBe(true)
+        // if we're unlucky we could also receive 99 as rtt, so let's be generous
+        expect(rtt >= (latency - 10)).toBe(true)
         done()
       })
       expect(result).toBe(true)

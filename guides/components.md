@@ -16,7 +16,7 @@ At the end of the Request life-cycle chapter, we created a template at `lib/hell
 
 ```heex
 <section>
-  <h2>Hello World, from <%= @messenger %>!</h2>
+  <h2>Hello World, from {@messenger}!</h2>
 </section>
 ```
 
@@ -34,7 +34,7 @@ That's simple enough. There's only two lines, `use HelloWeb, :html`. This line c
 
 All of the imports and aliases we make in our module will also be available in our templates. That's because templates are effectively compiled into functions inside their respective module. For example, if you define a function in your module, you will be able to invoke it directly from the template. Let's see this in practice.
 
-Imagine we want to refactor our `show.html.heex` to move the rendering of `<h2>Hello World, from <%= @messenger %>!</h2>` to its own function. We can move it to a function component inside `HelloHTML`, let's do so:
+Imagine we want to refactor our `show.html.heex` to move the rendering of `<h2>Hello World, from {@messenger}!</h2>` to its own function. We can move it to a function component inside `HelloHTML`, let's do so:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -46,7 +46,7 @@ defmodule HelloWeb.HelloHTML do
 
   def greet(assigns) do
     ~H"""
-    <h2>Hello World, from <%= @messenger %>!</h2>
+    <h2>Hello World, from {@messenger}!</h2>
     """
   end
 end
@@ -89,19 +89,21 @@ Next, let's fully understand the expressive power behind the HEEx template langu
 
 ## HEEx
 
-Function components and templates files are powered by [the HEEx template language](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2), which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into the template. This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
+Function components and templates files are powered by [the HEEx template language](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2), which stands for  "HTML+EEx". EEx is an Elixir library that uses `<%= expression %>` to execute Elixir expressions and interpolate their results into arbitrary text templates. HEEx extends EEx for writing HTML templates mixed with Elixir interpolation. We can write Elixir code inside `{...}` for HTML-aware interpolation inside tag attributes and the body. We can also interpolate arbitrary HEEx blocks using EEx interpolation (`<%= ... %>`). We use `@name` to access the key `name` defined inside `assigns`.
+
+This is frequently used to display assigns we have set by way of the `@` shortcut. In your controller, if you invoke:
 
 ```elixir
 render(conn, :show, username: "joe")
 ```
 
-Then you can access said username in the templates as `<%= @username %>`. In addition to displaying assigns and functions, we can use pretty much any Elixir expression. For example, in order to have conditionals:
+Then you can access said username in the templates as `{@username}`. In addition to displaying assigns and functions, we can use pretty much any Elixir expression. For example, in order to have conditionals:
 
 ```heex
 <%= if some_condition? do %>
-  <p>Some condition is true for user: <%= @username %></p>
+  <p>Some condition is true for user: {@username}</p>
 <% else %>
-  <p>Some condition is false for user: <%= @username %></p>
+  <p>Some condition is false for user: {@username}</p>
 <% end %>
 ```
 
@@ -115,8 +117,8 @@ or even loops:
   </tr>
   <%= for number <- 1..10 do %>
     <tr>
-      <td><%= number %></td>
-      <td><%= number * number %></td>
+      <td>{number}</td>
+      <td>{number * number}</td>
     </tr>
   <% end %>
 </table>
@@ -131,20 +133,20 @@ HEEx also comes with handy HTML extensions we will learn next.
 Besides allowing interpolation of Elixir expressions via `<%= %>`, `.heex` templates come with HTML-aware extensions. For example, let's see what happens if you try to interpolate a value with "<" or ">" in it, which would lead to HTML injection:
 
 ```heex
-<%= "<b>Bold?</b>" %>
+{"<b>Bold?</b>"}
 ```
 
 Once you render the template, you will see the literal `<b>` on the page. This means users cannot inject HTML content on the page. If you want to allow them to do so, you can call `raw`, but do so with extreme care:
 
 ```heex
-<%= raw "<b>Bold?</b>" %>
+{raw("<b>Bold?</b>")}
 ```
 
-Another super power of HEEx templates is validation of HTML and lean interpolation syntax of attributes. You can write:
+Another super power of HEEx templates is validation of HTML and interpolation syntax of attributes. You can write:
 
 ```heex
 <div title="My div" class={@class}>
-  <p>Hello <%= @username %></p>
+  <p>Hello {@username}</p>
 </div>
 ```
 
@@ -154,7 +156,7 @@ To interpolate a dynamic number of attributes in a keyword list or map, do:
 
 ```heex
 <div title="My div" {@many_attributes}>
-  <p>Hello <%= @username %></p>
+  <p>Hello {@username}</p>
 </div>
 ```
 
@@ -178,7 +180,7 @@ Likewise, for comprehensions may be written as:
 
 ```heex
 <ul>
-  <li :for={item <- @items}><%= item.name %></li>
+  <li :for={item <- @items}>{item.name}</li>
 </ul>
 ```
 
@@ -189,7 +191,7 @@ Layouts are just function components. They are defined in a module, just like al
 You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_web/components/layouts/root.html.heex`, just about at the end of the `<body>`, we will see this.
 
 ```heex
-<%= @inner_content %>
+{@inner_content}
 ```
 
 In other words, after rendering your page, the result is placed in the `@inner_content` assign.

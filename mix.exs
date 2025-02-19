@@ -8,13 +8,13 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.7.14"
+  @version "1.8.0-dev"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
   # installer is ahead of Phoenix itself.
-  @elixir_requirement "~> 1.11"
+  @elixir_requirement "~> 1.15"
 
   def project do
     [
@@ -23,7 +23,6 @@ defmodule Phoenix.MixProject do
       elixir: @elixir_requirement,
       deps: deps(),
       package: package(),
-      preferred_cli_env: [docs: :docs],
       consolidate_protocols: Mix.env() != :test,
       xref: [
         exclude: [
@@ -43,7 +42,17 @@ defmodule Phoenix.MixProject do
       aliases: aliases(),
       source_url: @scm_url,
       homepage_url: "https://www.phoenixframework.org",
-      description: "Peace of mind from prototype to production"
+      description: "Peace of mind from prototype to production",
+      test_ignore_filters: [
+        &String.starts_with?(&1, "test/fixtures/"),
+        &String.starts_with?(&1, "test/support/")
+      ]
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [docs: :docs]
     ]
   end
 
@@ -77,13 +86,12 @@ defmodule Phoenix.MixProject do
       {:phoenix_template, "~> 1.0"},
       {:websock_adapter, "~> 0.5.3"},
 
-      # TODO drop phoenix_view as an optional dependency in Phoenix v2.0
+      # TODO Drop phoenix_view as an optional dependency in Phoenix v2.0
       {:phoenix_view, "~> 2.0", optional: true},
-      # TODO drop castore when we require OTP 25+
-      {:castore, ">= 0.0.0"},
 
       # Optional deps
       {:plug_cowboy, "~> 2.7", optional: true},
+      {:bandit, "~> 1.0", optional: true},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)
@@ -93,10 +101,9 @@ defmodule Phoenix.MixProject do
       {:gettext, "~> 0.26", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 1.0", only: :docs},
-      {:makeup_eex, ">= 0.1.1", only: :docs},
-      {:makeup_elixir, "~> 1.0", only: :docs},
-      {:makeup_diff, "~> 0.1", only: :docs},
-
+      {:makeup_elixir, "~> 1.0.1 or ~> 1.1", only: :docs},
+      {:makeup_eex, "~> 2.0", only: :docs},
+      {:makeup_syntect, "~> 0.1.0", only: :docs},
       # Test dependencies
       {:phoenix_html, "~> 4.0", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: [:docs, :test]},
@@ -124,12 +131,12 @@ defmodule Phoenix.MixProject do
       main: "overview",
       logo: "logo.png",
       extra_section: "GUIDES",
-      assets: "guides/assets",
+      assets: %{"guides/assets" => "assets"},
       formatters: ["html", "epub"],
       groups_for_modules: groups_for_modules(),
       extras: extras(),
       groups_for_extras: groups_for_extras(),
-      groups_for_functions: [
+      groups_for_docs: [
         Reflection: &(&1[:type] == :reflection)
       ],
       skip_undefined_reference_warnings_on: ["CHANGELOG.md"]

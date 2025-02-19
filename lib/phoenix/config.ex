@@ -93,19 +93,19 @@ defmodule Phoenix.Config do
     merge(defaults, config)
   end
 
-  @doc """
-  Take 2 keyword lists and merge them recursively.
-
-  Used to merge configuration values into defaults.
-  """
-  def merge(a, b), do: Keyword.merge(a, b, &merger/3)
-
   defp fetch_config(otp_app, module) do
     case Application.fetch_env(otp_app, module) do
       {:ok, conf} -> conf
       :error -> []
     end
   end
+
+  @doc """
+  Take 2 keyword lists and merge them recursively.
+
+  Used to merge configuration values into defaults.
+  """
+  def merge(a, b), do: Keyword.merge(a, b, &merger/3)
 
   defp merger(_k, v1, v2) do
     if Keyword.keyword?(v1) and Keyword.keyword?(v2) do

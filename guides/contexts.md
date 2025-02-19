@@ -525,10 +525,9 @@ We added a `category_select` above our save button. Now let's try it out. Next, 
 <.list>
   ...
 + <:item title="Categories">
-+   <%= for cat <- @product.categories do %>
-+     <%= cat.title %>
-+     <br/>
-+   <% end %>
++   <ul>
++     <li :for={cat <- @product.categories}>{cat.title}</li>
++   </ul>
 + </:item>
 </.list>
 ```
@@ -937,34 +936,28 @@ We created a view to render our `show.html` template and aliased our `ShoppingCa
 Next we can create the template at `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```heex
-<%= if @cart.items == [] do %>
-  <.header>
-    My Cart
-    <:subtitle>Your cart is empty</:subtitle>
-  </.header>
-<% else %>
-  <.header>
-    My Cart
-  </.header>
+<.header>
+  My Cart
+  <:subtitle :if={@cart.items == []}>Your cart is empty</:subtitle>
+</.header>
 
+<div :if={@cart.items !== []}>
   <.simple_form :let={f} for={@changeset} action={~p"/cart"}>
-    <.inputs_for :let={item_form} field={f[:items]}>
-	<% item = item_form.data %>
+    <.inputs_for :let={%{data: item} = item_form} field={f[:items]}>
       <.input field={item_form[:quantity]} type="number" label={item.product.title} />
-      <%= currency_to_str(ShoppingCart.total_item_price(item)) %>
+      {currency_to_str(ShoppingCart.total_item_price(item))}
     </.inputs_for>
     <:actions>
       <.button>Update cart</.button>
     </:actions>
   </.simple_form>
-
-  <b>Total</b>: <%= currency_to_str(ShoppingCart.total_cart_price(@cart)) %>
-<% end %>
+  <b>Total</b>: {currency_to_str(ShoppingCart.total_cart_price(@cart))}
+</div>
 
 <.back navigate={~p"/products"}>Back to products</.back>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `simple_form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](`Phoenix.Component.inputs_for/1`) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
+We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `simple_form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
 
 We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
 
@@ -1034,7 +1027,7 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
   end
 ```
 
-We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](`Phoenix.Component.inputs_for/1`) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
+We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
 
 For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transaction/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
 
@@ -1299,20 +1292,20 @@ Next we can create the template at `lib/hello_web/controllers/order_html/show.ht
 <.header>
   Thank you for your order!
   <:subtitle>
-     <strong>User uuid: </strong><%= @order.user_uuid %>
+     <strong>User uuid: </strong>{@order.user_uuid}
   </:subtitle>
 </.header>
 
 <.table id="items" rows={@order.line_items}>
-  <:col :let={item} label="Title"><%= item.product.title %></:col>
-  <:col :let={item} label="Quantity"><%= item.quantity %></:col>
+  <:col :let={item} label="Title">{item.product.title}</:col>
+  <:col :let={item} label="Quantity">{item.quantity}</:col>
   <:col :let={item} label="Price">
-    <%= HelloWeb.CartHTML.currency_to_str(item.price) %>
+    {HelloWeb.CartHTML.currency_to_str(item.price)}
   </:col>
 </.table>
 
 <strong>Total price:</strong>
-<%= HelloWeb.CartHTML.currency_to_str(@order.total_price) %>
+{HelloWeb.CartHTML.currency_to_str(@order.total_price)}
 
 <.back navigate={~p"/products"}>Back to products</.back>
 ```
@@ -1324,11 +1317,11 @@ Our last addition will be to add the "complete order" button to our cart page to
 ```diff
   <.header>
     My Cart
-+    <:actions>
-+      <.link href={~p"/orders"} method="post">
-+        <.button>Complete order</.button>
-+      </.link>
-+    </:actions>
++   <:actions>
++     <.link href={~p"/orders"} method="post">
++       <.button>Complete order</.button>
++     </.link>
++   </:actions>
   </.header>
 ```
 

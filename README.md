@@ -1,4 +1,8 @@
-![phoenix logo](https://raw.githubusercontent.com/phoenixframework/phoenix/main/priv/static/phoenix.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./priv/static/phoenix-orange.png" />
+  <source media="(prefers-color-scheme: light)" srcset="./priv/static/phoenix.png" />
+  <img src="./priv/static/phoenix.png" alt="Phoenix logo" />
+</picture>
 
 > Peace of mind from prototype to production.
 

@@ -14,6 +14,7 @@ socat TCP-LISTEN:1433,fork TCP-CONNECT:mssql:1433&
 # Run installer tests
 echo "Running installer tests"
 cd installer
+mix deps.get
 mix test
 
 echo "Running integration tests"

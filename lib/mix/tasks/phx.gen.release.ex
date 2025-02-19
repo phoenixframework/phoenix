@@ -294,7 +294,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     http_options = [
       ssl: [
         verify: :verify_peer,
-        cacertfile: String.to_charlist(CAStore.file_path()),
+        cacerts: :public_key.cacerts_get(),
         depth: 3,
         customize_hostname_check: [
           match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
