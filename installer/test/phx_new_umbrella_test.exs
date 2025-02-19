@@ -635,7 +635,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "skip: skip_migrations?()"
 
         assert file =~ "defp skip_migrations?() do"
-        assert file =~ ~s/System.get_env("RELEASE_NAME") != nil/
+        assert file =~ ~s/System.get_env("RELEASE_NAME") == nil/
       end)
 
       assert_file(root_path(app, "config/dev.exs"), [~r/database: .*_dev.db/])
