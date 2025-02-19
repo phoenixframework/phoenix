@@ -58,15 +58,6 @@ defmodule Phoenix.Endpoint.SupervisorTest do
 
   defp persistent!(endpoint), do: :persistent_term.get({Phoenix.Endpoint, endpoint})
 
-  test "loads router configuration" do
-    config = Supervisor.config(:phoenix, SupervisorApp.Endpoint)
-    assert config[:otp_app] == :phoenix
-    assert config[:custom] == true
-
-    assert config[:render_errors] ==
-             [view: SupervisorApp.ErrorView, accepts: ~w(html), layout: false]
-  end
-
   test "generates the static url based on the static host configuration" do
     assert persistent!(StaticURLEndpoint).static_url == "http://static.example.com"
   end

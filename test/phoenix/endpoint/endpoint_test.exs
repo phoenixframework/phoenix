@@ -25,9 +25,9 @@ defmodule Phoenix.Endpoint.EndpointTest do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     # Assert endpoint variables
-    assert is_list(config)
     assert @otp_app == :phoenix
     assert code_reloading? == false
+    assert debug_errors? == false
   end
 
   defmodule NoConfigEndpoint do
