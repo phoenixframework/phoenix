@@ -115,6 +115,34 @@ defmodule Mix.Tasks.Phx.New do
 
   You can read more about umbrella projects using the
   official [Elixir guide](https://hexdocs.pm/elixir/dependencies-and-umbrella-projects.html#umbrella-projects)
+
+  ## `PHX_NEW_CACHE_DIR`
+
+  In rare cases, it may be useful to copy the build from a previously
+  cached build. To do this, set the `PHX_NEW_CACHE_DIR` environment
+  variable before running `mix phx.new`. For example, you could generate a
+  cache by running:
+
+  ```shell
+  mix phx.new mycache --no-install && cd mycache \
+    && mix deps.get && mix deps.compile && mix assets.setup \
+    && rm -rf assets config lib priv test mix.exs README.md
+  ```
+
+  Your cached build directory should contain:
+
+      _build
+      deps
+      mix.lock
+
+  Then you could run:
+
+  ```shell
+  PHX_NEW_CACHE_DIR=/path/to/mycache mix phx.new myapp
+  ```
+
+  The entire cache directory will be copied to the new project, replacing
+  any existing files where conflicts exist.
   """
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
@@ -211,7 +239,8 @@ defmodule Mix.Tasks.Phx.New do
     |> Generator.put_binding()
     |> validate_project(path)
     |> generator.generate()
-    |> prompt_to_install_deps(generator, path)
+    |> maybe_copy_cached_build(path)
+    |> maybe_prompt_to_install_deps(generator, path)
   end
 
   defp validate_project(%Project{opts: opts} = project, path) do
@@ -221,6 +250,15 @@ defmodule Mix.Tasks.Phx.New do
     check_module_name_availability!(project.root_mod)
 
     project
+  end
+
+  defp maybe_prompt_to_install_deps(%Project{} = project, generator, path_key) do
+    # we can skip the install deps setup, even with --install, because we already copied deps
+    if project.cached_build_path do
+      project
+    else
+      prompt_to_install_deps(project, generator, path_key)
+    end
   end
 
   defp prompt_to_install_deps(%Project{} = project, generator, path_key) do
@@ -431,6 +469,26 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
+  defp maybe_copy_cached_build(%Project{} = project, path_key) do
+    project_path = Map.fetch!(project, path_key)
+
+    case System.fetch_env("PHX_NEW_CACHE_DIR") do
+      {:ok, cache_dir} ->
+        copy_cached_build(%{project_path: project_path, cache_dir: cache_dir})
+        %Project{project | cached_build_path: cache_dir}
+
+      :error ->
+        project
+    end
+  end
+
+  defp copy_cached_build(%{project_path: project_path, cache_dir: cache_dir}) do
+    if File.exists?(cache_dir) do
+      Mix.shell().info("Copying cached build from #{cache_dir}")
+      System.cmd("cp", ["-Rp", Path.join(cache_dir, "."), project_path])
+    end
+  end
+  
   defp maybe_warn_outdated(latest_version) do
     if Version.compare(@version, latest_version) == :lt do
       Mix.shell().info([

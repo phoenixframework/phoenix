@@ -829,4 +829,43 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
     end)
   end
+
+  describe "PHX_NEW_CACHE_DIR" do
+    @phx_new_cache_dir System.get_env("PHX_NEW_CACHE_DIR")
+    test "new with PHX_NEW_CACHE_DIR" do
+      System.put_env("PHX_NEW_CACHE_DIR", __DIR__)
+      cache_files = File.ls!(__DIR__)
+      in_tmp("new with cache dir", fn ->
+        Mix.Tasks.Phx.New.run([@app_name])
+        project_files = File.ls!(Path.join(File.cwd!(), @app_name))
+        assert "mix.exs" in project_files
+        for file <- cache_files do
+          assert file in project_files, "#{file} not copied to new project"
+        end
+      end)
+    after
+      if @phx_new_cache_dir do
+        System.put_env("PHX_NEW_CACHE_DIR", @phx_new_cache_dir)
+      else
+        System.delete_env("PHX_NEW_CACHE_DIR")
+      end
+    end
+
+    test "new with PHX_NEW_CACHE_DIR that doesn't exist" do
+      cache_dir = Path.join(__DIR__, "does-not-exist")
+      System.put_env("PHX_NEW_CACHE_DIR", cache_dir)
+      refute File.exists?(cache_dir)
+      in_tmp("new with cache dir", fn ->
+        Mix.Tasks.Phx.New.run([@app_name])
+        project_files = File.ls!(Path.join(File.cwd!(), @app_name))
+        assert "mix.exs" in project_files
+      end)
+    after
+      if @phx_new_cache_dir do
+        System.put_env("PHX_NEW_CACHE_DIR", @phx_new_cache_dir)
+      else
+        System.delete_env("PHX_NEW_CACHE_DIR")
+      end
+    end
+  end
 end
