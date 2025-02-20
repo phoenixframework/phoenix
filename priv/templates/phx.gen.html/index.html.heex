@@ -1,11 +1,9 @@
 <.header>
   Listing <%= schema.human_plural %>
   <:actions>
-    <.button phx-click={JS.dispatch("click", to: {:inner, "a"})}>
-      <.link href={~p"<%= schema.route_prefix %>/new"}>
-        New <%= schema.human_singular %>
-      </.link>
-    </.button>
+    <.link class={button_classes()} href={~p"<%= schema.route_prefix %>/new"}>
+      New <%= schema.human_singular %>
+    </.link>
   </:actions>
 </.header>
 

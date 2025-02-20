@@ -27,7 +27,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   @doc false
   def init({otp_app, mod, opts}) do
     default_conf = Phoenix.Config.merge(defaults(otp_app, mod), opts)
-    env_conf = config(otp_app, mod, default_conf)
+    env_conf = Phoenix.Config.from_env(otp_app, mod, default_conf)
 
     secret_conf =
       cond do
@@ -188,17 +188,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     else
       []
     end
-  end
-
-  @doc """
-  The endpoint configuration used at compile time.
-  """
-  def config(otp_app, endpoint) do
-    config(otp_app, endpoint, defaults(otp_app, endpoint))
-  end
-
-  defp config(otp_app, endpoint, defaults) do
-    Phoenix.Config.from_env(otp_app, endpoint, defaults)
   end
 
   @doc """

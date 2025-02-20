@@ -92,7 +92,7 @@ defmodule Phoenix.Controller do
 
       use Phoenix.Controller,
         formats: [:html, :json],
-        layouts: [html: MyAppWeb.Layouts]
+        layouts: [html: {MyAppWeb.Layouts, :app}]
 
   You can also specify formats and layouts to render by calling
   `put_view/2` and `put_layout/2` directly with a connection.
@@ -125,7 +125,10 @@ defmodule Phoenix.Controller do
       set, the default view is set to `MyAppWeb.UserView`
 
     * `:layouts` - which layouts to render for each format,
-      for example: `[html: DemoWeb.Layouts]`
+      for example: `[html: DemoWeb.Layouts]`. The value for each
+      format can be a tuple with the layout module and the layout name,
+      or just a module. When the name is omitted, the default layout
+      name `:app` is used.
 
   Deprecated options:
 

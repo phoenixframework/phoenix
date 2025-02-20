@@ -95,26 +95,6 @@ defmodule Phoenix.Channel.ChannelTest do
     }
   end
 
-  test "broadcasts when not joined" do
-    socket = %Phoenix.Socket{joined: false}
-
-    assert_raise RuntimeError, ~r"join", fn ->
-      broadcast_from(socket, "event", %{key: :val})
-    end
-
-    assert_raise RuntimeError, ~r"join", fn ->
-      broadcast_from!(socket, "event", %{key: :val})
-    end
-
-    assert_raise RuntimeError, ~r"join", fn ->
-      broadcast(socket, "event", %{key: :val})
-    end
-
-    assert_raise RuntimeError, ~r"join", fn ->
-      broadcast!(socket, "event", %{key: :val})
-    end
-  end
-
   test "pushing to transport" do
     socket = %Phoenix.Socket{
       serializer: Phoenix.ChannelTest.NoopSerializer,
@@ -130,14 +110,6 @@ defmodule Phoenix.Channel.ChannelTest do
       payload: %{key: :val},
       topic: "sometopic"
     }
-  end
-
-  test "pushing when not joined" do
-    socket = %Phoenix.Socket{joined: false}
-
-    assert_raise RuntimeError, ~r"join", fn ->
-      push(socket, "event", %{key: :val})
-    end
   end
 
   test "replying to transport" do

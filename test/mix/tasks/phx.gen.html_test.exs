@@ -396,6 +396,26 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end)
   end
 
+  test "with custom primary key", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Html.run(~w(Blog Post posts title:string --primary-key post_id))
+
+      assert_file("lib/phoenix_web/controllers/post_controller.ex", fn file ->
+        assert file =~ ~s[%{"post_id" => post_id}]
+        assert file =~ ~s[%{"post_id" => post_id, "post" => post_params}]
+        assert file =~ ~s[Blog.get_post!(post_id)]
+      end)
+
+      assert_file("lib/phoenix_web/controllers/post_html/show.html.heex", fn file ->
+        assert file =~ ~S(Post {@post.post_id})
+      end)
+
+      assert_file("lib/phoenix_web/controllers/post_html/edit.html.heex", fn file ->
+        assert file =~ ~S(Edit Post {@post.post_id})
+      end)
+    end)
+  end
+
   describe "inside umbrella" do
     test "without context_app generators config uses web dir", config do
       in_tmp_umbrella_project(config.test, fn ->

@@ -2,7 +2,7 @@
 
 > This guide assumes that you have gone through the [introductory guides](overview.html) and have a Phoenix application [up and running](up_and_running.html).
 
-The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your Phoenix app. This generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
+The `mix phx.gen.auth` command generates a flexible, pre-built authentication system based on magic links into your Phoenix app. This generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
 
 ## Getting started
 
@@ -76,11 +76,10 @@ The generated code ships with an authentication module with a handful of plugs t
 
   * `fetch_current_user` - fetches the current user information if available
   * `require_authenticated_user` - must be invoked after `fetch_current_user` and requires that a current user exists and is authenticated
-  * `redirect_if_user_is_authenticated` - used for the few pages that must not be available to authenticated users
+  * `redirect_if_user_is_authenticated` - used for the few pages that must not be available to authenticated users (only generated for controller based authentication)
+  * `require_sudo_mode` - used for pages that contain sensitive operations and enforces recent authentication
 
-### Confirmation
-
-The generated functionality ships with an account confirmation mechanism, where users have to confirm their account, typically by email. However, the generated code does not forbid users from using the application if their accounts have not yet been confirmed. You can add this functionality by customizing the `require_authenticated_user` in the `Auth` module to check for the `confirmed_at` field (and any other property you desire).
+There are similar `:on_mount` hooks for LiveView based authentication.
 
 ### Notifiers
 
@@ -101,6 +100,10 @@ A user enumeration attack allows someone to check if an email is registered in t
 If your application is sensitive to enumeration attacks, you need to implement your own workflows, which tends to be very different from most applications, as you need to carefully balance security and user experience.
 
 Furthermore, if you are concerned about enumeration attacks, beware of timing attacks too. For example, registering a new account typically involves additional work (such as writing to the database, sending emails, etc) compared to when an account already exists. Someone could measure the time taken to execute those additional tasks to enumerate emails. This applies to all endpoints (registration, confirmation, password recovery, etc.) that may send email, in-app notifications, etc.
+
+### Confirmation and credential pre-stuffing attacks
+
+The generated functionality ships with an account confirmation mechanism, where users have to confirm their account, typically by email. Furthermore, to prevent security issues, the generated code does forbid users from using the application if their accounts have not yet been confirmed. If you want to change this behavior, please refer to the ["Mixing magic link and password registration" section](Mix.Tasks.Phx.Gen.Auth.html#module-mixing-magic-link-and-password-registration) of `mix phx.gen.auth`.
 
 ### Case sensitiveness
 
@@ -125,6 +128,8 @@ The following links have more information regarding the motivation and design of
   * The [original `phx_gen_auth` repo][phx_gen_auth repo] (for Phoenix 1.5 applications) - This is a great resource to see discussions around decisions that have been made in earlier versions of the project.
   * [Original pull request on bare Phoenix app][auth PR]
   * [Original design spec](https://github.com/dashbitco/mix_phx_gen_auth_demo/blob/auth/README.md)
+  * [Pull request for migrating LiveView based Phoenix 1.7 `phx.gen.auth` to magic links](https://github.com/SteffenDE/phoenix_gen_auth_magic_link/pull/1)
+  * [Pull request for migrating controller based Phoenix 1.7 `phx.gen.auth` to magic links](https://github.com/SteffenDE/phoenix_gen_auth_magic_link/pull/2)
 
 [phx_gen_auth repo]: https://github.com/aaronrenner/phx_gen_auth
 [auth PR]: https://github.com/dashbitco/mix_phx_gen_auth_demo/pull/1

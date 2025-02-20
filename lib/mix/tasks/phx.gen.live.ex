@@ -116,9 +116,17 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     Mix.Phoenix.ensure_live_view_compat!(__MODULE__)
 
     {context, schema} = Gen.Context.build(args)
+    validate_context!(context)
+
     Gen.Context.prompt_for_code_injection(context)
 
-    binding = [context: context, schema: schema, inputs: inputs(schema)]
+    binding = [
+      context: context,
+      schema: schema,
+      inputs: inputs(schema),
+      primary_key: schema.opts[:primary_key] || :id
+    ]
+
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
@@ -127,6 +135,18 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     |> copy_new_files(binding, paths)
     |> maybe_inject_imports()
     |> print_shell_instructions()
+  end
+
+  defp validate_context!(context) do
+    cond do
+      context.schema.singular == "form" ->
+        Gen.Context.raise_with_help(
+          "cannot use form as the schema name because it conflicts with the LiveView assigns!"
+        )
+
+      true ->
+        :ok
+    end
   end
 
   defp prompt_for_conflicts(context) do
@@ -269,8 +289,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     [
       ~s|live "/#{schema.plural}", #{inspect(schema.alias)}Live.Index, :index\n|,
       ~s|live "/#{schema.plural}/new", #{inspect(schema.alias)}Live.Form, :new\n|,
-      ~s|live "/#{schema.plural}/:id", #{inspect(schema.alias)}Live.Show, :show\n|,
-      ~s|live "/#{schema.plural}/:id/edit", #{inspect(schema.alias)}Live.Form, :edit|
+      ~s|live "/#{schema.plural}/:#{schema.opts[:primary_key] || :id}", #{inspect(schema.alias)}Live.Show, :show\n|,
+      ~s|live "/#{schema.plural}/:#{schema.opts[:primary_key] || :id}/edit", #{inspect(schema.alias)}Live.Form, :edit|
     ]
   end
 

@@ -75,7 +75,7 @@ defmodule Phoenix.Socket.PoolDrainer do
     %{
       id: {:terminator, name},
       start: {__MODULE__, :start_link, [tuple]},
-      shutdown: Keyword.get(opts, :shutdown, 30_000)
+      shutdown: Keyword.get(opts[:drainer], :shutdown, 30_000)
     }
   end
 
@@ -86,13 +86,14 @@ defmodule Phoenix.Socket.PoolDrainer do
   @impl true
   def init({endpoint, name, opts}) do
     Process.flag(:trap_exit, true)
-    size = Keyword.get(opts, :batch_size, 10_000)
-    interval = Keyword.get(opts, :batch_interval, 2_000)
-    {:ok, {endpoint, name, size, interval}}
+    size = Keyword.get(opts[:drainer], :batch_size, 10_000)
+    interval = Keyword.get(opts[:drainer], :batch_interval, 2_000)
+    log_level = Keyword.get(opts[:drainer], :log, opts[:log] || :info)
+    {:ok, {endpoint, name, size, interval, log_level}}
   end
 
   @impl true
-  def terminate(_reason, {endpoint, name, size, interval}) do
+  def terminate(_reason, {endpoint, name, size, interval, log_level}) do
     ets = endpoint.config({:socket, name})
     partitions = :ets.lookup_element(ets, :partitions, 2)
 
@@ -109,12 +110,21 @@ defmodule Phoenix.Socket.PoolDrainer do
 
     rounds = div(total, size) + 1
 
-    if total != 0 do
-      Logger.info("Shutting down #{total} sockets in #{rounds} rounds of #{interval}ms")
-    end
-
     for {pids, index} <-
           collection |> Stream.concat() |> Stream.chunk_every(size) |> Stream.with_index(1) do
+      count = if index == rounds, do: length(pids), else: size
+
+      :telemetry.execute(
+        [:phoenix, :socket_drain],
+        %{count: count, total: total, index: index, rounds: rounds},
+        %{
+          endpoint: endpoint,
+          socket: name,
+          interval: interval,
+          log: log_level
+        }
+      )
+
       spawn(fn ->
         for pid <- pids do
           send(pid, %Phoenix.Socket.Broadcast{event: "phx_drain"})

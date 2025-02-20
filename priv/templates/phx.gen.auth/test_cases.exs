@@ -18,12 +18,12 @@
     end
 
     test "does not return the <%= schema.singular %> if the password is not valid" do
-      <%= schema.singular %> = <%= schema.singular %>_fixture()
+      <%= schema.singular %> = <%= schema.singular %>_fixture() |> set_password()
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "invalid")
     end
 
     test "returns the <%= schema.singular %> if the email and password are valid" do
-      %{id: id} = <%= schema.singular %> = <%= schema.singular %>_fixture()
+      %{id: id} = <%= schema.singular %> = <%= schema.singular %>_fixture() |> set_password()
 
       assert %<%= inspect schema.alias %>{id: ^id} =
                <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, valid_<%= schema.singular %>_password())
@@ -39,34 +39,27 @@
 
     test "returns the <%= schema.singular %> with the given id" do
       %{id: id} = <%= schema.singular %> = <%= schema.singular %>_fixture()
-      assert %<%= inspect schema.alias %>{id: ^id} = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id)
+      assert %<%= inspect schema.alias %>{id: ^id} = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%=schema.singular %>.id)
     end
   end
 
   describe "register_<%= schema.singular %>/1" do
-    test "requires email and password to be set" do
+    test "requires email to be set" do
       {:error, changeset} = <%= inspect context.alias %>.register_<%= schema.singular %>(%{})
 
-      assert %{
-               password: ["can't be blank"],
-               email: ["can't be blank"]
-             } = errors_on(changeset)
+      assert %{email: ["can't be blank"]} = errors_on(changeset)
     end
 
-    test "validates email and password when given" do
-      {:error, changeset} = <%= inspect context.alias %>.register_<%= schema.singular %>(%{email: "not valid", password: "not valid"})
+    test "validates email when given" do
+      {:error, changeset} = <%= inspect context.alias %>.register_<%= schema.singular %>(%{email: "not valid"})
 
-      assert %{
-               email: ["must have the @ sign and no spaces"],
-               password: ["should be at least 12 character(s)"]
-             } = errors_on(changeset)
+      assert %{email: ["must have the @ sign and no spaces"]} = errors_on(changeset)
     end
 
-    test "validates maximum values for email and password for security" do
+    test "validates maximum values for email for security" do
       too_long = String.duplicate("db", 100)
-      {:error, changeset} = <%= inspect context.alias %>.register_<%= schema.singular %>(%{email: too_long, password: too_long})
+      {:error, changeset} = <%= inspect context.alias %>.register_<%= schema.singular %>(%{email: too_long})
       assert "should be at most 160 character(s)" in errors_on(changeset).email
-      assert "should be at most 72 character(s)" in errors_on(changeset).password
     end
 
     test "validates email uniqueness" do
@@ -79,93 +72,39 @@
       assert "has already been taken" in errors_on(changeset).email
     end
 
-    test "registers <%= schema.plural %> with a hashed password" do
+    test "registers <%= schema.plural %> without password" do
       email = unique_<%= schema.singular %>_email()
       {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.register_<%= schema.singular %>(valid_<%= schema.singular %>_attributes(email: email))
       assert <%= schema.singular %>.email == email
-      assert is_binary(<%= schema.singular %>.hashed_password)
+      assert is_nil(<%= schema.singular %>.hashed_password)
       assert is_nil(<%= schema.singular %>.confirmed_at)
       assert is_nil(<%= schema.singular %>.password)
     end
   end
 
-  describe "change_<%= schema.singular %>_registration/2" do
-    test "returns a changeset" do
-      assert %Ecto.Changeset{} = changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_registration(%<%= inspect schema.alias %>{})
-      assert changeset.required == [:password, :email]
-    end
+  describe "sudo_mode?/2" do
+    test "validates the authenticated_at time" do
+      now = <%= inspect datetime_module %>.utc_now()
 
-    test "allows fields to be set" do
-      email = unique_<%= schema.singular %>_email()
-      password = valid_<%= schema.singular %>_password()
+      assert <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: <%= inspect datetime_module %>.utc_now()})
+      assert <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: <%= inspect datetime_module %>.add(now, -19, :minute)})
+      refute <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{authenticated_at: <%= inspect datetime_module %>.add(now, -21, :minute)})
 
-      changeset =
-        <%= inspect context.alias %>.change_<%= schema.singular %>_registration(
-          %<%= inspect schema.alias %>{},
-          valid_<%= schema.singular %>_attributes(email: email, password: password)
-        )
+      # minute override
+      refute <%= inspect context.alias %>.sudo_mode?(
+               %<%= inspect schema.alias %>{authenticated_at: <%= inspect datetime_module %>.add(now, -11, :minute)},
+               -10
+             )
 
-      assert changeset.valid?
-      assert get_change(changeset, :email) == email
-      assert get_change(changeset, :password) == password
-      assert is_nil(get_change(changeset, :hashed_password))
+      # not authenticated
+      refute <%= inspect context.alias %>.sudo_mode?(%<%= inspect schema.alias %>{})
     end
   end
 
-  describe "change_<%= schema.singular %>_email/2" do
+  describe "change_<%= schema.singular %>_email/3" do
     test "returns a <%= schema.singular %> changeset" do
       assert %Ecto.Changeset{} = changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(%<%= inspect schema.alias %>{})
       assert changeset.required == [:email]
-    end
-  end
-
-  describe "apply_<%= schema.singular %>_email/3" do
-    setup do
-      %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
-    end
-
-    test "requires email to change", %{<%= schema.singular %>: <%= schema.singular %>} do
-      {:error, changeset} = <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{})
-      assert %{email: ["did not change"]} = errors_on(changeset)
-    end
-
-    test "validates email", %{<%= schema.singular %>: <%= schema.singular %>} do
-      {:error, changeset} =
-        <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{email: "not valid"})
-
-      assert %{email: ["must have the @ sign and no spaces"]} = errors_on(changeset)
-    end
-
-    test "validates maximum value for email for security", %{<%= schema.singular %>: <%= schema.singular %>} do
-      too_long = String.duplicate("db", 100)
-
-      {:error, changeset} =
-        <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{email: too_long})
-
-      assert "should be at most 160 character(s)" in errors_on(changeset).email
-    end
-
-    test "validates email uniqueness", %{<%= schema.singular %>: <%= schema.singular %>} do
-      %{email: email} = <%= schema.singular %>_fixture()
-      password = valid_<%= schema.singular %>_password()
-
-      {:error, changeset} = <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, password, %{email: email})
-
-      assert "has already been taken" in errors_on(changeset).email
-    end
-
-    test "validates current password", %{<%= schema.singular %>: <%= schema.singular %>} do
-      {:error, changeset} =
-        <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, "invalid", %{email: unique_<%= schema.singular %>_email()})
-
-      assert %{current_password: ["is not valid"]} = errors_on(changeset)
-    end
-
-    test "applies the email without persisting it", %{<%= schema.singular %>: <%= schema.singular %>} do
-      email = unique_<%= schema.singular %>_email()
-      {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.apply_<%= schema.singular %>_email(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{email: email})
-      assert <%= schema.singular %>.email == email
-      assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).email != email
     end
   end
 
@@ -190,7 +129,7 @@
 
   describe "update_<%= schema.singular %>_email/2" do
     setup do
-      <%= schema.singular %> = <%= schema.singular %>_fixture()
+      <%= schema.singular %> = unconfirmed_<%= schema.singular %>_fixture()
       email = unique_<%= schema.singular %>_email()
 
       token =
@@ -206,8 +145,6 @@
       changed_<%= schema.singular %> = Repo.get!(<%= inspect schema.alias %>, <%= schema.singular %>.id)
       assert changed_<%= schema.singular %>.email != <%= schema.singular %>.email
       assert changed_<%= schema.singular %>.email == email
-      assert changed_<%= schema.singular %>.confirmed_at
-      assert changed_<%= schema.singular %>.confirmed_at != <%= schema.singular %>.confirmed_at
       refute Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
     end
 
@@ -231,7 +168,7 @@
     end
   end
 
-  describe "change_<%= schema.singular %>_password/2" do
+  describe "change_<%= schema.singular %>_password/3" do
     test "returns a <%= schema.singular %> changeset" do
       assert %Ecto.Changeset{} = changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(%<%= inspect schema.alias %>{})
       assert changeset.required == [:password]
@@ -239,9 +176,13 @@
 
     test "allows fields to be set" do
       changeset =
-        <%= inspect context.alias %>.change_<%= schema.singular %>_password(%<%= inspect schema.alias %>{}, %{
-          "password" => "new valid password"
-        })
+        <%= inspect context.alias %>.change_<%= schema.singular %>_password(
+          %<%= inspect schema.alias %>{},
+          %{
+            "password" => "new valid password"
+          },
+          hash_password: false
+        )
 
       assert changeset.valid?
       assert get_change(changeset, :password) == "new valid password"
@@ -249,14 +190,14 @@
     end
   end
 
-  describe "update_<%= schema.singular %>_password/3" do
+  describe "update_<%= schema.singular %>_password/2" do
     setup do
       %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
     end
 
     test "validates password", %{<%= schema.singular %>: <%= schema.singular %>} do
       {:error, changeset} =
-        <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{
+        <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, %{
           password: "not valid",
           password_confirmation: "another"
         })
@@ -271,24 +212,18 @@
       too_long = String.duplicate("db", 100)
 
       {:error, changeset} =
-        <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{password: too_long})
+        <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, %{password: too_long})
 
       assert "should be at most 72 character(s)" in errors_on(changeset).password
     end
 
-    test "validates current password", %{<%= schema.singular %>: <%= schema.singular %>} do
-      {:error, changeset} =
-        <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, "invalid", %{password: valid_<%= schema.singular %>_password()})
-
-      assert %{current_password: ["is not valid"]} = errors_on(changeset)
-    end
-
     test "updates the password", %{<%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, <%= schema.singular %>} =
-        <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{
+      {:ok, <%= schema.singular %>, expired_tokens} =
+        <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, %{
           password: "new valid password"
         })
 
+      assert expired_tokens == []
       assert is_nil(<%= schema.singular %>.password)
       assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
     end
@@ -296,8 +231,8 @@
     test "deletes all tokens for the given <%= schema.singular %>", %{<%= schema.singular %>: <%= schema.singular %>} do
       _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
 
-      {:ok, _} =
-        <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, valid_<%= schema.singular %>_password(), %{
+      {:ok, _, _} =
+        <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, %{
           password: "new valid password"
         })
 
@@ -348,6 +283,60 @@
     end
   end
 
+  describe "get_<%= schema.singular %>_by_magic_link_token/1" do
+    setup do
+      <%= schema.singular %> = <%= schema.singular %>_fixture()
+      {encoded_token, _hashed_token} = generate_<%= schema.singular %>_magic_link_token(<%= schema.singular %>)
+      %{<%= schema.singular %>: <%= schema.singular %>, token: encoded_token}
+    end
+
+    test "returns <%= schema.singular %> by token", %{<%= schema.singular %>: <%= schema.singular %>, token: token} do
+      assert session_<%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_magic_link_token(token)
+      assert session_<%= schema.singular %>.id == <%= schema.singular %>.id
+    end
+
+    test "does not return <%= schema.singular %> for invalid token" do
+      refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_magic_link_token("oops")
+    end
+
+    test "does not return <%= schema.singular %> for expired token", %{token: token} do
+      {1, nil} = Repo.update_all(<%= inspect schema.alias %>Token, set: [inserted_at: ~N[2020-01-01 00:00:00]])
+      refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_magic_link_token(token)
+    end
+  end
+
+  describe "login_<%= schema.singular %>_by_magic_link/1" do
+    test "confirms <%= schema.singular %> and expires tokens" do
+      <%= schema.singular %> = unconfirmed_<%= schema.singular %>_fixture()
+      refute <%= schema.singular %>.confirmed_at
+      {encoded_token, hashed_token} = generate_<%= schema.singular %>_magic_link_token(<%= schema.singular %>)
+
+      assert {:ok, <%= schema.singular %>, [%{token: ^hashed_token}]} =
+               <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(encoded_token)
+
+      assert <%= schema.singular %>.confirmed_at
+    end
+
+    test "returns <%= schema.singular %> and (deleted) token for confirmed <%= schema.singular %>" do
+      <%= schema.singular %> = <%= schema.singular %>_fixture()
+      assert <%= schema.singular %>.confirmed_at
+      {encoded_token, _hashed_token} = generate_<%= schema.singular %>_magic_link_token(<%= schema.singular %>)
+      assert {:ok, ^<%= schema.singular %>, []} = <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(encoded_token)
+      # one time use only
+      assert {:error, :not_found} = <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(encoded_token)
+    end
+
+    test "raises when unconfirmed <%= schema.singular %> has password set" do
+      <%= schema.singular %> = unconfirmed_<%= schema.singular %>_fixture()
+      {1, nil} = Repo.update_all(<%= inspect schema.alias %>, set: [hashed_password: "hashed"])
+      {encoded_token, _hashed_token} = generate_<%= schema.singular %>_magic_link_token(<%= schema.singular %>)
+
+      assert_raise RuntimeError, ~r/magic link log in is not allowed/, fn ->
+        <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(encoded_token)
+      end
+    end
+  end
+
   describe "delete_<%= schema.singular %>_session_token/1" do
     test "deletes the token" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
@@ -357,141 +346,22 @@
     end
   end
 
-  describe "deliver_<%= schema.singular %>_confirmation_instructions/2" do
+  describe "deliver_login_instructions/2" do
     setup do
-      %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
+      %{<%= schema.singular %>: unconfirmed_<%= schema.singular %>_fixture()}
     end
 
     test "sends token through notification", %{<%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
-          <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, url)
+          <%= inspect context.alias %>.deliver_login_instructions(<%= schema.singular %>, url)
         end)
 
       {:ok, token} = Base.url_decode64(token, padding: false)
       assert <%= schema.singular %>_token = Repo.get_by(<%= inspect schema.alias %>Token, token: :crypto.hash(:sha256, token))
       assert <%= schema.singular %>_token.<%= schema.singular %>_id == <%= schema.singular %>.id
       assert <%= schema.singular %>_token.sent_to == <%= schema.singular %>.email
-      assert <%= schema.singular %>_token.context == "confirm"
-    end
-  end
-
-  describe "confirm_<%= schema.singular %>/1" do
-    setup do
-      <%= schema.singular %> = <%= schema.singular %>_fixture()
-
-      token =
-        extract_<%= schema.singular %>_token(fn url ->
-          <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, url)
-        end)
-
-      %{<%= schema.singular %>: <%= schema.singular %>, token: token}
-    end
-
-    test "confirms the email with a valid token", %{<%= schema.singular %>: <%= schema.singular %>, token: token} do
-      assert {:ok, confirmed_<%= schema.singular %>} = <%= inspect context.alias %>.confirm_<%= schema.singular %>(token)
-      assert confirmed_<%= schema.singular %>.confirmed_at
-      assert confirmed_<%= schema.singular %>.confirmed_at != <%= schema.singular %>.confirmed_at
-      assert Repo.get!(<%= inspect schema.alias %>, <%= schema.singular %>.id).confirmed_at
-      refute Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
-    end
-
-    test "does not confirm with invalid token", %{<%= schema.singular %>: <%= schema.singular %>} do
-      assert <%= inspect context.alias %>.confirm_<%= schema.singular %>("oops") == :error
-      refute Repo.get!(<%= inspect schema.alias %>, <%= schema.singular %>.id).confirmed_at
-      assert Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
-    end
-
-    test "does not confirm email if token expired", %{<%= schema.singular %>: <%= schema.singular %>, token: token} do
-      {1, nil} = Repo.update_all(<%= inspect schema.alias %>Token, set: [inserted_at: ~N[2020-01-01 00:00:00]])
-      assert <%= inspect context.alias %>.confirm_<%= schema.singular %>(token) == :error
-      refute Repo.get!(<%= inspect schema.alias %>, <%= schema.singular %>.id).confirmed_at
-      assert Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
-    end
-  end
-
-  describe "deliver_<%= schema.singular %>_reset_password_instructions/2" do
-    setup do
-      %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
-    end
-
-    test "sends token through notification", %{<%= schema.singular %>: <%= schema.singular %>} do
-      token =
-        extract_<%= schema.singular %>_token(fn url ->
-          <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, url)
-        end)
-
-      {:ok, token} = Base.url_decode64(token, padding: false)
-      assert <%= schema.singular %>_token = Repo.get_by(<%= inspect schema.alias %>Token, token: :crypto.hash(:sha256, token))
-      assert <%= schema.singular %>_token.<%= schema.singular %>_id == <%= schema.singular %>.id
-      assert <%= schema.singular %>_token.sent_to == <%= schema.singular %>.email
-      assert <%= schema.singular %>_token.context == "reset_password"
-    end
-  end
-
-  describe "get_<%= schema.singular %>_by_reset_password_token/1" do
-    setup do
-      <%= schema.singular %> = <%= schema.singular %>_fixture()
-
-      token =
-        extract_<%= schema.singular %>_token(fn url ->
-          <%= inspect context.alias %>.deliver_<%= schema.singular %>_reset_password_instructions(<%= schema.singular %>, url)
-        end)
-
-      %{<%= schema.singular %>: <%= schema.singular %>, token: token}
-    end
-
-    test "returns the <%= schema.singular %> with valid token", %{<%= schema.singular %>: %{id: id}, token: token} do
-      assert %<%= inspect schema.alias %>{id: ^id} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_reset_password_token(token)
-      assert Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: id)
-    end
-
-    test "does not return the <%= schema.singular %> with invalid token", %{<%= schema.singular %>: <%= schema.singular %>} do
-      refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_reset_password_token("oops")
-      assert Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
-    end
-
-    test "does not return the <%= schema.singular %> if token expired", %{<%= schema.singular %>: <%= schema.singular %>, token: token} do
-      {1, nil} = Repo.update_all(<%= inspect schema.alias %>Token, set: [inserted_at: ~N[2020-01-01 00:00:00]])
-      refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_reset_password_token(token)
-      assert Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
-    end
-  end
-
-  describe "reset_<%= schema.singular %>_password/2" do
-    setup do
-      %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
-    end
-
-    test "validates password", %{<%= schema.singular %>: <%= schema.singular %>} do
-      {:error, changeset} =
-        <%= inspect context.alias %>.reset_<%= schema.singular %>_password(<%= schema.singular %>, %{
-          password: "not valid",
-          password_confirmation: "another"
-        })
-
-      assert %{
-               password: ["should be at least 12 character(s)"],
-               password_confirmation: ["does not match password"]
-             } = errors_on(changeset)
-    end
-
-    test "validates maximum values for password for security", %{<%= schema.singular %>: <%= schema.singular %>} do
-      too_long = String.duplicate("db", 100)
-      {:error, changeset} = <%= inspect context.alias %>.reset_<%= schema.singular %>_password(<%= schema.singular %>, %{password: too_long})
-      assert "should be at most 72 character(s)" in errors_on(changeset).password
-    end
-
-    test "updates the password", %{<%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, updated_<%= schema.singular %>} = <%= inspect context.alias %>.reset_<%= schema.singular %>_password(<%= schema.singular %>, %{password: "new valid password"})
-      assert is_nil(updated_<%= schema.singular %>.password)
-      assert <%= inspect context.alias %>.get_<%= schema.singular %>_by_email_and_password(<%= schema.singular %>.email, "new valid password")
-    end
-
-    test "deletes all tokens for the given <%= schema.singular %>", %{<%= schema.singular %>: <%= schema.singular %>} do
-      _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
-      {:ok, _} = <%= inspect context.alias %>.reset_<%= schema.singular %>_password(<%= schema.singular %>, %{password: "new valid password"})
-      refute Repo.get_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
+      assert <%= schema.singular %>_token.context == "login"
     end
   end
 

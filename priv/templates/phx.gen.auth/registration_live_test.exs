@@ -28,31 +28,26 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       result =
         lv
         |> element("#registration_form")
-        |> render_change(<%= schema.singular %>: %{"email" => "with spaces", "password" => "too short"})
+        |> render_change(<%= schema.singular %>: %{"email" => "with spaces"})
 
       assert result =~ "Register"
       assert result =~ "must have the @ sign and no spaces"
-      assert result =~ "should be at least 12 character"
     end
   end
 
   describe "register <%= schema.singular %>" do
-    test "creates account and logs the <%= schema.singular %> in", %{conn: conn} do
+    test "creates account but does not log in", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/register")
 
       email = unique_<%= schema.singular %>_email()
       form = form(lv, "#registration_form", <%= schema.singular %>: valid_<%= schema.singular %>_attributes(email: email))
-      render_submit(form)
-      conn = follow_trigger_action(form, conn)
 
-      assert redirected_to(conn) == ~p"/"
+      {:ok, _lv, html} =
+        render_submit(form)
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
 
-      # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
-      response = html_response(conn, 200)
-      assert response =~ email
-      assert response =~ "Settings"
-      assert response =~ "Log out"
+      assert html =~
+               ~r/An email was sent to .*, please access it to confirm your account/
     end
 
     test "renders errors for duplicated email", %{conn: conn} do
@@ -63,7 +58,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       result =
         lv
         |> form("#registration_form",
-          <%= schema.singular %>: %{"email" => <%= schema.singular %>.email, "password" => "valid_password"}
+          <%= schema.singular %>: %{"email" => <%= schema.singular %>.email}
         )
         |> render_submit()
 

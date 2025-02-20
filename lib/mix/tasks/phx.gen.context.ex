@@ -28,6 +28,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   A migration file for the repository and test files for the context
   will also be generated.
 
+  The generated migration can be skipped with `--no-migration`.
+
   ## Generating without a schema
 
   In some cases, you may wish to bootstrap the context module and
@@ -90,7 +92,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     prefix: :string,
     live: :boolean,
     compile: :boolean,
-    primary_key: :string
+    primary_key: :string,
+    migration: :boolean
   ]
 
   @default_opts [schema: true, context: true]
@@ -104,7 +107,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
 
     {context, schema} = build(args)
-    binding = [context: context, schema: schema]
+    binding = [context: context, schema: schema, primary_key: schema.opts[:primary_key] || :id]
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)

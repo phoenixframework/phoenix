@@ -26,6 +26,30 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   to authentication views without necessarily triggering a new HTTP request
   each time (which would result in a full page load).
 
+  ## Mixing magic link and password registration
+
+  `mix phx.gen.auth` generates email based authentication, which assumes the user who
+  owns the email address has control over the account. Therefore, it is extremely
+  important to void all access tokens once the user confirms their account for the first
+  time, and we do so by revoking all tokens upon confirmation.
+
+  However, if you allow users to create an account with password, you must also
+  require them to be logged in by the time of confirmation, otherwise you may be
+  vulnerable to credential pre-stuffing, as the following attack is possible:
+
+  1. An attacker registers a new account with the email address of their target, anticipating
+     that the target creates an account at a later point in time.
+  2. The attacker sets a password when registering.
+  3. The target registers an account and sees that their email address is already in use.
+  4. The target logs in by magic link, but does not change the existing password.
+  5. The attacker maintains access using the password they previously set.
+
+  This is why the default implementation raises whenever a user tries to log in for the first
+  time by magic link and there is a password set. If you add registration with email and
+  password, then you must require the user to be logged in to confirm their account.
+  If they don't have a password (because it was set by the attacker), then they can set one
+  via a "Forgot your password?"-like workflow.
+
   ## Password hashing
 
   The password hashing mechanism defaults to `bcrypt` for
@@ -167,7 +191,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       router_scope: router_scope(context),
       web_path_prefix: web_path_prefix(schema),
       test_case_options: test_case_options(ecto_adapter),
-      live?: Keyword.fetch!(context.opts, :live)
+      live?: Keyword.fetch!(context.opts, :live),
+      datetime_module: datetime_module(schema)
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -298,34 +323,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             "#{singular}_live",
             "login_test.exs"
           ],
-          "reset_password_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "reset_password.ex"
-          ],
-          "reset_password_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "reset_password_test.exs"
-          ],
-          "forgot_password_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "forgot_password.ex"
-          ],
-          "forgot_password_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "forgot_password_test.exs"
-          ],
           "settings_live.ex": [web_pre, "live", web_path, "#{singular}_live", "settings.ex"],
           "settings_live_test.exs": [
             web_test_pre,
@@ -347,20 +344,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             web_path,
             "#{singular}_live",
             "confirmation_test.exs"
-          ],
-          "confirmation_instructions_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "confirmation_instructions.ex"
-          ],
-          "confirmation_instructions_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "confirmation_instructions_test.exs"
           ]
         ]
 
@@ -368,24 +351,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
       _ ->
         non_live_files = [
-          "confirmation_html.ex": [controller_pre, "#{singular}_confirmation_html.ex"],
-          "confirmation_new.html.heex": [
-            controller_pre,
-            "#{singular}_confirmation_html",
-            "new.html.heex"
-          ],
-          "confirmation_edit.html.heex": [
-            controller_pre,
-            "#{singular}_confirmation_html",
-            "edit.html.heex"
-          ],
-          "confirmation_controller.ex": [controller_pre, "#{singular}_confirmation_controller.ex"],
-          "confirmation_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_confirmation_controller_test.exs"
-          ],
           "registration_new.html.heex": [
             controller_pre,
             "#{singular}_registration_html",
@@ -399,29 +364,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             "#{singular}_registration_controller_test.exs"
           ],
           "registration_html.ex": [controller_pre, "#{singular}_registration_html.ex"],
-          "reset_password_html.ex": [controller_pre, "#{singular}_reset_password_html.ex"],
-          "reset_password_controller.ex": [
-            controller_pre,
-            "#{singular}_reset_password_controller.ex"
-          ],
-          "reset_password_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_reset_password_controller_test.exs"
-          ],
-          "reset_password_edit.html.heex": [
-            controller_pre,
-            "#{singular}_reset_password_html",
-            "edit.html.heex"
-          ],
-          "reset_password_new.html.heex": [
-            controller_pre,
-            "#{singular}_reset_password_html",
-            "new.html.heex"
-          ],
           "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
           "session_new.html.heex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
+          "session_confirm.html.heex": [
+            controller_pre,
+            "#{singular}_session_html",
+            "confirm.html.heex"
+          ],
           "settings_html.ex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
           "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
           "settings_edit.html.heex": [
@@ -870,6 +819,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp test_case_options(Ecto.Adapters.Postgres), do: ", async: true"
   defp test_case_options(adapter) when is_atom(adapter), do: ""
+
+  defp datetime_module(%{timestamp_type: :naive_datetime}), do: NaiveDateTime
+  defp datetime_module(%{timestamp_type: :utc_datetime}), do: DateTime
+  defp datetime_module(%{timestamp_type: :utc_datetime_usec}), do: DateTime
 
   defp put_live_option(schema) do
     opts =

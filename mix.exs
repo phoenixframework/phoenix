@@ -88,11 +88,10 @@ defmodule Phoenix.MixProject do
 
       # TODO Drop phoenix_view as an optional dependency in Phoenix v2.0
       {:phoenix_view, "~> 2.0", optional: true},
-      # TODO Drop castore when we require OTP 25+ / Elixir v1.17+
-      {:castore, ">= 0.0.0"},
 
       # Optional deps
       {:plug_cowboy, "~> 2.7", optional: true},
+      {:bandit, "~> 1.0", optional: true},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)
@@ -103,17 +102,8 @@ defmodule Phoenix.MixProject do
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 1.0", only: :docs},
       {:makeup_elixir, "~> 1.0.1 or ~> 1.1", only: :docs},
-      {:makeup_diff, "~> 0.1", only: :docs},
-      # TODO: change me when makeup_lexers is not needed any more
-      # {:makeup_eex, "~> 1.0", only: :docs},
-      {:makeup_eex,
-       github: "SteffenDE/makeup_eex",
-       ref: "5cfc91389dbdfad885734bc8050af61840eab019",
-       only: :docs,
-       override: true},
-      # TODO: remove me when makeup_lexers is not needed any more
-      {:makeup_lexers, github: "SteffenDE/makeup_lexers", only: :docs},
-      {:makeup_json, "~> 0.1.1", only: :docs},
+      {:makeup_eex, "~> 2.0", only: :docs},
+      {:makeup_syntect, "~> 0.1.0", only: :docs},
       # Test dependencies
       {:phoenix_html, "~> 4.0", only: [:docs, :test]},
       {:phx_new, path: "./installer", only: [:docs, :test]},

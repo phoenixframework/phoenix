@@ -18,6 +18,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn = get(conn, ~p"<%= schema.route_prefix %>/settings")
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
     end
+
+    @tag token_inserted_at: <%= inspect datetime_module %>.add(<%= inspect datetime_module %>.utc_now(), -11, :minute)
+    test "redirects if <%= schema.singular %> is not in sudo mode", %{conn: conn} do
+      conn = get(conn, ~p"<%= schema.route_prefix %>/settings")
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "You must re-authenticate to access this page."
+    end
   end
 
   describe "PUT <%= schema.route_prefix %>/settings (change password form)" do
@@ -25,7 +34,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       new_password_conn =
         put(conn, ~p"<%= schema.route_prefix %>/settings", %{
           "action" => "update_password",
-          "current_password" => valid_<%= schema.singular %>_password(),
           "<%= schema.singular %>" => %{
             "password" => "new valid password",
             "password_confirmation" => "new valid password"
@@ -46,7 +54,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       old_password_conn =
         put(conn, ~p"<%= schema.route_prefix %>/settings", %{
           "action" => "update_password",
-          "current_password" => "invalid",
           "<%= schema.singular %>" => %{
             "password" => "too short",
             "password_confirmation" => "does not match"
@@ -57,7 +64,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert response =~ "Settings"
       assert response =~ "should be at least 12 character(s)"
       assert response =~ "does not match password"
-      assert response =~ "is not valid"
 
       assert get_session(old_password_conn, :<%= schema.singular %>_token) == get_session(conn, :<%= schema.singular %>_token)
     end
@@ -69,7 +75,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn =
         put(conn, ~p"<%= schema.route_prefix %>/settings", %{
           "action" => "update_email",
-          "current_password" => valid_<%= schema.singular %>_password(),
           "<%= schema.singular %>" => %{"email" => unique_<%= schema.singular %>_email()}
         })
 
@@ -85,14 +90,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       conn =
         put(conn, ~p"<%= schema.route_prefix %>/settings", %{
           "action" => "update_email",
-          "current_password" => "invalid",
           "<%= schema.singular %>" => %{"email" => "with spaces"}
         })
 
       response = html_response(conn, 200)
       assert response =~ "Settings"
       assert response =~ "must have the @ sign and no spaces"
-      assert response =~ "is not valid"
     end
   end
 

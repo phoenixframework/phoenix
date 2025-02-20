@@ -13,7 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> live(~p"<%= schema.route_prefix %>/settings")
 
       assert html =~ "Change Email"
-      assert html =~ "Change Password"
+      assert html =~ "Save Password"
     end
 
     test "redirects if <%= schema.singular %> is not logged in", %{conn: conn} do
@@ -23,16 +23,27 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert path == ~p"<%= schema.route_prefix %>/log-in"
       assert %{"error" => "You must log in to access this page."} = flash
     end
+
+    test "redirects if <%= schema.singular %> is not in sudo mode", %{conn: conn} do
+      {:ok, conn} =
+        conn
+        |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture(),
+          token_inserted_at: <%= inspect datetime_module %>.add(<%= inspect datetime_module %>.utc_now(), -11, :minute)
+        )
+        |> live(~p"<%= schema.route_prefix %>/settings")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
+
+      assert conn.resp_body =~ "You must re-authenticate to access this page."
+    end
   end
 
   describe "update email form" do
     setup %{conn: conn} do
-      password = valid_<%= schema.singular %>_password()
-      <%= schema.singular %> = <%= schema.singular %>_fixture(%{password: password})
-      %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>), <%= schema.singular %>: <%= schema.singular %>, password: password}
+      <%= schema.singular %> = <%= schema.singular %>_fixture()
+      %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>), <%= schema.singular %>: <%= schema.singular %>}
     end
 
-    test "updates the <%= schema.singular %> email", %{conn: conn, password: password, <%= schema.singular %>: <%= schema.singular %>} do
+    test "updates the <%= schema.singular %> email", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       new_email = unique_<%= schema.singular %>_email()
 
       {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/settings")
@@ -40,7 +51,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       result =
         lv
         |> form("#email_form", %{
-          "current_password" => password,
           "<%= schema.singular %>" => %{"email" => new_email}
         })
         |> render_submit()
@@ -57,7 +67,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         |> element("#email_form")
         |> render_change(%{
           "action" => "update_email",
-          "current_password" => "invalid",
           "<%= schema.singular %>" => %{"email" => "with spaces"}
         })
 
@@ -71,32 +80,28 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       result =
         lv
         |> form("#email_form", %{
-          "current_password" => "invalid",
           "<%= schema.singular %>" => %{"email" => <%= schema.singular %>.email}
         })
         |> render_submit()
 
       assert result =~ "Change Email"
       assert result =~ "did not change"
-      assert result =~ "is not valid"
     end
   end
 
   describe "update password form" do
     setup %{conn: conn} do
-      password = valid_<%= schema.singular %>_password()
-      <%= schema.singular %> = <%= schema.singular %>_fixture(%{password: password})
-      %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>), <%= schema.singular %>: <%= schema.singular %>, password: password}
+      <%= schema.singular %> = <%= schema.singular %>_fixture()
+      %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>), <%= schema.singular %>: <%= schema.singular %>}
     end
 
-    test "updates the <%= schema.singular %> password", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>, password: password} do
+    test "updates the <%= schema.singular %> password", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       new_password = valid_<%= schema.singular %>_password()
 
       {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/settings")
 
       form =
         form(lv, "#password_form", %{
-          "current_password" => password,
           "<%= schema.singular %>" => %{
             "email" => <%= schema.singular %>.email,
             "password" => new_password,
@@ -125,14 +130,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         lv
         |> element("#password_form")
         |> render_change(%{
-          "current_password" => "invalid",
           "<%= schema.singular %>" => %{
             "password" => "too short",
             "password_confirmation" => "does not match"
           }
         })
 
-      assert result =~ "Change Password"
+      assert result =~ "Save Password"
       assert result =~ "should be at least 12 character(s)"
       assert result =~ "does not match password"
     end
@@ -143,7 +147,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       result =
         lv
         |> form("#password_form", %{
-          "current_password" => "invalid",
           "<%= schema.singular %>" => %{
             "password" => "too short",
             "password_confirmation" => "does not match"
@@ -151,10 +154,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         })
         |> render_submit()
 
-      assert result =~ "Change Password"
+      assert result =~ "Save Password"
       assert result =~ "should be at least 12 character(s)"
       assert result =~ "does not match password"
-      assert result =~ "is not valid"
     end
   end
 

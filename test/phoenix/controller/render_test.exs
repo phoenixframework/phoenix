@@ -99,7 +99,7 @@ defmodule Phoenix.Controller.RenderTest do
   end
 
   test "renders with conn status code" do
-    conn = %Plug.Conn{conn() | status: 404}
+    conn = %{conn() | status: 404}
     conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "app.html"})
     assert conn.status == 404
   end

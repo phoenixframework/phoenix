@@ -163,18 +163,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def button(assigns) do
     ~H"""
-    <button
-      type={@type}
-      class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
-        @class
-      ]}
-      {@rest}
-    >
+    <button type={@type} class={[button_classes(), @class]} {@rest}>
       {render_slot(@inner_block)}
     </button>
     """
+  end
+
+  @doc """
+  Returns the default button classes.
+
+  ## Examples
+
+      <.link class={button_classes()} href={~p"/items/new"}>
+        New Item
+      </.link>
+  """
+  def button_classes do
+    "inline-block phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3 text-sm font-semibold leading-6 text-white active:text-white/80"
   end
 
   @doc """
