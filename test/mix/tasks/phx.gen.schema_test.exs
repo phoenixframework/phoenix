@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "build" do
     in_tmp_project "build", fn ->
-      schema = Gen.Schema.build(~w(Blog.Post posts title:string tags:map), [])
+      schema = Gen.Schema.build(~w(Blog.Post posts title:string tags:map --no-scope), [])
 
       assert %Schema{
         alias: Post,
@@ -33,6 +33,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         optionals: [:tags],
         route_helper: "post",
         defaults: %{title: "", tags: ""},
+        scope: nil
       } = schema
       assert String.ends_with?(schema.file, "lib/phoenix/blog/post.ex")
     end
@@ -40,7 +41,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "build with nested web namespace", config do
     in_tmp_project config.test, fn ->
-      schema = Gen.Schema.build(~w(Blog.Post posts title:string --web API.V1), [])
+      schema = Gen.Schema.build(~w(Blog.Post posts title:string --web API.V1 --no-scope), [])
 
       assert %Schema{
         alias: Post,
@@ -56,6 +57,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         types: [title: :string],
         route_helper: "api_v1_post",
         defaults: %{title: ""},
+        scope: nil
       } = schema
       assert String.ends_with?(schema.file, "lib/phoenix/blog/post.ex")
     end
@@ -64,7 +66,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
   test "table name missing from references", config do
     in_tmp_project config.test, fn ->
       assert_raise Mix.Error, ~r/expect the table to be given to user_id:references/, fn ->
-        Gen.Schema.run(~w(Blog.Post posts user_id:references))
+        Gen.Schema.run(~w(Blog.Post posts user_id:references --no-scope))
       end
     end
   end
@@ -72,38 +74,38 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
   test "type missing from array", config do
     in_tmp_project config.test, fn ->
       assert_raise Mix.Error, ~r/expect the type of the array to be given to settings:array/, fn ->
-        Gen.Schema.run(~w(Blog.Post posts settings:array))
+        Gen.Schema.run(~w(Blog.Post posts settings:array --no-scope))
       end
     end
   end
 
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
-      Gen.Schema.run(~w(Blog Post title:string))
+      Gen.Schema.run(~w(Blog Post title:string --no-scope))
     end
   end
 
   test "plural can't have uppercased characters or camelized format" do
     assert_raise Mix.Error, fn ->
-      Gen.Schema.run(~w(Blog Post Posts title:string))
+      Gen.Schema.run(~w(Blog Post Posts title:string --no-scope))
     end
 
     assert_raise Mix.Error, fn ->
-      Gen.Schema.run(~w(Blog Post BlogPosts title:string))
+      Gen.Schema.run(~w(Blog Post BlogPosts title:string --no-scope))
     end
   end
 
   test "table name omitted", config do
     in_tmp_project config.test, fn ->
       assert_raise Mix.Error, fn ->
-        Gen.Schema.run(~w(Blog.Post))
+        Gen.Schema.run(~w(Blog.Post --no-scope))
       end
     end
   end
 
   test "generates schema", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post blog_posts title:string))
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string --no-scope))
       assert_file "lib/phoenix/blog/post.ex"
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_blog_posts.exs")
@@ -115,7 +117,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "allows a custom repo", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post blog_posts title:string --repo MyApp.CustomRepo))
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string --repo MyApp.CustomRepo --no-scope))
 
       assert [migration] = Path.wildcard("priv/custom_repo/migrations/*_create_blog_posts.exs")
       assert_file migration, fn file ->
@@ -126,7 +128,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "allows a custom migration dir", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post blog_posts title:string --migration-dir priv/custom_dir))
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string --migration-dir priv/custom_dir --no-scope))
 
       assert [migration] = Path.wildcard("priv/custom_dir/*_create_blog_posts.exs")
       assert_file migration, fn file ->
@@ -138,7 +140,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
   test "custom migration_dir takes precedence over custom repo name", config do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post blog_posts title:string \
-        --repo MyApp.CustomRepo --migration-dir priv/custom_dir))
+        --repo MyApp.CustomRepo --migration-dir priv/custom_dir --no-scope))
 
       assert [migration] = Path.wildcard("priv/custom_dir/*_create_blog_posts.exs")
       assert_file migration, fn file ->
@@ -149,7 +151,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "does not add maps to the required list", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post blog_posts title:string tags:map published_at:naive_datetime))
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string tags:map published_at:naive_datetime --no-scope))
       assert_file "lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "cast(attrs, [:title, :tags, :published_at]"
         assert file =~ "validate_required([:title, :published_at]"
@@ -159,7 +161,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates nested schema", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Admin.User users name:string))
+      Gen.Schema.run(~w(Blog.Admin.User users name:string --no-scope))
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users.exs")
       assert_file migration, fn file ->
@@ -176,7 +178,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates custom table name", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts --table cms_posts))
+      Gen.Schema.run(~w(Blog.Post posts --table cms_posts --no-scope))
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_cms_posts.exs")
       assert_file migration, fn file ->
@@ -187,7 +189,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates unique indices" , config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts title:unique secret:redact unique_int:integer:unique))
+      Gen.Schema.run(~w(Blog.Post posts title:unique secret:redact unique_int:integer:unique --no-scope))
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
       assert_file migration, fn file ->
@@ -212,7 +214,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates references and belongs_to associations", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts title user_id:references:users))
+      Gen.Schema.run(~w(Blog.Post posts title user_id:references:users --no-scope))
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
       assert_file migration, fn file ->
@@ -228,7 +230,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates references with unique indexes", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts title user_id:references:users unique_post_id:references:posts:unique))
+      Gen.Schema.run(~w(Blog.Post posts title user_id:references:users unique_post_id:references:posts:unique --no-scope))
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
@@ -251,7 +253,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates schema with proper datetime types", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Comment comments title:string drafted_at:datetime published_at:naive_datetime edited_at:utc_datetime locked_at:naive_datetime_usec))
+      Gen.Schema.run(~w(Blog.Comment comments title:string drafted_at:datetime published_at:naive_datetime edited_at:utc_datetime locked_at:naive_datetime_usec --no-scope))
 
       assert_file "lib/phoenix/blog/comment.ex", fn file ->
         assert file =~ "field :drafted_at, :naive_datetime"
@@ -272,7 +274,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates schema with enum", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Comment comments title:string status:enum:unpublished:published:deleted))
+      Gen.Schema.run(~w(Blog.Comment comments title:string status:enum:unpublished:published:deleted --no-scope))
 
       assert_file "lib/phoenix/blog/comment.ex", fn file ->
         assert file =~ "field :status, Ecto.Enum, values: [:unpublished, :published, :deleted]"
@@ -288,7 +290,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates migration with binary_id", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts title user_id:references:users --binary-id))
+      Gen.Schema.run(~w(Blog.Post posts title user_id:references:users --binary-id --no-scope))
 
       assert_file "lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "field :user_id, :binary_id"
@@ -305,7 +307,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates migration with custom primary key", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts title user_id:references:users --binary-id --primary-key post_id))
+      Gen.Schema.run(~w(Blog.Post posts title user_id:references:users --binary-id --primary-key post_id --no-scope))
 
       assert_file "lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "@derive {Phoenix.Param, key: :post_id}"
@@ -324,7 +326,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates schema and migration with prefix", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts title --prefix cms))
+      Gen.Schema.run(~w(Blog.Post posts title --prefix cms --no-scope))
 
       assert_file "lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "@schema_prefix :cms"
@@ -339,7 +341,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "skips migration with --no-migration option", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts --no-migration))
+      Gen.Schema.run(~w(Blog.Post posts --no-migration --no-scope))
       assert [] = Path.wildcard("priv/repo/migrations/*")
     end
   end
@@ -347,7 +349,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
   test "uses defaults from :generators configuration" do
     in_tmp_project "uses defaults from generators configuration (migration)", fn ->
       with_generator_env [migration: false], fn ->
-        Gen.Schema.run(~w(Blog.Post posts))
+        Gen.Schema.run(~w(Blog.Post posts --no-scope))
 
         assert [] = Path.wildcard("priv/repo/migrations/*")
       end
@@ -355,7 +357,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
     in_tmp_project "uses defaults from generators configuration (binary_id)", fn ->
       with_generator_env [binary_id: true], fn ->
-        Gen.Schema.run(~w(Blog.Post posts))
+        Gen.Schema.run(~w(Blog.Post posts --no-scope))
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
@@ -368,7 +370,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
     in_tmp_project "uses defaults from generators configuration (:utc_datetime)", fn ->
       with_generator_env [timestamp_type: :utc_datetime], fn ->
-        Gen.Schema.run(~w(Blog.Post posts))
+        Gen.Schema.run(~w(Blog.Post posts --no-scope))
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
@@ -388,7 +390,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       try do
         Application.put_env(:ecto_sql, :migration_module, MyCustomApp.MigrationModule)
 
-        Gen.Schema.run(~w(Blog.Post posts))
+        Gen.Schema.run(~w(Blog.Post posts --no-scope))
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
@@ -404,7 +406,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates schema without extra line break", config do
     in_tmp_project config.test, fn ->
-      Gen.Schema.run(~w(Blog.Post posts title))
+      Gen.Schema.run(~w(Blog.Post posts title --no-scope))
 
       assert_file "lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "import Ecto.Changeset\n\n  schema"
@@ -418,7 +420,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         Application.put_env(:phoenix, :generators, context_app: false)
 
         assert_raise Mix.Error, ~r/no context_app configured/, fn ->
-          Gen.Schema.run(~w(Blog.Post blog_posts title:string))
+          Gen.Schema.run(~w(Blog.Post blog_posts title:string --no-scope))
         end
       end
     end
@@ -427,7 +429,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       in_tmp_umbrella_project config.test, fn ->
         Application.put_env(:phoenix, :generators, context_app: nil)
 
-        Gen.Schema.run(~w(Blog.Post blog_posts title:string))
+        Gen.Schema.run(~w(Blog.Post blog_posts title:string --no-scope))
 
         assert_file "lib/phoenix/blog/post.ex"
         assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_posts.exs")
@@ -438,7 +440,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       in_tmp_umbrella_project config.test, fn ->
         Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
 
-        Gen.Schema.run(~w(Blog.Post blog_posts title:string))
+        Gen.Schema.run(~w(Blog.Post blog_posts title:string --no-scope))
 
         assert_file "another_app/lib/another_app/blog/post.ex"
         assert [_] = Path.wildcard("another_app/priv/repo/migrations/*_create_blog_posts.exs")

@@ -7,6 +7,7 @@ defmodule Mix.Phoenix.Scope do
             alias: nil,
             assign_key: nil,
             access_path: nil,
+            schema_table: nil,
             schema_key: nil,
             schema_type: nil
 

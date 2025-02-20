@@ -11,12 +11,13 @@
 <%= schema.fixture_params |> Enum.map(fn {key, code} -> "        #{key}: #{code}" end) |> Enum.join(",\n") %>
       })
 
-    {:ok, <%= schema.singular %>} = <%= inspect context.module %>.create_<%= schema.singular %>(scope, attrs)<% else %>{:ok, <%= schema.singular %>} =
+    {:ok, <%= schema.singular %>} = <%= inspect context.module %>.create_<%= schema.singular %>(scope, attrs)<% else %>
+    {:ok, <%= schema.singular %>} =
       attrs
       |> Enum.into(%{
 <%= schema.fixture_params |> Enum.map(fn {key, code} -> "        #{key}: #{code}" end) |> Enum.join(",\n") %>
       })
       |> <%= inspect context.module %>.create_<%= schema.singular %>()
-    <% end %>
+<% end %>
     <%= schema.singular %>
   end

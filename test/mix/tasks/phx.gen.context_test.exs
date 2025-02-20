@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "new context", config do
     in_tmp_project(config.test, fn ->
-      schema = Schema.new("Blog.Post", "posts", [], [])
+      schema = Schema.new("Blog.Post", "posts", [], [no_scope: true])
       context = Context.new("Blog", schema, [])
 
       assert %Context{
@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "new nested context", config do
     in_tmp_project(config.test, fn ->
-      schema = Schema.new("Site.Blog.Post", "posts", [], [])
+      schema = Schema.new("Site.Blog.Post", "posts", [], [no_scope: true])
       context = Context.new("Site.Blog", schema, [])
 
       assert %Context{
@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       end
       """)
 
-      schema = Schema.new("Blog.Post", "posts", [], [])
+      schema = Schema.new("Blog.Post", "posts", [], [no_scope: true])
       context = Context.new("Blog", schema, [])
       assert Context.pre_existing?(context)
       refute Context.pre_existing_tests?(context)
@@ -120,42 +120,42 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
   test "invalid mix arguments", config do
     in_tmp_project(config.test, fn ->
       assert_raise Mix.Error, ~r/Expected the context, "blog", to be a valid module name/, fn ->
-        Gen.Context.run(~w(blog Post posts title:string))
+        Gen.Context.run(~w(blog Post posts title:string --no-scope))
       end
 
       assert_raise Mix.Error, ~r/Expected the schema, "posts", to be a valid module name/, fn ->
-        Gen.Context.run(~w(Post posts title:string))
+        Gen.Context.run(~w(Post posts title:string --no-scope))
       end
 
       assert_raise Mix.Error, ~r/The context and schema should have different names/, fn ->
-        Gen.Context.run(~w(Blog Blog blogs))
+        Gen.Context.run(~w(Blog Blog blogs --no-scope))
       end
 
       assert_raise Mix.Error,
                    ~r/Cannot generate context Phoenix because it has the same name as the application/,
                    fn ->
-                     Gen.Context.run(~w(Phoenix Post blogs))
+                     Gen.Context.run(~w(Phoenix Post blogs --no-scope))
                    end
 
       assert_raise Mix.Error,
                    ~r/Cannot generate schema Phoenix because it has the same name as the application/,
                    fn ->
-                     Gen.Context.run(~w(Blog Phoenix blogs))
+                     Gen.Context.run(~w(Blog Phoenix blogs --no-scope))
                    end
 
       assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
-        Gen.Context.run(~w(Blog.Post posts))
+        Gen.Context.run(~w(Blog.Post posts --no-scope))
       end
 
       assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
-        Gen.Context.run(~w(Blog Post))
+        Gen.Context.run(~w(Blog Post --no-scope))
       end
     end)
   end
 
   test "generates context and handles existing contexts", config do
     in_tmp_project(config.test, fn ->
-      Gen.Context.run(~w(Blog Post posts slug:unique secret:redact title:string))
+      Gen.Context.run(~w(Blog Post posts slug:unique secret:redact title:string --no-scope))
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "field :title, :string"
@@ -193,7 +193,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       end)
 
       send(self(), {:mix_shell_input, :yes?, true})
-      Gen.Context.run(~w(Blog Comment comments title:string))
+      Gen.Context.run(~w(Blog Comment comments title:string --no-scope))
 
       assert_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> notice]}
@@ -248,6 +248,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
             published_at:utc_datetime:unique
             author:references:users:unique
             published?:boolean
+            --no-scope
           ))
 
       assert_received {:mix_shell, :info,
@@ -319,6 +320,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
             subject:unique
             body:text:unique
             order:integer:unique
+            --no-scope
           ))
 
       refute_received {:mix_shell, :info,
@@ -329,7 +331,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
   test "generates into existing context without prompt with --merge-with-existing-context",
        config do
     in_tmp_project(config.test, fn ->
-      Gen.Context.run(~w(Blog Post posts title))
+      Gen.Context.run(~w(Blog Post posts title --no-scope))
 
       assert_file("lib/phoenix/blog.ex", fn file ->
         assert file =~ "def get_post!"
@@ -340,7 +342,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def change_post"
       end)
 
-      Gen.Context.run(~w(Blog Comment comments message:string --merge-with-existing-context))
+      Gen.Context.run(~w(Blog Comment comments message:string --merge-with-existing-context --no-scope))
 
       refute_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> _notice]}
@@ -359,7 +361,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
   test "when more than 50 attributes are given", config do
     in_tmp_project(config.test, fn ->
       long_attribute_list = Enum.map_join(0..55, " ", &"attribute#{&1}:string")
-      Gen.Context.run(~w(Blog Post posts title #{long_attribute_list}))
+      Gen.Context.run(~w(Blog Post posts title #{long_attribute_list} --no-scope))
 
       assert_file("test/phoenix/blog_test.exs", fn file ->
         refute file =~ "...}"
@@ -369,7 +371,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "generates schema with no migration option", config do
     in_tmp_project(config.test, fn ->
-      Gen.Context.run(~w(Blog Post posts title:string --no-migration))
+      Gen.Context.run(~w(Blog Post posts title:string --no-migration --no-scope))
 
       assert Path.wildcard("priv/repo/migrations/*") == []
     end)
@@ -377,7 +379,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "generates context with no schema and repo option", config do
     in_tmp_project(config.test, fn ->
-      Gen.Context.run(~w(Blog Post posts title:string --no-schema --repo=Foo.RepoX))
+      Gen.Context.run(~w(Blog Post posts title:string --no-schema --repo=Foo.RepoX --no-scope))
 
       refute_file("lib/phoenix/blog/post.ex")
 
@@ -411,7 +413,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
   test "generates context with enum", config do
     in_tmp_project(config.test, fn ->
       Gen.Context.run(
-        ~w(Accounts User users email:text:unique password:text:redact status:enum:verified:unverified:disabled)
+        ~w(Accounts User users email:text:unique password:text:redact status:enum:verified:unverified:disabled --no-scope)
       )
 
       assert_file("lib/phoenix/accounts/user.ex", fn file ->

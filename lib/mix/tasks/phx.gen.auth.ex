@@ -157,7 +157,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     hashing_library = build_hashing_library!(opts)
 
     context_args = OptionParser.to_argv(opts, switches: @switches) ++ parsed
-    {context, schema} = Gen.Context.build(context_args, __MODULE__)
+    {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], __MODULE__)
 
     context = put_live_option(context)
     Gen.Context.prompt_for_code_injection(context)

@@ -103,10 +103,11 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
-    conn_scope = if schema.scope do
-      "conn.assigns.#{schema.scope.assign_key}"
+    {conn_scope, context_scope_prefix} = if schema.scope do
+      base = "conn.assigns.#{schema.scope.assign_key}"
+      {base, "#{base}, "}
     else
-      ""
+      {"", ""}
     end
 
     binding = [
@@ -117,7 +118,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
       gettext?: Code.ensure_loaded?(Module.concat(context.web_module, "Gettext")),
       primary_key: schema.opts[:primary_key] || :id,
       conn_scope: conn_scope,
-      context_scope_prefix: "#{conn_scope}, "
+      context_scope_prefix: context_scope_prefix
     ]
 
     paths = Mix.Phoenix.generator_paths()
