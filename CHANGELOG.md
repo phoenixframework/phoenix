@@ -46,11 +46,12 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
-## 1.7.20
+## 1.7.20 (2025-02-20)
 
 ### Enhancements
   * Add `[:phoenix, :socket_drain]` telemetry event to track socket draining and use it for logging
   * Address Elixir 1.18 warnings in phx.new
+  * Add `PHX_NEW_CACHE_DIR` env var for cached `phx.new` builds
 
 ### Bug fixes
   * Fix code reloader error when `mix.lock` is touched without its content changing
