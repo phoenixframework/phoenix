@@ -126,8 +126,7 @@ defmodule Mix.Tasks.Phx.New do
     && rm -rf assets config lib priv test mix.exs README.md
   ```
 
-  Your cached build directory
-  should contain:
+  Your cached build directory should contain:
 
       _build
       deps
