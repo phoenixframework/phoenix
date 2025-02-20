@@ -830,7 +830,7 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
-  describe "PHX_CACHE_DIR" do
+  describe "PHX_NEW_CACHE_DIR" do
     @phx_new_cache_dir System.get_env("PHX_NEW_CACHE_DIR")
     test "new with PHX_NEW_CACHE_DIR" do
       System.put_env("PHX_NEW_CACHE_DIR", __DIR__)
