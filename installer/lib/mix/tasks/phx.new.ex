@@ -132,6 +132,12 @@ defmodule Mix.Tasks.Phx.New do
       deps
       mix.lock
 
+  Then you could run:
+
+  ```shell
+  PHX_NEW_CACHE_DIR=/path/to/mycache mix phx.new myapp
+  ```
+
   The entire cache directory will be copied to the new project, replacing
   any existing files where conflicts exist.
   """
