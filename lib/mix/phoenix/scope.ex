@@ -24,8 +24,8 @@ defmodule Mix.Phoenix.Scope do
   @doc """
   Returns a `%{name: scope}` map of configured scopes.
   """
-  def scopes_from_config do
-    scopes = Application.get_env(:phoenix, :scopes, [])
+  def scopes_from_config(otp_app) do
+    scopes = Application.get_env(otp_app, :scopes, [])
 
     Map.new(scopes, fn {name, opts} -> {name, new!(name, opts)} end)
   end
@@ -33,8 +33,8 @@ defmodule Mix.Phoenix.Scope do
   @doc """
   Returns the default scope.
   """
-  def default_scope do
-    with {_, scope} <- Enum.find(scopes_from_config(), fn {_, scope} -> scope.default end) do
+  def default_scope(otp_app) do
+    with {_, scope} <- Enum.find(scopes_from_config(otp_app), fn {_, scope} -> scope.default end) do
       scope
     end
   end
@@ -44,20 +44,20 @@ defmodule Mix.Phoenix.Scope do
 
   Returns `nil` for `--no-scope` and raises if a specific scope is not configured.
   """
-  def scope_from_opts(bin, false) when is_binary(bin) do
+  def scope_from_opts(_otp_app, bin, false) when is_binary(bin) do
     raise "--scope and --no-scope must not be used together"
   end
 
-  def scope_from_opts(_, true), do: nil
+  def scope_from_opts(__otp_app, _name, true), do: nil
 
-  def scope_from_opts(nil, _) do
-    default_scope() || raise """
+  def scope_from_opts(otp_app, nil, _) do
+    default_scope(otp_app) || raise """
     no default scope configured!
 
     Either run the generator with --no-scope to skip scoping, specify a scope with --scope,
     or configure a default scope in your application's config:
 
-        config :phoenix, :scopes, [
+        config :#{otp_app}, :scopes, [
           user: [
             default: true,
             ...
@@ -66,16 +66,16 @@ defmodule Mix.Phoenix.Scope do
     """
   end
 
-  def scope_from_opts(name, _) do
+  def scope_from_opts(otp_app, name, _) do
     key = String.to_atom(name)
-    scopes = scopes_from_config()
+    scopes = scopes_from_config(otp_app)
     Map.get_lazy(scopes, key, fn ->
       raise """
       scope :#{key} not configured!
 
       Ensure that the scope :#{key} is configured in your application's config:
 
-          config :phoenix, :scopes, [
+          config :#{otp_app}, :scopes, [
             #{key}: [
               ...
             ]

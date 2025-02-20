@@ -202,7 +202,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     context
     |> copy_new_files(binding, paths)
     |> inject_conn_case_helpers(paths, binding)
-    |> inject_config(hashing_library)
+    |> inject_hashing_config(hashing_library)
+    |> inject_scope_config()
     |> maybe_inject_mix_dependency(hashing_library)
     |> inject_routes(paths, binding)
     |> maybe_inject_router_import(binding)
@@ -289,6 +290,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       "schema_token.ex": [context.dir, "#{singular}_token.ex"],
       "auth.ex": [web_pre, web_path, "#{singular}_auth.ex"],
       "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
+      "scope.ex": [context.dir, "#{singular}_scope.ex"],
       "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
       "session_controller_test.exs": [
         web_test_pre,
@@ -622,7 +624,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     end
   end
 
-  defp inject_config(context, %HashingLibrary{} = hashing_library) do
+  defp inject_hashing_config(context, %HashingLibrary{} = hashing_library) do
     file_path =
       if Mix.Phoenix.in_umbrella?(File.cwd!()) do
         Path.expand("../../")
@@ -634,7 +636,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     file =
       case read_file(file_path) do
         {:ok, file} -> file
-        {:error, {:file_read_error, _}} -> "use Mix.Config\n"
+        {:error, {:file_read_error, _}} -> "import Config\n"
       end
 
     case Injector.test_config_inject(file, hashing_library) do
@@ -651,6 +653,60 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         Mix.shell().info("""
 
         #{help_text}
+        """)
+    end
+
+    context
+  end
+
+  defp inject_scope_config(%Context{} = context) do
+    file_path =
+      if Mix.Phoenix.in_umbrella?(File.cwd!()) do
+        Path.expand("../../")
+      else
+        File.cwd!()
+      end
+      |> Path.join("config/config.exs")
+
+    file =
+      case read_file(file_path) do
+        {:ok, file} -> file
+        {:error, {:file_read_error, _}} -> "import Config\n"
+      end
+
+    existing_scopes = Application.get_env(context.context_app, :scopes, [])
+    scope_name = context.schema.singular
+    if Enum.find(existing_scopes, fn {k, _} -> k == scope_name end) do
+      raise "scope #{scope_name} is already configured"
+    end
+
+    scope_config = """
+    config :#{context.context_app}, :scopes,
+      #{context.schema.singular}: [
+        default: true,
+        module: #{inspect(context.module)}.#{inspect(context.schema.alias)}Scope,
+        assign_key: :current_scope,
+        access_path: [:#{context.schema.singular}, :#{context.schema.opts[:primary_key] || :id}],
+        schema_key: :#{context.schema.singular}_#{context.schema.opts[:primary_key] || :id},
+        schema_type: :#{if(context.schema.binary_id, do: :binary_id, else: :id)},
+        schema_table: :#{context.schema.table}
+      ]
+    """
+    |> String.trim()
+
+    case Injector.config_inject(file, scope_config) do
+      {:ok, new_file} ->
+        print_injecting(file_path)
+        File.write!(file_path, new_file)
+
+      :already_injected ->
+        :ok
+
+      {:error, :unable_to_inject} ->
+        Mix.shell().info("""
+        Add the following to #{Path.relative_to_cwd(file_path)}:
+
+        #{scope_config}
         """)
     end
 

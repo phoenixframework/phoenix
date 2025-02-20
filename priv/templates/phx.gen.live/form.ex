@@ -44,7 +44,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   defp apply_action(socket, :new, _params) do
-    <%= schema.singular %> = %<%= inspect schema.alias %>{}
+    <%= schema.singular %> = %<%= inspect schema.alias %>{<%= if scope do %><%= scope.schema_key %>: <%= socket_scope %>.<%= Enum.join(scope.access_path, ".") %><% end %>}
 
     socket
     |> assign(:page_title, "New <%= schema.human_singular %>")
