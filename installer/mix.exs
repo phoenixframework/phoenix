@@ -55,7 +55,7 @@ defmodule Phx.New.MixProject do
 
   def application do
     [
-      extra_applications: [:eex, :crypto]
+      extra_applications: [:eex, :crypto, :public_key]
     ]
   end
 
