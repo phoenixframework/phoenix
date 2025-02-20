@@ -114,7 +114,8 @@ defmodule Mix.Tasks.Phx.New do
   You can read more about umbrella projects using the
   official [Elixir guide](https://hexdocs.pm/elixir/dependencies-and-umbrella-projects.html#umbrella-projects)
 
-  ## PHX_NEW_CACHE_DIR
+  ## `PHX_NEW_CACHE_DIR`
+
   In rare cases, it may be useful to copy the build from a previously
   cached build. To do this, set the `PHX_NEW_CACHE_DIR` environment
   variable before running `mix phx.new`. For example, you could generate a
