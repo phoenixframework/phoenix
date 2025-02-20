@@ -33,7 +33,9 @@ defmodule Mix.Phoenix.Scope do
   Returns the default scope.
   """
   def default_scope do
-    Enum.find(scopes_from_config(), fn {_, scope} -> scope.default end)
+    with {_, scope} <- Enum.find(scopes_from_config(), fn {_, scope} -> scope.default end) do
+      scope
+    end
   end
 
   @doc """
