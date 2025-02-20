@@ -27,12 +27,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   describe "create <%= schema.singular %>" do
     test "renders <%= schema.singular %> when data is valid", %{conn: conn} do
       conn = post(conn, ~p"<%= schema.api_route_prefix %>", <%= schema.singular %>: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+      assert %{"<%= primary_key %>" => <%= primary_key %>} = json_response(conn, 201)["data"]
 
-      conn = get(conn, ~p"<%= schema.api_route_prefix %>/#{id}")
+      conn = get(conn, ~p"<%= schema.api_route_prefix %>/#{<%= primary_key %>}")
 
       assert %{
-               "id" => ^id<%= for {key, val} <- schema.params.create |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
+               "<%= primary_key %>" => ^<%= primary_key %><%= for {key, val} <- schema.params.create |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
                "<%= key %>" => <%= inspect(val) %><% end %>
              } = json_response(conn, 200)["data"]
     end
@@ -46,14 +46,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   describe "update <%= schema.singular %>" do
     setup [:create_<%= schema.singular %>]
 
-    test "renders <%= schema.singular %> when data is valid", %{conn: conn, <%= schema.singular %>: %<%= inspect schema.alias %>{id: id} = <%= schema.singular %>} do
+    test "renders <%= schema.singular %> when data is valid", %{conn: conn, <%= schema.singular %>: %<%= inspect schema.alias %>{<%= primary_key %>: <%= primary_key %>} = <%= schema.singular %>} do
       conn = put(conn, ~p"<%= schema.api_route_prefix %>/#{<%= schema.singular %>}", <%= schema.singular %>: @update_attrs)
-      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+      assert %{"<%= primary_key %>" => ^<%= primary_key %>} = json_response(conn, 200)["data"]
 
-      conn = get(conn, ~p"<%= schema.api_route_prefix %>/#{id}")
+      conn = get(conn, ~p"<%= schema.api_route_prefix %>/#{<%= primary_key %>}")
 
       assert %{
-               "id" => ^id<%= for {key, val} <- schema.params.update |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
+               "<%= primary_key %>" => ^<%= primary_key %><%= for {key, val} <- schema.params.update |> Phoenix.json_library().encode!() |> Phoenix.json_library().decode!() do %>,
                "<%= key %>" => <%= inspect(val) %><% end %>
              } = json_response(conn, 200)["data"]
     end

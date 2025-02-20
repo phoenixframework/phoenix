@@ -34,8 +34,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   defp return_to("show"), do: "show"
   defp return_to(_), do: "index"
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
+  defp apply_action(socket, :edit, %{"<%= primary_key %>" => <%= primary_key %>}) do
+    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= primary_key %>)
 
     socket
     |> assign(:page_title, "Edit <%= schema.human_singular %>")

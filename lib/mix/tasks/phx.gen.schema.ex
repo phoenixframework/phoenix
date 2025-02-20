@@ -168,7 +168,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     prompt_for_conflicts(schema)
 
     schema
-    |> copy_new_files(paths, schema: schema)
+    |> copy_new_files(paths, schema: schema, primary_key: schema.opts[:primary_key] || :id)
     |> print_shell_instructions()
   end
 
