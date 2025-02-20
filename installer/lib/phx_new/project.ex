@@ -16,6 +16,7 @@ defmodule Phx.New.Project do
             opts: :unset,
             in_umbrella?: false,
             binding: [],
+            cached_build_path: nil,
             generators: [timestamp_type: :utc_datetime]
 
   def new(project_path, opts) do
