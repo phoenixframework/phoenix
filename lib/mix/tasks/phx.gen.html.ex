@@ -107,13 +107,21 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
+    conn_scope = if schema.scope do
+      "conn.assigns.#{schema.scope.assign_key}"
+    else
+      ""
+    end
+
     binding = [
       context: context,
       schema: schema,
+      primary_key: schema.opts[:primary_key] || :id,
+      scope: schema.scope,
       inputs: inputs(schema),
-      primary_key: schema.opts[:primary_key] || :id
+      conn_scope: conn_scope,
+      context_scope_prefix: "#{conn_scope}, "
     ]
-
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
