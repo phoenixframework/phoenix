@@ -87,7 +87,14 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMSSQLAdapterTest do
       with_installer_tmp("new with defaults", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "phx_blog", ["--database", "mssql", "--live"])
 
-        mix_run!(~w(phx.gen.html Accounts Group groups name), app_root_path)
+        mix_run!(
+          ~w(phx.gen.html Accounts Group groups
+            name
+            details
+            other_very_important_attribute
+            one_more_attribute_with_long_name),
+          app_root_path
+        )
 
         modify_file(Path.join(app_root_path, "lib/phx_blog_web/router.ex"), fn file ->
           inject_before_final_end(file, """

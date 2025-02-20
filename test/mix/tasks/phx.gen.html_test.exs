@@ -331,6 +331,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   test "with a matching plural and singular term", config do
     in_tmp_project(config.test, fn ->
       Gen.Html.run(~w(Tracker Series series value:integer))
+
       assert_file("lib/phoenix_web/controllers/series_controller.ex", fn file ->
         assert file =~ "render(conn, :index, series_collection: series)"
       end)
@@ -399,58 +400,60 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   describe "inside umbrella" do
     test "without context_app generators config uses web dir", config do
       in_tmp_umbrella_project(config.test, fn ->
-        Application.put_env(:phoenix, :generators, context_app: nil)
-        Gen.Html.run(~w(Accounts User users name:string))
+        with_generator_env([context_app: nil], fn ->
+          Gen.Html.run(~w(Accounts User users name:string))
 
-        assert_file("lib/phoenix/accounts.ex")
-        assert_file("lib/phoenix/accounts/user.ex")
+          assert_file("lib/phoenix/accounts.ex")
+          assert_file("lib/phoenix/accounts/user.ex")
 
-        assert_file("lib/phoenix_web/controllers/user_controller.ex", fn file ->
-          assert file =~ "defmodule PhoenixWeb.UserController"
-          assert file =~ "use PhoenixWeb, :controller"
-        end)
+          assert_file("lib/phoenix_web/controllers/user_controller.ex", fn file ->
+            assert file =~ "defmodule PhoenixWeb.UserController"
+            assert file =~ "use PhoenixWeb, :controller"
+          end)
 
-        assert_file("lib/phoenix_web/controllers/user_html.ex", fn file ->
-          assert file =~ "defmodule PhoenixWeb.UserHTML"
-        end)
+          assert_file("lib/phoenix_web/controllers/user_html.ex", fn file ->
+            assert file =~ "defmodule PhoenixWeb.UserHTML"
+          end)
 
-        assert_file("test/phoenix_web/controllers/user_controller_test.exs", fn file ->
-          assert file =~ "defmodule PhoenixWeb.UserControllerTest"
+          assert_file("test/phoenix_web/controllers/user_controller_test.exs", fn file ->
+            assert file =~ "defmodule PhoenixWeb.UserControllerTest"
+          end)
         end)
       end)
     end
 
     test "raises with false context_app", config do
       in_tmp_umbrella_project(config.test, fn ->
-        Application.put_env(:phoenix, :generators, context_app: false)
-
-        assert_raise Mix.Error, ~r/no context_app configured/, fn ->
-          Gen.Html.run(~w(Accounts User users name:string))
-        end
+        with_generator_env([context_app: false], fn ->
+          assert_raise Mix.Error, ~r/no context_app configured/, fn ->
+            Gen.Html.run(~w(Accounts User users name:string))
+          end
+        end)
       end)
     end
 
     test "with context_app generators config does not use web dir", config do
       in_tmp_umbrella_project(config.test, fn ->
         File.mkdir!("another_app")
-        Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
 
-        Gen.Html.run(~w(Accounts User users name:string))
+        with_generator_env([context_app: {:another_app, "another_app"}], fn ->
+          Gen.Html.run(~w(Accounts User users name:string))
 
-        assert_file("another_app/lib/another_app/accounts.ex")
-        assert_file("another_app/lib/another_app/accounts/user.ex")
+          assert_file("another_app/lib/another_app/accounts.ex")
+          assert_file("another_app/lib/another_app/accounts/user.ex")
 
-        assert_file("lib/phoenix/controllers/user_controller.ex", fn file ->
-          assert file =~ "defmodule Phoenix.UserController"
-          assert file =~ "use Phoenix, :controller"
-        end)
+          assert_file("lib/phoenix/controllers/user_controller.ex", fn file ->
+            assert file =~ "defmodule Phoenix.UserController"
+            assert file =~ "use Phoenix, :controller"
+          end)
 
-        assert_file("lib/phoenix/controllers/user_html.ex", fn file ->
-          assert file =~ "defmodule Phoenix.UserHTML"
-        end)
+          assert_file("lib/phoenix/controllers/user_html.ex", fn file ->
+            assert file =~ "defmodule Phoenix.UserHTML"
+          end)
 
-        assert_file("test/phoenix/controllers/user_controller_test.exs", fn file ->
-          assert file =~ "defmodule Phoenix.UserControllerTest"
+          assert_file("test/phoenix/controllers/user_controller_test.exs", fn file ->
+            assert file =~ "defmodule Phoenix.UserControllerTest"
+          end)
         end)
       end)
     end

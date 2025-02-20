@@ -74,6 +74,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   You can skip this prompt and automatically merge the new schema access functions and tests into the
   existing context using `--merge-with-existing-context`. To prevent changes to
   the existing context and exit the generator, use `--no-merge-with-existing-context`.
+
+  ## Format
+  #{Mix.Phoenix.override_format_instruction()}
+
   """
 
   use Mix.Task
@@ -115,6 +119,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
     context
     |> copy_new_files(paths, binding)
+    |> format_files()
     |> print_shell_instructions()
   end
 
@@ -152,17 +157,18 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
+  def files_to_be_generated(%Context{generate?: false}), do: []
+
   def files_to_be_generated(%Context{schema: schema}) do
-    if schema.generate? do
-      Gen.Schema.files_to_be_generated(schema)
-    else
-      []
-    end
+    Gen.Schema.files_to_be_generated(schema)
   end
 
   @doc false
+  def copy_new_files(%Context{generate?: false} = context, _, _), do: context
+
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
-    if schema.generate?, do: Gen.Schema.copy_new_files(schema, paths, binding)
+    Gen.Schema.copy_new_files(schema, paths, binding)
+
     inject_schema_access(context, paths, binding)
     inject_tests(context, paths, binding)
     inject_test_fixture(context, paths, binding)
@@ -296,13 +302,24 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
   end
 
+  defp format_files(%Context{} = context) do
+    files_to_format(context) |> Mix.Phoenix.maybe_format()
+    context
+  end
+
   @doc false
+  def files_to_format(%Context{generate?: false}), do: []
+
+  def files_to_format(%Context{schema: schema} = context) do
+    [context.file, context.test_file, context.test_fixtures_file] ++
+      Gen.Schema.files_to_format(schema)
+  end
+
+  @doc false
+  def print_shell_instructions(%Context{generate?: false}), do: :ok
+
   def print_shell_instructions(%Context{schema: schema}) do
-    if schema.generate? do
-      Gen.Schema.print_shell_instructions(schema)
-    else
-      :ok
-    end
+    Gen.Schema.print_shell_instructions(schema)
   end
 
   defp schema_access_template(%Context{schema: schema}) do
