@@ -3,6 +3,13 @@
   alias <%= inspect scope.alias %>
 
   @doc """
+  Subscribes to scoped notifications about any <%= schema.singular %> changes.
+  """
+  def subscribe_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _<%= scope.name %>_scope) do
+    raise "TODO"
+  end
+
+  @doc """
   Returns the list of <%= schema.plural %>.
 
   ## Examples

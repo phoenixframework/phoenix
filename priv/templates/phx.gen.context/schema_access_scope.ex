@@ -3,6 +3,28 @@
   alias <%= inspect scope.module %>
 
   @doc """
+  Subscribes to scoped notifications about any <%= schema.singular %> changes.
+
+  The broadcasted messages match the pattern:
+
+    * {:created, %<%= inspect schema.alias %>{}}
+    * {:updated, %<%= inspect schema.alias %>{}}
+    * {:deleted, %<%= inspect schema.alias %>{}}
+
+  """
+  def subscribe_<%= schema.plural %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope) do
+    key = <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>
+
+    Phoenix.PubSub.subscribe(<%= inspect context.base_module %>.PubSub, "<%= scope.name %>:#{key}:<%= schema.plural %>")
+  end
+
+  defp broadcast(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, message) do
+    key = <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>
+
+    Phoenix.PubSub.broadcast(<%= inspect context.base_module %>.PubSub, "<%= scope.name %>:#{key}:<%= schema.plural %>", message)
+  end
+
+  @doc """
   Returns the list of <%= schema.plural %>.
 
   ## Examples
@@ -46,9 +68,13 @@
 
   """
   def create_<%= schema.singular %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, attrs \\ %{}) do
-    %<%= inspect schema.alias %>{}
-    |> <%= inspect schema.alias %>.changeset(attrs, <%= scope.name %>_scope)
-    |> Repo.insert()
+    with {:ok, <%= schema.singular %> = %<%= inspect schema.alias %>{}} <-
+      %<%= inspect schema.alias %>{}
+      |> <%= inspect schema.alias %>.changeset(attrs, <%= scope.name %>_scope)
+      |> Repo.insert() do
+      broadcast(<%= scope.name %>_scope, {:created, <%= schema.singular %>})
+      {:ok, <%= schema.singular %>}
+    end
   end
 
   @doc """
@@ -66,9 +92,13 @@
   def update_<%= schema.singular %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
     true = <%= schema.singular %>.<%= scope.schema_key %> == <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>
 
-    <%= schema.singular %>
-    |> <%= inspect schema.alias %>.changeset(attrs, <%= scope.name %>_scope)
-    |> Repo.update()
+    with {:ok, <%= schema.singular %> = %<%= inspect schema.alias %>{}} <-
+      <%= schema.singular %>
+      |> <%= inspect schema.alias %>.changeset(attrs, <%= scope.name %>_scope)
+      |> Repo.update() do
+      broadcast(<%= scope.name %>_scope, {:updated, <%= schema.singular %>})
+      {:ok, <%= schema.singular %>}
+    end
   end
 
   @doc """
@@ -86,7 +116,11 @@
   def delete_<%= schema.singular %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>) do
     true = <%= schema.singular %>.<%= scope.schema_key %> == <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>
 
-    Repo.delete(<%= schema.singular %>)
+    with {:ok, <%= schema.singular %> = %<%= inspect schema.alias %>{}} <-
+      Repo.delete(<%= schema.singular %>) do
+      broadcast(<%= scope.name %>_scope, {:deleted, <%= schema.singular %>})
+      {:ok, <%= schema.singular %>}
+    end
   end
 
   @doc """
