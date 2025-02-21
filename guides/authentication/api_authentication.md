@@ -1,6 +1,6 @@
 # API Authentication
 
-> **Requirement**: This guide expects that you have gone through the [`mix phx.gen.auth`](mix_phx_gen_auth.html) guide.
+> **Requirement**: This guide expects that you have gone through the [`mix phx.gen.auth`](mix_phx_gen_auth.md) guide.
 
 This guide shows how to add API authentication on top of `mix phx.gen.auth`. Since the authentication generator already includes a token table, we use it to store API tokens too, following the best security practices.
 

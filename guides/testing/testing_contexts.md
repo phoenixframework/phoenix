@@ -1,10 +1,10 @@
 # Testing Contexts
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](../introduction/installation.md) and got a Phoenix application [up and running](../introduction/up_and_running.md).
 
-> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
+> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.md).
 
-> **Requirement**: This guide expects that you have gone through the [Contexts guide](contexts.html).
+> **Requirement**: This guide expects that you have gone through the [Contexts guide](../contexts.md).
 
 At the end of the Introduction to Testing guide, we generated an HTML resource for posts using the following command:
 

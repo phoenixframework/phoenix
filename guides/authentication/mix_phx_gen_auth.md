@@ -1,6 +1,6 @@
 # mix phx.gen.auth
 
-> This guide assumes that you have gone through the [introductory guides](overview.html) and have a Phoenix application [up and running](up_and_running.html).
+> This guide assumes that you have gone through the [introductory guides](../introduction/overview.md) and have a Phoenix application [up and running](../introduction/up_and_running.md).
 
 The `mix phx.gen.auth` command generates a flexible, pre-built authentication system based on magic links into your Phoenix app. This generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve.
 
@@ -103,7 +103,7 @@ Furthermore, if you are concerned about enumeration attacks, beware of timing at
 
 ### Confirmation and credential pre-stuffing attacks
 
-The generated functionality ships with an account confirmation mechanism, where users have to confirm their account, typically by email. Furthermore, to prevent security issues, the generated code does forbid users from using the application if their accounts have not yet been confirmed. If you want to change this behavior, please refer to the ["Mixing magic link and password registration" section](Mix.Tasks.Phx.Gen.Auth.html#module-mixing-magic-link-and-password-registration) of `mix phx.gen.auth`.
+The generated functionality ships with an account confirmation mechanism, where users have to confirm their account, typically by email. Furthermore, to prevent security issues, the generated code does forbid users from using the application if their accounts have not yet been confirmed. If you want to change this behavior, please refer to the ["Mixing magic link and password registration" section](https://hexdocs.pm/phoenix/mix_phx_gen_auth.html) of `mix phx.gen.auth`.
 
 ### Case sensitiveness
 

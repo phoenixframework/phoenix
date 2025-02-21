@@ -20,7 +20,7 @@ In this guide you will do the following:
 
   4. Manage your uploaded files
 
-In the [`Contexts guide`](contexts.md), we generated an HTML resource for products. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please refer to that guide for instructions on generating the product resource you will be using here.
+In the [`Contexts guide`](../contexts.md), we generated an HTML resource for products. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please refer to that guide for instructions on generating the product resource you will be using here.
 
 ### Configure a multipart form
 

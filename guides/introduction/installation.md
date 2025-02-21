@@ -35,7 +35,7 @@ Once we have Elixir and Erlang, we are ready to install the Phoenix application 
 $ mix archive.install hex phx_new
 ```
 
-The `phx.new` generator is now available to generate new applications in the next guide, called [Up and Running](up_and_running.html). The flags mentioned below are command line options to the generator; see all available options by calling `mix help phx.new`.
+The `phx.new` generator is now available to generate new applications in the next guide, called [Up and Running](up_and_running.md). The flags mentioned below are command line options to the generator; see all available options by calling `mix help phx.new`.
 
 ## PostgreSQL
 
@@ -53,4 +53,4 @@ macOS and Windows users already have a filesystem watcher, but Linux users must 
 
 ## Summary
 
-At the end of this section, you must have installed Elixir, Hex, Phoenix, and PostgreSQL. Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.html).
+At the end of this section, you must have installed Elixir, Hex, Phoenix, and PostgreSQL. Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.md).

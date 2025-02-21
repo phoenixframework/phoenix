@@ -1,13 +1,13 @@
 # Controllers
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](introduction/installation.md) and got a Phoenix application [up and running](introduction/up_and_running.md).
 
-> **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.md).
 
 Phoenix controllers act as intermediary modules. Their functions — called actions — are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before invoking the view layer to render a template or returning a JSON response.
 
-Phoenix controllers also build on the Plug package, and are themselves plugs. Controllers provide the functions to do almost anything we need to in an action. If we do find ourselves looking for something that Phoenix controllers don't provide, we might find what we're looking for in Plug itself. Please see the [Plug guide](plug.html) or the [Plug documentation](`Plug`) for more information.
-
+Phoenix controllers also build on the Plug package, and are themselves plugs. Controllers provide the functions to do almost anything we need to in an action. If we do find ourselves looking for something that Phoenix controllers don't provide, we might find what we're looking for in Plug itself. Please see the [Plug guide](plug.md) or the [Plug documentation](`Plug`) for more information.
+m
 A newly generated Phoenix app will have a single controller named `PageController`, which can be found at `lib/hello_web/controllers/page_controller.ex` which looks like this:
 
 ```elixir
@@ -52,7 +52,7 @@ defmodule HelloWeb.PageController do
 end
 ```
 
-While we can name our actions whatever we like, there are conventions for action names which we should follow whenever possible. We went over these in the [routing guide](routing.html), but we'll take another quick look here.
+While we can name our actions whatever we like, there are conventions for action names which we should follow whenever possible. We went over these in the [routing guide](routing.md), but we'll take another quick look here.
 
 - index   - renders a list of all items of the given resource type
 - show    - renders an individual item by ID
@@ -66,7 +66,7 @@ Each of these actions takes two parameters, which will be provided by Phoenix be
 
 The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn` comes to Phoenix via Elixir's Plug middleware framework. More detailed information about `conn` can be found in the [Plug.Conn documentation](`Plug.Conn`).
 
-The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against parameters in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [request life-cycle guide](request_lifecycle.html) when we added a messenger parameter to our `show` route in `lib/hello_web/controllers/hello_controller.ex`.
+The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against parameters in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [request life-cycle guide](request_lifecycle.md) when we added a messenger parameter to our `show` route in `lib/hello_web/controllers/hello_controller.ex`.
 
 ```elixir
 defmodule HelloWeb.HelloController do
@@ -110,7 +110,7 @@ If we again visit [`/hello/Frank`] in the browser, we should see a block of JSON
 
 The [`json/2`] function is useful for writing APIs and there is also the [`html/2`] function for rendering HTML, but most of the times we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
 
-Let's rollback our `show` action to what we originally wrote in the [request life-cycle guide](request_lifecycle.html):
+Let's rollback our `show` action to what we originally wrote in the [request life-cycle guide](request_lifecycle.md):
 
 ```elixir
 defmodule HelloWeb.HelloController do
@@ -159,7 +159,7 @@ Or you can pass the assigns directly to `render` instead:
 
 Generally speaking, once all assigns are configured, we invoke the view layer. The view layer (`HelloWeb.HelloHTML`) then renders `show.html` alongside the layout and a response is sent back to the browser.
 
-[Components and HEEx templates](components.html) have their own guide, so we won't spend much time on them here. What we will look at is how to render different formats from inside a controller action.
+[Components and HEEx templates](components.md) have their own guide, so we won't spend much time on them here. What we will look at is how to render different formats from inside a controller action.
 
 ## New rendering formats
 
@@ -329,7 +329,7 @@ end
 
 ```
 
-We made use of `Phoenix.VerifiedRoutes.sigil_p/2` to build our redirect path, which is the preferred approach to reference any path within our application. We learned about verified routes in the [routing guide](routing.html).
+We made use of `Phoenix.VerifiedRoutes.sigil_p/2` to build our redirect path, which is the preferred approach to reference any path within our application. We learned about verified routes in the [routing guide](routing.md).
 
 Finally, let's define in the same file the action we redirect to, which simply renders the home, but now under a new address:
 
@@ -398,7 +398,7 @@ Phoenix does not enforce which keys are stored in the flash. As long as we are i
 
 ## Error pages
 
-Phoenix has two views called `ErrorHTML` and `ErrorJSON` which live in `lib/hello_web/controllers/`. The purpose of these views is to handle errors in a general way for incoming HTML or JSON requests. Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [Custom Error Pages How-To](custom_error_pages.html) for more information.
+Phoenix has two views called `ErrorHTML` and `ErrorJSON` which live in `lib/hello_web/controllers/`. The purpose of these views is to handle errors in a general way for incoming HTML or JSON requests. Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [Custom Error Pages How-To](how_to/custom_error_pages.md) for more information.
 
 [`render/4`]: `Phoenix.Template.render/4`
 [`/hello/Frank`]:  http://localhost:4000/hello/Frank

@@ -1,8 +1,8 @@
 # Presence
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](../introduction/installation.md) and got a Phoenix application [up and running](../introduction/up_and_running.md).
 
-> **Requirement**: This guide expects that you have gone through the [Channels guide](channels.html).
+> **Requirement**: This guide expects that you have gone through the [Channels guide](../real_time/channels.md).
 
 Phoenix Presence is a feature which allows you to register process information on a topic and replicate it transparently across a cluster. It's a combination of both a server-side and client-side library, which makes it simple to implement. A simple use-case would be showing which users are currently online in an application.
 
