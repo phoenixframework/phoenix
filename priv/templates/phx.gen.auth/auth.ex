@@ -5,7 +5,7 @@ defmodule <%= inspect auth_module %> do
   import Phoenix.Controller
 
   alias <%= inspect context.module %>
-  alias <%= inspect context.module %>.<%= inspect schema.alias %>Scope
+  alias <%= inspect scope_config.scope.module %>
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -104,7 +104,7 @@ defmodule <%= inspect auth_module %> do
   def fetch_current_scope(conn, _opts) do
     {<%= schema.singular %>_token, conn} = ensure_<%= schema.singular %>_token(conn)
     <%= schema.singular %> = <%= schema.singular %>_token && <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-    assign(conn, :current_scope, <%= inspect schema.alias %>Scope.for_<%= schema.singular %>(<%= schema.singular %>))
+    assign(conn, :current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
   end
 
   defp ensure_<%= schema.singular %>_token(conn) do
@@ -160,7 +160,7 @@ defmodule <%= inspect auth_module %> do
   def on_mount(:ensure_authenticated, _params, session, socket) do
     socket = mount_current_scope(socket, session)
 
-    if socket.assigns.current_scope.<%= schema.singular %> do
+    if socket.assigns.current_scope do
       {:cont, socket}
     else
       socket =
@@ -175,7 +175,7 @@ defmodule <%= inspect auth_module %> do
   def on_mount(:ensure_sudo_mode, _params, session, socket) do
     socket = mount_current_scope(socket, session)
 
-    if <%= inspect context.alias %>.sudo_mode?(socket.assigns.current_scope.user, -10) do
+    if <%= inspect context.alias %>.sudo_mode?(socket.assigns.current_scope.<%= schema.singular %>, -10) do
       {:cont, socket}
     else
       socket =
@@ -194,7 +194,7 @@ defmodule <%= inspect auth_module %> do
           <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
         end
 
-      <%= inspect schema.alias %>Scope.for_<%= schema.singular %>(<%= schema.singular %>)
+      <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>)
     end)
   end
 
@@ -202,7 +202,7 @@ defmodule <%= inspect auth_module %> do
   Used for routes that require sudo mode.
   """
   def require_sudo_mode(conn, _opts) do
-    if <%= inspect context.alias %>.sudo_mode?(conn.assigns.current_scope.user, -10) do
+    if <%= inspect context.alias %>.sudo_mode?(conn.assigns.current_scope.<%= schema.singular %>, -10) do
       conn
     else
       conn
@@ -217,7 +217,7 @@ defmodule <%= inspect auth_module %> do
   Used for routes that require the <%= schema.singular %> to not be authenticated.
   """
   def redirect_if_<%= schema.singular %>_is_authenticated(conn, _opts) do
-    if conn.assigns.current_scope.<%= schema.singular %> do
+    if conn.assigns.current_scope do
       conn
       |> redirect(to: signed_in_path(conn))
       |> halt()
@@ -233,7 +233,7 @@ defmodule <%= inspect auth_module %> do
   they use the application at all, here would be a good place.
   """
   def require_authenticated_<%= schema.singular %>(conn, _opts) do
-    if conn.assigns.current_scope.<%= schema.singular %> do
+    if conn.assigns.current_scope do
       conn
     else
       conn
@@ -273,7 +273,7 @@ defmodule <%= inspect auth_module %> do
 
   <%= if live? do %>@doc "Returns the path to redirect to after log in."
   # the <%= schema.singular %> was already logged in, redirect to settings
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %<%= inspect schema.alias %>Scope{user: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}}) do
+  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %<%= inspect scope_config.scope.alias %>{user: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}}) do
     ~p"<%= schema.route_prefix %>/settings"
   end
 

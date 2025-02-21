@@ -103,12 +103,13 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
-    {conn_scope, context_scope_prefix} = if schema.scope do
-      base = "conn.assigns.#{schema.scope.assign_key}"
-      {base, "#{base}, "}
-    else
-      {"", ""}
-    end
+    {conn_scope, context_scope_prefix} =
+      if schema.scope do
+        base = "conn.assigns.#{schema.scope.assign_key}"
+        {base, "#{base}, "}
+      else
+        {"", ""}
+      end
 
     binding = [
       context: context,

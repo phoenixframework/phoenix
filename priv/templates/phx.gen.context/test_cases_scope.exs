@@ -2,7 +2,7 @@
   describe "<%= schema.plural %>" do
     alias <%= inspect schema.module %>
 
-    import <%= inspect scope.module %>Fixtures
+    import <%= inspect scope.fixture |> elem(0) %>
     import <%= inspect context.module %>Fixtures
 
     @invalid_attrs <%= Mix.Phoenix.to_text for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %>
@@ -21,7 +21,7 @@
       <%= schema.singular %> = <%= schema.singular %>_fixture(scope)
       other_scope = <%= scope.name %>_scope_fixture()
       assert <%= inspect context.alias %>.get_<%= schema.singular %>!(scope, <%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>) == <%= schema.singular %>
-      refute <%= inspect context.alias %>.get_<%= schema.singular %>!(other_scope, <%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>)
+      assert_raise Ecto.NoResultsError, fn -> <%= inspect context.alias %>.get_<%= schema.singular %>!(other_scope, <%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>) end
     end
 
     test "create_<%= schema.singular %>/2 with valid data creates a <%= schema.singular %>" do
@@ -61,23 +61,21 @@
       scope = <%= scope.name %>_scope_fixture()
       <%= schema.singular %> = <%= schema.singular %>_fixture(scope)
       assert {:error, %Ecto.Changeset{}} = <%= inspect context.alias %>.update_<%= schema.singular %>(scope, <%= schema.singular %>, @invalid_attrs)
-      assert <%= schema.singular %> == <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>)
+      assert <%= schema.singular %> == <%= inspect context.alias %>.get_<%= schema.singular %>!(scope, <%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>)
     end
 
     test "delete_<%= schema.singular %>/2 deletes the <%= schema.singular %>" do
       scope = <%= scope.name %>_scope_fixture()
       <%= schema.singular %> = <%= schema.singular %>_fixture(scope)
       assert {:ok, %<%= inspect schema.alias %>{}} = <%= inspect context.alias %>.delete_<%= schema.singular %>(scope, <%= schema.singular %>)
-      assert_raise Ecto.NoResultsError, fn -> <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>) end
+      assert_raise Ecto.NoResultsError, fn -> <%= inspect context.alias %>.get_<%= schema.singular %>!(scope, <%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>) end
     end
 
     test "delete_<%= schema.singular %>/2 with invalid scope raises" do
       scope = <%= scope.name %>_scope_fixture()
       other_scope = <%= scope.name %>_scope_fixture()
       <%= schema.singular %> = <%= schema.singular %>_fixture(scope)
-      assert_raise MatchError, fn ->
-        <%= inspect context.alias %>.delete_<%= schema.singular %>(other_scope, <%= schema.singular %>)
-      end
+      assert_raise MatchError, fn -> <%= inspect context.alias %>.delete_<%= schema.singular %>(other_scope, <%= schema.singular %>) end
     end
 
     test "change_<%= schema.singular %>/2 returns a <%= schema.singular %> changeset" do

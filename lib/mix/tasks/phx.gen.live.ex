@@ -120,12 +120,13 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
     Gen.Context.prompt_for_code_injection(context)
 
-    {socket_scope, context_scope_prefix} = if schema.scope do
-      base = "socket.assigns.#{schema.scope.assign_key}"
-      {base, "#{base}, "}
-    else
-      {"", ""}
-    end
+    {socket_scope, context_scope_prefix} =
+      if schema.scope do
+        base = "socket.assigns.#{schema.scope.assign_key}"
+        {base, "#{base}, "}
+      else
+        {"", ""}
+      end
 
     binding = [
       context: context,
@@ -136,6 +137,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       socket_scope: socket_scope,
       context_scope_prefix: context_scope_prefix
     ]
+
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)

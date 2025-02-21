@@ -42,7 +42,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   @impl true
   def mount(_params, _session, socket) do<%= if scope do %>
     <%= inspect context.alias %>.subscribe_<%= schema.plural %>(<%= socket_scope %>)
-    <% end %>
+<% end %>
     {:ok,
      socket
      |> assign(:page_title, "Listing <%= schema.human_plural %>")<%= if primary_key != :id do %>
@@ -59,7 +59,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end<%= if scope do %>
 
   @impl true
-  def handle_info({type, %<%= inspect schema.module %>{}}, socket) when type in [:created, :updated, :deleted] do
+  def handle_info({type, %<%= inspect schema.module %>{}}, socket)
+      when type in [:created, :updated, :deleted] do
     {:noreply, stream(socket, :<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>(<%= socket_scope %>), reset: true)}
   end<% end %>
 end

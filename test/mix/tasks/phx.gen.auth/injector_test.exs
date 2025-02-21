@@ -498,7 +498,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash
                    plug :protect_from_forgery
                    plug :put_secure_browser_headers
-                   plug :fetch_current_user
+                   plug :fetch_current_scope
                  end
                end
                """
@@ -535,7 +535,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash
                    plug :protect_from_forgery
                    plug :put_secure_browser_headers, %{"content-security-policy" => @csp}
-                   plug :fetch_current_user
+                   plug :fetch_current_scope
                  end
                end
                """
@@ -572,7 +572,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash\r
                    plug :protect_from_forgery\r
                    plug :put_secure_browser_headers\r
-                   plug :fetch_current_user\r
+                   plug :fetch_current_scope\r
                  end\r
                end\r
                """
@@ -608,12 +608,12 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
       assert Injector.router_plug_help_text(file_path, context) ==
                """
-               Add the :fetch_current_user plug to the :browser pipeline in foo.ex:
+               Add the :fetch_current_scope plug to the :browser pipeline in foo.ex:
 
                    pipeline :browser do
                      ...
                      plug :put_secure_browser_headers
-                     plug :fetch_current_user
+                     plug :fetch_current_scope
                    end
                """
     end
@@ -666,9 +666,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                            <% end %>
                          </ul>
                          <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-                           <%= if @current_user do %>
+                           <%= if @current_scope do %>
                              <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                               {@current_user.email}
+                               {@current_scope.user.email}
                              </li>
                              <li>
                                <.link
@@ -760,9 +760,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                            <% end %>\r
                          </ul>\r
                          <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
-                           <%= if @current_user do %>\r
+                           <%= if @current_scope do %>\r
                              <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
-                               {@current_user.email}\r
+                               {@current_scope.user.email}\r
                              </li>\r
                              <li>\r
                                <.link\r
@@ -838,9 +838,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  </head>
                  <body>
                    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-                     <%= if @current_user do %>
+                     <%= if @current_scope do %>
                        <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                         {@current_user.email}
+                         {@current_scope.user.email}
                        </li>
                        <li>
                          <.link
@@ -918,9 +918,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  </head>\r
                  <body>\r
                    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
-                     <%= if @current_user do %>\r
+                     <%= if @current_scope do %>\r
                        <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
-                         {@current_user.email}\r
+                         {@current_scope.user.email}\r
                        </li>\r
                        <li>\r
                          <.link\r

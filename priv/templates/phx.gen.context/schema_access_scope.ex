@@ -12,14 +12,14 @@
     * {:deleted, %<%= inspect schema.alias %>{}}
 
   """
-  def subscribe_<%= schema.plural %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope) do
-    key = <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>
+  def subscribe_<%= schema.plural %>(%<%= inspect scope.alias %>{} = scope) do
+    key = scope.<%= Enum.join(scope.access_path, ".") %>
 
     Phoenix.PubSub.subscribe(<%= inspect context.base_module %>.PubSub, "<%= scope.name %>:#{key}:<%= schema.plural %>")
   end
 
-  defp broadcast(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, message) do
-    key = <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>
+  defp broadcast(%<%= inspect scope.alias %>{} = scope, message) do
+    key = scope.<%= Enum.join(scope.access_path, ".") %>
 
     Phoenix.PubSub.broadcast(<%= inspect context.base_module %>.PubSub, "<%= scope.name %>:#{key}:<%= schema.plural %>", message)
   end
@@ -33,8 +33,8 @@
       [%<%= inspect schema.alias %>{}, ...]
 
   """
-  def list_<%= schema.plural %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope) do
-    Repo.all(from <%= schema.singular %> in <%= inspect schema.alias %>, where: <%= schema.singular %>.<%= scope.schema_key %> == ^<%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>)
+  def list_<%= schema.plural %>(%<%= inspect scope.alias %>{} = scope) do
+    Repo.all(from <%= schema.singular %> in <%= inspect schema.alias %>, where: <%= schema.singular %>.<%= scope.schema_key %> == ^scope.<%= Enum.join(scope.access_path, ".") %>)
   end
 
   @doc """
@@ -51,8 +51,8 @@
       ** (Ecto.NoResultsError)
 
   """
-  def get_<%= schema.singular %>!(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, id) do
-    Repo.get_by!(<%= inspect schema.alias %>, [id: id, <%= scope.schema_key %>: <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>])
+  def get_<%= schema.singular %>!(%<%= inspect scope.alias %>{} = scope, id) do
+    Repo.get_by!(<%= inspect schema.alias %>, id: id, <%= scope.schema_key %>: scope.<%= Enum.join(scope.access_path, ".") %>)
   end
 
   @doc """
@@ -67,12 +67,12 @@
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_<%= schema.singular %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, attrs \\ %{}) do
+  def create_<%= schema.singular %>(%<%= inspect scope.alias %>{} = scope, attrs \\ %{}) do
     with {:ok, <%= schema.singular %> = %<%= inspect schema.alias %>{}} <-
-      %<%= inspect schema.alias %>{}
-      |> <%= inspect schema.alias %>.changeset(attrs, <%= scope.name %>_scope)
-      |> Repo.insert() do
-      broadcast(<%= scope.name %>_scope, {:created, <%= schema.singular %>})
+           %<%= inspect schema.alias %>{}
+           |> <%= inspect schema.alias %>.changeset(attrs, scope)
+           |> Repo.insert() do
+      broadcast(scope, {:created, <%= schema.singular %>})
       {:ok, <%= schema.singular %>}
     end
   end
@@ -89,14 +89,14 @@
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_<%= schema.singular %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
-    true = <%= schema.singular %>.<%= scope.schema_key %> == <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>
+  def update_<%= schema.singular %>(%<%= inspect scope.alias %>{} = scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
+    true = <%= schema.singular %>.<%= scope.schema_key %> == scope.<%= Enum.join(scope.access_path, ".") %>
 
     with {:ok, <%= schema.singular %> = %<%= inspect schema.alias %>{}} <-
-      <%= schema.singular %>
-      |> <%= inspect schema.alias %>.changeset(attrs, <%= scope.name %>_scope)
-      |> Repo.update() do
-      broadcast(<%= scope.name %>_scope, {:updated, <%= schema.singular %>})
+           <%= schema.singular %>
+           |> <%= inspect schema.alias %>.changeset(attrs, scope)
+           |> Repo.update() do
+      broadcast(scope, {:updated, <%= schema.singular %>})
       {:ok, <%= schema.singular %>}
     end
   end
@@ -113,12 +113,12 @@
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_<%= schema.singular %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>) do
-    true = <%= schema.singular %>.<%= scope.schema_key %> == <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>
+  def delete_<%= schema.singular %>(%<%= inspect scope.alias %>{} = scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>) do
+    true = <%= schema.singular %>.<%= scope.schema_key %> == scope.<%= Enum.join(scope.access_path, ".") %>
 
     with {:ok, <%= schema.singular %> = %<%= inspect schema.alias %>{}} <-
-      Repo.delete(<%= schema.singular %>) do
-      broadcast(<%= scope.name %>_scope, {:deleted, <%= schema.singular %>})
+           Repo.delete(<%= schema.singular %>) do
+      broadcast(scope, {:deleted, <%= schema.singular %>})
       {:ok, <%= schema.singular %>}
     end
   end
@@ -132,8 +132,8 @@
       %Ecto.Changeset{data: %<%= inspect schema.alias %>{}}
 
   """
-  def change_<%= schema.singular %>(%<%= inspect scope.alias %>{} = <%= scope.name %>_scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs \\ %{}) do
-    true = <%= schema.singular %>.<%= scope.schema_key %> == <%= scope.name %>_scope.<%= Enum.join(scope.access_path, ".") %>
+  def change_<%= schema.singular %>(%<%= inspect scope.alias %>{} = scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs \\ %{}) do
+    true = <%= schema.singular %>.<%= scope.schema_key %> == scope.<%= Enum.join(scope.access_path, ".") %>
 
-    <%= inspect schema.alias %>.changeset(<%= schema.singular %>, attrs, <%= scope.name %>_scope)
+    <%= inspect schema.alias %>.changeset(<%= schema.singular %>, attrs, scope)
   end

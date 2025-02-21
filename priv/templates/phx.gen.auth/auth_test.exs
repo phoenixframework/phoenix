@@ -3,7 +3,7 @@ defmodule <%= inspect auth_module %>Test do
 
   <%= if live? do %>alias Phoenix.LiveView
   <% end %>alias <%= inspect context.module %>
-  alias <%= inspect context.module %>.<%= inspect schema.alias %>Scope
+  alias <%= inspect context.module %>.<%= inspect scope_config.scope.alias %>
   alias <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Auth
 
   import <%= inspect context.module %>Fixtures
@@ -49,7 +49,11 @@ defmodule <%= inspect auth_module %>Test do
     end<%= if live? do %>
 
     test "redirects to settings when <%= schema.singular %> is already logged in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      conn = conn |> assign(:current_scope, <%= schema.singular %> |> <%= inspect schema.alias %>Scope.for_<%= schema.singular %>) |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
+      conn =
+        conn
+        |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
+        |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
+
       assert redirected_to(conn) == "<%= schema.route_prefix %>/settings"
     end<% end %>
 
@@ -143,7 +147,7 @@ defmodule <%= inspect auth_module %>Test do
       _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       conn = <%= inspect schema.alias %>Auth.fetch_current_scope(conn, [])
       refute get_session(conn, :<%= schema.singular %>_token)
-      refute conn.assigns.current_scope.<%= schema.singular %>
+      refute conn.assigns.current_scope
     end
   end
 
@@ -162,23 +166,23 @@ defmodule <%= inspect auth_module %>Test do
       assert updated_socket.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
     end
 
-    test "assigns nil to current_scope.<%= schema.singular %> assign if there isn't a valid <%= schema.singular %>_token", %{conn: conn} do
+    test "assigns nil to current_scope assign if there isn't a valid <%= schema.singular %>_token", %{conn: conn} do
       <%= schema.singular %>_token = "invalid_token"
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
       {:cont, updated_socket} =
         <%= inspect schema.alias %>Auth.on_mount(:mount_current_scope, %{}, session, %LiveView.Socket{})
 
-      assert updated_socket.assigns.current_scope.<%= schema.singular %> == nil
+      assert updated_socket.assigns.current_scope == nil
     end
 
-    test "assigns nil to current_scope.<%= schema.singular %> assign if there isn't a <%= schema.singular %>_token", %{conn: conn} do
+    test "assigns nil to current_scope assign if there isn't a <%= schema.singular %>_token", %{conn: conn} do
       session = conn |> get_session()
 
       {:cont, updated_socket} =
         <%= inspect schema.alias %>Auth.on_mount(:mount_current_scope, %{}, session, %LiveView.Socket{})
 
-      assert updated_socket.assigns.current_scope.<%= schema.singular %> == nil
+      assert updated_socket.assigns.current_scope == nil
     end
   end
 
@@ -203,7 +207,7 @@ defmodule <%= inspect auth_module %>Test do
       }
 
       {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
-      assert updated_socket.assigns.current_scope.<%= schema.singular %> == nil
+      assert updated_socket.assigns.current_scope == nil
     end
 
     test "redirects to login page if there isn't a <%= schema.singular %>_token", %{conn: conn} do
@@ -215,7 +219,7 @@ defmodule <%= inspect auth_module %>Test do
       }
 
       {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
-      assert updated_socket.assigns.current_scope.<%= schema.singular %> == nil
+      assert updated_socket.assigns.current_scope == nil
     end
   end
 
@@ -241,7 +245,7 @@ defmodule <%= inspect auth_module %>Test do
         assigns: %{
           __changed__: %{},
           flash: %{},
-          current_scope: <%= inspect schema.alias %>Scope.for_<%= schema.singular %>(%{<%= schema.singular %> | authenticated_at: eleven_minutes_ago})
+          current_scope: <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(%{<%= schema.singular %> | authenticated_at: eleven_minutes_ago})
         }
       }
 
@@ -253,7 +257,7 @@ defmodule <%= inspect auth_module %>Test do
       conn =
         conn
         |> fetch_flash()
-        |> assign(:current_scope, <%= inspect schema.alias %>Scope.for_<%= schema.singular %>(<%= schema.singular %>))
+        |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
         |> <%= inspect schema.alias %>Auth.require_sudo_mode([])
 
       refute conn.halted
@@ -266,7 +270,7 @@ defmodule <%= inspect auth_module %>Test do
       conn =
         conn
         |> fetch_flash()
-        |> assign(:current_scope, <%= inspect schema.alias %>Scope.for_<%= schema.singular %>(%{<%= schema.singular %> | authenticated_at: eleven_minutes_ago}))
+        |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(%{<%= schema.singular %> | authenticated_at: eleven_minutes_ago}))
         |> <%= inspect schema.alias %>Auth.require_sudo_mode([])
 
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
@@ -284,7 +288,7 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects if <%= schema.singular %> is authenticated", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
         conn
-        |> assign(:current_scope, <%= inspect schema.alias %>Scope.for_<%= schema.singular %>(<%= schema.singular %>))
+        |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
         |> <%= inspect schema.alias %>Auth.redirect_if_<%= schema.singular %>_is_authenticated([])
 
       assert conn.halted
@@ -342,7 +346,7 @@ defmodule <%= inspect auth_module %>Test do
     test "does not redirect if <%= schema.singular %> is authenticated", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn =
         conn
-        |> assign(:current_scope, <%= inspect schema.alias %>Scope.for_<%= schema.singular %>(<%= schema.singular %>))
+        |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
         |> <%= inspect schema.alias %>Auth.require_authenticated_<%= schema.singular %>([])
 
       refute conn.halted

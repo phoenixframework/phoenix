@@ -5,7 +5,7 @@
   @doc """
   Subscribes to scoped notifications about any <%= schema.singular %> changes.
   """
-  def subscribe_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _<%= scope.name %>_scope) do
+  def subscribe_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _scope) do
     raise "TODO"
   end
 
@@ -18,7 +18,7 @@
       [%<%= inspect schema.alias %>{}, ...]
 
   """
-  def list_<%= schema.plural %>(%<%= inspect scope.alias %>{} = _<%= scope.name %>_scope) do
+  def list_<%= schema.plural %>(%<%= inspect scope.alias %>{} = _scope) do
     raise "TODO"
   end
 
@@ -33,7 +33,7 @@
       %<%= inspect schema.alias %>{}
 
   """
-  def get_<%= schema.singular %>!(%<%= inspect scope.alias %>{} = _<%= scope.name %>_scope, id), do: raise "TODO"
+  def get_<%= schema.singular %>!(%<%= inspect scope.alias %>{} = _scope, id), do: raise "TODO"
 
   @doc """
   Creates a <%= schema.singular %>.
@@ -47,7 +47,7 @@
       {:error, ...}
 
   """
-  def create_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _<%= scope.name %>_scope, attrs \\ %{}) do
+  def create_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _scope, attrs \\ %{}) do
     raise "TODO"
   end
 
@@ -63,7 +63,7 @@
       {:error, ...}
 
   """
-  def update_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _<%= scope.name %>_scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
+  def update_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
     raise "TODO"
   end
 
@@ -79,7 +79,7 @@
       {:error, ...}
 
   """
-  def delete_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _<%= scope.name %>_scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>) do
+  def delete_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>) do
     raise "TODO"
   end
 
@@ -92,6 +92,6 @@
       %Todo{...}
 
   """
-  def change_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _<%= scope.name %>_scope,%<%= inspect schema.alias %>{} = <%= schema.singular %>, _attrs \\ %{}) do
+  def change_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _scope, %<%= inspect schema.alias %>{} = <%= schema.singular %>, _attrs \\ %{}) do
     raise "TODO"
   end

@@ -4,6 +4,7 @@ defmodule Mix.Phoenix.Scope do
   defstruct name: nil,
             default: false,
             module: nil,
+            fixture: nil,
             alias: nil,
             assign_key: nil,
             access_path: nil,
@@ -51,24 +52,26 @@ defmodule Mix.Phoenix.Scope do
   def scope_from_opts(__otp_app, _name, true), do: nil
 
   def scope_from_opts(otp_app, nil, _) do
-    default_scope(otp_app) || raise """
-    no default scope configured!
+    default_scope(otp_app) ||
+      raise """
+      no default scope configured!
 
-    Either run the generator with --no-scope to skip scoping, specify a scope with --scope,
-    or configure a default scope in your application's config:
+      Either run the generator with --no-scope to skip scoping, specify a scope with --scope,
+      or configure a default scope in your application's config:
 
-        config :#{otp_app}, :scopes, [
-          user: [
-            default: true,
-            ...
+          config :#{otp_app}, :scopes, [
+            user: [
+              default: true,
+              ...
+            ]
           ]
-        ]
-    """
+      """
   end
 
   def scope_from_opts(otp_app, name, _) do
     key = String.to_atom(name)
     scopes = scopes_from_config(otp_app)
+
     Map.get_lazy(scopes, key, fn ->
       raise """
       scope :#{key} not configured!

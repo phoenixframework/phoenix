@@ -1,4 +1,4 @@
-defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Scope do
+defmodule <%= inspect scope_config.scope.module %> do
   @moduledoc """
   Defines the scope of the caller to be used throughout the app.
 
@@ -22,10 +22,12 @@ defmodule <%= inspect context.module %>.<%= inspect schema.alias %>Scope do
 
   @doc """
   Creates a scope for the given <%= schema.singular %>.
-  """
-  def for_<%= schema.singular %>(nil), do: %__MODULE__{user: nil}
 
+  Returns nil if no user is given.
+  """
   def for_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
     %__MODULE__{<%= schema.singular %>: <%= schema.singular %>}
   end
+
+  def for_<%= schema.singular %>(nil), do: nil
 end

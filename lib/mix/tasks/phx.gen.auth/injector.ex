@@ -175,7 +175,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
 
     template = """
     <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_scope.#{schema.singular} do %>
+      <%= if @current_scope do %>
         <li class="#{base_tailwind_classes}">
           {@current_scope.#{schema.singular}.email}
         </li>
