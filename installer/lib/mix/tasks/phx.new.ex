@@ -287,7 +287,7 @@ defmodule Mix.Tasks.Phx.New do
 
         tasks =
           Enum.map(builders, fn builder ->
-            cmd = "mix do loadpaths --no-compile + #{builder}.install"
+            cmd = "mix do loadpaths --no-compile --no-listeners + #{builder}.install"
             Task.async(fn -> cmd(project, cmd, log: false, cd: project.web_path) end)
           end)
 
@@ -488,7 +488,7 @@ defmodule Mix.Tasks.Phx.New do
       System.cmd("cp", ["-Rp", Path.join(cache_dir, "."), project_path])
     end
   end
-  
+
   defp maybe_warn_outdated(latest_version) do
     if Version.compare(@version, latest_version) == :lt do
       Mix.shell().info([
