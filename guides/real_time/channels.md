@@ -1,6 +1,6 @@
 # Channels
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](../introduction/installation.md) and got a Phoenix application [up and running](../introduction/up_and_running.md).
 
 Channels are an exciting part of Phoenix that enable soft real-time communication with and between millions of connected clients.
 
@@ -165,7 +165,7 @@ If your deployment environment does not support distributed Elixir or direct com
 ### Client Libraries
 
 Any networked device can connect to Phoenix Channels as long as it has a client library.
-The following libraries exist today, and new ones are always welcome; to write your own, see our how-to guide [Writing a Channels Client](writing_a_channels_client.md).
+The following libraries exist today, and new ones are always welcome; to write your own, see our how-to guide [Writing a Channels Client](../how_to/writing_a_channels_client.md).
 
 #### Official
 

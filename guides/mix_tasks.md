@@ -288,7 +288,7 @@ to create your account and then access to "/dev/mailbox" to
 see the account confirmation email.
 ```
 
-A more complete walk-through of how to get started with this generator is available in the [`mix phx.gen.auth` authentication guide](mix_phx_gen_auth.html).
+A more complete walk-through of how to get started with this generator is available in the [`mix phx.gen.auth` authentication guide](authentication/mix_phx_gen_auth.md).
 
 ### `mix phx.gen.channel` and `mix phx.gen.socket`
 
@@ -354,7 +354,7 @@ in lib/hello/application.ex:
 
 ### `mix phx.routes`
 
-This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [routing guide](routing.html).
+This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [routing guide](routing.md).
 
 If we don't specify a router for this task, it will default to the router Phoenix generated for us.
 

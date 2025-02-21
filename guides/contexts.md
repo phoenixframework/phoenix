@@ -1,10 +1,10 @@
 # Contexts
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](introduction/installation.md) and got a Phoenix application [up and running](introduction/up_and_running.md).
 
-> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.md).
 
-> **Requirement**: This guide expects that you have gone through the [Ecto guide](ecto.html).
+> **Requirement**: This guide expects that you have gone through the [Ecto guide](ecto.md).
 
 So far, we've built pages, wired up controller actions through our routers, and learned how Ecto allows data to be validated and persisted. Now it's time to tie it all together by writing web-facing features that interact with our greater Elixir application.
 
@@ -168,7 +168,7 @@ defmodule HelloWeb.ProductController do
 end
 ```
 
-We've seen how controllers work in our [controller guide](controllers.html), so the code probably isn't too surprising. What is worth noticing is how our controller calls into the `Catalog` context. We can see that the `index` action fetches a list of products with `Catalog.list_products/0`, and how products are persisted in the `create` action with `Catalog.create_product/1`. We haven't yet looked at the catalog context, so we don't yet know how product fetching and creation is happening under the hood – *but that's the point*. Our Phoenix controller is the web interface into our greater application. It shouldn't be concerned with the details of how products are fetched from the database or persisted into storage. We only care about telling our application to perform some work for us. This is great because our business logic and storage details are decoupled from the web layer of our application. If we move to a full-text storage engine later for fetching products instead of a SQL query, our controller doesn't need to be changed. Likewise, we can reuse our context code from any other interface in our application, be it a channel, mix task, or long-running process importing CSV data.
+We've seen how controllers work in our [controller guide](controllers.md), so the code probably isn't too surprising. What is worth noticing is how our controller calls into the `Catalog` context. We can see that the `index` action fetches a list of products with `Catalog.list_products/0`, and how products are persisted in the `create` action with `Catalog.create_product/1`. We haven't yet looked at the catalog context, so we don't yet know how product fetching and creation is happening under the hood – *but that's the point*. Our Phoenix controller is the web interface into our greater application. It shouldn't be concerned with the details of how products are fetched from the database or persisted into storage. We only care about telling our application to perform some work for us. This is great because our business logic and storage details are decoupled from the web layer of our application. If we move to a full-text storage engine later for fetching products instead of a SQL query, our controller doesn't need to be changed. Likewise, we can reuse our context code from any other interface in our application, be it a channel, mix task, or long-running process importing CSV data.
 
 In the case of our `create` action, when we successfully create a product, we use `Phoenix.Controller.put_flash/3` to show a success message, and then we redirect to the router's product show page. Conversely, if `Catalog.create_product/1` fails, we render our `"new.html"` template and pass along the Ecto changeset for the template to lift error messages from.
 
@@ -201,7 +201,7 @@ defmodule Hello.Catalog do
 end
 ```
 
-This module will be the public API for all product catalog functionality in our system. For example, in addition to product detail management, we may also handle product category classification and product variants for things like optional sizing, trims, etc. If we look at the `list_products/0` function, we can see the private details of product fetching. And it's super simple. We have a call to `Repo.all(Product)`. We saw how Ecto repo queries worked in the [Ecto guide](ecto.html), so this call should look familiar. Our `list_products` function is a generalized function name specifying the *intent* of our code – namely to list products. The details of that intent where we use our Repo to fetch the products from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
+This module will be the public API for all product catalog functionality in our system. For example, in addition to product detail management, we may also handle product category classification and product variants for things like optional sizing, trims, etc. If we look at the `list_products/0` function, we can see the private details of product fetching. And it's super simple. We have a call to `Repo.all(Product)`. We saw how Ecto repo queries worked in the [Ecto guide](ecto.md), so this call should look familiar. Our `list_products` function is a generalized function name specifying the *intent* of our code – namely to list products. The details of that intent where we use our Repo to fetch the products from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
 
 Now we know how data is fetched, but how are products persisted? Let's take a look at the `Catalog.create_product/1` function:
 

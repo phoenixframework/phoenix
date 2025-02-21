@@ -1,6 +1,6 @@
 # Request life-cycle
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](introduction/installation.md) and got a Phoenix application [up and running](introduction/up_and_running.md).
 
 The goal of this guide is to talk about Phoenix's request life-cycle. This guide will take a practical approach where we will learn by doing: we will add two new pages to our Phoenix project and comment on how the pieces fit together along the way.
 
@@ -26,7 +26,7 @@ The router maps unique HTTP verb/path pairs to controller/action pairs which wil
 
 Phoenix generates a router file for us in new applications at `lib/hello_web/router.ex`. This is where we will be working for this section.
 
-The route for our "Welcome to Phoenix!" page from the previous [Up And Running Guide](up_and_running.html) looks like this.
+The route for our "Welcome to Phoenix!" page from the previous [Up And Running Guide](introduction/up_and_running.md) looks like this.
 
 ```elixir
 get "/", PageController, :home
@@ -70,7 +70,7 @@ defmodule HelloWeb.Router do
 end
 ```
 
-For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. We will discuss those in the [Routing guide](routing.html).
+For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. We will discuss those in the [Routing guide](routing.md).
 
 Let's add a new route to the router that maps a `GET` request for `/hello` to the `index` action of a soon-to-be-created `HelloWeb.HelloController` inside the `scope "/" do` block of the router:
 
@@ -99,7 +99,7 @@ defmodule HelloWeb.HelloController do
 end
 ```
 
-We'll save a discussion of `use HelloWeb, :controller` for the [Controllers guide](controllers.html). For now, let's focus on the `index` action.
+We'll save a discussion of `use HelloWeb, :controller` for the [Controllers guide](controllers.md). For now, let's focus on the `index` action.
 
 All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by prefixing it with `_`.
 
@@ -192,7 +192,7 @@ This line injects our template into the layout before the HTML is sent off to th
 
 As we built our first page, we could start to understand how the request life-cycle is put together. Now let's take a more holistic look at it.
 
-All HTTP requests start in our application endpoint. You can find it as a module named `HelloWeb.Endpoint` in `lib/hello_web/endpoint.ex`. Once you open up the endpoint file, you will see that, similar to the router, the endpoint has many calls to `plug`. `Plug` is a library and a specification for stitching web applications together. It is an essential part of how Phoenix handles requests and we will discuss it in detail in the [Plug guide](plug.html) coming next.
+All HTTP requests start in our application endpoint. You can find it as a module named `HelloWeb.Endpoint` in `lib/hello_web/endpoint.ex`. Once you open up the endpoint file, you will see that, similar to the router, the endpoint has many calls to `plug`. `Plug` is a library and a specification for stitching web applications together. It is an essential part of how Phoenix handles requests and we will discuss it in detail in the [Plug guide](plug.md) coming next.
 
 For now, it suffices to say that each plug defines a slice of request processing. In the endpoint you will find a skeleton roughly like this:
 

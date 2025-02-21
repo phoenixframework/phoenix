@@ -1,8 +1,8 @@
 # Testing Controllers
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](../introduction/installation.md) and got a Phoenix application [up and running](../introduction/up_and_running.md).
 
-> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
+> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.md).
 
 At the end of the Introduction to Testing guide, we generated an HTML resource for posts using the following command:
 
@@ -109,7 +109,7 @@ We then use `redirected_params(conn)` to get the ID of the post and then match t
 
 For the second test, we simply test the failure scenario. If any invalid attribute is given, it should re-render the "New Post" page.
 
-One common question is: how many failure scenarios do you test at the controller level? For example, in the [Testing Contexts](testing_contexts.html) guide, we introduced a validation to the `title` field of the post:
+One common question is: how many failure scenarios do you test at the controller level? For example, in the [Testing Contexts](testing_contexts.md) guide, we introduced a validation to the `title` field of the post:
 
 ```elixir
 def changeset(post, attrs) do
@@ -386,7 +386,7 @@ end
 
 It simply posts to the `create` path with invalid parameters. This makes it return a JSON response, with status code 422, and a response with a non-empty "errors" key.
 
-The `action_fallback` can be extremely useful to reduce boilerplate when designing APIs. You can learn more about the "Action Fallback" in the [Controllers guide](controllers.html).
+The `action_fallback` can be extremely useful to reduce boilerplate when designing APIs. You can learn more about the "Action Fallback" in the [Controllers guide](../controllers.md).
 
 ### The `delete` action
 

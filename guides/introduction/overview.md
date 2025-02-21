@@ -24,6 +24,6 @@ The guides that you are currently looking at provide an overview of all parts th
 
 If you would prefer to read these guides as an EPUB, [click here!](Phoenix.epub)
 
-Note, these guides are not a step-by-step introduction to Phoenix. If you want a more structured approach to learning the framework, we have a large community and many books, courses, and screencasts available. See [our community page](community.html) for a complete list.
+Note, these guides are not a step-by-step introduction to Phoenix. If you want a more structured approach to learning the framework, we have a large community and many books, courses, and screencasts available. See [our community page](community.md) for a complete list.
 
-[Let's get Phoenix installed](installation.html).
+[Let's get Phoenix installed](installation.md).

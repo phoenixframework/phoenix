@@ -1,8 +1,8 @@
 # Plug
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](introduction/installation.md) and got a Phoenix application [up and running](introduction/up_and_running.md).
 
-> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.md).
 
 Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and center. We interact with plugs at every step of the request life-cycle, and the core Phoenix components like endpoints, routers, and controllers are all just plugs internally. Let's jump in and find out just what makes Plug so special.
 
@@ -175,7 +175,7 @@ In the middle of the endpoint, there is also a conditional block:
 This block is only executed in development. It enables:
 
 * live reloading - if you change a CSS file, they are updated in-browser without refreshing the page;
-* [code reloading](`Phoenix.CodeReloader`) - so we can see changes to our application without restarting the server;
+* [code reloading](https://hexdocs.pm/phoenix/Phoenix.CodeReloader.html) - so we can see changes to our application without restarting the server;
 * check repo status - which makes sure our database is up to date, raising a readable and actionable error otherwise.
 
 ### Router plugs
@@ -205,7 +205,7 @@ defmodule HelloWeb.Router do
 
 Routes are defined inside scopes and scopes may pipe through multiple pipelines. Once a route matches, Phoenix invokes all plugs defined in all pipelines associated to that route. For example, accessing "/" will pipe through the `:browser` pipeline, consequently invoking all of its plugs.
 
-As we will see in the [routing guide](routing.html), the pipelines themselves are plugs. There, we will also discuss all plugs in the `:browser` pipeline.
+As we will see in the [routing guide](routing.md), the pipelines themselves are plugs. There, we will also discuss all plugs in the `:browser` pipeline.
 
 ### Controller plugs
 

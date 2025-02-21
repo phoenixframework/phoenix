@@ -1,8 +1,8 @@
 # Components and HEEx
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](introduction/installation.md) and got a Phoenix application [up and running](introduction/up_and_running.md).
 
-> **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.md).
 
 The Phoenix endpoint pipeline takes a request, routes it to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connections assigns, and the function's job is to return a HEEx template. We call any function that accepts an `assigns` parameter and returns a HEEx template a *function component*. Function components are defined with the help of the [`Phoenix.Component`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) module.
 

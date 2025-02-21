@@ -26,7 +26,7 @@ Heroku is a great platform and Elixir performs well on it. However, you may run 
 
 If you are just getting started, or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
 
-If you want a platform-as-a-service without these limitations, try [Gigalixir](gigalixir.html). If you would rather deploy to a cloud platform, such as EC2, Google Cloud, etc, consider using `mix release`.
+If you want a platform-as-a-service without these limitations, try [Gigalixir](gigalixir.md). If you would rather deploy to a cloud platform, such as EC2, Google Cloud, etc, consider using `mix release`.
 
 ## Steps
 
@@ -364,7 +364,7 @@ build:
 
 ### Set up releases and Dockerfile
 
-Now we need to define a `Dockerfile` at the root folder of your project that contains your application. We recommend to use releases when doing so, as the release will allow us to build a container with only the parts of Erlang and Elixir we actually use. Follow the [releases docs](releases.html). At the end of the guide, there is a sample Dockerfile file you can use.
+Now we need to define a `Dockerfile` at the root folder of your project that contains your application. We recommend to use releases when doing so, as the release will allow us to build a container with only the parts of Erlang and Elixir we actually use. Follow the [releases docs](releases.md). At the end of the guide, there is a sample Dockerfile file you can use.
 
 Once you have the image definition set up, you can push your app to heroku and you can see it starts building the image and deploy it.
 

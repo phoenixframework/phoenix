@@ -1,6 +1,6 @@
 # Introduction to Deployment
 
-Once we have a working application, we're ready to deploy it. If you're not quite finished with your own application, don't worry. Just follow the [Up and Running Guide](up_and_running.html) to create a basic application to work with.
+Once we have a working application, we're ready to deploy it. If you're not quite finished with your own application, don't worry. Just follow the [Up and Running Guide](../introduction/up_and_running.md) to create a basic application to work with.
 
 When preparing an application for deployment, there are three main steps:
 
@@ -10,7 +10,7 @@ When preparing an application for deployment, there are three main steps:
 
 In this guide, we will learn how to get the production environment running locally. You can use the same techniques in this guide to run your application in production, but depending on your deployment infrastructure, extra steps will be necessary.
 
-As an example of deploying to other infrastructures, we also discuss four different approaches in our guides: using [Elixir's releases](releases.html) with `mix release`, [using Gigalixir](gigalixir.html), [using Fly](fly.html), and [using Heroku](heroku.html). We've also included links to deploying Phoenix on other platforms under [Community Deployment Guides](#community-deployment-guides). Finally, the release guide has a sample Dockerfile you can use if you prefer to deploy with container technologies.
+As an example of deploying to other infrastructures, we also discuss four different approaches in our guides: using [Elixir's releases](releases.md) with `mix release`, [using Gigalixir](gigalixir.md), [using Fly](fly.md), and [using Heroku](heroku.md). We've also included links to deploying Phoenix on other platforms under [Community Deployment Guides](#community-deployment-guides). Finally, the release guide has a sample Dockerfile you can use if you prefer to deploy with container technologies.
 
 Let's explore those steps above one by one.
 
@@ -110,10 +110,10 @@ $ PORT=4001 MIX_ENV=prod mix phx.server
 
 And that's it. Next, you can use one of our official guides to deploy:
 
-  * [with Elixir's releases](releases.html)
-  * [to Gigalixir](gigalixir.html), an Elixir-centric Platform as a Service (PaaS)
-  * [to Fly.io](fly.html), a PaaS that deploys your servers close to your users with built-in distribution support
-  * and [to Heroku](heroku.html), one of the most popular PaaS.
+  * [with Elixir's releases](releases.md)
+  * [to Gigalixir](gigalixir.md), an Elixir-centric Platform as a Service (PaaS)
+  * [to Fly.io](fly.md), a PaaS that deploys your servers close to your users with built-in distribution support
+  * and [to Heroku](heroku.md), one of the most popular PaaS.
 
 ## Clustering and Long-Polling Transports
 

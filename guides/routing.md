@@ -1,8 +1,8 @@
 # Routing
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> **Requirement**: This guide expects that you have gone through the [introductory guides](introduction/installation.md) and got a Phoenix application [up and running](introduction/up_and_running.md).
 
-> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.md).
 
 Routers are the main hubs of Phoenix applications. They match HTTP requests to controller actions, wire up real-time channel handlers, and define a series of pipeline transformations scoped to a set of routes.
 
@@ -441,7 +441,7 @@ warning: this clause cannot match because a previous clause at line 16 always ma
 
 We have come quite a long way in this guide without talking about one of the first lines we saw in the router: `pipe_through :browser`. It's time to fix that.
 
-Pipelines are a series of plugs that can be attached to specific scopes. If you are not familiar with plugs, we have an [in-depth guide about them](plug.html).
+Pipelines are a series of plugs that can be attached to specific scopes. If you are not familiar with plugs, we have an [in-depth guide about them](plug.md).
 
 Routes are defined inside scopes and scopes may pipe through multiple pipelines. Once a route matches, Phoenix invokes all plugs defined in all pipelines associated to that route. For example, accessing `/` will pipe through the `:browser` pipeline, consequently invoking all of its plugs.
 
@@ -630,7 +630,7 @@ forward "/jobs", BackgroundJob.Plug, name: "Hello Phoenix"
 
 There is a fourth `router_opts` argument that can be passed. These options are outlined in the `Phoenix.Router.scope/2` documentation.
 
-`BackgroundJob.Plug` can be implemented as any Module Plug discussed in the [Plug guide](plug.html). Note though it is not advised to forward to another Phoenix endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
+`BackgroundJob.Plug` can be implemented as any Module Plug discussed in the [Plug guide](plug.md). Note though it is not advised to forward to another Phoenix endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
 
 ## Summary
 
