@@ -6,8 +6,17 @@
  * Make LiveView wrapper divs transparent for layout.
  * This makes it possible to use LiveViews as flex children for example.
  */
-
-
 [data-phx-root-id] { display: contents }
+
+/* Helper class for the default table component style that adds
+ * rounded corners to the table rows.
+ */
+@layer components {
+  .rounded-table-corner {
+    @apply
+      first:before:absolute first:before:h-full first:before:w-4 first:before:top-0 first:before:-left-4 first:before:group-hover:bg-zinc-50 first:before:sm:rounded-l-xl
+      last:before:absolute last:before:h-full last:before:w-4 last:before:top-0 last:before:-right-4 last:before:group-hover:bg-zinc-50 last:before:sm:rounded-r-xl;
+  }
+}
 
 /* This file is for your main application CSS */
