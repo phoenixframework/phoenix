@@ -138,7 +138,7 @@ defmodule <%= inspect auth_module %> do
   ## Examples
 
   Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
-  the current_scope:
+  the `current_scope`:
 
       defmodule <%= inspect context.web_module %>.PageLive do
         use <%= inspect context.web_module %>, :live_view
