@@ -15,8 +15,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <%= scope.schema_key %>: <%= conn_scope %>.<%= Enum.join(scope.access_path, ".") %>
       })
 <% else %>
-    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(%<%= inspect schema.alias %>{})
-<% end %>
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(%<%= inspect schema.alias %>{})<% end %>
     render(conn, :new, changeset: changeset)
   end
 
