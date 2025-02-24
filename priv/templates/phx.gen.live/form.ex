@@ -35,26 +35,26 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   defp return_to(_), do: "index"
 
   defp apply_action(socket, :edit, %{"<%= primary_key %>" => <%= primary_key %>}) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= primary_key %>)
+    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= context_scope_prefix %><%= primary_key %>)
 
     socket
     |> assign(:page_title, "Edit <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, <%= schema.singular %>)
-    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
+    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>)))
   end
 
   defp apply_action(socket, :new, _params) do
-    <%= schema.singular %> = %<%= inspect schema.alias %>{}
+    <%= schema.singular %> = %<%= inspect schema.alias %>{<%= if scope do %><%= scope.schema_key %>: <%= socket_scope %>.<%= Enum.join(scope.access_path, ".") %><% end %>}
 
     socket
     |> assign(:page_title, "New <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, <%= schema.singular %>)
-    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
+    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>)))
   end
 
   @impl true
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
-    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params)
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %>socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
@@ -63,7 +63,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   defp save_<%= schema.singular %>(socket, :edit, <%= schema.singular %>_params) do
-    case <%= inspect context.alias %>.update_<%= schema.singular %>(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params) do
+    case <%= inspect context.alias %>.update_<%= schema.singular %>(<%= context_scope_prefix %>socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
         {:noreply,
          socket
@@ -76,7 +76,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   defp save_<%= schema.singular %>(socket, :new, <%= schema.singular %>_params) do
-    case <%= inspect context.alias %>.create_<%= schema.singular %>(<%= schema.singular %>_params) do
+    case <%= inspect context.alias %>.create_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
         {:noreply,
          socket

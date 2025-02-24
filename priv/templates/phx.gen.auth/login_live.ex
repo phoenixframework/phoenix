@@ -9,7 +9,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <.header class="text-center">
         <p>Log in</p>
         <:subtitle>
-          <%%= if @current_<%= schema.singular %> do %>
+          <%%= if @current_scope do %>
             You need to reauthenticate to perform sensitive actions on your account.
           <%% else %>
             Don't have an account? <.link
@@ -29,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         phx-submit="submit_magic"
       >
         <.input
-          readonly={!!@current_<%= schema.singular %>}
+          readonly={!!@current_scope}
           field={f[:email]}
           type="email"
           label="Email"
@@ -56,7 +56,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         phx-trigger-action={@trigger_submit}
       >
         <.input
-          readonly={!!@current_<%= schema.singular %>}
+          readonly={!!@current_scope}
           field={f[:email]}
           type="email"
           label="Email"
@@ -70,7 +70,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           autocomplete="current-password"
         />
         <.input
-          :if={!@current_<%= schema.singular %>}
+          :if={!@current_scope}
           field={f[:remember_me]}
           type="checkbox"
           label="Keep me logged in"
@@ -93,7 +93,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def mount(_params, _session, socket) do
     email =
       Phoenix.Flash.get(socket.assigns.flash, :email) ||
-        get_in(socket.assigns, [:current_<%= schema.singular %>, Access.key(:email)])
+        get_in(socket.assigns, [:current_scope, Access.key(:<%= schema.singular %>), Access.key(:email)])
 
     form = to_form(%{"email" => email}, as: "<%= schema.singular %>")
 

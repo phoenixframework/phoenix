@@ -2,7 +2,7 @@
   <.header class="text-center">
     <p>Log in</p>
     <:subtitle>
-      <%%= if @current_<%= schema.singular %> do %>
+      <%%= if @current_scope do %>
         You need to reauthenticate to perform sensitive actions on your account.
       <%% else %>
         Don't have an account? <.link
@@ -16,7 +16,7 @@
 
   <.simple_form :let={f} for={@form} as={:<%= schema.singular %>} id="login_form_magic" action={~p"<%= schema.route_prefix %>/log-in"}>
     <.input
-      readonly={!!@current_<%= schema.singular %>}
+      readonly={!!@current_scope}
       field={f[:email]}
       type="email"
       label="Email"
@@ -43,7 +43,7 @@
   >
     <.error :if={@error_message}>{@error_message}</.error>
     <.input
-      readonly={!!@current_<%= schema.singular %>}
+      readonly={!!@current_scope}
       field={f[:email]}
       type="email"
       label="Email"
@@ -52,7 +52,7 @@
     />
     <.input field={f[:password]} type="password" label="Password" autocomplete="current-password" />
     <.input
-      :if={!@current_<%= schema.singular %>}
+      :if={!@current_scope}
       field={f[:remember_me]}
       type="checkbox"
       label="Keep me logged in"

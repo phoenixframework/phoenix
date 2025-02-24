@@ -18,7 +18,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       >
         <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
         <.input
-          :if={!@current_<%= schema.singular %>}
+          :if={!@current_scope}
           field={@form[:remember_me]}
           type="checkbox"
           label="Keep me logged in"
@@ -38,7 +38,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       >
         <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
         <.input
-          :if={!@current_<%= schema.singular %>}
+          :if={!@current_scope}
           field={@form[:remember_me]}
           type="checkbox"
           label="Keep me logged in"

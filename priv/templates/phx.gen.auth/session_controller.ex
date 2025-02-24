@@ -47,7 +47,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def update_password(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params) do
-    <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
+    <%= schema.singular %> = conn.assigns.current_scope.<%= schema.singular %>
     true = <%= inspect context.alias %>.sudo_mode?(<%= schema.singular %>)
     {:ok, _<%= schema.singular %>, expired_tokens} = <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params)
 
@@ -60,7 +60,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end<% else %>
 
   def new(conn, _params) do
-    email = get_in(conn.assigns, [:current_<%= schema.singular %>, Access.key(:email)])
+    email = get_in(conn.assigns, [:current_scope, Access.key(:<%= schema.singular %>), Access.key(:email)])
     form = Phoenix.Component.to_form(%{"email" => email}, as: "<%= schema.singular %>")
 
     render(conn, :new, form: form, error_message: nil)

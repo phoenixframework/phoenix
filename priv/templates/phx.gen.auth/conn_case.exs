@@ -9,13 +9,14 @@
   """
   def register_and_log_in_<%= schema.singular %>(%{conn: conn} = context) do
     <%= schema.singular %> = <%= inspect context.module %>Fixtures.<%= schema.singular %>_fixture()
+    scope = <%= inspect scope_config.scope.module %>.for_<%= schema.singular %>(<%= schema.singular %>)
 
     opts =
       context
       |> Map.take([:token_inserted_at])
       |> Enum.into([])
 
-    %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>, opts), <%= schema.singular %>: <%= schema.singular %>}
+    %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>, opts), <%= schema.singular %>: <%= schema.singular %>, scope: scope}
   end
 
   @doc """
