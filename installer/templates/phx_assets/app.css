@@ -1,6 +1,15 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+/* See the Tailwind configuration guide for advanced usage
+   https://tailwindcss.com/docs/configuration */
+
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+@plugin "./tailwind_heroicons.js";
+@variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
+@variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
+@variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
+@theme {
+  --color-brand: "#FD4F00",
+};
 
 /*
  * Make LiveView wrapper divs transparent for layout.
