@@ -1,7 +1,8 @@
 defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ControllerTest do
   use <%= inspect context.web_module %>.ConnCase
 
-  import <%= inspect context.module %>Fixtures
+  import <%= inspect context.module %>Fixtures<%= if scope && elem(scope.fixture, 0) != Module.concat(context.module, "Fixtures") do %>
+  import <%= inspect elem(scope.fixture, 0) %><% end %>
 
   alias <%= inspect schema.module %>
 
@@ -11,7 +12,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   @update_attrs %{
 <%= schema.params.update |> Enum.map(fn {key, val} -> "    #{key}: #{inspect(val)}" end) |> Enum.join(",\n") %>
   }
-  @invalid_attrs <%= Mix.Phoenix.to_text for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %>
+  @invalid_attrs <%= Mix.Phoenix.to_text for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %><%= if scope do %>
+
+  setup :<%= scope.fixture |> elem(1) %><% end %>
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -77,8 +80,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  defp create_<%= schema.singular %>(_) do
+<%= if scope do %>  defp create_<%= schema.singular %>(%{scope: scope}) do
+    <%= schema.singular %> = <%= schema.singular %>_fixture(scope)
+<% else %>  defp create_<%= schema.singular %>(_) do
     <%= schema.singular %> = <%= schema.singular %>_fixture()
+<% end %>
     %{<%= schema.singular %>: <%= schema.singular %>}
   end
 end

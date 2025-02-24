@@ -2,7 +2,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   use <%= inspect context.web_module %>.ConnCase
 
   import Phoenix.LiveViewTest
-  import <%= inspect context.module %>Fixtures
+  import <%= inspect context.module %>Fixtures<%= if scope && elem(scope.fixture, 0) != Module.concat(context.module, "Fixtures") do %>
+  import <%= inspect elem(scope.fixture, 0) %><% end %>
 
   @create_attrs <%= Mix.Phoenix.to_text for {key, value} <- schema.params.create, into: %{}, do: {key, Mix.Phoenix.Schema.live_form_value(value)} %>
   @update_attrs <%= Mix.Phoenix.to_text for {key, value} <- schema.params.update, into: %{}, do: {key, Mix.Phoenix.Schema.live_form_value(value)} %>

@@ -60,7 +60,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end<% else %>
 
   def new(conn, _params) do
-    email = get_in(conn.assigns, [:current_scope.<%= schema.singular %>, Access.key(:email)])
+    email = get_in(conn.assigns, [:current_scope, Access.key(:<%= schema.singular %>), Access.key(:email)])
     form = Phoenix.Component.to_form(%{"email" => email}, as: "<%= schema.singular %>")
 
     render(conn, :new, form: form, error_message: nil)

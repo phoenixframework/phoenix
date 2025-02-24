@@ -270,7 +270,10 @@ defmodule <%= inspect auth_module %>Test do
       conn =
         conn
         |> fetch_flash()
-        |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(%{<%= schema.singular %> | authenticated_at: eleven_minutes_ago}))
+        |> assign(
+          :current_scope,
+          <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(%{<%= schema.singular %> | authenticated_at: eleven_minutes_ago})
+        )
         |> <%= inspect schema.alias %>Auth.require_sudo_mode([])
 
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"

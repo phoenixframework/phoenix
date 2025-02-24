@@ -101,6 +101,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  user: [
                    default: true,
                    module: MyApp.Accounts.AuthScope,
+                   fixture: {MyApp.AccountsFixtures, :register_and_log_in_user},
                    assign_key: :current_scope,
                    access_path: [:user, :id],
                    schema_key: :user_id,
@@ -241,6 +242,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                  user: [
                    default: true,
                    module: MyApp.Accounts.AuthScope,
+                   fixture: {MyApp.AccountsFixtures, :register_and_log_in_user},
                    assign_key: :current_scope,
                    access_path: [:user, :id],
                    schema_key: :user_id,

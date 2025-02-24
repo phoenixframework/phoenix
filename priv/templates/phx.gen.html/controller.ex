@@ -9,8 +9,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     render(conn, :index, <%= schema.collection %>: <%= schema.plural %>)
   end
 
-  def new(conn, _params) do
-    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %>%<%= inspect schema.alias %>{})
+  def new(conn, _params) do<%= if scope do %>
+    changeset =
+      <%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %>%<%= inspect schema.alias %>{
+        <%= scope.schema_key %>: <%= conn_scope %>.<%= Enum.join(scope.access_path, ".") %>
+      })
+<% else %>
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(%<%= inspect schema.alias %>{})
+<% end %>
     render(conn, :new, changeset: changeset)
   end
 
@@ -33,14 +39,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def edit(conn, %{"<%= primary_key %>" => <%= primary_key %>}) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= context_scope_prefix %><%= primary_key %>)
-    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>)
     render(conn, :edit, <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
   end
 
   def update(conn, %{"<%= primary_key %>" => <%= primary_key %>, <%= inspect schema.singular %> => <%= schema.singular %>_params}) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= context_scope_prefix %><%= primary_key %>)
 
-    case <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params) do
+    case <%= inspect context.alias %>.update_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>, <%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
         conn
         |> put_flash(:info, "<%= schema.human_singular %> updated successfully.")

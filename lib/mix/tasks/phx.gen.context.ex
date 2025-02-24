@@ -112,7 +112,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     binding = [
       context: context,
       schema: schema,
-      scope: schema.scope,
+      scope: context.scope,
       primary_key: schema.opts[:primary_key] || :id
     ]
     paths = Mix.Phoenix.generator_paths()
