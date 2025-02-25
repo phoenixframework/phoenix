@@ -586,10 +586,43 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
           assert_file(migration, fn file ->
             assert file =~ "create table(:blog_posts, primary_key: false) do"
             assert file =~ "add :id, :binary_id, primary_key: true"
-            assert file =~ "add :org_id, references(:organizations, type: :id, on_delete: :delete_all)"
+
+            assert file =~
+                     "add :org_id, references(:organizations, type: :id, on_delete: :delete_all)"
           end)
         end
       )
     end)
+  end
+
+  test "raises when there are multiple default scopes" do
+    with_scope_env(
+      :phoenix,
+      [
+        org: [
+          default: true,
+          module: MyApp.Accounts.AuthScope,
+          assign_key: :current_scope,
+          access_path: [:user, :org_id],
+          schema_key: :org_id,
+          schema_type: :id,
+          schema_table: :organizations
+        ],
+        user: [
+          default: true,
+          module: MyApp.Accounts.AuthScope,
+          assign_key: :current_scope,
+          access_path: [:user, :id],
+          schema_key: :user_id,
+          schema_type: :id,
+          schema_table: :users
+        ]
+      ],
+      fn ->
+        assert_raise RuntimeError, ~r"there can only be one default scope", fn ->
+          Gen.Schema.run(~w(Blog.Post blog_posts title:string))
+        end
+      end
+    )
   end
 end

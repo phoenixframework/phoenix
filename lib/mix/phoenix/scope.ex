@@ -41,8 +41,19 @@ defmodule Mix.Phoenix.Scope do
   Returns the default scope.
   """
   def default_scope(otp_app) do
-    with {_, scope} <- Enum.find(scopes_from_config(otp_app), fn {_, scope} -> scope.default end) do
-      scope
+    case Enum.filter(scopes_from_config(otp_app), fn {_, scope} -> scope.default end) do
+      [{_name, scope}] ->
+        scope
+
+      [_ | _] = scopes ->
+        raise """
+        there can only be one default scope defined on your application, got:
+
+            * #{Enum.map(scopes, fn {name, _scope} -> name end) |> Enum.join("\n    * ")}
+        """
+
+      [] ->
+        nil
     end
   end
 
