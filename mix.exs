@@ -159,6 +159,7 @@ defmodule Phoenix.MixProject do
       "guides/ecto.md",
       "guides/contexts.md",
       "guides/json_and_apis.md",
+      "guides/scopes.md",
       "guides/mix_tasks.md",
       "guides/telemetry.md",
       "guides/asset_management.md",

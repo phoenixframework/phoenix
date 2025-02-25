@@ -111,25 +111,13 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
               access_path: [:u, :id],
               schema_key: :user_id,
               schema_type: :integer,
-              schema_table: :users
+              schema_migration_type: :bigint,
+              schema_table: nil
             ]\
           """)
         end)
 
         mix_run!(~w(phx.gen.json Blog Post posts title:string --scope user), app_root_path)
-
-        assert [path] =
-                 Path.wildcard(
-                   Path.join(app_root_path, "priv/repo/migrations/*_create_posts.exs")
-                 )
-
-        modify_file(path, fn file ->
-          String.replace(
-            file,
-            "add :user_id, references(:users, type: :integer, on_delete: :delete_all)",
-            "add :user_id, :bigint"
-          )
-        end)
 
         File.write!(Path.join(app_root_path, "test/support/fixtures/user_scope_fixtures.ex"), """
         defmodule Scopes.UserScopeFixtures do

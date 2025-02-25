@@ -10,7 +10,8 @@ defmodule Mix.Phoenix.Scope do
             access_path: nil,
             schema_table: nil,
             schema_key: nil,
-            schema_type: nil
+            schema_type: nil,
+            schema_migration_type: nil
 
   @doc """
   Creates a new scope struct.
@@ -19,7 +20,12 @@ defmodule Mix.Phoenix.Scope do
     scope = struct!(__MODULE__, opts)
     alias = Module.concat([scope.module |> Module.split() |> List.last()])
 
-    %{scope | name: name, alias: alias}
+    %{
+      scope
+      | name: name,
+        alias: alias,
+        schema_migration_type: scope.schema_migration_type || scope.schema_type
+    }
   end
 
   @doc """
