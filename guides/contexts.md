@@ -30,7 +30,7 @@ In order to run the context generators, we need to come up with a module name th
 
 > #### A note on scopes {: .info}
 >
-> Many generators support the `--scope` option to generate scoped resources. For example, a scope might be the logged in user account of your application. Scoped resources are useful when different entities should see different resources. If a resource is scoped by user, the user will only be able to manage and see their own resources. For our catalog, we want everyone to see the same products, therefore we use `--no-scope`. We will see scopes in user later in this guide. You can also learn more about scopes in the [Scopes](scopes.html) guide.
+> Many generators support the `--scope` option to generate scoped resources. For example, a scope might be the logged in user account of your application. Scoped resources are useful when different entities should see different resources. If a resource is scoped by user, the user will only be able to manage and see their own resources. For our catalog, we want everyone to see the same products, therefore we use `--no-scope`. Note that if no scopes are configured, `--no-scope` is the default. We will see scopes in user later in this guide. You can also learn more about scopes in the [Scopes](scopes.html) guide.
 
 To jump-start our catalog context, we'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting products, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
 

@@ -66,24 +66,9 @@ defmodule Mix.Phoenix.Scope do
     raise "--scope and --no-scope must not be used together"
   end
 
-  def scope_from_opts(__otp_app, _name, true), do: nil
+  def scope_from_opts(_otp_app, _name, true), do: nil
 
-  def scope_from_opts(otp_app, nil, _) do
-    default_scope(otp_app) ||
-      raise """
-      no default scope configured!
-
-      Either run the generator with --no-scope to skip scoping, specify a scope with --scope,
-      or configure a default scope in your application's config:
-
-          config :#{otp_app}, :scopes, [
-            user: [
-              default: true,
-              ...
-            ]
-          ]
-      """
-  end
+  def scope_from_opts(otp_app, nil, _), do: default_scope(otp_app)
 
   def scope_from_opts(otp_app, name, _) do
     key = String.to_atom(name)

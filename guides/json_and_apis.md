@@ -13,7 +13,7 @@ For this guide let's create a simple JSON API to store our favourite links, that
 For this guide, we will use Phoenix generators to scaffold our API infrastructure:
 
 ```console
-mix phx.gen.json Urls Url urls link:string title:string --no-scope
+mix phx.gen.json Urls Url urls link:string title:string
 * creating lib/hello_web/controllers/url_controller.ex
 * creating lib/hello_web/controllers/url_json.ex
 * creating lib/hello_web/controllers/changeset_json.ex
