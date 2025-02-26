@@ -269,7 +269,8 @@ defmodule Phoenix.Socket do
             serializer: nil,
             topic: nil,
             transport: nil,
-            transport_pid: nil
+            transport_pid: nil,
+            handover_pid: nil
 
   @type t :: %Socket{
           assigns: map,
@@ -371,6 +372,7 @@ defmodule Phoenix.Socket do
   ## Options
 
     * `:assigns` - the map of socket assigns to merge into the socket on join
+    * `:handover_on_rejoin` - a boolean to indicate if the channel allows a handover when a duplicate join is detected
 
   ## Examples
 
@@ -385,6 +387,14 @@ defmodule Phoenix.Socket do
   allow more versatile topic scoping.
 
   See `Phoenix.Channel` for more information
+
+  ## Handover
+
+  If a channel is joined multiple times, the existing channel will be terminated by default.
+  This can be disabled by setting the `:handover_on_rejoin` option to `true`. A custom channel
+  implementation can then perform a handover by exchanging messages with the old channel
+  process that is available under the `:handover_pid` key in the socket struct.
+
   """
   defmacro channel(topic_pattern, module, opts \\ []) do
     module = expand_alias(module, __CALLER__)
@@ -530,6 +540,13 @@ defmodule Phoenix.Socket do
     handle_in(Map.get(state.channels, topic), message, state, socket)
   end
 
+  def __info__({:DOWN, _ref, _, _pid, {:shutdown, :handover}}, state) do
+    # in the special case where the channel is being handed over,
+    # we don't want to send a phx_error to the socket, as the exit
+    # is expected
+    {:ok, state}
+  end
+
   def __info__({:DOWN, ref, _, pid, reason}, {state, socket}) do
     case state.channels_inverse do
       %{^pid => {topic, join_ref}} ->
@@ -561,6 +578,41 @@ defmodule Phoenix.Socket do
   def __info__(:garbage_collect, state) do
     :erlang.garbage_collect(self())
     {:ok, state}
+  end
+
+  def __info__({:handover, payload, handover_pid, topic, join_ref}, {state, socket}) do
+    {channel, opts} = socket.handler.__channel__(topic)
+    opts = Keyword.put(opts, :handover_pid, handover_pid)
+    join_message = %Message{topic: topic, payload: payload, ref: join_ref, join_ref: join_ref}
+
+    case Phoenix.Channel.Server.join(socket, channel, join_message, opts) do
+      {:ok, reply, pid} ->
+        reply = %Message{
+          join_ref: join_ref,
+          ref: nil,
+          topic: topic,
+          event: "phx_handover",
+          payload: reply
+        }
+
+        shutdown_duplicate_channel(handover_pid, :handover)
+
+        state = put_channel(state, pid, topic, join_ref)
+        {:reply, :ok, encode_reply(socket, reply), {state, socket}}
+
+      {:error, reply} ->
+        reply = %Reply{
+          join_ref: join_ref,
+          ref: nil,
+          topic: topic,
+          status: :error,
+          payload: reply
+        }
+
+        shutdown_duplicate_channel(handover_pid, :handover)
+
+        {:reply, :error, encode_reply(socket, reply), {state, socket}}
+    end
   end
 
   def __info__(_, state) do
@@ -674,6 +726,17 @@ defmodule Phoenix.Socket do
        ) do
     case socket.handler.__channel__(topic) do
       {channel, opts} ->
+        handover? = Keyword.get(opts, :handover_on_rejoin, false)
+
+        handover_pid = if handover? do
+          case state.channels[topic] do
+            {pid, _, _} -> pid
+            _ -> nil
+          end
+        end
+
+        opts = Keyword.put(opts, :handover_pid, handover_pid)
+
         case Phoenix.Channel.Server.join(socket, channel, message, opts) do
           {:ok, reply, pid} ->
             reply = %Reply{
@@ -683,6 +746,10 @@ defmodule Phoenix.Socket do
               status: :ok,
               payload: reply
             }
+
+            if handover_pid do
+              shutdown_duplicate_channel(handover_pid, :handover)
+            end
 
             state = put_channel(state, pid, topic, join_ref)
             {:reply, :ok, encode_reply(socket, reply), {state, socket}}
@@ -696,6 +763,10 @@ defmodule Phoenix.Socket do
               payload: reply
             }
 
+            if handover_pid do
+              shutdown_duplicate_channel(handover_pid, :handover)
+            end
+
             {:reply, :error, encode_reply(socket, reply), {state, socket}}
         end
 
@@ -706,22 +777,37 @@ defmodule Phoenix.Socket do
   end
 
   defp handle_in({pid, _ref, status}, %{event: "phx_join", topic: topic} = message, state, socket) do
-    receive do
-      {:socket_close, ^pid, _reason} -> :ok
-    after
-      0 ->
-        if status != :leaving do
-          Logger.debug(fn ->
-            "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
-              "Closing existing channel for new join."
-          end)
-        end
+    handover? = case socket.handler.__channel__(topic) do
+      {_channel, opts} ->
+        Keyword.get(opts, :handover_on_rejoin, false)
+
+      _ -> false
     end
 
-    :ok = shutdown_duplicate_channel(pid)
-    {:push, {opcode, payload}, {new_state, new_socket}} = socket_close(pid, {state, socket})
-    send(self(), {:socket_push, opcode, payload})
-    handle_in(nil, message, new_state, new_socket)
+    if handover? do
+      # the channel wants to handover duplicate joins,
+      # therefore we don't exit the existing channel process (yet);
+      # instead, the old pid will be terminated after the new one
+      # joined successfully
+      handle_in(nil, message, state, socket)
+    else
+      receive do
+        {:socket_close, ^pid, _reason} -> :ok
+      after
+        0 ->
+          if status != :leaving do
+            Logger.debug(fn ->
+              "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
+                "Closing existing channel for new join."
+            end)
+          end
+      end
+
+      :ok = shutdown_duplicate_channel(pid)
+      {:push, {opcode, payload}, {new_state, new_socket}} = socket_close(pid, {state, socket})
+      send(self(), {:socket_push, opcode, payload})
+      handle_in(nil, message, new_state, new_socket)
+    end
   end
 
   defp handle_in({pid, _ref, _status}, %{event: "phx_leave"} = msg, state, socket) do
@@ -816,9 +902,9 @@ defmodule Phoenix.Socket do
     encode_reply(socket, message)
   end
 
-  defp shutdown_duplicate_channel(pid) do
+  defp shutdown_duplicate_channel(pid, reason \\ :duplicate_join) do
     ref = Process.monitor(pid)
-    Process.exit(pid, {:shutdown, :duplicate_join})
+    Process.exit(pid, {:shutdown, reason})
 
     receive do
       {:DOWN, ^ref, _, _, _} -> :ok
