@@ -8,8 +8,8 @@
 @variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
 @variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
 @theme {
-  --color-brand: "#FD4F00",
-};
+  --color-brand: oklch(66.64% 0.2202 37.57);
+}
 
 /*
  * Make LiveView wrapper divs transparent for layout.
