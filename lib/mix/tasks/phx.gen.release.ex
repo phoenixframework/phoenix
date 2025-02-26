@@ -31,6 +31,38 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
   For extended release configuration, the `mix release.init` task can be used
   in addition to this task. See the `Mix.Release` docs for more details.
+
+  If you are using third party JS package managers like `npm` or `yarn`, you will
+  need to update the generated Dockerfile with an extra step to fetch those packages.
+  This might look like this:
+
+  ```dockerfile
+  ...
+  ARG RUNNER_IMAGE="debian:..."
+
+  FROM node:20 as node
+  COPY assets assets
+  RUN cd assets && npm install
+
+  FROM ${BUILDER_IMAGE} as builder
+
+  ...
+
+  COPY assets assets
+  COPY --from=node assets/node_modules assets/node_modules
+  ...
+  ```
+
+  If you are using esbuild through Node.js or other JavaScript build tools, the approach
+  above can also be modified to invoke those in the node stage, for example:
+
+  ```dockerfile
+  FROM node:20 as node
+  COPY assets assets
+  RUN cd assets && npm install && node build.js --deploy
+  ```
+
+  Note that you may need to adjust the `assets.deploy` task to not invoke Node.js again.
   """
 
   use Mix.Task
