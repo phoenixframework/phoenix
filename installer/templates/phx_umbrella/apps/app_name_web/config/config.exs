@@ -29,7 +29,7 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "4.0.3",
+  version: "4.0.9",
   <%= @web_app_name %>: [
     args: ~w(
       --input=assets/css/app.css
