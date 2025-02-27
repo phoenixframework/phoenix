@@ -358,8 +358,6 @@ defmodule Mix.Tasks.Phx.Gen.Context do
           "Cannot generate schema #{schema} because it has the same name as the application"
         )
 
-
-
       true ->
         args
     end
