@@ -34,7 +34,7 @@
     <%= schema.singular %>
   end
 
-  def <%= schema.singular %>_scope_fixture() do
+  def <%= schema.singular %>_scope_fixture do
     <%= schema.singular %> = <%= schema.singular %>_fixture()
     <%= schema.singular %>_scope_fixture(<%= schema.singular %>)
   end

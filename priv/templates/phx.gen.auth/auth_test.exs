@@ -117,10 +117,13 @@ defmodule <%= inspect auth_module %>Test do
     end
   end
 
-  describe "fetch_current_scope/2" do
+  describe "fetch_current_scope_for_<%= schema.singular %>/2" do
     test "authenticates <%= schema.singular %> from session", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
-      conn = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> <%= inspect schema.alias %>Auth.fetch_current_scope([])
+
+      conn =
+        conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>([])
+
       assert conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
     end
 
@@ -134,7 +137,7 @@ defmodule <%= inspect auth_module %>Test do
       conn =
         conn
         |> put_req_cookie(@remember_me_cookie, signed_token)
-        |> <%= inspect schema.alias %>Auth.fetch_current_scope([])
+        |> <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>([])
 
       assert conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
       assert get_session(conn, :<%= schema.singular %>_token) == <%= schema.singular %>_token<%= if live? do %>
@@ -145,7 +148,7 @@ defmodule <%= inspect auth_module %>Test do
 
     test "does not authenticate if data is missing", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
-      conn = <%= inspect schema.alias %>Auth.fetch_current_scope(conn, [])
+      conn = <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>(conn, [])
       refute get_session(conn, :<%= schema.singular %>_token)
       refute conn.assigns.current_scope
     end
@@ -153,7 +156,7 @@ defmodule <%= inspect auth_module %>Test do
 
   <%= if live? do %>describe "on_mount :mount_current_scope" do
     setup %{conn: conn} do
-      %{conn: <%= inspect schema.alias %>Auth.fetch_current_scope(conn, [])}
+      %{conn: <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>(conn, [])}
     end
 
     test "assigns current_scope based on a valid <%= schema.singular %>_token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -285,7 +288,7 @@ defmodule <%= inspect auth_module %>Test do
 
   describe "redirect_if_<%= schema.singular %>_is_authenticated/2" do
     setup %{conn: conn} do
-      %{conn: <%= inspect schema.alias %>Auth.fetch_current_scope(conn, [])}
+      %{conn: <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>(conn, [])}
     end
 
     test "redirects if <%= schema.singular %> is authenticated", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -307,7 +310,7 @@ defmodule <%= inspect auth_module %>Test do
 
   describe "require_authenticated_<%= schema.singular %>/2" do
     setup %{conn: conn} do
-      %{conn: <%= inspect schema.alias %>Auth.fetch_current_scope(conn, [])}
+      %{conn: <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>(conn, [])}
     end
 
     test "redirects if <%= schema.singular %> is not authenticated", %{conn: conn} do

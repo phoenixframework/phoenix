@@ -2,7 +2,7 @@
   describe "<%= schema.plural %>" do
     alias <%= inspect schema.module %>
 
-    import <%= inspect scope.fixture |> elem(0) %>
+    import <%= inspect scope.test_data_fixture %>, only: [<%= scope.name %>_scope_fixture: 0]
     import <%= inspect context.module %>Fixtures
 
     @invalid_attrs <%= Mix.Phoenix.to_text for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %>

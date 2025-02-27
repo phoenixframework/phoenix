@@ -74,7 +74,7 @@ For more information about choosing these libraries, see the [Comeonin project](
 
 The generated code ships with an authentication module with a handful of plugs that fetch the current user, require authentication and so on. For instance, in an app named Demo which had `mix phx.gen.auth Accounts User users` run on it, you will find a module named `DemoWeb.UserAuth` with plugs such as:
 
-  * `fetch_current_user` - fetches the current user information if available
+  * `fetch_current_scope_for_user` - fetches the current user information if available and stores it as `:current_scope` assign
   * `require_authenticated_user` - must be invoked after `fetch_current_user` and requires that a current user exists and is authenticated
   * `redirect_if_user_is_authenticated` - used for the few pages that must not be available to authenticated users (only generated for controller based authentication)
   * `require_sudo_mode` - used for pages that contain sensitive operations and enforces recent authentication

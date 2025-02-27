@@ -4,14 +4,15 @@ defmodule Mix.Phoenix.Scope do
   defstruct name: nil,
             default: false,
             module: nil,
-            fixture: nil,
             alias: nil,
             assign_key: nil,
             access_path: nil,
             schema_table: nil,
             schema_key: nil,
             schema_type: nil,
-            schema_migration_type: nil
+            schema_migration_type: nil,
+            test_data_fixture: nil,
+            test_login_helper: nil
 
   @doc """
   Creates a new scope struct.

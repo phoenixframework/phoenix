@@ -78,7 +78,12 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
           inject_before_final_end(file, """
 
             scope "/api", ScopesWeb do
-              pipe_through [:api, :fetch_session, :fetch_current_scope, :require_authenticated_user]
+              pipe_through [
+                :api,
+                :fetch_session,
+                :fetch_current_scope_for_user,
+                :require_authenticated_user
+              ]
 
               resources "/posts", PostController, except: [:new, :edit]
             end
@@ -106,13 +111,14 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
             user: [
               default: false,
               module: Scopes.UserScope,
-              fixture: {Scopes.UserScopeFixtures, :assign_scope},
               assign_key: :user_scope,
               access_path: [:u, :id],
               schema_key: :user_id,
               schema_type: :integer,
               schema_migration_type: :bigint,
-              schema_table: nil
+              schema_table: nil,
+              test_data_fixture: Scopes.UserScopeFixtures,
+              test_login_helper: :assign_scope
             ]\
           """)
         end)
@@ -126,20 +132,25 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
           def user_scope_fixture(id \\\\ System.unique_integer()) do
             %UserScope{u: %{id: id}}
           end
-
-          def assign_scope(%{conn: conn}) do
-            id = System.unique_integer()
-            scope = user_scope_fixture(id)
-
-            conn =
-              conn
-              |> Phoenix.ConnTest.init_test_session(%{})
-              |> Plug.Conn.put_session(:user_id, id)
-
-            %{conn: conn, scope: scope}
-          end
         end
         """)
+
+        modify_file(Path.join(app_root_path, "test/support/conn_case.ex"), fn file ->
+          inject_before_final_end(file, """
+
+            def assign_scope(%{conn: conn}) do
+              id = System.unique_integer()
+              scope = Scopes.UserScopeFixtures.user_scope_fixture(id)
+
+              conn =
+                conn
+                |> Phoenix.ConnTest.init_test_session(%{})
+                |> Plug.Conn.put_session(:user_id, id)
+
+              %{conn: conn, scope: scope}
+            end
+          """)
+        end)
 
         File.write!(Path.join(app_root_path, "lib/scopes/user_scope.ex"), """
         defmodule Scopes.UserScope do

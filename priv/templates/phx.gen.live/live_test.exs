@@ -2,14 +2,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   use <%= inspect context.web_module %>.ConnCase
 
   import Phoenix.LiveViewTest
-  import <%= inspect context.module %>Fixtures<%= if scope && elem(scope.fixture, 0) != Module.concat(context.module, "Fixtures") do %>
-  import <%= inspect elem(scope.fixture, 0) %><% end %>
+  import <%= inspect context.module %>Fixtures
 
   @create_attrs <%= Mix.Phoenix.to_text for {key, value} <- schema.params.create, into: %{}, do: {key, Mix.Phoenix.Schema.live_form_value(value)} %>
   @update_attrs <%= Mix.Phoenix.to_text for {key, value} <- schema.params.update, into: %{}, do: {key, Mix.Phoenix.Schema.live_form_value(value)} %>
   @invalid_attrs <%= Mix.Phoenix.to_text for {key, value} <- schema.params.create, into: %{}, do: {key, value |> Mix.Phoenix.Schema.live_form_value() |> Mix.Phoenix.Schema.invalid_form_value()} %><%= if scope do %>
 
-  setup :<%= scope.fixture |> elem(1) %>
+  setup :<%= scope.test_login_helper %>
 
   defp create_<%= schema.singular %>(%{scope: scope}) do
     <%= schema.singular %> = <%= schema.singular %>_fixture(scope)

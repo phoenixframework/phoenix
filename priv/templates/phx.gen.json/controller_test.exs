@@ -1,9 +1,7 @@
 defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ControllerTest do
   use <%= inspect context.web_module %>.ConnCase
 
-  import <%= inspect context.module %>Fixtures<%= if scope && elem(scope.fixture, 0) != Module.concat(context.module, "Fixtures") do %>
-  import <%= inspect elem(scope.fixture, 0) %><% end %>
-
+  import <%= inspect context.module %>Fixtures
   alias <%= inspect schema.module %>
 
   @create_attrs %{
@@ -14,7 +12,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   }
   @invalid_attrs <%= Mix.Phoenix.to_text for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %><%= if scope do %>
 
-  setup :<%= scope.fixture |> elem(1) %><% end %>
+  setup :<%= scope.test_login_helper %><% end %>
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}

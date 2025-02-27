@@ -576,7 +576,7 @@ An authentication system can be created in two different ways:
 Do you want to create a LiveView based authentication system? [Yn] n
 
 ...
-* creating lib/hello/accounts/auth_scope.ex
+* creating lib/hello/accounts/scope.ex
 ...
 * injecting config/config.exs
 ...
@@ -596,10 +596,10 @@ see the account confirmation email.
 
 After following the instructions to re-fetch dependencies and migrating the database, we can start the server with `mix phx.server` and re-visit the home page [`http://localhost:4000/`](http://localhost:4000/) and should see new registration and login links at the top of the page. On the registration page, create a new user. In development, an confirmation email is sent to the dev mailbox, which is accessible at [`http://localhost:4000/dev/mailbox`](http://localhost:4000/dev/mailbox). After clicking the confirmation link, you should be successfully logged in.
 
-Looking at the generated scope file `lib/hello/accounts/auth_scope.ex`:
+Looking at the generated scope file `lib/hello/accounts/scope.ex`:
 
 ```elixir
-defmodule Hello.Accounts.AuthScope do
+defmodule Hello.Accounts.Scope do
   ...
   alias Hello.Accounts.User
 
@@ -618,7 +618,7 @@ defmodule Hello.Accounts.AuthScope do
 end
 ```
 
-we can see that it is simply a struct with a `user` field. The authentication system ensures that the `current_scope` assign is set to an `%AuthScope{}` struct that identifies the current user and our generators can rely on the struct to properly scope resources.
+we can see that it is simply a struct with a `user` field. The authentication system ensures that the `current_scope` assign is set to an `%Scope{}` struct that identifies the current user and our generators can rely on the struct to properly scope resources.
 
 Let's generate our new context:
 
@@ -768,7 +768,7 @@ Because we used `mix phx.gen.auth`, we already have a real authentication system
     plug :put_root_layout, html: {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug :fetch_current_scope
+    plug :fetch_current_scope_for_user
 +   plug :fetch_current_cart
   end
 
@@ -872,9 +872,9 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +  alias Hello.Catalog
 -  alias Hello.ShoppingCart.Cart
 +  alias Hello.ShoppingCart.{Cart, CartItem}
-   alias Hello.Accounts.AuthScope
+   alias Hello.Accounts.Scope
 
-+  def get_cart(%AuthScope{} = scope) do
++  def get_cart(%Scope{} = scope) do
 +    Repo.one(
 +      from(c in Cart,
 +        where: c.user_id == ^scope.user.id,
@@ -886,7 +886,7 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +    )
 +  end
 
-   def create_cart(%AuthScope{} = scope, attrs \\ %{}) do
+   def create_cart(%Scope{} = scope, attrs \\ %{}) do
      with {:ok, cart = %Cart{}} <-
             %Cart{}
             |> Cart.changeset(attrs, scope)
@@ -897,7 +897,7 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
      end
    end
 +
-+  def add_item_to_cart(%AuthScope{} = scope, %Cart{} = cart, product_id) do
++  def add_item_to_cart(%Scope{} = scope, %Cart{} = cart, product_id) do
 +    true = cart.user_id == scope.user.id
 +    product = Catalog.get_product!(product_id)
 +
@@ -911,7 +911,7 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +    )
 +  end
 +
-+  def remove_item_from_cart(%AuthScope{} = scope, %Cart{} = cart, product_id) do
++  def remove_item_from_cart(%Scope{} = scope, %Cart{} = cart, product_id) do
 +    true = cart.user_id == scope.user.id
 +
 +    {1, _} =
@@ -1081,7 +1081,7 @@ We started by plucking out the cart params from the form submit. Next, we call o
 Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and replace your `update_cart/2` function with the following implementation:
 
 ```elixir
-  def update_cart(%AuthScope{} = scope, %Cart{} = cart, attrs) do
+  def update_cart(%Scope{} = scope, %Cart{} = cart, attrs) do
     true = cart.user_id == scope.user.id
     
     changeset =
@@ -1264,7 +1264,7 @@ $ mix ecto.migrate
 Before we render information about our orders, we need to ensure our order data is fully populated and can be looked up by a current user. Open up your orders context in `lib/hello/orders.ex` and adjust your `get_order!/2` to include a preload:
 
 ```diff
-   def get_order!(%AuthScope{} = scope, id) do
+   def get_order!(%Scope{} = scope, id) do
 -    Repo.get_by!(Order, id: id, user_id: scope.user.id)
 +    Order
 +    |> Repo.get_by!(id: id, user_id: scope.user.id)
@@ -1314,7 +1314,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
   alias Hello.Orders.LineItem
   alias Hello.ShoppingCart
 
-  def complete_order(%AuthScope{} = scope, %ShoppingCart.Cart{} = cart) do
+  def complete_order(%Scope{} = scope, %ShoppingCart.Cart{} = cart) do
     true = cart.user_id == scope.user.id
 
     line_items =
@@ -1351,7 +1351,7 @@ We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into
 To close out our order completion, we need to implement the `ShoppingCart.prune_cart_items/1` function in `lib/hello/shopping_cart.ex`:
 
 ```elixir
-  def prune_cart_items(%AuthScope{} = scope, %Cart{} = cart) do
+  def prune_cart_items(%Scope{} = scope, %Cart{} = cart) do
     {_, _} = Repo.delete_all(from(i in CartItem, where: i.cart_id == ^cart.id))
     {:ok, get_cart(scope)}
   end

@@ -498,7 +498,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash
                    plug :protect_from_forgery
                    plug :put_secure_browser_headers
-                   plug :fetch_current_scope
+                   plug :fetch_current_scope_for_user
                  end
                end
                """
@@ -535,7 +535,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash
                    plug :protect_from_forgery
                    plug :put_secure_browser_headers, %{"content-security-policy" => @csp}
-                   plug :fetch_current_scope
+                   plug :fetch_current_scope_for_user
                  end
                end
                """
@@ -572,7 +572,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash\r
                    plug :protect_from_forgery\r
                    plug :put_secure_browser_headers\r
-                   plug :fetch_current_scope\r
+                   plug :fetch_current_scope_for_user\r
                  end\r
                end\r
                """
@@ -608,12 +608,12 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
       assert Injector.router_plug_help_text(file_path, context) ==
                """
-               Add the :fetch_current_scope plug to the :browser pipeline in foo.ex:
+               Add the :fetch_current_scope_for_user plug to the :browser pipeline in foo.ex:
 
                    pipeline :browser do
                      ...
                      plug :put_secure_browser_headers
-                     plug :fetch_current_scope
+                     plug :fetch_current_scope_for_user
                    end
                """
     end

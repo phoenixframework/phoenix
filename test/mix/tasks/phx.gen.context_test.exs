@@ -124,7 +124,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         [
           user: [
             default: true,
-            module: MyApp.Accounts.AuthScope,
+            module: MyApp.Accounts.Scope,
             assign_key: :current_scope,
             access_path: [:user, :id],
             schema_key: :user_id,
@@ -140,7 +140,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
                    scope: %Mix.Phoenix.Scope{
                      name: :user,
                      default: true,
-                     module: MyApp.Accounts.AuthScope,
+                     module: MyApp.Accounts.Scope,
                      assign_key: :current_scope,
                      access_path: [:user, :id],
                      schema_key: :user_id,
@@ -472,13 +472,14 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         [
           user: [
             default: true,
-            module: MyApp.Accounts.AuthScope,
-            fixture: {MyApp.AccountsFixtures, :register_and_log_in_user},
+            module: MyApp.Accounts.Scope,
             assign_key: :current_scope,
             access_path: [:user, :id],
             schema_key: :user_id,
             schema_type: :binary_id,
-            schema_table: :users
+            schema_table: :users,
+            test_data_fixture: MyApp.AccountsFixtures,
+            test_login_helper: :register_and_log_in_user
           ]
         ],
         fn ->
@@ -490,13 +491,13 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
           end)
 
           assert_file("lib/phoenix/blog.ex", fn file ->
-            assert file =~ "def subscribe_posts(%AuthScope{} = scope)"
-            assert file =~ "def get_post!(%AuthScope{} = scope, id)"
-            assert file =~ "def list_posts(%AuthScope{} = scope)"
-            assert file =~ "def create_post(%AuthScope{} = scope, attrs \\\\ %{})"
-            assert file =~ "def update_post(%AuthScope{} = scope, %Post{} = post, attrs)"
-            assert file =~ "def delete_post(%AuthScope{} = scope, %Post{} = post)"
-            assert file =~ "def change_post(%AuthScope{} = scope, %Post{} = post, attrs \\\\ %{})"
+            assert file =~ "def subscribe_posts(%Scope{} = scope)"
+            assert file =~ "def get_post!(%Scope{} = scope, id)"
+            assert file =~ "def list_posts(%Scope{} = scope)"
+            assert file =~ "def create_post(%Scope{} = scope, attrs \\\\ %{})"
+            assert file =~ "def update_post(%Scope{} = scope, %Post{} = post, attrs)"
+            assert file =~ "def delete_post(%Scope{} = scope, %Post{} = post)"
+            assert file =~ "def change_post(%Scope{} = scope, %Post{} = post, attrs \\\\ %{})"
           end)
 
           assert_file("test/phoenix/blog_test.exs", fn file ->

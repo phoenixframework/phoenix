@@ -94,7 +94,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @router_plug_anchor_line "plug :put_secure_browser_headers"
 
   @doc """
-  Injects the fetch_current_scope plug into router's browser pipeline
+  Injects the fetch_current_scope_for_<schema> plug into router's browser pipeline
   """
   @spec router_plug_inject(String.t(), context) ::
           {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
@@ -135,8 +135,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     "plug " <> router_plug_name(schema)
   end
 
-  defp router_plug_name(_schema) do
-    ":fetch_current_scope"
+  defp router_plug_name(schema) do
+    ":fetch_current_scope_for_#{schema.singular}"
   end
 
   @doc """

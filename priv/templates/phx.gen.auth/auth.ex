@@ -101,7 +101,7 @@ defmodule <%= inspect auth_module %> do
   Authenticates the <%= schema.singular %> by looking into the session
   and remember me token.
   """
-  def fetch_current_scope(conn, _opts) do
+  def fetch_current_scope_for_<%= schema.singular %>(conn, _opts) do
     {<%= schema.singular %>_token, conn} = ensure_<%= schema.singular %>_token(conn)
     <%= schema.singular %> = <%= schema.singular %>_token && <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
     assign(conn, :current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))

@@ -12,6 +12,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   Additional information and security considerations are detailed in the
   [`mix phx.gen.auth` guide](mix_phx_gen_auth.html).
 
+  > #### A note on scopes {: .info}
+  >
+  > `mix phx.gen.auth` creates a scope named after the schema by default.
+  > You can read more about scopes in the [Scopes guide](scopes.html).
+
   ## LiveView vs conventional Controllers & Views
 
   Authentication views can either be generated to use LiveView by passing
@@ -125,6 +130,16 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       $ mix phx.gen.auth Accounts User users --table accounts_users
 
   This will cause the generated tables to be named `"accounts_users"` and `"accounts_users_tokens"`.
+
+  ## Custom scope name
+
+  By default, the scope name is the same as the schema name. You can customize the scope name by passing the `--scope` option. For example:
+
+  ```console
+  $ mix phx.gen.auth Accounts User users --scope app_user
+  ```
+
+  This will generate a scope named `app_user` instead of `user`. You can read more about scopes in the [Scopes guide](scopes.html).
   """
 
   use Mix.Task
@@ -301,10 +316,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   defp new_scope(context, key, default_scope) do
     Mix.Phoenix.Scope.new!(key, %{
       default: !default_scope,
-      module: Module.concat([context.module, "AuthScope"]),
-      fixture:
-        {Module.concat([context.module, "Fixtures"]),
-         :"register_and_log_in_#{context.schema.singular}"},
+      module: Module.concat([context.module, "Scope"]),
       assign_key: :current_scope,
       access_path: [
         String.to_atom(context.schema.singular),
@@ -313,7 +325,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       schema_key:
         String.to_atom("#{context.schema.singular}_#{context.schema.opts[:primary_key] || :id}"),
       schema_type: if(context.schema.binary_id, do: :binary_id, else: :id),
-      schema_table: context.schema.table
+      schema_table: context.schema.table,
+      test_data_fixture: Module.concat([context.module, "Fixtures"]),
+      test_login_helper: :"register_and_log_in_#{context.schema.singular}"
     })
   end
 
@@ -322,13 +336,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     config :#{context.context_app}, :scopes,
       #{key}: [
         default: #{if default_scope, do: false, else: true},
-        module: #{inspect(context.module)}.AuthScope,
-        fixture: {#{inspect(context.module)}Fixtures, :register_and_log_in_#{context.schema.singular}},
+        module: #{inspect(context.module)}.Scope,
         assign_key: :current_scope,
         access_path: [:#{context.schema.singular}, :#{context.schema.opts[:primary_key] || :id}],
         schema_key: :#{context.schema.singular}_#{context.schema.opts[:primary_key] || :id},
         schema_type: :#{if(context.schema.binary_id, do: :binary_id, else: :id)},
-        schema_table: :#{context.schema.table}
+        schema_table: :#{context.schema.table},
+        test_data_fixture: #{inspect(context.module)}Fixtures,
+        test_login_helper: :register_and_log_in_#{context.schema.singular}
       ]\
     """
   end
@@ -409,7 +424,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         ]
       ] ++
         if scope_config.create_new? do
-          ["scope.ex": [context.dir, "auth_scope.ex"]]
+          ["scope.ex": [context.dir, "scope.ex"]]
         else
           []
         end

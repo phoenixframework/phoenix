@@ -1,14 +1,13 @@
 defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>ControllerTest do
   use <%= inspect context.web_module %>.ConnCase
 
-  import <%= inspect context.module %>Fixtures<%= if scope && elem(scope.fixture, 0) != Module.concat(context.module, "Fixtures") do %>
-  import <%= inspect elem(scope.fixture, 0) %><% end %>
+  import <%= inspect context.module %>Fixtures
 
   @create_attrs <%= Mix.Phoenix.to_text schema.params.create %>
   @update_attrs <%= Mix.Phoenix.to_text schema.params.update %>
   @invalid_attrs <%= Mix.Phoenix.to_text (for {key, _} <- schema.params.create, into: %{}, do: {key, nil}) %><%= if scope do %>
 
-  setup :<%= scope.fixture |> elem(1) %><% end %>
+  setup :<%= scope.test_login_helper %><% end %>
 
   describe "index" do
     test "lists all <%= schema.plural %>", %{conn: conn} do

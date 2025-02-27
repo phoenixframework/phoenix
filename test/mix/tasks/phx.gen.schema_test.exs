@@ -47,7 +47,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         [
           user: [
             default: true,
-            module: MyApp.Accounts.AuthScope,
+            module: MyApp.Accounts.Scope,
             assign_key: :current_scope,
             access_path: [:user, :id],
             schema_key: :user_id,
@@ -62,7 +62,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
                    scope: %Mix.Phoenix.Scope{
                      name: :user,
                      default: true,
-                     module: MyApp.Accounts.AuthScope,
+                     module: MyApp.Accounts.Scope,
                      assign_key: :current_scope,
                      access_path: [:user, :id],
                      schema_key: :user_id,
@@ -82,7 +82,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         [
           user: [
             default: false,
-            module: MyApp.Accounts.AuthScope,
+            module: MyApp.Accounts.Scope,
             assign_key: :current_scope,
             access_path: [:user, :id],
             schema_key: :user_id,
@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
           ],
           org: [
             default: true,
-            module: MyApp.Accounts.AuthScope,
+            module: MyApp.Accounts.Scope,
             assign_key: :current_scope,
             access_path: [:user, :org_id],
             schema_key: :org_id,
@@ -106,7 +106,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
                    scope: %Mix.Phoenix.Scope{
                      name: :org,
                      default: true,
-                     module: MyApp.Accounts.AuthScope,
+                     module: MyApp.Accounts.Scope,
                      assign_key: :current_scope,
                      access_path: [:user, :org_id],
                      schema_key: :org_id,
@@ -565,7 +565,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         [
           org: [
             default: true,
-            module: MyApp.Accounts.AuthScope,
+            module: MyApp.Accounts.Scope,
             assign_key: :current_scope,
             access_path: [:user, :org_id],
             schema_key: :org_id,
@@ -601,7 +601,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       [
         org: [
           default: true,
-          module: MyApp.Accounts.AuthScope,
+          module: MyApp.Accounts.Scope,
           assign_key: :current_scope,
           access_path: [:user, :org_id],
           schema_key: :org_id,
@@ -610,7 +610,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         ],
         user: [
           default: true,
-          module: MyApp.Accounts.AuthScope,
+          module: MyApp.Accounts.Scope,
           assign_key: :current_scope,
           access_path: [:user, :id],
           schema_key: :user_id,
