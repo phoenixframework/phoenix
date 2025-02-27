@@ -391,7 +391,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     %{scope: scope, default_scope: default_scope, create_new?: new?} = binding[:scope_config]
 
     cond do
-      # TODO: check if we want to include this or only ask for the existing default case
+      # this can only happen if --scope is used and the user explicitly asked for the scope name
       scope && not new? ->
         Mix.shell().yes?("""
         The scope #{scope.name} is already configured.
