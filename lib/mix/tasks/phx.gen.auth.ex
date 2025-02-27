@@ -294,7 +294,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     {_, default_scope} =
       Enum.find(existing_scopes, {nil, nil}, fn {_, scope} -> scope.default end)
 
-    key = String.to_atom(requested_scope || context.schema.singular)
+    key = String.to_atom(requested_scope || find_scope_name(context, existing_scopes))
 
     {create_new?, scope, config_string} =
       if Map.has_key?(existing_scopes, key) do
@@ -311,6 +311,36 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       scope: scope,
       config_string: config_string
     }
+  end
+
+  defp find_scope_name(context, existing_scopes) do
+    cond do
+      # user
+      is_new_scope?(existing_scopes, context.schema.singular) ->
+        context.schema.singular
+
+      # accounts_user
+      is_new_scope?(existing_scopes, "#{context.basename}_#{context.schema.singular}") ->
+        "#{context.basename}_#{context.schema.singular}"
+
+      # my_app_accounts_user
+      is_new_scope?(existing_scopes, "#{context.context_app}_#{context.basename}_#{context.schema.singular}") ->
+        "#{context.context_app}_#{context.basename}_#{context.schema.singular}"
+
+      true ->
+        Mix.raise """
+        Could not generate a scope name for #{context.schema.singular}! These scopes already exist:
+
+            * #{Enum.map(existing_scopes, fn {name, _scope} -> name end) |> Enum.join("\n    * ")}
+
+        You can customize the scope name by passing the --scope option.
+        """
+    end
+  end
+
+  defp is_new_scope?(existing_scopes, bin_key) do
+    key = String.to_atom(bin_key)
+    not Map.has_key?(existing_scopes, key)
   end
 
   defp new_scope(context, key, default_scope) do

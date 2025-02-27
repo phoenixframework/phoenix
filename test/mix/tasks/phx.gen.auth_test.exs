@@ -1333,7 +1333,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end)
     end
 
-    test "when scope already exists", config do
+    test "when default scope already exists", config do
       in_tmp_phx_project(config.test, fn ->
         with_scope_env(
           :my_app,
@@ -1353,6 +1353,81 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
             Gen.Auth.run(
               ~w(Accounts User users --no-compile --live),
+              ecto_adapter: Ecto.Adapters.Postgres
+            )
+
+            help_text = """
+            Your application configuration already contains a default scope: :user.
+
+            phx.gen.auth will create a new accounts_user scope.
+
+            Do you want to proceed with the generation?\
+            """
+
+            assert_received {:mix_shell, :yes?, [question]}
+            assert question == help_text
+          end
+        )
+      end)
+    end
+
+    test "when scope name cannot be generated", config do
+      in_tmp_phx_project(config.test, fn ->
+        with_scope_env(
+          :my_app,
+          [
+            user: [
+              default: true,
+              module: MyApp.Accounts.Scope,
+              assign_key: :current_scope,
+              access_path: [:user, :id],
+              schema_key: :user_id,
+              schema_type: :id,
+              schema_table: :users
+            ],
+            accounts_user: [
+              default: false,
+              module: MyApp.Accounts.Scope
+            ],
+            my_app_accounts_user: [
+              default: false,
+              module: MyApp.Accounts.Scope
+            ]
+          ],
+          fn ->
+            send(self(), {:mix_shell_input, :yes?, true})
+
+            assert_raise Mix.Error, ~r/Could not generate a scope name for user!/, fn ->
+              Gen.Auth.run(
+                ~w(Accounts User users --no-compile --live),
+                ecto_adapter: Ecto.Adapters.Postgres
+              )
+            end
+          end
+        )
+      end)
+    end
+
+    test "when given scope already exists", config do
+      in_tmp_phx_project(config.test, fn ->
+        with_scope_env(
+          :my_app,
+          [
+            user: [
+              default: true,
+              module: MyApp.Accounts.Scope,
+              assign_key: :current_scope,
+              access_path: [:user, :id],
+              schema_key: :user_id,
+              schema_type: :id,
+              schema_table: :users
+            ]
+          ],
+          fn ->
+            send(self(), {:mix_shell_input, :yes?, true})
+
+            Gen.Auth.run(
+              ~w(Accounts User users --no-compile --live --scope user),
               ecto_adapter: Ecto.Adapters.Postgres
             )
 
