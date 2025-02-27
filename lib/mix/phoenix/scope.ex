@@ -47,11 +47,11 @@ defmodule Mix.Phoenix.Scope do
         scope
 
       [_ | _] = scopes ->
-        raise """
-        there can only be one default scope defined on your application, got:
+        Mix.raise("""
+        There can only be one default scope defined on your application, got:
 
             * #{Enum.map(scopes, fn {name, _scope} -> name end) |> Enum.join("\n    * ")}
-        """
+        """)
 
       [] ->
         nil
@@ -64,7 +64,7 @@ defmodule Mix.Phoenix.Scope do
   Returns `nil` for `--no-scope` and raises if a specific scope is not configured.
   """
   def scope_from_opts(_otp_app, bin, false) when is_binary(bin) do
-    raise "--scope and --no-scope must not be used together"
+    Mix.raise("The --scope and --no-scope options must not be used together")
   end
 
   def scope_from_opts(_otp_app, _name, true), do: nil
@@ -76,8 +76,8 @@ defmodule Mix.Phoenix.Scope do
     scopes = scopes_from_config(otp_app)
 
     Map.get_lazy(scopes, key, fn ->
-      raise """
-      scope :#{key} not configured!
+      Mix.raise("""
+      Scope :#{key} not configured!
 
       Ensure that the scope :#{key} is configured in your application's config:
 
@@ -88,7 +88,7 @@ defmodule Mix.Phoenix.Scope do
           ]
 
       Note that phx.gen.auth generates a default scope for you.
-      """
+      """)
     end)
   end
 end

@@ -619,7 +619,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         ]
       ],
       fn ->
-        assert_raise RuntimeError, ~r"there can only be one default scope", fn ->
+        assert_raise Mix.Error, ~r"There can only be one default scope", fn ->
           Gen.Schema.run(~w(Blog.Post blog_posts title:string))
         end
       end
