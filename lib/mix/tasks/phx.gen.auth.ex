@@ -12,6 +12,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   Additional information and security considerations are detailed in the
   [`mix phx.gen.auth` guide](mix_phx_gen_auth.html).
 
+  > #### A note on scopes {: .info}
+  >
+  > `mix phx.gen.auth` creates a scope named after the schema by default.
+  > You can read more about scopes in the [Scopes guide](scopes.html).
+
   ## LiveView vs conventional Controllers & Views
 
   Authentication views can either be generated to use LiveView by passing
@@ -125,6 +130,16 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       $ mix phx.gen.auth Accounts User users --table accounts_users
 
   This will cause the generated tables to be named `"accounts_users"` and `"accounts_users_tokens"`.
+
+  ## Custom scope name
+
+  By default, the scope name is the same as the schema name. You can customize the scope name by passing the `--scope` option. For example:
+
+  ```console
+  $ mix phx.gen.auth Accounts User users --scope app_user
+  ```
+
+  This will generate a scope named `app_user` instead of `user`. You can read more about scopes in the [Scopes guide](scopes.html).
   """
 
   use Mix.Task
@@ -141,7 +156,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     merge_with_existing_context: :boolean,
     prefix: :string,
     live: :boolean,
-    compile: :boolean
+    compile: :boolean,
+    scope: :string
   ]
 
   @doc false
@@ -156,8 +172,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     validate_args!(parsed)
     hashing_library = build_hashing_library!(opts)
 
-    context_args = OptionParser.to_argv(opts, switches: @switches) ++ parsed
-    {context, schema} = Gen.Context.build(context_args, __MODULE__)
+    context_args =
+      OptionParser.to_argv(Keyword.drop(opts, [:scope]), switches: @switches) ++ parsed
+
+    {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], __MODULE__)
 
     context = put_live_option(context)
     Gen.Context.prompt_for_code_injection(context)
@@ -192,17 +210,19 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       web_path_prefix: web_path_prefix(schema),
       test_case_options: test_case_options(ecto_adapter),
       live?: Keyword.fetch!(context.opts, :live),
-      datetime_module: datetime_module(schema)
+      datetime_module: datetime_module(schema),
+      scope_config: scope_config(context, opts[:scope])
     ]
 
     paths = Mix.Phoenix.generator_paths()
 
-    prompt_for_conflicts(context)
+    prompt_for_conflicts(binding)
 
     context
     |> copy_new_files(binding, paths)
     |> inject_conn_case_helpers(paths, binding)
-    |> inject_config(hashing_library)
+    |> inject_hashing_config(hashing_library)
+    |> maybe_inject_scope_config(binding)
     |> maybe_inject_mix_dependency(hashing_library)
     |> inject_routes(paths, binding)
     |> maybe_inject_router_import(binding)
@@ -268,13 +288,148 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     end
   end
 
-  defp prompt_for_conflicts(context) do
-    context
+  defp scope_config(context, requested_scope) do
+    existing_scopes = Mix.Phoenix.Scope.scopes_from_config(context.context_app)
+
+    {_, default_scope} =
+      Enum.find(existing_scopes, {nil, nil}, fn {_, scope} -> scope.default end)
+
+    key = String.to_atom(requested_scope || find_scope_name(context, existing_scopes))
+
+    {create_new?, scope, config_string} =
+      if Map.has_key?(existing_scopes, key) do
+        {false, existing_scopes[key], nil}
+      else
+        {true, new_scope(context, key, default_scope),
+         scope_config_string(context, key, default_scope)}
+      end
+
+    %{
+      scopes: existing_scopes,
+      default_scope: default_scope,
+      create_new?: create_new?,
+      scope: scope,
+      config_string: config_string
+    }
+  end
+
+  defp find_scope_name(context, existing_scopes) do
+    cond do
+      # user
+      is_new_scope?(existing_scopes, context.schema.singular) ->
+        context.schema.singular
+
+      # accounts_user
+      is_new_scope?(existing_scopes, "#{context.basename}_#{context.schema.singular}") ->
+        "#{context.basename}_#{context.schema.singular}"
+
+      # my_app_accounts_user
+      is_new_scope?(existing_scopes, "#{context.context_app}_#{context.basename}_#{context.schema.singular}") ->
+        "#{context.context_app}_#{context.basename}_#{context.schema.singular}"
+
+      true ->
+        Mix.raise """
+        Could not generate a scope name for #{context.schema.singular}! These scopes already exist:
+
+            * #{Enum.map(existing_scopes, fn {name, _scope} -> name end) |> Enum.join("\n    * ")}
+
+        You can customize the scope name by passing the --scope option.
+        """
+    end
+  end
+
+  defp is_new_scope?(existing_scopes, bin_key) do
+    key = String.to_atom(bin_key)
+    not Map.has_key?(existing_scopes, key)
+  end
+
+  defp new_scope(context, key, default_scope) do
+    Mix.Phoenix.Scope.new!(key, %{
+      default: !default_scope,
+      module: Module.concat([context.module, "Scope"]),
+      assign_key: :current_scope,
+      access_path: [
+        String.to_atom(context.schema.singular),
+        context.schema.opts[:primary_key] || :id
+      ],
+      schema_key:
+        String.to_atom("#{context.schema.singular}_#{context.schema.opts[:primary_key] || :id}"),
+      schema_type: if(context.schema.binary_id, do: :binary_id, else: :id),
+      schema_table: context.schema.table,
+      test_data_fixture: Module.concat([context.module, "Fixtures"]),
+      test_login_helper: :"register_and_log_in_#{context.schema.singular}"
+    })
+  end
+
+  defp scope_config_string(context, key, default_scope) do
+    """
+    config :#{context.context_app}, :scopes,
+      #{key}: [
+        default: #{if default_scope, do: false, else: true},
+        module: #{inspect(context.module)}.Scope,
+        assign_key: :current_scope,
+        access_path: [:#{context.schema.singular}, :#{context.schema.opts[:primary_key] || :id}],
+        schema_key: :#{context.schema.singular}_#{context.schema.opts[:primary_key] || :id},
+        schema_type: :#{if(context.schema.binary_id, do: :binary_id, else: :id)},
+        schema_table: :#{context.schema.table},
+        test_data_fixture: #{inspect(context.module)}Fixtures,
+        test_login_helper: :register_and_log_in_#{context.schema.singular}
+      ]\
+    """
+  end
+
+  defp prompt_for_conflicts(binding) do
+    prompt_for_scope_conflicts(binding)
+
+    binding
     |> files_to_be_generated()
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 
-  defp files_to_be_generated(%Context{schema: schema, context_app: context_app} = context) do
+  defp prompt_for_scope_conflicts(binding) do
+    schema = binding[:schema]
+    %{scope: scope, default_scope: default_scope, create_new?: new?} = binding[:scope_config]
+
+    cond do
+      # this can only happen if --scope is used and the user explicitly asked for the scope name
+      scope && not new? ->
+        Mix.shell().yes?("""
+        The scope #{scope.name} is already configured.
+
+        phx.gen.auth expects the configured scope module #{inspect(scope.module)} to include
+        a `for_#{schema.singular}/1` function that returns a `%#{inspect(schema.module)}{}` struct:
+
+            def for_#{schema.singular}(nil), do: %__MODULE__{user: nil}
+
+            def for_#{schema.singular}(%<%= inspect schema.alias %>{} = #{schema.singular}) do
+              %__MODULE__{#{schema.singular}: #{schema.singular}}
+            end
+
+        Please ensure that your scope module includes such code.
+
+        Do you want to proceed with the generation?\
+        """) || System.halt()
+
+      default_scope ->
+        Mix.shell().yes?("""
+        Your application configuration already contains a default scope: #{inspect(default_scope.name)}.
+
+        phx.gen.auth will create a new #{scope.name} scope.
+
+        Do you want to proceed with the generation?\
+        """) || System.halt()
+
+      true ->
+        :ok
+    end
+  end
+
+  defp files_to_be_generated(binding) do
+    schema = binding[:schema]
+    context = binding[:context]
+    context_app = context.context_app
+    scope_config = binding[:scope_config]
+
     singular = schema.singular
     web_pre = Mix.Phoenix.web_path(context_app)
     web_test_pre = Mix.Phoenix.web_test_path(context_app)
@@ -282,21 +437,27 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     web_path = to_string(schema.web_path)
     controller_pre = Path.join([web_pre, "controllers", web_path])
 
-    default_files = [
-      "migration.ex": [migrations_pre, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"],
-      "notifier.ex": [context.dir, "#{singular}_notifier.ex"],
-      "schema.ex": [context.dir, "#{singular}.ex"],
-      "schema_token.ex": [context.dir, "#{singular}_token.ex"],
-      "auth.ex": [web_pre, web_path, "#{singular}_auth.ex"],
-      "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
-      "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
-      "session_controller_test.exs": [
-        web_test_pre,
-        "controllers",
-        web_path,
-        "#{singular}_session_controller_test.exs"
-      ]
-    ]
+    default_files =
+      [
+        "migration.ex": [migrations_pre, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"],
+        "notifier.ex": [context.dir, "#{singular}_notifier.ex"],
+        "schema.ex": [context.dir, "#{singular}.ex"],
+        "schema_token.ex": [context.dir, "#{singular}_token.ex"],
+        "auth.ex": [web_pre, web_path, "#{singular}_auth.ex"],
+        "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
+        "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
+        "session_controller_test.exs": [
+          web_test_pre,
+          "controllers",
+          web_path,
+          "#{singular}_session_controller_test.exs"
+        ]
+      ] ++
+        if scope_config.create_new? do
+          ["scope.ex": [context.dir, "scope.ex"]]
+        else
+          []
+        end
 
     case Keyword.fetch(context.opts, :live) do
       {:ok, true} ->
@@ -395,7 +556,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   defp copy_new_files(%Context{} = context, binding, paths) do
-    files = files_to_be_generated(context)
+    files = files_to_be_generated(binding)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.auth", binding, files)
     inject_context_functions(context, paths, binding)
     inject_tests(context, paths, binding)
@@ -622,7 +783,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     end
   end
 
-  defp inject_config(context, %HashingLibrary{} = hashing_library) do
+  defp inject_hashing_config(context, %HashingLibrary{} = hashing_library) do
     file_path =
       if Mix.Phoenix.in_umbrella?(File.cwd!()) do
         Path.expand("../../")
@@ -634,7 +795,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     file =
       case read_file(file_path) do
         {:ok, file} -> file
-        {:error, {:file_read_error, _}} -> "use Mix.Config\n"
+        {:error, {:file_read_error, _}} -> "import Config\n"
       end
 
     case Injector.test_config_inject(file, hashing_library) do
@@ -651,6 +812,50 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         Mix.shell().info("""
 
         #{help_text}
+        """)
+    end
+
+    context
+  end
+
+  defp maybe_inject_scope_config(%Context{} = context, binding) do
+    if binding[:scope_config].create_new? do
+      inject_scope_config(context, binding)
+    else
+      context
+    end
+  end
+
+  defp inject_scope_config(%Context{} = context, binding) do
+    scope_config = binding[:scope_config].config_string
+
+    file_path =
+      if Mix.Phoenix.in_umbrella?(File.cwd!()) do
+        Path.expand("../../")
+      else
+        File.cwd!()
+      end
+      |> Path.join("config/config.exs")
+
+    file =
+      case read_file(file_path) do
+        {:ok, file} -> file
+        {:error, {:file_read_error, _}} -> "import Config\n"
+      end
+
+    case Injector.config_inject(file, scope_config) do
+      {:ok, new_file} ->
+        print_injecting(file_path)
+        File.write!(file_path, new_file)
+
+      :already_injected ->
+        :ok
+
+      {:error, :unable_to_inject} ->
+        Mix.shell().info("""
+        Add the following to #{Path.relative_to_cwd(file_path)}:
+
+        #{scope_config}
         """)
     end
 

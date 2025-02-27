@@ -75,7 +75,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def mount(%{"token" => token}, _session, socket) do
     socket =
-      case <%= inspect context.alias %>.update_<%= schema.singular %>_email(socket.assigns.current_<%= schema.singular %>, token) do
+      case <%= inspect context.alias %>.update_<%= schema.singular %>_email(socket.assigns.current_scope.<%= schema.singular %>, token) do
         :ok ->
           put_flash(socket, :info, "Email changed successfully.")
 
@@ -87,7 +87,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(_params, _session, socket) do
-    <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
+    <%= schema.singular %> = socket.assigns.current_scope.<%= schema.singular %>
     email_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>, %{}, validate_email: false)
     password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, %{}, hash_password: false)
 
@@ -105,7 +105,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
 
     email_form =
-      socket.assigns.current_<%= schema.singular %>
+      socket.assigns.current_scope.<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>_params, validate_email: false)
       |> Map.put(:action, :validate)
       |> to_form()
@@ -115,7 +115,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def handle_event("update_email", params, socket) do
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
-    <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
+    <%= schema.singular %> = socket.assigns.current_scope.<%= schema.singular %>
     true = <%= inspect context.alias %>.sudo_mode?(<%= schema.singular %>)
 
     case <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>, <%= schema.singular %>_params) do
@@ -138,7 +138,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
 
     password_form =
-      socket.assigns.current_<%= schema.singular %>
+      socket.assigns.current_scope.<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>_params, hash_password: false)
       |> Map.put(:action, :validate)
       |> to_form()
@@ -148,7 +148,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def handle_event("update_password", params, socket) do
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
-    <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
+    <%= schema.singular %> = socket.assigns.current_scope.<%= schema.singular %>
     true = <%= inspect context.alias %>.sudo_mode?(<%= schema.singular %>)
 
     case <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params) do

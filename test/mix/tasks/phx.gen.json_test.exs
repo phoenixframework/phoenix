@@ -56,7 +56,8 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                      alarm:time
                      alarm_usec:time_usec
                      secret:uuid:redact announcement_date:date
-                     weight:float user_id:references:users))
+                     weight:float user_id:references:users
+                    ))
 
       assert_file("lib/phoenix/blog/post.ex")
       assert_file("lib/phoenix/blog.ex")

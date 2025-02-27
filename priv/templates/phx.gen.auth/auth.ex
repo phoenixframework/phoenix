@@ -5,6 +5,7 @@ defmodule <%= inspect auth_module %> do
   import Phoenix.Controller
 
   alias <%= inspect context.module %>
+  alias <%= inspect scope_config.scope.module %>
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -100,10 +101,10 @@ defmodule <%= inspect auth_module %> do
   Authenticates the <%= schema.singular %> by looking into the session
   and remember me token.
   """
-  def fetch_current_<%= schema.singular %>(conn, _opts) do
+  def fetch_current_scope_for_<%= schema.singular %>(conn, _opts) do
     {<%= schema.singular %>_token, conn} = ensure_<%= schema.singular %>_token(conn)
     <%= schema.singular %> = <%= schema.singular %>_token && <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-    assign(conn, :current_<%= schema.singular %>, <%= schema.singular %>)
+    assign(conn, :current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
   end
 
   defp ensure_<%= schema.singular %>_token(conn) do
@@ -121,28 +122,28 @@ defmodule <%= inspect auth_module %> do
   end
 
   <%= if live? do %>@doc """
-  Handles mounting and authenticating the current_<%= schema.singular %> in LiveViews.
+  Handles mounting and authenticating the current_scope in LiveViews.
 
   ## `on_mount` arguments
 
-    * `:mount_current_<%= schema.singular %>` - Assigns current_<%= schema.singular %>
+    * `:mount_current_scope` - Assigns current_scope
       to socket assigns based on <%= schema.singular %>_token, or nil if
       there's no <%= schema.singular %>_token or no matching <%= schema.singular %>.
 
     * `:ensure_authenticated` - Authenticates the <%= schema.singular %> from the session,
-      and assigns the current_<%= schema.singular %> to socket assigns based
+      and assigns the current_scope to socket assigns based
       on <%= schema.singular %>_token.
       Redirects to login page if there's no logged <%= schema.singular %>.
 
   ## Examples
 
   Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
-  the current_<%= schema.singular %>:
+  the `current_scope`:
 
       defmodule <%= inspect context.web_module %>.PageLive do
         use <%= inspect context.web_module %>, :live_view
 
-        on_mount {<%= inspect auth_module %>, :mount_current_<%= schema.singular %>}
+        on_mount {<%= inspect auth_module %>, :mount_current_scope}
         ...
       end
 
@@ -152,14 +153,14 @@ defmodule <%= inspect auth_module %> do
         live "/profile", ProfileLive, :index
       end
   """
-  def on_mount(:mount_current_<%= schema.singular %>, _params, session, socket) do
-    {:cont, mount_current_<%= schema.singular %>(socket, session)}
+  def on_mount(:mount_current_scope, _params, session, socket) do
+    {:cont, mount_current_scope(socket, session)}
   end
 
   def on_mount(:ensure_authenticated, _params, session, socket) do
-    socket = mount_current_<%= schema.singular %>(socket, session)
+    socket = mount_current_scope(socket, session)
 
-    if socket.assigns.current_<%= schema.singular %> do
+    if socket.assigns.current_scope do
       {:cont, socket}
     else
       socket =
@@ -172,9 +173,9 @@ defmodule <%= inspect auth_module %> do
   end
 
   def on_mount(:ensure_sudo_mode, _params, session, socket) do
-    socket = mount_current_<%= schema.singular %>(socket, session)
+    socket = mount_current_scope(socket, session)
 
-    if <%= inspect context.alias %>.sudo_mode?(socket.assigns.current_<%= schema.singular %>, -10) do
+    if <%= inspect context.alias %>.sudo_mode?(socket.assigns.current_scope.<%= schema.singular %>, -10) do
       {:cont, socket}
     else
       socket =
@@ -186,11 +187,14 @@ defmodule <%= inspect auth_module %> do
     end
   end
 
-  defp mount_current_<%= schema.singular %>(socket, session) do
-    Phoenix.Component.assign_new(socket, :current_<%= schema.singular %>, fn ->
-      if <%= schema.singular %>_token = session["<%= schema.singular %>_token"] do
-        <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-      end
+  defp mount_current_scope(socket, session) do
+    Phoenix.Component.assign_new(socket, :current_scope, fn ->
+      <%= schema.singular %> =
+        if <%= schema.singular %>_token = session["<%= schema.singular %>_token"] do
+          <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+        end
+
+      <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>)
     end)
   end
 
@@ -198,7 +202,7 @@ defmodule <%= inspect auth_module %> do
   Used for routes that require sudo mode.
   """
   def require_sudo_mode(conn, _opts) do
-    if <%= inspect context.alias %>.sudo_mode?(conn.assigns.current_<%= schema.singular %>, -10) do
+    if <%= inspect context.alias %>.sudo_mode?(conn.assigns.current_scope.<%= schema.singular %>, -10) do
       conn
     else
       conn
@@ -213,7 +217,7 @@ defmodule <%= inspect auth_module %> do
   Used for routes that require the <%= schema.singular %> to not be authenticated.
   """
   def redirect_if_<%= schema.singular %>_is_authenticated(conn, _opts) do
-    if conn.assigns[:current_<%= schema.singular %>] do
+    if conn.assigns.current_scope do
       conn
       |> redirect(to: signed_in_path(conn))
       |> halt()
@@ -229,7 +233,7 @@ defmodule <%= inspect auth_module %> do
   they use the application at all, here would be a good place.
   """
   def require_authenticated_<%= schema.singular %>(conn, _opts) do
-    if conn.assigns[:current_<%= schema.singular %>] do
+    if conn.assigns.current_scope do
       conn
     else
       conn
@@ -269,7 +273,7 @@ defmodule <%= inspect auth_module %> do
 
   <%= if live? do %>@doc "Returns the path to redirect to after log in."
   # the <%= schema.singular %> was already logged in, redirect to settings
-  def signed_in_path(%Plug.Conn{assigns: %{current_<%= schema.singular %>: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}) do
+  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %<%= inspect scope_config.scope.alias %>{user: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}}) do
     ~p"<%= schema.route_prefix %>/settings"
   end
 

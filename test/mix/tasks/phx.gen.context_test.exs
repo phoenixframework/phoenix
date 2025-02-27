@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "new context", config do
     in_tmp_project(config.test, fn ->
-      schema = Schema.new("Blog.Post", "posts", [], [])
+      schema = Schema.new("Blog.Post", "posts", [], no_scope: true)
       context = Context.new("Blog", schema, [])
 
       assert %Context{
@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
   test "new nested context", config do
     in_tmp_project(config.test, fn ->
-      schema = Schema.new("Site.Blog.Post", "posts", [], [])
+      schema = Schema.new("Site.Blog.Post", "posts", [], no_scope: true)
       context = Context.new("Site.Blog", schema, [])
 
       assert %Context{
@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       end
       """)
 
-      schema = Schema.new("Blog.Post", "posts", [], [])
+      schema = Schema.new("Blog.Post", "posts", [], no_scope: true)
       context = Context.new("Blog", schema, [])
       assert Context.pre_existing?(context)
       refute Context.pre_existing_tests?(context)
@@ -114,6 +114,42 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       """)
 
       assert Context.pre_existing_test_fixtures?(context)
+    end)
+  end
+
+  test "new with default scope", config do
+    in_tmp_project(config.test, fn ->
+      with_scope_env(
+        :phoenix,
+        [
+          user: [
+            default: true,
+            module: MyApp.Accounts.Scope,
+            assign_key: :current_scope,
+            access_path: [:user, :id],
+            schema_key: :user_id,
+            schema_type: :id,
+            schema_table: :users
+          ]
+        ],
+        fn ->
+          schema = Schema.new("Blog.Post", "posts", [], [])
+          context = Context.new("Blog", schema, [])
+
+          assert %Context{
+                   scope: %Mix.Phoenix.Scope{
+                     name: :user,
+                     default: true,
+                     module: MyApp.Accounts.Scope,
+                     assign_key: :current_scope,
+                     access_path: [:user, :id],
+                     schema_key: :user_id,
+                     schema_type: :id,
+                     schema_table: :users
+                   }
+                 } = context
+        end
+      )
     end)
   end
 
@@ -340,7 +376,9 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def change_post"
       end)
 
-      Gen.Context.run(~w(Blog Comment comments message:string --merge-with-existing-context))
+      Gen.Context.run(
+        ~w(Blog Comment comments message:string --merge-with-existing-context)
+      )
 
       refute_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> _notice]}
@@ -424,6 +462,65 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "create table(:users)"
         assert file =~ "add :status, :string"
       end)
+    end)
+  end
+
+  test "generates scoped context", config do
+    in_tmp_project(config.test, fn ->
+      with_scope_env(
+        :phoenix,
+        [
+          user: [
+            default: true,
+            module: MyApp.Accounts.Scope,
+            assign_key: :current_scope,
+            access_path: [:user, :id],
+            schema_key: :user_id,
+            schema_type: :binary_id,
+            schema_table: :users,
+            test_data_fixture: MyApp.AccountsFixtures,
+            test_login_helper: :register_and_log_in_user
+          ]
+        ],
+        fn ->
+          Gen.Context.run(~w(Blog Post posts title:string))
+
+          assert_file("lib/phoenix/blog/post.ex", fn file ->
+            assert file =~ "field :title, :string"
+            assert file =~ "field :user_id, :binary_id"
+          end)
+
+          assert_file("lib/phoenix/blog.ex", fn file ->
+            assert file =~ "def subscribe_posts(%Scope{} = scope)"
+            assert file =~ "def get_post!(%Scope{} = scope, id)"
+            assert file =~ "def list_posts(%Scope{} = scope)"
+            assert file =~ "def create_post(%Scope{} = scope, attrs \\\\ %{})"
+            assert file =~ "def update_post(%Scope{} = scope, %Post{} = post, attrs)"
+            assert file =~ "def delete_post(%Scope{} = scope, %Post{} = post)"
+            assert file =~ "def change_post(%Scope{} = scope, %Post{} = post, attrs \\\\ %{})"
+          end)
+
+          assert_file("test/phoenix/blog_test.exs", fn file ->
+            assert file =~ "use Phoenix.DataCase"
+            assert file =~ "describe \"posts\" do"
+            assert file =~ "import Phoenix.BlogFixtures"
+          end)
+
+          assert_file("test/support/fixtures/blog_fixtures.ex", fn file ->
+            assert file =~ "defmodule Phoenix.BlogFixtures do"
+            assert file =~ "def post_fixture(scope, attrs \\\\ %{})"
+            assert file =~ "title: \"some title\""
+          end)
+
+          assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
+
+          assert_file(path, fn file ->
+            assert file =~ "create table(:posts)"
+            assert file =~ "add :title, :string"
+            assert file =~ "add :user_id, references(:users, type: :binary_id, on_delete: :delete_all)"
+          end)
+        end
+      )
     end)
   end
 end

@@ -475,7 +475,7 @@ defmodule Mix.Tasks.Phx.New do
     case System.fetch_env("PHX_NEW_CACHE_DIR") do
       {:ok, cache_dir} ->
         copy_cached_build(%{project_path: project_path, cache_dir: cache_dir})
-        %Project{project | cached_build_path: cache_dir}
+        %{project | cached_build_path: cache_dir}
 
       :error ->
         project

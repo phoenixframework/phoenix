@@ -40,19 +40,27 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, _session, socket) do<%= if scope do %>
+    <%= inspect context.alias %>.subscribe_<%= schema.plural %>(<%= socket_scope %>)
+<% end %>
     {:ok,
      socket
      |> assign(:page_title, "Listing <%= schema.human_plural %>")<%= if primary_key != :id do %>
      |> stream_configure(:<%= schema.collection %>, dom_id: &"<%= schema.table %>-#{&1.<%= primary_key %>}")<% end %>
-     |> stream(:<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>())}
+     |> stream(:<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>(<%= socket_scope %>))}
   end
 
   @impl true
   def handle_event("delete", %{"<%= primary_key %>" => <%= primary_key %>}, socket) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= primary_key %>)
-    {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
+    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= context_scope_prefix %><%= primary_key %>)
+    {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>)
 
     {:noreply, stream_delete(socket, :<%= schema.collection %>, <%= schema.singular %>)}
-  end
+  end<%= if scope do %>
+
+  @impl true
+  def handle_info({type, %<%= inspect schema.module %>{}}, socket)
+      when type in [:created, :updated, :deleted] do
+    {:noreply, stream(socket, :<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>(<%= socket_scope %>), reset: true)}
+  end<% end %>
 end

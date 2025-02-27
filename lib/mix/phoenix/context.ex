@@ -16,7 +16,8 @@ defmodule Mix.Phoenix.Context do
             dir: nil,
             generate?: true,
             context_app: nil,
-            opts: []
+            opts: [],
+            scope: nil
 
   def valid?(context) do
     context =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
@@ -55,7 +56,9 @@ defmodule Mix.Phoenix.Context do
       dir: dir,
       generate?: generate?,
       context_app: ctx_app,
-      opts: opts}
+      opts: opts,
+      scope: schema.scope
+    }
   end
 
   def pre_existing?(%Context{file: file}), do: File.exists?(file)
