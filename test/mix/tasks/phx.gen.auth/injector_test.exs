@@ -468,7 +468,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
   describe "router_plug_inject/2" do
     test "injects after :put_secure_browser_headers" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       input = """
@@ -498,14 +498,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash
                    plug :protect_from_forgery
                    plug :put_secure_browser_headers
-                   plug :fetch_current_user
+                   plug :fetch_current_scope_for_user
                  end
                end
                """
     end
 
     test "injects after :put_secure_browser_headers even when it has additional options" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       input = """
@@ -535,14 +535,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash
                    plug :protect_from_forgery
                    plug :put_secure_browser_headers, %{"content-security-policy" => @csp}
-                   plug :fetch_current_user
+                   plug :fetch_current_scope_for_user
                  end
                end
                """
     end
 
     test "respects windows line endings" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       input = """
@@ -572,14 +572,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash\r
                    plug :protect_from_forgery\r
                    plug :put_secure_browser_headers\r
-                   plug :fetch_current_user\r
+                   plug :fetch_current_scope_for_user\r
                  end\r
                end\r
                """
     end
 
     test "errors when :put_secure_browser_headers_is_missing" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       input = """
@@ -601,19 +601,19 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
   describe "router_plug_help_text/2" do
     test "returns a string with the expected help text" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       file_path = Path.expand("foo.ex")
 
       assert Injector.router_plug_help_text(file_path, context) ==
                """
-               Add the :fetch_current_user plug to the :browser pipeline in foo.ex:
+               Add the :fetch_current_scope_for_user plug to the :browser pipeline in foo.ex:
 
                    pipeline :browser do
                      ...
                      plug :put_secure_browser_headers
-                     plug :fetch_current_user
+                     plug :fetch_current_scope_for_user
                    end
                """
     end
@@ -621,7 +621,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
   describe "app_layout_menu_inject/2" do
     test "injects user menu at the bottom of nav section when it exists" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>
@@ -666,9 +666,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                            <% end %>
                          </ul>
                          <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-                           <%= if @current_user do %>
+                           <%= if @current_scope do %>
                              <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                               {@current_user.email}
+                               {@current_scope.user.email}
                              </li>
                              <li>
                                <.link
@@ -715,7 +715,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "injects user menu at the bottom of nav section when it exists with windows line endings" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>\r
@@ -760,9 +760,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                            <% end %>\r
                          </ul>\r
                          <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
-                           <%= if @current_user do %>\r
+                           <%= if @current_scope do %>\r
                              <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
-                               {@current_user.email}\r
+                               {@current_scope.user.email}\r
                              </li>\r
                              <li>\r
                                <.link\r
@@ -809,7 +809,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "injects render user_menu after the opening body tag" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>
@@ -838,9 +838,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  </head>
                  <body>
                    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-                     <%= if @current_user do %>
+                     <%= if @current_scope do %>
                        <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                         {@current_user.email}
+                         {@current_scope.user.email}
                        </li>
                        <li>
                          <.link
@@ -889,7 +889,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "works with windows line endings" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>\r
@@ -918,9 +918,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                  </head>\r
                  <body>\r
                    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
-                     <%= if @current_user do %>\r
+                     <%= if @current_scope do %>\r
                        <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
-                         {@current_user.email}\r
+                         {@current_scope.user.email}\r
                        </li>\r
                        <li>\r
                          <.link\r
@@ -969,7 +969,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "returns :already_injected when render is already found in file" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>
@@ -1003,14 +1003,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "returns {:error, :unable_to_inject} when the body tag isn't found" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       assert {:error, :unable_to_inject} = Injector.app_layout_menu_inject(schema, "")
     end
   end
 
   describe "app_layout_menu_help_text/2" do
     test "returns a string with the expected help text" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       file_path = Path.expand("foo.ex")
 
       assert Injector.app_layout_menu_help_text(file_path, schema) =~

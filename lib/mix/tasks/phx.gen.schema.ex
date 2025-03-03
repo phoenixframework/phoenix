@@ -154,7 +154,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   @switches [migration: :boolean, binary_id: :boolean, table: :string, web: :string,
     context_app: :string, prefix: :string, repo: :string, migration_dir: :string,
-    primary_key: :string]
+    primary_key: :string, scope: :string, no_scope: :boolean]
 
   @doc false
   def run(args) do
@@ -167,8 +167,14 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
     prompt_for_conflicts(schema)
 
+    binding = [
+      schema: schema,
+      primary_key: schema.opts[:primary_key] || :id,
+      scope: schema.scope
+    ]
+
     schema
-    |> copy_new_files(paths, schema: schema, primary_key: schema.opts[:primary_key] || :id)
+    |> copy_new_files(paths, binding)
     |> print_shell_instructions()
   end
 

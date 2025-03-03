@@ -28,7 +28,7 @@
     pipe_through [:browser]
 
     <%= if live? do %>live_session :current_<%= schema.singular %>,
-      on_mount: [{<%= inspect auth_module %>, :mount_current_<%= schema.singular %>}] do
+      on_mount: [{<%= inspect auth_module %>, :mount_current_scope}] do
       live "/<%= schema.plural %>/register", <%= inspect schema.alias %>Live.Registration, :new
       live "/<%= schema.plural %>/log-in", <%= inspect schema.alias %>Live.Login, :new
       live "/<%= schema.plural %>/log-in/:token", <%= inspect schema.alias %>Live.Confirmation, :new

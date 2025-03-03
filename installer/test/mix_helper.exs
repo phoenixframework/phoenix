@@ -144,6 +144,20 @@ defmodule MixHelper do
     end
   end
 
+  def with_scope_env(app_name, new_env, fun) do
+    config_before = Application.fetch_env(app_name, :scopes)
+    Application.put_env(app_name, :scopes, new_env)
+
+    try do
+      fun.()
+    after
+      case config_before do
+        {:ok, config} -> Application.put_env(app_name, :scopes, config)
+        :error -> Application.delete_env(app_name, :scopes)
+      end
+    end
+  end
+
   def umbrella_mixfile_contents do
     """
     defmodule Umbrella.MixProject do

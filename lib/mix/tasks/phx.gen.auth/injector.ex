@@ -40,16 +40,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   end
 
   @doc """
-  Injects configuration for test environment into `file`.
+  Injects configuration into `file`.
   """
-  @spec test_config_inject(String.t(), HashingLibrary.t()) ::
-          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
-  def test_config_inject(file, %HashingLibrary{} = hashing_library) when is_binary(file) do
-    code_to_inject =
-      hashing_library
-      |> test_config_code()
-      |> normalize_line_endings_to_file(file)
-
+  def config_inject(file, code_to_inject) when is_binary(file) and is_binary(code_to_inject) do
     inject_unless_contains(
       file,
       code_to_inject,
@@ -63,6 +56,20 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
         global: false
       )
     )
+  end
+
+  @doc """
+  Injects configuration for test environment into `file`.
+  """
+  @spec test_config_inject(String.t(), HashingLibrary.t()) ::
+          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
+  def test_config_inject(file, %HashingLibrary{} = hashing_library) when is_binary(file) do
+    code_to_inject =
+      hashing_library
+      |> test_config_code()
+      |> normalize_line_endings_to_file(file)
+
+    config_inject(file, code_to_inject)
   end
 
   @doc """
@@ -87,7 +94,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @router_plug_anchor_line "plug :put_secure_browser_headers"
 
   @doc """
-  Injects the fetch_current_<schema> plug into router's browser pipeline
+  Injects the fetch_current_scope_for_<schema> plug into router's browser pipeline
   """
   @spec router_plug_inject(String.t(), context) ::
           {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
@@ -128,8 +135,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     "plug " <> router_plug_name(schema)
   end
 
-  defp router_plug_name(%Schema{} = schema) do
-    ":fetch_current_#{schema.singular}"
+  defp router_plug_name(schema) do
+    ":fetch_current_scope_for_#{schema.singular}"
   end
 
   @doc """
@@ -168,9 +175,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
 
     template = """
     <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_#{schema.singular} do %>
+      <%= if @current_scope do %>
         <li class="#{base_tailwind_classes}">
-          {@current_#{schema.singular}.email}
+          {@current_scope.#{schema.singular}.email}
         </li>
         <li>
           <.link

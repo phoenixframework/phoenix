@@ -28,11 +28,15 @@ Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`,
 
 In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have products to showcase on pages for sale, along with descriptions, pricing, etc. Along with selling products, we know we'll need to support carting, order checkout, and so on. While the products being purchased are related to the cart and checkout processes, showcasing a product and managing the *exhibition* of our products is distinctly different than tracking what a user has placed in their cart or how an order is placed. A `Catalog` context is a natural place for the management of our product details and the showcasing of those products we have for sale.
 
+> #### A note on scopes {: .info}
+>
+> Many generators support the `--scope` option to generate scoped resources. For example, a scope might be the logged in user account of your application. Scoped resources are useful when different entities should see different resources. If a resource is scoped by user, the user will only be able to manage and see their own resources. For our catalog, we want everyone to see the same products, therefore we use `--no-scope`. Note that if no scopes are configured, `--no-scope` is the default. We will see scopes in user later in this guide. You can also learn more about scopes in the [Scopes](scopes.html) guide.
+
 To jump-start our catalog context, we'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting products, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
 
 ```console
 $ mix phx.gen.html Catalog Product products title:string \
-description:string price:decimal views:integer
+description:string price:decimal views:integer --no-scope
 
 * creating lib/hello_web/controllers/product_controller.ex
 * creating lib/hello_web/controllers/product_html/edit.html.heex
@@ -43,7 +47,7 @@ description:string price:decimal views:integer
 * creating lib/hello_web/controllers/product_html.ex
 * creating test/hello_web/controllers/product_controller_test.exs
 * creating lib/hello/catalog/product.ex
-* creating priv/repo/migrations/20210201185747_create_products.exs
+* creating priv/repo/migrations/20250201185747_create_products.exs
 * creating lib/hello/catalog.ex
 * injecting lib/hello/catalog.ex
 * creating test/hello/catalog_test.exs
@@ -91,11 +95,11 @@ We modified our price column to a specific precision of 15, scale of 6, along wi
 
 ```console
 $ mix ecto.migrate
-14:09:02.260 [info] == Running 20210201185747 Hello.Repo.Migrations.CreateProducts.change/0 forward
+14:09:02.260 [info] == Running 20250201185747 Hello.Repo.Migrations.CreateProducts.change/0 forward
 
 14:09:02.262 [info] create table products
 
-14:09:02.273 [info] == Migrated 20210201185747 in 0.0s
+14:09:02.273 [info] == Migrated 20250201185747 in 0.0s
 ```
 
 Before we jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/products](http://localhost:4000/products). Let's follow the "New Product" link and click the "Save" button without providing any input. We should be greeted with the following output:
@@ -334,13 +338,13 @@ For now, categories will contain only textual information. Our first order of bu
 
 ```console
 $ mix phx.gen.context Catalog Category categories \
-title:string:unique
+title:string:unique --no-scope
 
 You are generating into an existing context.
 ...
 Would you like to proceed? [Yn] y
 * creating lib/hello/catalog/category.ex
-* creating priv/repo/migrations/20210203192325_create_categories.exs
+* creating priv/repo/migrations/20250203192325_create_categories.exs
 * injecting lib/hello/catalog.ex
 * injecting test/hello/catalog_test.exs
 * injecting test/support/fixtures/catalog_fixtures.ex
@@ -355,7 +359,7 @@ This time around, we used `mix phx.gen.context`, which is just like `mix phx.gen
 ```console
 $ mix ecto.gen.migration create_product_categories
 
-* creating priv/repo/migrations/20210203192958_create_product_categories.exs
+* creating priv/repo/migrations/20250203192958_create_product_categories.exs
 ```
 
 Next, let's open up the new migration file and add the following code to the `change` function:
@@ -385,15 +389,15 @@ With our migrations in place, we can migrate up.
 ```console
 $ mix ecto.migrate
 
-18:20:36.489 [info] == Running 20210222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
+18:20:36.489 [info] == Running 20250222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
 
 18:20:36.493 [info] create table categories
 
 18:20:36.508 [info] create index categories_title_index
 
-18:20:36.512 [info] == Migrated 20210222231834 in 0.0s
+18:20:36.512 [info] == Migrated 20250222231834 in 0.0s
 
-18:20:36.547 [info] == Running 20210222231930 Hello.Repo.Migrations.CreateProductCategories.change/0 forward
+18:20:36.547 [info] == Running 20250222231930 Hello.Repo.Migrations.CreateProductCategories.change/0 forward
 
 18:20:36.547 [info] create table product_categories
 
@@ -401,7 +405,7 @@ $ mix ecto.migrate
 
 18:20:36.560 [info]  create index product_categories_category_id_product_id_index
 
-18:20:36.562 [info] == Migrated 20210222231930 in 0.0s
+18:20:36.562 [info] == Migrated 20250222231930 in 0.0s
 ```
 
 Now that we have a `Catalog.Product` schema and a join table to associate products and categories, we're nearly ready to start wiring up our new features. Before we dive in, we first need real categories to select in our web UI. Let's quickly seed some new categories in the application. Add the following code to your seeds file in `priv/repo/seeds.exs`:
@@ -418,13 +422,13 @@ We simply enumerate over a list of category titles and use the generated `create
 $ mix run priv/repo/seeds.exs
 
 [debug] QUERY OK db=3.1ms decode=1.1ms queue=0.7ms idle=2.2ms
-INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Home Improvement", ~N[2021-02-03 19:39:53], ~N[2021-02-03 19:39:53]]
+INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Home Improvement", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 [debug] QUERY OK db=1.2ms queue=1.3ms idle=12.3ms
-INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Power Tools", ~N[2021-02-03 19:39:53], ~N[2021-02-03 19:39:53]]
+INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Power Tools", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 [debug] QUERY OK db=1.1ms queue=1.1ms idle=15.1ms
-INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Gardening", ~N[2021-02-03 19:39:53], ~N[2021-02-03 19:39:53]]
+INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Gardening", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 [debug] QUERY OK db=2.4ms queue=1.0ms idle=17.6ms
-INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Books", ~N[2021-02-03 19:39:53], ~N[2021-02-03 19:39:53]]
+INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Books", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 ```
 
 Perfect. Before we integrate categories in the web layer, we need to let our context know how to associate products and categories. First, open up `lib/hello/catalog/product.ex` and add the following association:
@@ -512,7 +516,7 @@ With our `category_opts` function in place, we can open up `lib/hello_web/contro
   ...
   <.input field={f[:views]} type="number" label="Views" />
 
-+ <.input field={f[:category_ids]} type="select" multiple={true} options={category_opts(@changeset)} />
++ <.input field={f[:category_ids]} type="select" multiple options={category_opts(@changeset)} />
 
   <:actions>
     <.button>Save Product</.button>
@@ -559,13 +563,70 @@ Let's create a `ShoppingCart` context to handle basic cart duties. Before we wri
   3. Store and update quantities in cart
   4. Calculate and display sum of cart prices
 
-From the description, it's clear we need a `Cart` resource for storing the user's cart, along with a `CartItem` to track products in the cart. With our plan set, let's get to work. Run the following command to generate our new context:
+From the description, it's clear we need a `Cart` resource for storing the user's cart, along with a `CartItem` to track products in the cart. With our plan set, let's get to work.
+
+Initially we mentioned that the generators support scoping resources. For our cart, we want to scope by user. A user should only be able to manage their own cart. In our application, there is no authentication system and also no scope defined yet. While it is possible to create a scope from scratch, we will use the `mix phx.gen.auth` authentication generator which will create a user scope for us:
 
 ```console
-$ mix phx.gen.context ShoppingCart Cart carts user_uuid:uuid:unique
+mix phx.gen.auth Accounts User user
+
+An authentication system can be created in two different ways:
+- Using Phoenix.LiveView (default)
+- Using Phoenix.Controller only
+Do you want to create a LiveView based authentication system? [Yn] n
+
+...
+* creating lib/hello/accounts/scope.ex
+...
+* injecting config/config.exs
+...
+
+Please re-fetch your dependencies with the following command:
+
+    $ mix deps.get
+
+Remember to update your repository by running migrations:
+
+    $ mix ecto.migrate
+
+Once you are ready, visit "/user/register"
+to create your account and then access "/dev/mailbox" to
+see the account confirmation email.
+```
+
+After following the instructions to re-fetch dependencies and migrating the database, we can start the server with `mix phx.server` and re-visit the home page [`http://localhost:4000/`](http://localhost:4000/) and should see new registration and login links at the top of the page. On the registration page, create a new user. In development, an confirmation email is sent to the dev mailbox, which is accessible at [`http://localhost:4000/dev/mailbox`](http://localhost:4000/dev/mailbox). After clicking the confirmation link, you should be successfully logged in.
+
+Looking at the generated scope file `lib/hello/accounts/scope.ex`:
+
+```elixir
+defmodule Hello.Accounts.Scope do
+  ...
+  alias Hello.Accounts.User
+
+  defstruct user: nil
+
+  @doc """
+  Creates a scope for the given user.
+
+  Returns nil if no user is given.
+  """
+  def for_user(%User{} = user) do
+    %__MODULE__{user: user}
+  end
+
+  def for_user(nil), do: nil
+end
+```
+
+we can see that it is simply a struct with a `user` field. The authentication system ensures that the `current_scope` assign is set to an `%Scope{}` struct that identifies the current user and our generators can rely on the struct to properly scope resources.
+
+Let's generate our new context:
+
+```console
+$ mix phx.gen.context ShoppingCart Cart carts
 
 * creating lib/hello/shopping_cart/cart.ex
-* creating priv/repo/migrations/20210205203128_create_carts.exs
+* creating priv/repo/migrations/20250205203128_create_carts.exs
 * creating lib/hello/shopping_cart.ex
 * injecting lib/hello/shopping_cart.ex
 * creating test/hello/shopping_cart_test.exs
@@ -573,31 +634,23 @@ $ mix phx.gen.context ShoppingCart Cart carts user_uuid:uuid:unique
 * creating test/support/fixtures/shopping_cart_fixtures.ex
 * injecting test/support/fixtures/shopping_cart_fixtures.ex
 
-Some of the generated database columns are unique. Please provide
-unique implementations for the following fixture function(s) in
-test/support/fixtures/shopping_cart_fixtures.ex:
-
-    def unique_cart_user_uuid do
-      raise "implement the logic to generate a unique cart user_uuid"
-    end
-
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
 ```
 
-We generated our new context `ShoppingCart`, with a new `ShoppingCart.Cart` schema to tie a user to their cart which holds cart items. We don't have real users yet, so for now our cart will be tracked by an anonymous user UUID that we'll add to our plug session in a moment. With our cart in place, let's generate our cart items:
+We generated our new context `ShoppingCart`, with a new `ShoppingCart.Cart` schema to tie a user to their cart which holds cart items. With our cart in place, let's generate our cart items:
 
 ```console
 $ mix phx.gen.context ShoppingCart CartItem cart_items \
 cart_id:references:carts product_id:references:products \
-price_when_carted:decimal quantity:integer
+price_when_carted:decimal quantity:integer --no-scope
 
 You are generating into an existing context.
 ...
 Would you like to proceed? [Yn] y
 * creating lib/hello/shopping_cart/cart_item.ex
-* creating priv/repo/migrations/20210205213410_create_cart_items.exs
+* creating priv/repo/migrations/20250205213410_create_cart_items.exs
 * injecting lib/hello/shopping_cart.ex
 * injecting test/hello/shopping_cart_test.exs
 * injecting test/support/fixtures/shopping_cart_fixtures.ex
@@ -632,15 +685,13 @@ We used the `:delete_all` strategy again to enforce data integrity. This way, wh
 ```console
 $ mix ecto.migrate
 
-16:59:51.941 [info] == Running 20210205203342 Hello.Repo.Migrations.CreateCarts.change/0 forward
+16:59:51.941 [info] == Running 20250205203342 Hello.Repo.Migrations.CreateCarts.change/0 forward
 
 16:59:51.945 [info] create table carts
 
-16:59:51.949 [info] create index carts_user_uuid_index
+16:59:51.952 [info] == Migrated 20250205203342 in 0.0s
 
-16:59:51.952 [info] == Migrated 20210205203342 in 0.0s
-
-16:59:51.988 [info] == Running 20210205213410 Hello.Repo.Migrations.CreateCartItems.change/0 forward
+16:59:51.988 [info] == Running 20250205213410 Hello.Repo.Migrations.CreateCartItems.change/0 forward
 
 16:59:51.988 [info] create table cart_items
 
@@ -650,7 +701,7 @@ $ mix ecto.migrate
 
 16:59:52.001 [info] create index cart_items_cart_id_product_id_index
 
-16:59:52.002 [info] == Migrated 20210205213410 in 0.0s
+16:59:52.002 [info] == Migrated 20250205213410 in 0.0s
 ```
 
 Our database is ready to go with new `carts` and `cart_items` tables, but now we need to map that back into application code. You may be wondering how we can mix database foreign keys across different tables and how that relates to the context pattern of isolated, grouped functionality. Let's jump in and discuss the approaches and their tradeoffs.
@@ -665,8 +716,8 @@ Now that we know where our data dependencies exist, let's add our schema associa
 
 ```diff
   schema "carts" do
-    field :user_uuid, Ecto.UUID
-
+-   field :user_id, :id
++   belongs_to :user, Hello.Accounts.User
 +   has_many :items, Hello.ShoppingCart.CartItem
 
     timestamps()
@@ -707,6 +758,8 @@ As we mentioned before, the context generators are only a starting point for our
 
 We won't focus on a real user authentication system at this point, but by the time we're done, you'll be able to naturally integrate one with what we've written here. To simulate a current user session, open up your `lib/hello_web/router.ex` and key this in:
 
+Because we used `mix phx.gen.auth`, we already have a real authentication system in place. We can use the `current_scope` assign to access the currently authenticated user. Let's add a new plug that assigns a cart if there is an authenticated user:
+
 ```diff
   pipeline :browser do
     plug :accepts, ["html"]
@@ -715,50 +768,69 @@ We won't focus on a real user authentication system at this point, but by the ti
     plug :put_root_layout, html: {HelloWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-+   plug :fetch_current_user
+    plug :fetch_current_scope_for_user
 +   plug :fetch_current_cart
   end
 
-+ defp fetch_current_user(conn, _) do
-+   if user_uuid = get_session(conn, :current_uuid) do
-+     assign(conn, :current_uuid, user_uuid)
-+   else
-+     new_uuid = Ecto.UUID.generate()
-+
-+     conn
-+     |> assign(:current_uuid, new_uuid)
-+     |> put_session(:current_uuid, new_uuid)
-+   end
-+ end
-
 + alias Hello.ShoppingCart
 +
-+ defp fetch_current_cart(conn, _opts) do
-+   if cart = ShoppingCart.get_cart_by_user_uuid(conn.assigns.current_uuid) do
++ defp fetch_current_cart(%{assigns: %{current_scope: scope}} = conn, _opts) when not is_nil(scope) do
++   if cart = ShoppingCart.get_cart(scope) do
 +     assign(conn, :cart, cart)
 +   else
-+     {:ok, new_cart} = ShoppingCart.create_cart(conn.assigns.current_uuid)
++     {:ok, new_cart} = ShoppingCart.create_cart(scope)
 +     assign(conn, :cart, new_cart)
 +   end
 + end
++
++ defp fetch_current_cart(conn, _opts), do: conn
 ```
 
-We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our browser pipeline to run on all browser-based requests. Next, we implemented the `fetch_current_user` plug which simply checks the session for a user UUID that was previously added. If we find one, we add a `current_uuid` assign to the connection and we're done. In the case we haven't yet identified this visitor, we generate a unique UUID with `Ecto.UUID.generate()`, then we place that value in the `current_uuid` assign, along with a new session value to identify this visitor on future requests. A random, unique ID isn't much to represent a user, but it's enough for us to track and identify a visitor across requests, which is all we need for now. Later as our application becomes more complete, you'll be ready to migrate to a complete user authentication solution. With a guaranteed current user, we then implemented the `fetch_current_cart` plug which either finds a cart for the user UUID or creates a cart for the current user and assigns the result in the connection assigns. We'll need to implement our `ShoppingCart.get_cart_by_user_uuid/1` and modify the create cart function to accept a UUID, but let's add our routes first.
+We added a new `:fetch_current_cart` plug which either finds a cart for the user UUID or creates a cart for the current user and assigns the result in the connection assigns. We'll need to implement our `ShoppingCart.get_cart/1`, but let's add our routes first.
 
-We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the following routes to your router in `lib/hello_web/router.ex`:
+We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. The authentication system already generated different router scopes that have different authentication requirements:
+
+```elixir
+...
+  ## Authentication routes
+
+  scope "/", HelloWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    get "/user/register", UserRegistrationController, :new
+    post "/user/register", UserRegistrationController, :create
+  end
+
+  scope "/", HelloWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    get "/user/settings", UserSettingsController, :edit
+    put "/user/settings", UserSettingsController, :update
+    get "/user/settings/confirm-email/:token", UserSettingsController, :confirm_email
+  end
+...
+```
+
+As you can see, the registration route has a `:redirect_if_user_is_authenticated` plug, which means it will redirect to the home page if the user is already authenticated. The user settings routes use a `:require_authenticated_user` plug, which means they will redirect to the log in page if the user is not authenticated. These plugs are defined in the `lib/hello_web/user_auth.ex` module.
+
+For our cart routes, we want to only allow access to authenticated users. Add the following routes to your router in `lib/hello_web/router.ex`:
 
 ```diff
-  scope "/", HelloWeb do
-    pipe_through :browser
+   scope "/", HelloWeb do
+     pipe_through :browser
 
-    get "/", PageController, :index
-    resources "/products", ProductController
+     get "/", PageController, :index
+     resources "/products", ProductController
+   end
 
-+   resources "/cart_items", CartItemController, only: [:create, :delete]
-
-+   get "/cart", CartController, :show
-+   put "/cart", CartController, :update
-  end
++  scope "/", HelloWeb do
++    pipe_through [:browser, :require_authenticated_user]
++
++    resources "/cart_items", CartItemController, only: [:create, :delete]
++
++    get "/cart", CartController, :show
++    put "/cart", CartController, :update
++  end
 ```
 
 We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and removing individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT request, will handle the submission of a form for updating our cart quantities.
@@ -772,7 +844,7 @@ defmodule HelloWeb.CartItemController do
   alias Hello.ShoppingCart
 
   def create(conn, %{"product_id" => product_id}) do
-    case ShoppingCart.add_item_to_cart(conn.assigns.cart, product_id) do
+    case ShoppingCart.add_item_to_cart(conn.assigns.current_scope, conn.assigns.cart, product_id) do
       {:ok, _item} ->
         conn
         |> put_flash(:info, "Item added to your cart")
@@ -786,7 +858,7 @@ defmodule HelloWeb.CartItemController do
   end
 
   def delete(conn, %{"id" => product_id}) do
-    {:ok, _cart} = ShoppingCart.remove_item_from_cart(conn.assigns.cart, product_id)
+    {:ok, _cart} = ShoppingCart.remove_item_from_cart(conn.assigns.current_scope, conn.assigns.cart, product_id)
     redirect(conn, to: ~p"/cart")
   end
 end
@@ -800,11 +872,12 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +  alias Hello.Catalog
 -  alias Hello.ShoppingCart.Cart
 +  alias Hello.ShoppingCart.{Cart, CartItem}
+   alias Hello.Accounts.Scope
 
-+  def get_cart_by_user_uuid(user_uuid) do
++  def get_cart(%Scope{} = scope) do
 +    Repo.one(
 +      from(c in Cart,
-+        where: c.user_uuid == ^user_uuid,
++        where: c.user_id == ^scope.user.id,
 +        left_join: i in assoc(c, :items),
 +        left_join: p in assoc(i, :product),
 +        order_by: [asc: i.inserted_at],
@@ -813,22 +886,19 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +    )
 +  end
 
-- def create_cart(attrs \\ %{}) do
--   %Cart{}
--   |> Cart.changeset(attrs)
-+ def create_cart(user_uuid) do
-+   %Cart{user_uuid: user_uuid}
-+   |> Cart.changeset(%{})
-    |> Repo.insert()
-+   |> case do
-+     {:ok, cart} -> {:ok, reload_cart(cart)}
-+     {:error, changeset} -> {:error, changeset}
-+   end
-  end
-
-+  defp reload_cart(%Cart{} = cart), do: get_cart_by_user_uuid(cart.user_uuid)
+   def create_cart(%Scope{} = scope, attrs \\ %{}) do
+     with {:ok, cart = %Cart{}} <-
+            %Cart{}
+            |> Cart.changeset(attrs, scope)
+            |> Repo.insert() do
+       broadcast(scope, {:created, cart})
+-      {:ok, cart}
++      {:ok, get_cart!(scope, cart.id)}
+     end
+   end
 +
-+  def add_item_to_cart(%Cart{} = cart, product_id) do
++  def add_item_to_cart(%Scope{} = scope, %Cart{} = cart, product_id) do
++    true = cart.user_id == scope.user.id
 +    product = Catalog.get_product!(product_id)
 +
 +    %CartItem{quantity: 1, price_when_carted: product.price}
@@ -841,7 +911,9 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +    )
 +  end
 +
-+  def remove_item_from_cart(%Cart{} = cart, product_id) do
++  def remove_item_from_cart(%Scope{} = scope, %Cart{} = cart, product_id) do
++    true = cart.user_id == scope.user.id
++
 +    {1, _} =
 +      Repo.delete_all(
 +        from(i in CartItem,
@@ -850,15 +922,15 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +        )
 +      )
 +
-+    {:ok, reload_cart(cart)}
++    {:ok, get_cart(scope)}
 +  end
 ```
 
-We started by implementing  `get_cart_by_user_uuid/1` which fetches our cart and joins the cart items, and their products so that we have the full cart populated with all preloaded data. Next, we modified our `create_cart` function to accept a user UUID instead of attributes, which we used to populate the `user_uuid` field. If the insert is successful, we reload the cart contents by calling a private `reload_cart/1` function, which simply calls `get_cart_by_user_uuid/1` to refetch data.
+We started by implementing `get_cart/1` which fetches our cart and joins the cart items, and their products so that we have the full cart populated with all preloaded data. Next, we modified our `create_cart` function to use `get_cart` to reload the cart contents.
 
-Next, we wrote our new `add_item_to_cart/2` function which accepts a cart struct and a product id. We proceed to fetch the product with `Catalog.get_product!/1`, showing how contexts can naturally invoke other contexts if required. You could also have chosen to receive the product as argument and you would achieve similar results. Then we used an upsert operation against our repo to either insert a new cart item into the database, or increase the quantity by one if it already exists in the cart. This is accomplished via the `on_conflict` and `conflict_target` options, which tells our repo how to handle an insert conflict.
+Next, we wrote our new `add_item_to_cart/3` function which accepts a scope, a cart struct and a product id. We proceed to fetch the product with `Catalog.get_product!/1`, showing how contexts can naturally invoke other contexts if required. You could also have chosen to receive the product as argument and you would achieve similar results. Then we used an upsert operation against our repo to either insert a new cart item into the database, or increase the quantity by one if it already exists in the cart. This is accomplished via the `on_conflict` and `conflict_target` options, which tells our repo how to handle an insert conflict.
 
-Finally, we implemented `remove_item_from_cart/2` where we simply issue a `Repo.delete_all` call with a query to delete the cart item in our cart that matches the product ID. Finally, we reload the cart contents by calling `reload_cart/1`.
+Finally, we implemented `remove_item_from_cart/3` where we simply issue a `Repo.delete_all` call with a query to delete the cart item in our cart that matches the product ID. Finally, we reload the cart contents by calling `get_cart/1`.
 
 With our new cart functions in place, we can now expose the "Add to cart" button on the product catalog show page. Open up your template in `lib/hello_web/controllers/product_html/show.html.heex` and make the following changes:
 
@@ -875,28 +947,29 @@ With our new cart functions in place, we can now expose the "Add to cart" button
 
 The `link` function component from `Phoenix.Component` accepts a `:method` attribute to issue an HTTP verb when clicked, instead of the default GET request. With this link in place, the "Add to cart" link will issue a POST request, which will be matched by the route we defined in router which dispatches to the `CartItemController.create/2` function.
 
-Let's try it out. Start your server with `mix phx.server` and visit a product page. If we try clicking the add to cart link, we'll be greeted by an error page with the following logs in the console:
+Let's try it out. Start your server with `mix phx.server` and visit a product page. If we try clicking the add to cart link, we'll be greeted by an error page. If you are authenticated the following logs should be visible in the console:
 
 ```text
 [info] POST /cart_items
 [debug] Processing with HelloWeb.CartItemController.create/2
   Parameters: %{"_method" => "post", "product_id" => "1", ...}
-  Pipelines: [:browser]
+  Pipelines: [:browser, :require_authenticated_user]
+[debug] QUERY OK source="user_tokens" db=2.4ms idle=1340.8ms
+...
+[debug] QUERY OK source="cart_items" db=2.5ms
 INSERT INTO "cart_items" ...
 [info] Sent 302 in 24ms
 [info] GET /cart
 [debug] Processing with HelloWeb.CartController.show/2
   Parameters: %{}
-  Pipelines: [:browser]
+  Pipelines: [:browser, :require_authenticated_user]
+[debug] QUERY OK source="user_tokens" db=1.6ms idle=430.2ms
+...
 [debug] QUERY OK source="carts" db=1.9ms idle=1798.5ms
-
-[error] #PID<0.856.0> running HelloWeb.Endpoint (connection #PID<0.841.0>, stream id 5) terminated
-Server: localhost:4000 (http)
-Request: GET /cart
-** (exit) an exception was raised:
-    ** (UndefinedFunctionError) function HelloWeb.CartController.init/1 is undefined
-       (module HelloWeb.CartController is not available)
-       ...
+...
+[info] Sent 500 in 18ms
+[error] ** (UndefinedFunctionError) function HelloWeb.CartController.init/1 is undefined (module HelloWeb.CartController is not available)
+    ...
 ```
 
 It's working! Kind of. If we follow the logs, we see our POST to the `/cart_items` path. Next, we can see our `ShoppingCart.add_item_to_cart` function successfully inserted a row into the `cart_items` table, and then we issued a redirect to `/cart`. Before our error, we also see a query to the `carts` table, which means we're fetching the current user's cart. So far so good. We know our `CartItem` controller and new `ShoppingCart` context functions are doing their jobs, but we've hit our next unimplemented feature when the router attempts to dispatch to a nonexistent cart controller. Let's create the cart controller, view, and template to display and manage user carts.
@@ -910,7 +983,7 @@ defmodule HelloWeb.CartController do
   alias Hello.ShoppingCart
 
   def show(conn, _params) do
-    render(conn, :show, changeset: ShoppingCart.change_cart(conn.assigns.cart))
+    render(conn, :show, changeset: ShoppingCart.change_cart(conn.assigns.current_scope, conn.assigns.cart))
   end
 end
 ```
@@ -982,16 +1055,16 @@ Now that we can calculate price totals, let's try it out! Visit [`http://localho
 Our cart page is almost complete, but submitting the form will yield yet another error.
 
 ```text
-Request: POST /cart
-** (exit) an exception was raised:
-    ** (UndefinedFunctionError) function HelloWeb.CartController.update/2 is undefined or private
+[info] POST /cart
+...
+[error] ** (UndefinedFunctionError) function HelloWeb.CartController.update/2 is undefined or private
 ```
 
 Let's head back to our `CartController` at `lib/hello_web/controllers/cart_controller.ex` and implement the update action:
 
 ```elixir
   def update(conn, %{"cart" => cart_params}) do
-    case ShoppingCart.update_cart(conn.assigns.cart, cart_params) do
+    case ShoppingCart.update_cart(conn.assigns.current_scope, conn.assigns.cart, cart_params) do
       {:ok, _cart} ->
         redirect(conn, to: ~p"/cart")
 
@@ -1008,10 +1081,12 @@ We started by plucking out the cart params from the form submit. Next, we call o
 Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and replace your `update_cart/2` function with the following implementation:
 
 ```elixir
-  def update_cart(%Cart{} = cart, attrs) do
+  def update_cart(%Scope{} = scope, %Cart{} = cart, attrs) do
+    true = cart.user_id == scope.user.id
+    
     changeset =
       cart
-      |> Cart.changeset(attrs)
+      |> Cart.changeset(attrs, scope)
       |> Ecto.Changeset.cast_assoc(:items, with: &CartItem.changeset/2)
 
     Ecto.Multi.new()
@@ -1021,8 +1096,12 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
     end)
     |> Repo.transaction()
     |> case do
-      {:ok, %{cart: cart}} -> {:ok, cart}
-      {:error, :cart, changeset, _changes_so_far} -> {:error, changeset}
+      {:ok, %{cart: cart}} ->
+        broadcast(scope, {:updated, cart})
+        {:ok, cart}
+  
+      {:error, :cart, changeset, _changes_so_far} ->
+        {:error, changeset}
     end
   end
 ```
@@ -1031,7 +1110,7 @@ We started much like how our out-of-the-box code started – we take the cart st
 
 For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transaction/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
 
-Let's head back to the browser and try it out. Add a few products to your cart, update the quantities, and watch the values changes along with the price calculations. Setting any quantity to 0 will also remove the item. Pretty neat!
+Let's head back to the browser and try it out. Add a few products to your cart, update the quantities, and watch the values changes along with the price calculations. Setting any quantity to 0 will also remove the item. You can also try logging out and registering a new user to see how the carts are scoped to the current user. Pretty neat!
 
 ## Adding an Orders context
 
@@ -1039,13 +1118,13 @@ With our `Catalog` and `ShoppingCart` contexts, we're seeing first-hand how our 
 
 If we stop and consider the order process, we'll see that orders involve related, but distinctly different data from the cart contents. Also, business rules around the checkout process are much different than carting. For example, we may allow a user to add a back-ordered item to their cart, but we could not allow an order with no inventory to be completed. Additionally, we need to capture point-in-time product information when an order is completed, such as the price of the items *at payment transaction time*. This is essential because a product price may change in the future, but the line items in our order must always record and display what we charged at time of purchase. For these reasons, we can start to see that ordering can stand on its own with its own data concerns and business rules.
 
-Naming wise, `Orders` clearly defines the scope of our context, so let's get started by again taking advantage of the context generators. Run the following command in your console:
+Naming wise, `Orders` clearly defines our context, so let's get started by again taking advantage of the context generators. Note that the `user` scope generated by `mix phx.gen.auth` is marked as default scope (in your `config/config.exs`), therefore we don't need to specify it in our command. There can be different scopes in an application, in which case the `--scope` option can be used when running the generators. Run the following command in your console:
 
 ```console
-$ mix phx.gen.context Orders Order orders user_uuid:uuid total_price:decimal
+$ mix phx.gen.context Orders Order orders total_price:decimal
 
 * creating lib/hello/orders/order.ex
-* creating priv/repo/migrations/20210209214612_create_orders.exs
+* creating priv/repo/migrations/20250209214612_create_orders.exs
 * creating lib/hello/orders.ex
 * injecting lib/hello/orders.ex
 * creating test/hello/orders_test.exs
@@ -1058,14 +1137,14 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-We generated an `Orders` context. We added a `user_uuid` field to associate our placeholder current user to an order, along with a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
+We generated an `Orders` context. The order is automatically scoped to the current user and added a `total_price` column. With our starting point in place, let's open up the newly created migration in `priv/repo/migrations/*_create_orders.exs` and make the following changes:
 
 ```diff
   def change do
     create table(:orders) do
-      add :user_uuid, :uuid
 -     add :total_price, :decimal
 +     add :total_price, :decimal, precision: 15, scale: 6, null: false
+      add :user_id, references(:user, type: :id, on_delete: :delete_all)
 
       timestamps()
     end
@@ -1079,13 +1158,13 @@ The orders table alone doesn't hold much information, but we know we'll need to 
 ```console
 $ mix phx.gen.context Orders LineItem order_line_items \
 price:decimal quantity:integer \
-order_id:references:orders product_id:references:products
+order_id:references:orders product_id:references:products --no-scope
 
 You are generating into an existing context.
 ...
 Would you like to proceed? [Yn] y
 * creating lib/hello/orders/line_item.ex
-* creating priv/repo/migrations/20210209215050_create_order_line_items.exs
+* creating priv/repo/migrations/20250209215050_create_order_line_items.exs
 * injecting lib/hello/orders.ex
 * injecting test/hello/orders_test.exs
 * injecting test/support/fixtures/orders_fixtures.ex
@@ -1119,8 +1198,9 @@ With our migration in place, let's wire up our orders and line items association
 ```diff
   schema "orders" do
     field :total_price, :decimal
-    field :user_uuid, Ecto.UUID
+-   field :user_id, :id
 
++   belongs_to :user, Hello.Accounts.User
 +   has_many :line_items, Hello.Orders.LineItem
 +   has_many :products, through: [:line_items, :product]
 
@@ -1148,9 +1228,13 @@ We used `belongs_to` to associate line items to orders and products. With our as
 
 ```diff
   scope "/", HelloWeb do
-    pipe_through :browser
+    pipe_through [:browser, :require_authenticated_user]
 
-    ...
+    resources "/cart_items", CartItemController, only: [:create, :delete]
+
+    get "/cart", CartController, :show
+    put "/cart", CartController, :update
+
 +   resources "/orders", OrderController, only: [:create, :show]
   end
 ```
@@ -1160,13 +1244,13 @@ We wired up `create` and `show` routes for our generated `OrderController`, sinc
 ```console
 $ mix ecto.migrate
 
-17:14:37.715 [info] == Running 20210209214612 Hello.Repo.Migrations.CreateOrders.change/0 forward
+17:14:37.715 [info] == Running 20250209214612 Hello.Repo.Migrations.CreateOrders.change/0 forward
 
 17:14:37.720 [info] create table orders
 
-17:14:37.755 [info] == Migrated 20210209214612 in 0.0s
+17:14:37.755 [info] == Migrated 20250209214612 in 0.0s
 
-17:14:37.784 [info] == Running 20210209215050 Hello.Repo.Migrations.CreateOrderLineItems.change/0 forward
+17:14:37.784 [info] == Running 20250209215050 Hello.Repo.Migrations.CreateOrderLineItems.change/0 forward
 
 17:14:37.785 [info] create table order_line_items
 
@@ -1174,20 +1258,19 @@ $ mix ecto.migrate
 
 17:14:37.796 [info] create index order_line_items_product_id_index
 
-17:14:37.798 [info] == Migrated 20210209215050 in 0.0s
+17:14:37.798 [info] == Migrated 20250209215050 in 0.0s
 ```
 
-Before we render information about our orders, we need to ensure our order data is fully populated and can be looked up by a current user. Open up your orders context in `lib/hello/orders.ex` and replace your `get_order!/1` function by a new `get_order!/2` definition:
+Before we render information about our orders, we need to ensure our order data is fully populated and can be looked up by a current user. Open up your orders context in `lib/hello/orders.ex` and adjust your `get_order!/2` to include a preload:
 
-```elixir
-  def get_order!(user_uuid, id) do
-    Order
-    |> Repo.get_by!(id: id, user_uuid: user_uuid)
-    |> Repo.preload([line_items: [:product]])
-  end
+```diff
+   def get_order!(%Scope{} = scope, id) do
+-    Repo.get_by!(Order, id: id, user_id: scope.user.id)
++    Order
++    |> Repo.get_by!(id: id, user_id: scope.user.id)
++    |> Repo.preload([line_items: [:product]])
+   end
 ```
-
-We rewrote the function to accept a user UUID and query our repo for an order matching the user's ID for a given order ID. Then we populated the order by preloading our line item and product associations.
 
 To complete an order, our cart page can issue a POST to the `OrderController.create` action, but we need to implement the operations and logic to actually complete an order. Like before, we'll start at the web interface. Create a new file at `lib/hello_web/controllers/order_controller.ex` and key this in:
 
@@ -1198,7 +1281,7 @@ defmodule HelloWeb.OrderController do
   alias Hello.Orders
 
   def create(conn, _) do
-    case Orders.complete_order(conn.assigns.cart) do
+    case Orders.complete_order(conn.assigns.current_scope, conn.assigns.cart) do
       {:ok, order} ->
         conn
         |> put_flash(:info, "Order created successfully.")
@@ -1213,11 +1296,11 @@ defmodule HelloWeb.OrderController do
 end
 ```
 
-We wrote the `create` action to call an as-yet-implemented `Orders.complete_order/1` function. Our code is technically "creating" an order, but it's important to step back and consider the naming of your interfaces. The act of *completing* an order is extremely important in our system. Money changes hands in a transaction, physical goods could be automatically shipped, etc. Such an operation deserves a better, more obvious function name, such as `complete_order`. If the order is completed successfully we redirect to the show page, otherwise a flash error is shown as we redirect back to the cart page.
+We wrote the `create` action to call an as-yet-implemented `Orders.complete_order/2` function. Our code is technically "creating" an order, but it's important to step back and consider the naming of your interfaces. The act of *completing* an order is extremely important in our system. Money changes hands in a transaction, physical goods could be automatically shipped, etc. Such an operation deserves a better, more obvious function name, such as `complete_order`. If the order is completed successfully we redirect to the show page, otherwise a flash error is shown as we redirect back to the cart page.
 
 Here is also a good opportunity to highlight that contexts can naturally work with data defined by other contexts too. This will be especially common with data that is used throughout the application, such as the cart here (but it can also be the current user or the current project, and so forth, depending on your project).
 
-Now we can implement our `Orders.complete_order/1` function. To complete an order, our job will require a few operations:
+Now we can implement our `Orders.complete_order/2` function. To complete an order, our job will require a few operations:
 
   1. A new order record must be persisted with the total price of the order
   2. All items in the cart must be transformed into new order line items records
@@ -1231,7 +1314,9 @@ From our requirements alone, we can start to see why a generic `create_order` fu
   alias Hello.Orders.LineItem
   alias Hello.ShoppingCart
 
-  def complete_order(%ShoppingCart.Cart{} = cart) do
+  def complete_order(%Scope{} = scope, %ShoppingCart.Cart{} = cart) do
+    true = cart.user_id == scope.user.id
+
     line_items =
       Enum.map(cart.items, fn item ->
         %{product_id: item.product_id, price: item.product.price, quantity: item.quantity}
@@ -1239,7 +1324,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
 
     order =
       Ecto.Changeset.change(%Order{},
-        user_uuid: cart.user_uuid,
+        user_id: scope.user.id,
         total_price: ShoppingCart.total_cart_price(cart),
         line_items: line_items
       )
@@ -1247,12 +1332,16 @@ From our requirements alone, we can start to see why a generic `create_order` fu
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:order, order)
     |> Ecto.Multi.run(:prune_cart, fn _repo, _changes ->
-      ShoppingCart.prune_cart_items(cart)
+      ShoppingCart.prune_cart_items(scope, cart)
     end)
     |> Repo.transaction()
     |> case do
-      {:ok, %{order: order}} -> {:ok, order}
-      {:error, name, value, _changes_so_far} -> {:error, {name, value}}
+      {:ok, %{order: order}} ->
+        broadcast(scope, {:created, order})
+        {:ok, order}
+
+      {:error, name, value, _changes_so_far} ->
+        {:error, {name, value}}
     end
   end
 ```
@@ -1262,9 +1351,9 @@ We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into
 To close out our order completion, we need to implement the `ShoppingCart.prune_cart_items/1` function in `lib/hello/shopping_cart.ex`:
 
 ```elixir
-  def prune_cart_items(%Cart{} = cart) do
+  def prune_cart_items(%Scope{} = scope, %Cart{} = cart) do
     {_, _} = Repo.delete_all(from(i in CartItem, where: i.cart_id == ^cart.id))
-    {:ok, reload_cart(cart)}
+    {:ok, get_cart(scope)}
   end
 ```
 
@@ -1272,12 +1361,12 @@ Our new function accepts the cart struct and issues a `Repo.delete_all` which ac
 
 ```elixir
   def show(conn, %{"id" => id}) do
-    order = Orders.get_order!(conn.assigns.current_uuid, id)
+    order = Orders.get_order!(conn.assigns.current_scope, id)
     render(conn, :show, order: order)
   end
 ```
 
-We added the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can implement the view and template. Create a new view file at `lib/hello_web/controllers/order_html.ex` with the following content:
+We added the show action to pass our `conn.assigns.current_scope` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can implement the view and template. Create a new view file at `lib/hello_web/controllers/order_html.ex` with the following content:
 
 ```elixir
 defmodule HelloWeb.OrderHTML do
@@ -1292,7 +1381,7 @@ Next we can create the template at `lib/hello_web/controllers/order_html/show.ht
 <.header>
   Thank you for your order!
   <:subtitle>
-     <strong>User uuid: </strong>{@order.user_uuid}
+     <strong>Email: </strong>{@current_scope.user.email}
   </:subtitle>
 </.header>
 
