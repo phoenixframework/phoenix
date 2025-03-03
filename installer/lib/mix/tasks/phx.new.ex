@@ -281,8 +281,8 @@ defmodule Mix.Tasks.Phx.New do
           Mix.shell().info([:green, "* running ", :reset, "mix assets.setup"])
 
           # First compile only builders so we can install in parallel
-          # TODO: Once we require Erlang/OTP 28, castore and jason may no longer be required
-          cmd(project, "mix deps.compile castore jason #{Enum.join(builders, " ")}", log: false)
+          # TODO: Once we require Erlang/OTP 28, jason may no longer be required
+          cmd(project, "mix deps.compile jason #{Enum.join(builders, " ")}", log: false)
         end
 
         tasks =
