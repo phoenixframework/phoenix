@@ -225,7 +225,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
-  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :multiple, :boolean, default: false, doc: "the multiple flag for select and checkbox inputs"
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
@@ -251,12 +251,12 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <div>
       <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
-        <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
+        <input :if={!@multiple} type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <input
           type="checkbox"
-          id={@id}
+          id={if @multiple, do: @id <> "-#{@value}", else: @id}
           name={@name}
-          value="true"
+          value={if @multiple, do: @value, else: "true"}
           checked={@checked}
           class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
           {@rest}
