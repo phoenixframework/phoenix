@@ -46,6 +46,10 @@ If you want to import JavaScript dependencies, you have at least three options t
    be used by Hex packages, so if you intend to publish your project to Hex,
    consider vendoring the files instead.
 
+Note that if you use third party JS package managers, you might need to adjust your deployment steps
+to properly include the packages. If you're using `mix phx.gen.release --docker`, have a look at the
+[documentation](Mix.Tasks.Phx.Gen.Release.html#module-docker) for further details.
+
 ## Images, fonts, and external files
 
 If you reference an external file in your CSS or JavaScript files, `esbuild` will attempt to validate and manage them, unless told otherwise.

@@ -269,7 +269,7 @@ defmodule Phoenix.Socket.Transport do
 
     connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers, :auth_token] ->
+        key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers, :sec_websocket_headers, :auth_token] ->
           key
 
         {:session, session} ->
@@ -280,7 +280,7 @@ defmodule Phoenix.Socket.Transport do
 
         other ->
           raise ArgumentError,
-                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :uri, or {:session, config}, " <>
+                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :user_agent, :sec_websocket_headers, :uri, or {:session, config}, " <>
                   "optionally followed by custom keyword pairs, got: #{inspect(other)}"
       end)
 
@@ -470,6 +470,8 @@ defmodule Phoenix.Socket.Transport do
 
     * `:user_agent` - the value of the "user-agent" request header
 
+    * `:sec_websocket_headers` - a list of all request headers that have a "sec-websocket-" prefix
+
   The CSRF check can be disabled by setting the `:check_csrf` option to `false`.
   """
   def connect_info(conn, endpoint, keys, opts \\ []) do
@@ -482,13 +484,16 @@ defmodule Phoenix.Socket.Transport do
           {:trace_context_headers, fetch_trace_context_headers(conn)}
 
         :x_headers ->
-          {:x_headers, fetch_x_headers(conn)}
+          {:x_headers, fetch_headers(conn, "x-")}
 
         :uri ->
           {:uri, fetch_uri(conn)}
 
         :user_agent ->
           {:user_agent, fetch_user_agent(conn)}
+
+        :sec_websocket_headers ->
+          {:sec_websocket_headers, fetch_headers(conn, "sec-websocket-")}
 
         {:session, session} ->
           {:session, connect_session(conn, endpoint, session, opts)}
@@ -527,9 +532,9 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp fetch_x_headers(conn) do
+  defp fetch_headers(conn, prefix) do
     for {header, _} = pair <- conn.req_headers,
-        String.starts_with?(header, "x-"),
+        String.starts_with?(header, prefix),
         do: pair
   end
 
