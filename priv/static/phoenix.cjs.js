@@ -286,15 +286,16 @@ var Channel = class {
   /**
    * Join the channel
    * @param {integer} timeout
+   * @param {boolean} handover - When true, the client won't send a leave message to the existing channel when rejoining
    * @returns {Push}
    */
-  join(timeout = this.timeout) {
+  join(timeout = this.timeout, handover = false) {
     if (this.joinedOnce) {
       throw new Error("tried to join multiple times. 'join' can only be called a single time per channel instance");
     } else {
       this.timeout = timeout;
       this.joinedOnce = true;
-      this.rejoin();
+      this.rejoin(timeout, handover);
       return this.joinPush;
     }
   }
@@ -467,11 +468,13 @@ var Channel = class {
   /**
    * @private
    */
-  rejoin(timeout = this.timeout) {
+  rejoin(timeout = this.timeout, handover = false) {
     if (this.isLeaving()) {
       return;
     }
-    this.socket.leaveOpenTopic(this.topic);
+    if (!handover) {
+      this.socket.leaveOpenTopic(this.topic);
+    }
     this.state = CHANNEL_STATES.joining;
     this.joinPush.resend(timeout);
   }
