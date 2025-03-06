@@ -11,7 +11,7 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   defp get_resp_content_type(conn) do
-    [header]  = get_resp_header(conn, "content-type")
+    [header] = get_resp_header(conn, "content-type")
     header |> String.split(";") |> Enum.fetch!(0)
   end
 
@@ -50,24 +50,24 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = conn(:get, "/")
     assert layout(conn) == false
 
-    conn = put_layout conn, {AppView, "app.html"}
+    conn = put_layout(conn, {AppView, "app.html"})
     assert layout(conn) == {AppView, "app.html"}
 
-    conn = put_layout conn, "print.html"
+    conn = put_layout(conn, "print.html")
     assert layout(conn) == {AppView, "print.html"}
 
-    conn = put_layout conn, :print
+    conn = put_layout(conn, :print)
     assert layout(conn) == {AppView, :print}
 
-    conn = put_layout conn, false
+    conn = put_layout(conn, false)
     assert layout(conn) == false
 
     assert_raise RuntimeError, fn ->
-      put_layout conn, "print"
+      put_layout(conn, "print")
     end
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_layout sent_conn(), {AppView, :print}
+      put_layout(sent_conn(), {AppView, :print})
     end
   end
 
@@ -115,7 +115,7 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_layout sent_conn(), {AppView, :print}
+      put_layout(sent_conn(), {AppView, :print})
     end
   end
 
@@ -154,7 +154,7 @@ defmodule Phoenix.Controller.ControllerTest do
     assert layout(conn) == {AppView, "app.html"}
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_new_layout sent_conn(), {AppView, "app.html"}
+      put_new_layout(sent_conn(), {AppView, "app.html"})
     end
   end
 
@@ -188,10 +188,11 @@ defmodule Phoenix.Controller.ControllerTest do
     assert view_module(conn) == World
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_new_view sent_conn(), Hello
+      put_new_view(sent_conn(), Hello)
     end
+
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_view sent_conn(), Hello
+      put_view(sent_conn(), Hello)
     end
   end
 
@@ -230,11 +231,11 @@ defmodule Phoenix.Controller.ControllerTest do
     assert view_module(conn, "json") == Hello
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_new_view sent_conn(), html: Hello
+      put_new_view(sent_conn(), html: Hello)
     end
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_view sent_conn(), html: Hello
+      put_view(sent_conn(), html: Hello)
     end
   end
 
@@ -257,45 +258,54 @@ defmodule Phoenix.Controller.ControllerTest do
       conn = conn(:get, "/") |> put_resp_content_type("application/vnd.api+json")
       conn = json(conn, %{foo: :bar})
       assert conn.resp_body == "{\"foo\":\"bar\"}"
+
       assert Conn.get_resp_header(conn, "content-type") ==
                ["application/vnd.api+json; charset=utf-8"]
     end
 
     test "with allow_jsonp/2 returns json when no callback param is present" do
-      conn = conn(:get, "/")
-             |> fetch_query_params()
-             |> allow_jsonp()
-             |> json(%{foo: "bar"})
+      conn =
+        conn(:get, "/")
+        |> fetch_query_params()
+        |> allow_jsonp()
+        |> json(%{foo: "bar"})
+
       assert conn.resp_body == "{\"foo\":\"bar\"}"
       assert get_resp_content_type(conn) == "application/json"
       refute conn.halted
     end
 
     test "with allow_jsonp/2 returns json when callback name is left empty" do
-      conn = conn(:get, "/?callback=")
-             |> fetch_query_params()
-             |> allow_jsonp()
-             |> json(%{foo: "bar"})
+      conn =
+        conn(:get, "/?callback=")
+        |> fetch_query_params()
+        |> allow_jsonp()
+        |> json(%{foo: "bar"})
+
       assert conn.resp_body == "{\"foo\":\"bar\"}"
       assert get_resp_content_type(conn) == "application/json"
       refute conn.halted
     end
 
     test "with allow_jsonp/2 returns javascript when callback param is present" do
-      conn = conn(:get, "/?callback=cb")
-             |> fetch_query_params
-             |> allow_jsonp
-             |> json(%{foo: "bar"})
+      conn =
+        conn(:get, "/?callback=cb")
+        |> fetch_query_params
+        |> allow_jsonp
+        |> json(%{foo: "bar"})
+
       assert conn.resp_body == "/**/ typeof cb === 'function' && cb({\"foo\":\"bar\"});"
       assert get_resp_content_type(conn) == "application/javascript"
       refute conn.halted
     end
 
     test "with allow_jsonp/2 allows to override the callback param" do
-      conn = conn(:get, "/?cb=cb")
-             |> fetch_query_params
-             |> allow_jsonp(callback: "cb")
-             |> json(%{foo: "bar"})
+      conn =
+        conn(:get, "/?cb=cb")
+        |> fetch_query_params
+        |> allow_jsonp(callback: "cb")
+        |> json(%{foo: "bar"})
+
       assert conn.resp_body == "/**/ typeof cb === 'function' && cb({\"foo\":\"bar\"});"
       assert get_resp_content_type(conn) == "application/javascript"
       refute conn.halted
@@ -303,17 +313,22 @@ defmodule Phoenix.Controller.ControllerTest do
 
     test "with allow_jsonp/2 raises ArgumentError when callback contains invalid characters" do
       conn = conn(:get, "/?cb=_c*b!()[0]") |> fetch_query_params()
+
       assert_raise ArgumentError, "the JSONP callback name contains invalid characters", fn ->
         allow_jsonp(conn, callback: "cb")
       end
     end
 
     test "with allow_jsonp/2 escapes invalid javascript characters" do
-      conn = conn(:get, "/?cb=cb")
-             |> fetch_query_params
-             |> allow_jsonp(callback: "cb")
-             |> json(%{foo: <<0x2028::utf8, 0x2029::utf8>>})
-      assert conn.resp_body == "/**/ typeof cb === 'function' && cb({\"foo\":\"\\u2028\\u2029\"});"
+      conn =
+        conn(:get, "/?cb=cb")
+        |> fetch_query_params
+        |> allow_jsonp(callback: "cb")
+        |> json(%{foo: <<0x2028::utf8, 0x2029::utf8>>})
+
+      assert conn.resp_body ==
+               "/**/ typeof cb === 'function' && cb({\"foo\":\"\\u2028\\u2029\"});"
+
       assert get_resp_content_type(conn) == "application/javascript"
       refute conn.halted
     end
@@ -414,99 +429,103 @@ defmodule Phoenix.Controller.ControllerTest do
 
   describe "accepts/2" do
     test "uses params[\"_format\"] when available" do
-      conn = accepts conn(:get, "/", _format: "json"), ~w(json)
+      conn = accepts(conn(:get, "/", _format: "json"), ~w(json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == "json"
 
-      exception = assert_raise Phoenix.NotAcceptableError, ~r/unknown format "json"/, fn ->
-        accepts conn(:get, "/", _format: "json"), ~w(html)
-      end
+      exception =
+        assert_raise Phoenix.NotAcceptableError, ~r/unknown format "json"/, fn ->
+          accepts(conn(:get, "/", _format: "json"), ~w(html))
+        end
+
       assert Plug.Exception.status(exception) == 406
       assert exception.accepts == ["html"]
     end
 
     test "uses first accepts on empty or catch-all header" do
-      conn = accepts conn(:get, "/", []), ~w(json)
+      conn = accepts(conn(:get, "/", []), ~w(json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("*/*"), ~w(json)
+      conn = accepts(with_accept("*/*"), ~w(json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
     end
 
     test "uses first matching accepts on empty subtype" do
-      conn = accepts with_accept("text/*"), ~w(json text css)
+      conn = accepts(with_accept("text/*"), ~w(json text css))
       assert get_format(conn) == "text"
       assert conn.params["_format"] == nil
     end
 
     test "on non-empty */*" do
       # Fallbacks to HTML due to browsers behavior
-      conn = accepts with_accept("application/json, */*"), ~w(html json)
+      conn = accepts(with_accept("application/json, */*"), ~w(html json))
       assert get_format(conn) == "html"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("*/*, application/json"), ~w(html json)
+      conn = accepts(with_accept("*/*, application/json"), ~w(html json))
       assert get_format(conn) == "html"
       assert conn.params["_format"] == nil
 
       # No HTML is treated normally
-      conn = accepts with_accept("*/*, text/plain, application/json"), ~w(json text)
+      conn = accepts(with_accept("*/*, text/plain, application/json"), ~w(json text))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("text/plain, application/json, */*"), ~w(json text)
+      conn = accepts(with_accept("text/plain, application/json, */*"), ~w(json text))
       assert get_format(conn) == "text"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("text/*, application/*, */*"), ~w(json text)
+      conn = accepts(with_accept("text/*, application/*, */*"), ~w(json text))
       assert get_format(conn) == "text"
       assert conn.params["_format"] == nil
     end
 
     test "ignores invalid media types" do
-      conn = accepts with_accept("foo/bar, bar baz, application/json"), ~w(html json)
+      conn = accepts(with_accept("foo/bar, bar baz, application/json"), ~w(html json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("foo/*, */bar, text/*"), ~w(json html)
+      conn = accepts(with_accept("foo/*, */bar, text/*"), ~w(json html))
       assert get_format(conn) == "html"
       assert conn.params["_format"] == nil
     end
 
     test "considers q params" do
-      conn = accepts with_accept("text/html; q=0.7, application/json"), ~w(html json)
+      conn = accepts(with_accept("text/html; q=0.7, application/json"), ~w(html json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("application/json, text/html; q=0.7"), ~w(html json)
+      conn = accepts(with_accept("application/json, text/html; q=0.7"), ~w(html json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("application/json; q=1.0, text/html; q=0.7"), ~w(html json)
+      conn = accepts(with_accept("application/json; q=1.0, text/html; q=0.7"), ~w(html json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("application/json; q=0.8, text/html; q=0.7"), ~w(html json)
+      conn = accepts(with_accept("application/json; q=0.8, text/html; q=0.7"), ~w(html json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(html json)
+      conn = accepts(with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(html json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("text/*; q=0.7, application/json"), ~w(html json)
+      conn = accepts(with_accept("text/*; q=0.7, application/json"), ~w(html json))
       assert get_format(conn) == "json"
       assert conn.params["_format"] == nil
 
-      conn = accepts with_accept("application/json; q=0.7, text/*; q=0.8"), ~w(json html)
+      conn = accepts(with_accept("application/json; q=0.7, text/*; q=0.8"), ~w(json html))
       assert get_format(conn) == "html"
       assert conn.params["_format"] == nil
 
-      exception = assert_raise Phoenix.NotAcceptableError, ~r/no supported media type in accept/, fn ->
-        accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
-      end
+      exception =
+        assert_raise Phoenix.NotAcceptableError, ~r/no supported media type in accept/, fn ->
+          accepts(with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml))
+        end
+
       assert Plug.Exception.status(exception) == 406
       assert exception.accepts == ["xml"]
     end
@@ -518,192 +537,271 @@ defmodule Phoenix.Controller.ControllerTest do
     test "sends file for download" do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt})
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello.txt\""]
+               ["attachment; filename=\"hello.txt\""]
+
       assert get_resp_header(conn, "content-type") ==
-             ["text/plain"]
+               ["text/plain"]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "sends file for download with custom :filename" do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "hello world.json")
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello%20world.json\"; filename*=utf-8''hello%20world.json"]
+               [
+                 "attachment; filename=\"hello%20world.json\"; filename*=utf-8''hello%20world.json"
+               ]
+
       assert get_resp_header(conn, "content-type") ==
-             ["application/json"]
+               ["application/json"]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "sends file for download for filename with unreserved characters" do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "hello, world.json")
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello%2C%20world.json\"; filename*=utf-8''hello%2C%20world.json"]
+               [
+                 "attachment; filename=\"hello%2C%20world.json\"; filename*=utf-8''hello%2C%20world.json"
+               ]
+
       assert get_resp_header(conn, "content-type") ==
-             ["application/json"]
+               ["application/json"]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "sends file supports UTF-8" do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "测 试.txt")
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"%E6%B5%8B%20%E8%AF%95.txt\"; filename*=utf-8''%E6%B5%8B%20%E8%AF%95.txt"]
+               [
+                 "attachment; filename=\"%E6%B5%8B%20%E8%AF%95.txt\"; filename*=utf-8''%E6%B5%8B%20%E8%AF%95.txt"
+               ]
+
       assert get_resp_header(conn, "content-type") ==
-             ["text/plain"]
+               ["text/plain"]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "sends file for download with custom :filename and :encode false" do
-      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "dev's hello world.json", encode: false)
+      conn =
+        send_download(conn(:get, "/"), {:file, @hello_txt},
+          filename: "dev's hello world.json",
+          encode: false
+        )
+
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"dev's hello world.json\""]
+               ["attachment; filename=\"dev's hello world.json\""]
+
       assert get_resp_header(conn, "content-type") ==
-             ["application/json"]
+               ["application/json"]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "sends file for download with custom :content_type and :charset" do
-      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, content_type: "application/json", charset: "utf8")
+      conn =
+        send_download(conn(:get, "/"), {:file, @hello_txt},
+          content_type: "application/json",
+          charset: "utf8"
+        )
+
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello.txt\""]
+               ["attachment; filename=\"hello.txt\""]
+
       assert get_resp_header(conn, "content-type") ==
-             ["application/json; charset=utf8"]
+               ["application/json; charset=utf8"]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "sends file for download with custom :disposition" do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, disposition: :inline)
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["inline; filename=\"hello.txt\""]
+               ["inline; filename=\"hello.txt\""]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "sends file for download with custom :offset" do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, offset: 2)
       assert conn.status == 200
+
       assert conn.resp_body ==
-             "rld"
+               "rld"
     end
 
     test "sends file for download with custom :length" do
       conn = send_download(conn(:get, "/"), {:file, @hello_txt}, length: 2)
       assert conn.status == 200
+
       assert conn.resp_body ==
-             "wo"
+               "wo"
     end
 
     test "sends binary for download with :filename" do
       conn = send_download(conn(:get, "/"), {:binary, "world"}, filename: "hello.json")
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello.json\""]
+               ["attachment; filename=\"hello.json\""]
+
       assert get_resp_header(conn, "content-type") ==
-             ["application/json"]
+               ["application/json"]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "sends binary as download with custom :content_type and :charset" do
-      conn = send_download(conn(:get, "/"), {:binary, "world"},
-                           filename: "hello.txt", content_type: "application/json", charset: "utf8")
+      conn =
+        send_download(conn(:get, "/"), {:binary, "world"},
+          filename: "hello.txt",
+          content_type: "application/json",
+          charset: "utf8"
+        )
+
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["attachment; filename=\"hello.txt\""]
+               ["attachment; filename=\"hello.txt\""]
+
       assert get_resp_header(conn, "content-type") ==
-             ["application/json; charset=utf8"]
+               ["application/json; charset=utf8"]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "sends binary for download with custom :disposition" do
-      conn = send_download(conn(:get, "/"), {:binary, "world"},
-                           filename: "hello.txt", disposition: :inline)
+      conn =
+        send_download(conn(:get, "/"), {:binary, "world"},
+          filename: "hello.txt",
+          disposition: :inline
+        )
+
       assert conn.status == 200
+
       assert get_resp_header(conn, "content-disposition") ==
-             ["inline; filename=\"hello.txt\""]
+               ["inline; filename=\"hello.txt\""]
+
       assert conn.resp_body ==
-             "world"
+               "world"
     end
 
     test "raises ArgumentError for :disposition other than :attachment or :inline" do
-      assert_raise(ArgumentError, ~r"expected :disposition to be :attachment or :inline, got: :foo", fn ->
-        send_download(conn(:get, "/"), {:file, @hello_txt}, disposition: :foo)
-      end)
+      assert_raise(
+        ArgumentError,
+        ~r"expected :disposition to be :attachment or :inline, got: :foo",
+        fn ->
+          send_download(conn(:get, "/"), {:file, @hello_txt}, disposition: :foo)
+        end
+      )
 
-      assert_raise(ArgumentError, ~r"expected :disposition to be :attachment or :inline, got: :foo", fn ->
-        send_download(conn(:get, "/"), {:binary, "world"},
-                           filename: "hello.txt", disposition: :foo)
-      end)
+      assert_raise(
+        ArgumentError,
+        ~r"expected :disposition to be :attachment or :inline, got: :foo",
+        fn ->
+          send_download(conn(:get, "/"), {:binary, "world"},
+            filename: "hello.txt",
+            disposition: :foo
+          )
+        end
+      )
     end
   end
 
   describe "scrub_params/2" do
     test "raises Phoenix.MissingParamError for missing key" do
-      assert_raise(Phoenix.MissingParamError, ~r"expected key \"foo\" to be present in params", fn ->
-        conn(:get, "/") |> fetch_query_params |> scrub_params("foo")
-      end)
+      assert_raise(
+        Phoenix.MissingParamError,
+        ~r"expected key \"foo\" to be present in params",
+        fn ->
+          conn(:get, "/") |> fetch_query_params |> scrub_params("foo")
+        end
+      )
 
-      assert_raise(Phoenix.MissingParamError, ~r"expected key \"foo\" to be present in params", fn ->
-        conn(:get, "/?foo=") |> fetch_query_params |> scrub_params("foo")
-      end)
+      assert_raise(
+        Phoenix.MissingParamError,
+        ~r"expected key \"foo\" to be present in params",
+        fn ->
+          conn(:get, "/?foo=") |> fetch_query_params |> scrub_params("foo")
+        end
+      )
     end
 
     test "keeps populated keys intact" do
-      conn = conn(:get, "/?foo=bar")
-      |> fetch_query_params
-      |> scrub_params("foo")
+      conn =
+        conn(:get, "/?foo=bar")
+        |> fetch_query_params
+        |> scrub_params("foo")
 
       assert conn.params["foo"] == "bar"
     end
 
     test "nils out all empty values for the passed in key if it is a list" do
-      conn = conn(:get, "/?foo[]=&foo[]=++&foo[]=bar")
-      |> fetch_query_params
-      |> scrub_params("foo")
+      conn =
+        conn(:get, "/?foo[]=&foo[]=++&foo[]=bar")
+        |> fetch_query_params
+        |> scrub_params("foo")
 
       assert conn.params["foo"] == [nil, nil, "bar"]
     end
 
     test "nils out all empty keys in value for the passed in key if it is a map" do
-      conn = conn(:get, "/?foo[bar]=++&foo[baz]=&foo[bat]=ok")
-      |> fetch_query_params
-      |> scrub_params("foo")
+      conn =
+        conn(:get, "/?foo[bar]=++&foo[baz]=&foo[bat]=ok")
+        |> fetch_query_params
+        |> scrub_params("foo")
 
       assert conn.params["foo"] == %{"bar" => nil, "baz" => nil, "bat" => "ok"}
     end
 
     test "nils out all empty keys in value for the passed in key if it is a nested map" do
-      conn = conn(:get, "/?foo[bar][baz]=")
-      |> fetch_query_params
-      |> scrub_params("foo")
+      conn =
+        conn(:get, "/?foo[bar][baz]=")
+        |> fetch_query_params
+        |> scrub_params("foo")
 
       assert conn.params["foo"] == %{"bar" => %{"baz" => nil}}
     end
 
     test "ignores the keys that don't match the passed in key" do
-      conn = conn(:get, "/?foo=bar&baz=")
-      |> fetch_query_params
-      |> scrub_params("foo")
+      conn =
+        conn(:get, "/?foo=bar&baz=")
+        |> fetch_query_params
+        |> scrub_params("foo")
 
       assert conn.params["baz"] == ""
     end
 
     test "keeps structs intact" do
-      conn = conn(:post, "/", %{"foo" => %{"bar" => %Plug.Upload{}}})
-      |> fetch_query_params
-      |> scrub_params("foo")
+      conn =
+        conn(:post, "/", %{"foo" => %{"bar" => %Plug.Upload{}}})
+        |> fetch_query_params
+        |> scrub_params("foo")
 
       assert conn.params["foo"]["bar"] == %Plug.Upload{}
     end
@@ -714,51 +812,72 @@ defmodule Phoenix.Controller.ControllerTest do
     |> init_test_session(%{})
     |> protect_from_forgery([])
 
-    assert is_binary get_csrf_token()
-    assert is_binary delete_csrf_token()
+    assert is_binary(get_csrf_token())
+    assert is_binary(delete_csrf_token())
   end
 
-  test "put_secure_browser_headers/2" do
-    conn = conn(:get, "/") |> put_secure_browser_headers()
-    assert get_resp_header(conn, "x-frame-options") == ["SAMEORIGIN"]
-    assert get_resp_header(conn, "x-content-type-options") == ["nosniff"]
-    assert get_resp_header(conn, "x-download-options") == ["noopen"]
-    assert get_resp_header(conn, "x-permitted-cross-domain-policies") == ["none"]
+  describe "put_secure_browser_headers/2" do
+    test "sets headers" do
+      conn = conn(:get, "/") |> put_secure_browser_headers()
+      assert get_resp_header(conn, "x-content-type-options") == ["nosniff"]
+      assert get_resp_header(conn, "x-permitted-cross-domain-policies") == ["none"]
 
-    custom_headers = %{"x-frame-options" => "custom", "foo" => "bar"}
-    conn = conn(:get, "/") |> put_secure_browser_headers(custom_headers)
-    assert get_resp_header(conn, "x-frame-options") == ["custom"]
-    assert get_resp_header(conn, "x-download-options") == ["noopen"]
-    assert get_resp_header(conn, "x-permitted-cross-domain-policies") == ["none"]
-    assert get_resp_header(conn, "foo") == ["bar"]
+      assert get_resp_header(conn, "content-security-policy") ==
+               ["base-uri 'self'; frame-ancestors 'self';"]
+    end
+
+    test "only if not set headers" do
+      custom_headers = %{"content-security-policy" => "custom", "foo" => "bar"}
+      conn = conn(:get, "/") |> merge_resp_headers(custom_headers) |> put_secure_browser_headers()
+      assert get_resp_header(conn, "x-content-type-options") == ["nosniff"]
+      assert get_resp_header(conn, "x-permitted-cross-domain-policies") == ["none"]
+      assert get_resp_header(conn, "content-security-policy") == ["custom"]
+      assert get_resp_header(conn, "foo") == ["bar"]
+    end
+
+    test "can be overridden" do
+      custom_headers = %{"content-security-policy" => "custom", "foo" => "bar"}
+      conn = conn(:get, "/") |> put_secure_browser_headers(custom_headers)
+      assert get_resp_header(conn, "x-content-type-options") == ["nosniff"]
+      assert get_resp_header(conn, "x-permitted-cross-domain-policies") == ["none"]
+      assert get_resp_header(conn, "content-security-policy") == ["custom"]
+      assert get_resp_header(conn, "foo") == ["bar"]
+    end
   end
 
   test "__view__ returns the view module based on controller module" do
     assert Phoenix.Controller.__view__(MyApp.UserController, []) == MyApp.UserView
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController, []) == MyApp.Admin.UserView
+
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, :json]) ==
-      [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserJSON]
+             [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserJSON]
+
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, json: "View"]) ==
-      [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserView]
+             [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserView]
   end
 
   test "__layout__ returns the layout module based on controller module" do
     assert Phoenix.Controller.__layout__(UserController, []) ==
-           {LayoutView, :app}
+             {LayoutView, :app}
+
     assert Phoenix.Controller.__layout__(MyApp.UserController, []) ==
-           {MyApp.LayoutView, :app}
+             {MyApp.LayoutView, :app}
+
     assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, []) ==
-           {MyApp.LayoutView, :app}
+             {MyApp.LayoutView, :app}
+
     assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, namespace: MyApp.Admin) ==
-           {MyApp.Admin.LayoutView, :app}
+             {MyApp.Admin.LayoutView, :app}
 
     opts = [layouts: [html: MyApp.LayoutHTML]]
+
     assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, opts) ==
-           [html: {MyApp.LayoutHTML, :app}]
+             [html: {MyApp.LayoutHTML, :app}]
 
     opts = [layouts: [html: {MyApp.LayoutHTML, :application}]]
+
     assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, opts) ==
-           [html: {MyApp.LayoutHTML, :application}]
+             [html: {MyApp.LayoutHTML, :application}]
   end
 
   defp sent_conn do
@@ -799,7 +918,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
     test "current_path/2 allows custom nested query params" do
       conn = build_conn_for_path("/")
-      assert current_path(conn, [foo: [bar: [:baz], baz: :qux]]) == "/?foo[bar][]=baz&foo[baz]=qux"
+      assert current_path(conn, foo: [bar: [:baz], baz: :qux]) == "/?foo[bar][]=baz&foo[baz]=qux"
     end
 
     test "current_url/1 with root path includes trailing slash" do

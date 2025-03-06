@@ -1375,25 +1375,25 @@ defmodule Phoenix.Controller do
   @doc """
   Put headers that improve browser security.
 
-  It sets the following headers:
+  It sets the following headers, if they are not already set:
+
+    * `content-security-policy` - It sets `frame-ancestors` and
+      `base-uri` to `self`, restricting embedding and the use of
+      `<base>` element to same origin respectively. It is equivalent
+      to setting `"base-uri 'self'; frame-ancestors 'self';"`
 
     * `referrer-policy` - only send origin on cross origin requests
-    * `x-frame-options` - set to SAMEORIGIN to avoid clickjacking
-      through iframes unless in the same origin
+
     * `x-content-type-options` - set to nosniff. This requires
       script and style tags to be sent with proper content type
-    * `x-download-options` - set to noopen to instruct the browser
-      not to open a download directly in the browser, to avoid
-      HTML files rendering inline and accessing the security
-      context of the application (like critical domain cookies)
+
     * `x-permitted-cross-domain-policies` - set to none to restrict
       Adobe Flash Player’s access to data
 
   A custom headers map may also be given to be merged with defaults.
+
   It is recommended for custom header keys to be in lowercase, to avoid sending
-  duplicate keys in a request.
-  Additionally, responses with mixed-case headers served over HTTP/2 are not
-  considered valid by common clients, resulting in dropped responses.
+  duplicate keys or invalid responses.
   """
   def put_secure_browser_headers(conn, headers \\ %{})
 
@@ -1407,17 +1407,23 @@ defmodule Phoenix.Controller do
     |> merge_resp_headers(headers)
   end
 
-  defp put_secure_defaults(conn) do
-    merge_resp_headers(conn, [
-      # Below is the default from November 2020 but not yet in Safari as in Jan/2022.
-      # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+  defp put_secure_defaults(%Plug.Conn{resp_headers: resp_headers} = conn) do
+    headers = [
       {"referrer-policy", "strict-origin-when-cross-origin"},
+      {"content-security-policy", "base-uri 'self'; frame-ancestors 'self';"},
       {"x-content-type-options", "nosniff"},
-      # Applies only to Internet Explorer, can safely be removed in the future.
-      {"x-download-options", "noopen"},
-      {"x-frame-options", "SAMEORIGIN"},
       {"x-permitted-cross-domain-policies", "none"}
-    ])
+    ]
+
+    resp_headers =
+      Enum.reduce(headers, resp_headers, fn {key, _} = pair, acc ->
+        case :lists.keymember(key, 1, acc) do
+          true -> acc
+          false -> [pair | acc]
+        end
+      end)
+
+    %{conn | resp_headers: resp_headers}
   end
 
   @doc """
