@@ -41,7 +41,8 @@ defmodule Mix.Phoenix.Schema do
             fixture_unique_functions: [],
             fixture_params: [],
             prefix: nil,
-            timestamp_type: :naive_datetime
+            timestamp_type: :naive_datetime,
+            scope: nil
 
   @valid_types [
     :integer,
@@ -82,6 +83,7 @@ defmodule Mix.Phoenix.Schema do
     repo_alias = if String.ends_with?(Atom.to_string(repo), ".Repo"), do: "", else: ", as: Repo"
     file = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
     table = opts[:table] || schema_plural
+    scope = Mix.Phoenix.Scope.scope_from_opts(otp_app, opts[:scope], opts[:no_scope])
     {cli_attrs, uniques, redacts} = extract_attr_flags(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
     types = types(attrs)
@@ -154,7 +156,8 @@ defmodule Mix.Phoenix.Schema do
       migration_module: migration_module(),
       fixture_unique_functions: Enum.sort(fixture_unique_functions),
       fixture_params: fixture_params(attrs, fixture_unique_functions),
-      prefix: opts[:prefix]
+      prefix: opts[:prefix],
+      scope: scope
     }
   end
 

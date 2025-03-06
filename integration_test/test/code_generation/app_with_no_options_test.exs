@@ -59,7 +59,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
         [
           "--no-halt",
           "-e",
-          "spawn fn -> IO.gets('') && System.halt(0) end",
+          "spawn fn -> IO.gets([]) && System.halt(0) end",
           "-S",
           "mix",
           "phx.server"
