@@ -19,7 +19,8 @@ defmodule Phoenix.DigesterTest do
 
   describe "compile" do
     test "fails when the given paths are invalid" do
-      assert {:error, :invalid_path} = Phoenix.Digester.compile("nonexistent path", "/ ?? /path", true)
+      assert {:error, :invalid_path} =
+               Phoenix.Digester.compile("nonexistent path", "/ ?? /path", true)
     end
 
     test "digests and compress files" do
@@ -324,6 +325,83 @@ defmodule Phoenix.DigesterTest do
 
       refute digested_js_map =~ ~r"\"file\":\"app.js\""
       assert digested_js_map =~ ~r"#{digested_js_filename}"
+    end
+
+    test "digests await import paths found within javascript source files" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
+
+      digested_js_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"async_import-#{@hash_regex}.js"))
+
+      digested_app_js_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.js"))
+
+      digested_js = Path.join(@output_path, digested_js_filename) |> File.read!()
+      assert String.contains?(digested_js, "await import(\"./#{digested_app_js_filename}\");")
+
+      assert String.contains?(
+               digested_js,
+               "(await import(\"./#{digested_app_js_filename}\")).default;"
+             )
+    end
+
+    test "does not digest await import called not on a path" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
+
+      digested_js_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"async_import-#{@hash_regex}.js"))
+
+      digested_js = Path.join(@output_path, digested_js_filename) |> File.read!()
+      assert String.contains?(digested_js, "await import(notAsyncPath);")
+    end
+
+    test "digests promise based import paths found within javascript source files" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
+
+      digested_js_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"async_import-#{@hash_regex}.js"))
+
+      digested_app_js_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.js"))
+
+      digested_js = Path.join(@output_path, digested_js_filename) |> File.read!()
+
+      assert String.contains?(
+               digested_js,
+               "import(\"./#{digested_app_js_filename}\").then((app) => {"
+             )
+    end
+
+    test "does not digest promise based import called not on a path" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
+
+      digested_js_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"async_import-#{@hash_regex}.js"))
+
+      digested_js = Path.join(@output_path, digested_js_filename) |> File.read!()
+      assert String.contains?(digested_js, "import(notPromisePath).then(")
+    end
+
+    test "does not digest import paths that don't exist" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path, true)
+
+      digested_js_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"async_import-#{@hash_regex}.js"))
+
+      digested_js = Path.join(@output_path, digested_js_filename) |> File.read!()
+      assert String.contains?(digested_js, "await import(\"https://example.com/thing.js\");")
     end
 
     test "does not digest assets within undigested files" do
