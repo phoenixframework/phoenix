@@ -1,6 +1,7 @@
   import Ecto.Query
 
   alias <%= inspect context.module %>
+  alias <%= inspect scope_config.scope.module %>
 
   def unique_<%= schema.singular %>_email, do: "<%= schema.singular %>#{System.unique_integer()}@example.com"
   def valid_<%= schema.singular %>_password, do: "hello world!"
@@ -31,6 +32,15 @@
     {:ok, <%= schema.singular %>, _expired_tokens} = <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(token)
 
     <%= schema.singular %>
+  end
+
+  def <%= schema.singular %>_scope_fixture do
+    <%= schema.singular %> = <%= schema.singular %>_fixture()
+    <%= schema.singular %>_scope_fixture(<%= schema.singular %>)
+  end
+
+  def <%= schema.singular %>_scope_fixture(<%= schema.singular %>) do
+    <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>)
   end
 
   def set_password(<%= schema.singular %>) do

@@ -95,6 +95,23 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
+      assert_file("config/config.exs", fn file ->
+        assert file =~ """
+               config :my_app, :scopes,
+                 user: [
+                   default: true,
+                   module: MyApp.Accounts.Scope,
+                   assign_key: :current_scope,
+                   access_path: [:user, :id],
+                   schema_key: :user_id,
+                   schema_type: :id,
+                   schema_table: :users,
+                   test_data_fixture: MyApp.AccountsFixtures,
+                   test_login_helper: :register_and_log_in_user
+                 ]
+               """
+      end)
+
       assert_file("config/test.exs", fn file ->
         assert file =~ "config :bcrypt_elixir, :log_rounds, 1"
       end)
@@ -102,6 +119,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file("lib/my_app/accounts.ex")
       assert_file("lib/my_app/accounts/user.ex")
       assert_file("lib/my_app/accounts/user_token.ex")
+
+      assert_file("lib/my_app/accounts/scope.ex", fn file ->
+        assert file =~ "def for_user(%User{} = user)"
+        assert file =~ "def for_user(nil), do: nil"
+      end)
 
       assert_file("lib/my_app/accounts/user_notifier.ex", fn file ->
         assert file =~ "defmodule MyApp.Accounts.UserNotifier do"
@@ -142,7 +164,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/router.ex", fn file ->
         assert file =~ "import MyAppWeb.UserAuth"
-        assert file =~ "plug :fetch_current_user"
+        assert file =~ "plug :fetch_current_scope_for_user"
 
         assert file =~ """
                  ## Authentication routes
@@ -215,6 +237,23 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_received {:mix_shell, :yes?, [@liveview_option_message]}
 
+      assert_file("config/config.exs", fn file ->
+        assert file =~ """
+               config :my_app, :scopes,
+                 user: [
+                   default: true,
+                   module: MyApp.Accounts.Scope,
+                   assign_key: :current_scope,
+                   access_path: [:user, :id],
+                   schema_key: :user_id,
+                   schema_type: :id,
+                   schema_table: :users,
+                   test_data_fixture: MyApp.AccountsFixtures,
+                   test_login_helper: :register_and_log_in_user
+                 ]
+               """
+      end)
+
       assert_file("config/test.exs", fn file ->
         assert file =~ "config :bcrypt_elixir, :log_rounds, 1"
       end)
@@ -222,6 +261,11 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_file("lib/my_app/accounts.ex")
       assert_file("lib/my_app/accounts/user.ex")
       assert_file("lib/my_app/accounts/user_token.ex")
+
+      assert_file("lib/my_app/accounts/scope.ex", fn file ->
+        assert file =~ "def for_user(%User{} = user)"
+        assert file =~ "def for_user(nil), do: nil"
+      end)
 
       assert_file("lib/my_app/accounts/user_notifier.ex", fn file ->
         assert file =~ "defmodule MyApp.Accounts.UserNotifier do"
@@ -258,7 +302,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/router.ex", fn file ->
         assert file =~ "import MyAppWeb.UserAuth"
-        assert file =~ "plug :fetch_current_user"
+        assert file =~ "plug :fetch_current_scope_for_user"
 
         assert file =~ """
                  ## Authentication routes
@@ -279,7 +323,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    pipe_through [:browser]
 
                    live_session :current_user,
-                     on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
+                     on_mount: [{MyAppWeb.UserAuth, :mount_current_scope}] do
                      live "/users/register", UserLive.Registration, :new
                      live "/users/log-in", UserLive.Login, :new
                      live "/users/log-in/:token", UserLive.Confirmation, :new
@@ -345,7 +389,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/router.ex", fn file ->
         assert file =~ "import MyAppWeb.UserAuth"
-        assert file =~ "plug :fetch_current_user"
+        assert file =~ "plug :fetch_current_scope_for_user"
 
         assert file =~ """
                  ## Authentication routes
@@ -366,7 +410,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    pipe_through [:browser]
 
                    live_session :current_user,
-                     on_mount: [{MyAppWeb.UserAuth, :mount_current_user}] do
+                     on_mount: [{MyAppWeb.UserAuth, :mount_current_scope}] do
                      live "/users/register", UserLive.Registration, :new
                      live "/users/log-in", UserLive.Login, :new
                      live "/users/log-in/:token", UserLive.Confirmation, :new
@@ -403,7 +447,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/router.ex", fn file ->
         assert file =~ "import MyAppWeb.UserAuth"
-        assert file =~ "plug :fetch_current_user"
+        assert file =~ "plug :fetch_current_scope_for_user"
 
         assert file =~ """
                  ## Authentication routes
@@ -568,7 +612,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/router.ex", fn file ->
         assert file =~ "import MyAppWeb.Warehouse.UserAuth"
-        assert file =~ "plug :fetch_current_user"
+        assert file =~ "plug :fetch_current_scope_for_user"
 
         assert file =~ """
                  ## Authentication routes
@@ -1134,12 +1178,12 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                          [
                            """
 
-                           Add the :fetch_current_user plug to the :browser pipeline in lib/my_app_web/router.ex:
+                           Add the :fetch_current_scope_for_user plug to the :browser pipeline in lib/my_app_web/router.ex:
 
                                pipeline :browser do
                                  ...
                                  plug :put_secure_browser_headers
-                                 plug :fetch_current_user
+                                 plug :fetch_current_scope_for_user
                                end
 
                            """
@@ -1178,9 +1222,9 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                like the user menu items to be rendered.
 
                    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-                     <%= if @current_user do %>
+                     <%= if @current_scope do %>
                        <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                         {@current_user.email}
+                         {@current_scope.user.email}
                        </li>
                        <li>
                          <.link
@@ -1242,9 +1286,9 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         Add the following user menu items to your lib/my_app_web/components/layouts/root.html.heex layout file:
 
             <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-              <%= if @current_user do %>
+              <%= if @current_scope do %>
                 <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                  {@current_user.email}
+                  {@current_scope.user.email}
                 </li>
                 <li>
                   <.link
@@ -1286,6 +1330,128 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         """
 
         assert_received {:mix_shell, :info, [^help_text]}
+      end)
+    end
+
+    test "when default scope already exists", config do
+      in_tmp_phx_project(config.test, fn ->
+        with_scope_env(
+          :my_app,
+          [
+            user: [
+              default: true,
+              module: MyApp.Accounts.Scope,
+              assign_key: :current_scope,
+              access_path: [:user, :id],
+              schema_key: :user_id,
+              schema_type: :id,
+              schema_table: :users
+            ]
+          ],
+          fn ->
+            send(self(), {:mix_shell_input, :yes?, true})
+
+            Gen.Auth.run(
+              ~w(Accounts User users --no-compile --live),
+              ecto_adapter: Ecto.Adapters.Postgres
+            )
+
+            help_text = """
+            Your application configuration already contains a default scope: :user.
+
+            phx.gen.auth will create a new accounts_user scope.
+
+            Do you want to proceed with the generation?\
+            """
+
+            assert_received {:mix_shell, :yes?, [question]}
+            assert question == help_text
+          end
+        )
+      end)
+    end
+
+    test "when scope name cannot be generated", config do
+      in_tmp_phx_project(config.test, fn ->
+        with_scope_env(
+          :my_app,
+          [
+            user: [
+              default: true,
+              module: MyApp.Accounts.Scope,
+              assign_key: :current_scope,
+              access_path: [:user, :id],
+              schema_key: :user_id,
+              schema_type: :id,
+              schema_table: :users
+            ],
+            accounts_user: [
+              default: false,
+              module: MyApp.Accounts.Scope
+            ],
+            my_app_accounts_user: [
+              default: false,
+              module: MyApp.Accounts.Scope
+            ]
+          ],
+          fn ->
+            send(self(), {:mix_shell_input, :yes?, true})
+
+            assert_raise Mix.Error, ~r/Could not generate a scope name for user!/, fn ->
+              Gen.Auth.run(
+                ~w(Accounts User users --no-compile --live),
+                ecto_adapter: Ecto.Adapters.Postgres
+              )
+            end
+          end
+        )
+      end)
+    end
+
+    test "when given scope already exists", config do
+      in_tmp_phx_project(config.test, fn ->
+        with_scope_env(
+          :my_app,
+          [
+            user: [
+              default: true,
+              module: MyApp.Accounts.Scope,
+              assign_key: :current_scope,
+              access_path: [:user, :id],
+              schema_key: :user_id,
+              schema_type: :id,
+              schema_table: :users
+            ]
+          ],
+          fn ->
+            send(self(), {:mix_shell_input, :yes?, true})
+
+            Gen.Auth.run(
+              ~w(Accounts User users --no-compile --live --scope user),
+              ecto_adapter: Ecto.Adapters.Postgres
+            )
+
+            help_text = """
+            The scope user is already configured.
+
+            phx.gen.auth expects the configured scope module MyApp.Accounts.Scope to include
+            a `for_user/1` function that returns a `%MyApp.Accounts.User{}` struct:
+
+                def for_user(nil), do: %__MODULE__{user: nil}
+
+                def for_user(%<%= inspect schema.alias %>{} = user) do
+                  %__MODULE__{user: user}
+                end
+
+            Please ensure that your scope module includes such code.
+
+            Do you want to proceed with the generation?\
+            """
+
+            assert_received {:mix_shell, :yes?, [question]}
+            assert question == help_text
+          end
+        )
       end)
     end
   end
