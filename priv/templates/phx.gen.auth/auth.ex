@@ -160,7 +160,7 @@ defmodule <%= inspect auth_module %> do
   def on_mount(:ensure_authenticated, _params, session, socket) do
     socket = mount_current_scope(socket, session)
 
-    if socket.assigns.current_scope do
+    if socket.assigns.current_scope && socket.assigns.current_scope.<%= schema.singular %> do
       {:cont, socket}
     else
       socket =
@@ -233,7 +233,7 @@ defmodule <%= inspect auth_module %> do
   they use the application at all, here would be a good place.
   """
   def require_authenticated_<%= schema.singular %>(conn, _opts) do
-    if conn.assigns.current_scope do
+    if conn.assigns.current_scope && conn.assigns.current_scope.<%= schema.singular %> do
       conn
     else
       conn
