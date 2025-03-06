@@ -47,6 +47,11 @@ defmodule Phoenix.VerifiedRoutesTest do
 
     forward "/router_forward", AdminRouter
     forward "/plug_forward", UserController
+
+    scope "/:locale" do
+      get "/foo", PostController, :show
+      get "/bar", PostController, :show
+    end
   end
 
   defmodule CatchAllWarningRouter do
@@ -190,6 +195,22 @@ defmodule Phoenix.VerifiedRoutesTest do
   after
     :code.purge(__MODULE__.Hash)
     :code.delete(__MODULE__.Hash)
+  end
+
+  test ":path_prefixes" do
+    defmodule PathPrefixes do
+      use Phoenix.VerifiedRoutes,
+        endpoint: unquote(@endpoint),
+        router: unquote(@router),
+        path_prefixes: [{__MODULE__, :locale, [{1, 2, 3}]}]
+
+      def locale({1, 2, 3}), do: "en"
+      def foo, do: ~p"/foo"
+      def bar, do: ~p"/bar"
+    end
+
+    assert PathPrefixes.foo() == "/en/foo"
+    assert PathPrefixes.bar() == "/en/bar"
   end
 
   test "unverified_path" do
@@ -521,7 +542,6 @@ defmodule Phoenix.VerifiedRoutesTest do
 
         assert warnings =~
                  ~r"test/phoenix/verified_routes_test.exs:#{line}:(\d+:)? Phoenix.VerifiedRoutesTest.Forwards.test/0"
-
       after
         :code.purge(__MODULE__.Forwards)
         :code.delete(__MODULE__.Forwards)

@@ -103,11 +103,23 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
+    {conn_scope, context_scope_prefix} =
+      if schema.scope do
+        base = "conn.assigns.#{schema.scope.assign_key}"
+        {base, "#{base}, "}
+      else
+        {"", ""}
+      end
+
     binding = [
       context: context,
       schema: schema,
+      scope: schema.scope,
       core_components?: Code.ensure_loaded?(Module.concat(context.web_module, "CoreComponents")),
-      gettext?: Code.ensure_loaded?(Module.concat(context.web_module, "Gettext"))
+      gettext?: Code.ensure_loaded?(Module.concat(context.web_module, "Gettext")),
+      primary_key: schema.opts[:primary_key] || :id,
+      conn_scope: conn_scope,
+      context_scope_prefix: context_scope_prefix
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -164,7 +176,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
           scope "/#{schema.web_path}", #{inspect(Module.concat(context.web_module, schema.web_namespace))}, as: :#{schema.web_path} do
             pipe_through :api
             ...
-            resources "/#{schema.plural}", #{inspect(schema.alias)}Controller
+            resources "/#{schema.plural}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
           end
       """)
     else
@@ -172,7 +184,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
       Add the resource to the "#{Application.get_env(ctx_app, :generators)[:api_prefix] || "/api"}" scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          resources "/#{schema.plural}", #{inspect(schema.alias)}Controller, except: [:new, :edit]
+          resources "/#{schema.plural}", #{inspect(schema.alias)}Controller, except: [:new, :edit]#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
       """)
     end
 

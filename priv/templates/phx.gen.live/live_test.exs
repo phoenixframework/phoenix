@@ -6,10 +6,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @create_attrs <%= Mix.Phoenix.to_text for {key, value} <- schema.params.create, into: %{}, do: {key, Mix.Phoenix.Schema.live_form_value(value)} %>
   @update_attrs <%= Mix.Phoenix.to_text for {key, value} <- schema.params.update, into: %{}, do: {key, Mix.Phoenix.Schema.live_form_value(value)} %>
-  @invalid_attrs <%= Mix.Phoenix.to_text for {key, value} <- schema.params.create, into: %{}, do: {key, value |> Mix.Phoenix.Schema.live_form_value() |> Mix.Phoenix.Schema.invalid_form_value()} %>
+  @invalid_attrs <%= Mix.Phoenix.to_text for {key, value} <- schema.params.create, into: %{}, do: {key, value |> Mix.Phoenix.Schema.live_form_value() |> Mix.Phoenix.Schema.invalid_form_value()} %><%= if scope do %>
 
+  setup :<%= scope.test_login_helper %>
+
+  defp create_<%= schema.singular %>(%{scope: scope}) do
+    <%= schema.singular %> = <%= schema.singular %>_fixture(scope)
+<% else %>
   defp create_<%= schema.singular %>(_) do
     <%= schema.singular %> = <%= schema.singular %>_fixture()
+<% end %>
     %{<%= schema.singular %>: <%= schema.singular %>}
   end
 
@@ -54,7 +60,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert {:ok, form_live, _html} =
                index_live
-               |> element("#<%= schema.plural %>-#{<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>} a", "Edit")
+               |> element("#<%= schema.plural %>-#{<%= schema.singular %>.<%= primary_key %>} a", "Edit")
                |> render_click()
                |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}/edit")
 
@@ -78,8 +84,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "deletes <%= schema.singular %> in listing", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       {:ok, index_live, _html} = live(conn, ~p"<%= schema.route_prefix %>")
 
-      assert index_live |> element("#<%= schema.plural %>-#{<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>} a", "Delete") |> render_click()
-      refute has_element?(index_live, "#<%= schema.plural %>-#{<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>}")
+      assert index_live |> element("#<%= schema.plural %>-#{<%= schema.singular %>.<%= primary_key %>} a", "Delete") |> render_click()
+      refute has_element?(index_live, "#<%= schema.plural %>-#{<%= schema.singular %>.<%= primary_key %>}")
     end
   end
 

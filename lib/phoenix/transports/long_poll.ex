@@ -138,6 +138,8 @@ defmodule Phoenix.Transports.LongPoll do
 
     keys = Keyword.get(opts, :connect_info, [])
 
+    conn = maybe_auth_token_from_header(conn, opts[:auth_token])
+
     connect_info =
       Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
 
@@ -264,6 +266,18 @@ defmodule Phoenix.Transports.LongPoll do
       opts[:crypto]
     )
   end
+
+  defp maybe_auth_token_from_header(conn, true) do
+    case Plug.Conn.get_req_header(conn, "x-phoenix-authtoken") do
+      [] ->
+        conn
+
+      [token | _] ->
+        Plug.Conn.put_private(conn, :phoenix_transport_auth_token, token)
+    end
+  end
+
+  defp maybe_auth_token_from_header(conn, _), do: conn
 
   defp status_json(conn) do
     send_json(conn, %{"status" => conn.status || 200})

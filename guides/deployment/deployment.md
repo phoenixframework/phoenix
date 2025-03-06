@@ -115,6 +115,35 @@ And that's it. Next, you can use one of our official guides to deploy:
   * [to Fly.io](fly.html), a PaaS that deploys your servers close to your users with built-in distribution support
   * and [to Heroku](heroku.html), one of the most popular PaaS.
 
+## Clustering and Long-Polling Transports
+
+Phoenix supports two types of transports for its Socket implementation: WebSocket, and Long-Polling. When generating a Phoenix project, you can see the default configuration set in the generated `endpoint.ex` file:
+
+```elixir
+socket "/live", Phoenix.LiveView.Socket,
+  websocket: [connect_info: [session: @session_options]],
+  longpoll: [connect_info: [session: @session_options]]
+```
+
+This configuration tells Phoenix that both the WebSocket and the Long-Polling options are available, and based on the client's network conditions, Phoenix will first attempt to connect to the WebSocket, falling back to the Long-Poll option after the configured timeout found in the generated `app.js` file:
+
+```javascript
+let liveSocket = new LiveSocket("/live", Socket, {
+  longPollFallbackMs: 2500,
+  params: {_csrf_token: csrfToken}
+})
+```
+
+If you are running more than one machine in production, which is the recommended approach in most cases, this automatic fallback comes with an important caveat. If you want Long-Polling to work properly, your application must either:
+
+1. Utilize the Erlang VM's clustering capabilities, so the default `Phoenix.PubSub` adapter can broadcast messages across nodes
+
+2. Choose a different `Phoenix.PubSub` adapter (such as `Phoenix.PubSub.Redis`)
+
+3. Or your deployment option must implement sticky sessions - ensuring that all requests for a specific session go to the same machine
+
+The reason for this is simple. While a WebSocket is a long-lived open connection to the same machine, long-polling works by opening a request to the server, waiting for a timeout or until the open request is fulfilled, and repeating this process. In order to preserve the state of the user's connected socket and to preserve the behaviour of a socket being long-lived, the user's process is kept alive, and each long-poll request attempts to find the user's stateful process. If the stateful process is not reachable, every request will create a new process and a new state, thereby breaking the fact that the socket is long-lived and stateful.
+
 ## Community Deployment Guides
 
   * [Render](https://render.com) has first class support for Phoenix applications. There are guides for hosting Phoenix with [Mix releases](https://render.com/docs/deploy-phoenix), [Distillery](https://render.com/docs/deploy-phoenix-distillery), and as a [Distributed Elixir Cluster](https://render.com/docs/deploy-elixir-cluster).

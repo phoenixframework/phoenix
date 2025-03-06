@@ -5,7 +5,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @create_attrs <%= Mix.Phoenix.to_text schema.params.create %>
   @update_attrs <%= Mix.Phoenix.to_text schema.params.update %>
-  @invalid_attrs <%= Mix.Phoenix.to_text (for {key, _} <- schema.params.create, into: %{}, do: {key, nil}) %>
+  @invalid_attrs <%= Mix.Phoenix.to_text (for {key, _} <- schema.params.create, into: %{}, do: {key, nil}) %><%= if scope do %>
+
+  setup :<%= scope.test_login_helper %><% end %>
 
   describe "index" do
     test "lists all <%= schema.plural %>", %{conn: conn} do
@@ -25,11 +27,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     test "redirects to show when data is valid", %{conn: conn} do
       conn = post(conn, ~p"<%= schema.route_prefix %>", <%= schema.singular %>: @create_attrs)
 
-      assert %{id: id} = redirected_params(conn)
-      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/#{id}"
+      assert %{<%= primary_key %>: <%= primary_key %>} = redirected_params(conn)
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/#{<%= primary_key %>}"
 
-      conn = get(conn, ~p"<%= schema.route_prefix %>/#{id}")
-      assert html_response(conn, 200) =~ "<%= schema.human_singular %> #{id}"
+      conn = get(conn, ~p"<%= schema.route_prefix %>/#{<%= primary_key %>}")
+      assert html_response(conn, 200) =~ "<%= schema.human_singular %> #{<%= primary_key %>}"
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
@@ -78,8 +80,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
-  defp create_<%= schema.singular %>(_) do
+<%= if scope do %>  defp create_<%= schema.singular %>(%{scope: scope}) do
+    <%= schema.singular %> = <%= schema.singular %>_fixture(scope)
+<% else %>  defp create_<%= schema.singular %>(_) do
     <%= schema.singular %> = <%= schema.singular %>_fixture()
+<% end %>
     %{<%= schema.singular %>: <%= schema.singular %>}
   end
 end

@@ -28,6 +28,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   A migration file for the repository and test files for the context
   will also be generated.
 
+  The generated migration can be skipped with `--no-migration`.
+
   ## Generating without a schema
 
   In some cases, you may wish to bootstrap the context module and
@@ -90,7 +92,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     prefix: :string,
     live: :boolean,
     compile: :boolean,
-    primary_key: :string
+    primary_key: :string,
+    migration: :boolean,
+    scope: :string,
+    no_scope: :boolean
   ]
 
   @default_opts [schema: true, context: true]
@@ -104,7 +109,12 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
 
     {context, schema} = build(args)
-    binding = [context: context, schema: schema]
+    binding = [
+      context: context,
+      schema: schema,
+      scope: context.scope,
+      primary_key: schema.opts[:primary_key] || :id
+    ]
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
@@ -206,8 +216,15 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
     ensure_test_file_exists(context, paths, binding)
 
+    file =
+      if context.schema.scope do
+        "test_cases_scope.exs"
+      else
+        "test_cases.exs"
+      end
+
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/test_cases.exs", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/#{file}", binding)
     |> inject_eex_before_final_end(test_file, binding)
   end
 
@@ -302,10 +319,18 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   defp schema_access_template(%Context{schema: schema}) do
-    if schema.generate? do
-      "schema_access.ex"
-    else
-      "access_no_schema.ex"
+    cond do
+      schema.generate? && schema.scope ->
+        "schema_access_scope.ex"
+
+      schema.generate? ->
+        "schema_access.ex"
+
+      schema.scope ->
+        "access_no_schema_scope.ex"
+
+      true ->
+        "access_no_schema.ex"
     end
   end
 

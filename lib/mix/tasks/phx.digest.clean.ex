@@ -46,6 +46,8 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
       Mix.Task.run("compile", all_args)
     end
 
+    Mix.Task.reenable("phx.digest.clean")
+
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     {opts, _, _} = OptionParser.parse(all_args, switches: @switches, aliases: [o: :output])

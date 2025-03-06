@@ -5,85 +5,101 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   import <%= inspect context.module %>Fixtures
 
   alias <%= inspect context.module %>
-  alias <%= inspect schema.repo %><%= schema.repo_alias %>
 
   setup do
-    %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
+    %{unconfirmed_<%= schema.singular %>: unconfirmed_<%= schema.singular %>_fixture(), confirmed_<%= schema.singular %>: <%= schema.singular %>_fixture()}
   end
 
   describe "Confirm <%= schema.singular %>" do
-    test "renders confirmation page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/some-token")
-      assert html =~ "Confirm Account"
-    end
-
-    test "confirms the given token once", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+    test "renders confirmation page for unconfirmed <%= schema.singular %>", %{conn: conn, unconfirmed_<%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
-          <%= inspect context.alias %>.deliver_<%= schema.singular %>_confirmation_instructions(<%= schema.singular %>, url)
+          <%= inspect context.alias %>.deliver_login_instructions(<%= schema.singular %>, url)
         end)
 
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/#{token}")
+      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log-in/#{token}")
+      assert html =~ "Confirm my account"
+    end
 
-      result =
-        lv
-        |> form("#confirmation_form")
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/")
+    test "renders login page for confirmed <%= schema.singular %>", %{conn: conn, confirmed_<%= schema.singular %>: <%= schema.singular %>} do
+      token =
+        extract_<%= schema.singular %>_token(fn url ->
+          <%= inspect context.alias %>.deliver_login_instructions(<%= schema.singular %>, url)
+        end)
 
-      assert {:ok, conn} = result
+      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log-in/#{token}")
+      refute html =~ "Confirm my account"
+      assert html =~ "Log in"
+    end
+
+    test "confirms the given token once", %{conn: conn, unconfirmed_<%= schema.singular %>: <%= schema.singular %>} do
+      token =
+        extract_<%= schema.singular %>_token(fn url ->
+          <%= inspect context.alias %>.deliver_login_instructions(<%= schema.singular %>, url)
+        end)
+
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in/#{token}")
+
+      form = form(lv, "#confirmation_form", %{"<%= schema.singular %>" => %{"token" => token}})
+      render_submit(form)
+
+      conn = follow_trigger_action(form, conn)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
                "<%= inspect schema.alias %> confirmed successfully"
 
       assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at
-      refute get_session(conn, :<%= schema.singular %>_token)
-      assert Repo.all(<%= inspect context.alias %>.<%= inspect schema.alias %>Token) == []
+      # we are logged in now
+      assert get_session(conn, :<%= schema.singular %>_token)
+      assert redirected_to(conn) == ~p"/"
 
-      # when not logged in
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/#{token}")
+      # log out, new conn
+      conn = build_conn()
 
-      result =
-        lv
-        |> form("#confirmation_form")
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/")
+      {:ok, _lv, html} =
+        live(conn, ~p"<%= schema.route_prefix %>/log-in/#{token}")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
 
-      assert {:ok, conn} = result
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "<%= inspect schema.alias %> confirmation link is invalid or it has expired"
-
-      # when logged in
-      conn =
-        build_conn()
-        |> log_in_<%= schema.singular %>(<%= schema.singular %>)
-
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/#{token}")
-
-      result =
-        lv
-        |> form("#confirmation_form")
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/")
-
-      assert {:ok, conn} = result
-      refute Phoenix.Flash.get(conn.assigns.flash, :error)
+      assert html =~ "Magic link is invalid or it has expired"
     end
 
-    test "does not confirm email with invalid token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/confirm/invalid-token")
+    test "logs confirmed <%= schema.singular %> in without changing confirmed_at", %{
+      conn: conn,
+      confirmed_<%= schema.singular %>: <%= schema.singular %>
+    } do
+      token =
+        extract_<%= schema.singular %>_token(fn url ->
+          <%= inspect context.alias %>.deliver_login_instructions(<%= schema.singular %>, url)
+        end)
 
-      {:ok, conn} =
-        lv
-        |> form("#confirmation_form")
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/")
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in/#{token}")
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "<%= inspect schema.alias %> confirmation link is invalid or it has expired"
+      form = form(lv, "#login_form", %{"<%= schema.singular %>" => %{"token" => token}})
+      render_submit(form)
 
-      refute <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at
+      conn = follow_trigger_action(form, conn)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+               "Welcome back!"
+
+      assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id).confirmed_at == <%= schema.singular %>.confirmed_at
+
+      # log out, new conn
+      conn = build_conn()
+
+      {:ok, _lv, html} =
+        live(conn, ~p"<%= schema.route_prefix %>/log-in/#{token}")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
+
+      assert html =~ "Magic link is invalid or it has expired"
+    end
+
+    test "raises error for invalid token", %{conn: conn} do
+      {:ok, _lv, html} =
+        live(conn, ~p"<%= schema.route_prefix %>/log-in/invalid-token")
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
+
+      assert html =~ "Magic link is invalid or it has expired"
     end
   end
 end

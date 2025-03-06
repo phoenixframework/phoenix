@@ -9,11 +9,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <.header>
       Listing <%= schema.human_plural %>
       <:actions>
-        <.button phx-click={JS.dispatch("click", to: {:inner, "a"})}>
-          <.link navigate={~p"<%= schema.route_prefix %>/new"}>
-            New <%= schema.human_singular %>
-          </.link>
-        </.button>
+        <.link class={button_classes()} navigate={~p"<%= schema.route_prefix %>/new"}>
+          New <%= schema.human_singular %>
+        </.link>
       </:actions>
     </.header>
 
@@ -31,7 +29,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </:action>
       <:action :let={{id, <%= schema.singular %>}}>
         <.link
-          phx-click={JS.push("delete", value: %{id: <%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>}) |> hide("##{id}")}
+          phx-click={JS.push("delete", value: %{<%= primary_key %>: <%= schema.singular %>.<%= primary_key %>}) |> hide("##{id}")}
           data-confirm="Are you sure?"
         >
           Delete
@@ -42,19 +40,27 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, _session, socket) do<%= if scope do %>
+    <%= inspect context.alias %>.subscribe_<%= schema.plural %>(<%= socket_scope %>)
+<% end %>
     {:ok,
      socket
-     |> assign(:page_title, "Listing <%= schema.human_plural %>")<%= if schema.opts[:primary_key] do %>
-     |> stream_configure(:<%= schema.collection %>, dom_id: &"<%= schema.table %>-#{&1.<%= schema.opts[:primary_key] %>}")<% end %>
-     |> stream(:<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>())}
+     |> assign(:page_title, "Listing <%= schema.human_plural %>")<%= if primary_key != :id do %>
+     |> stream_configure(:<%= schema.collection %>, dom_id: &"<%= schema.table %>-#{&1.<%= primary_key %>}")<% end %>
+     |> stream(:<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>(<%= socket_scope %>))}
   end
 
   @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
-    {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
+  def handle_event("delete", %{"<%= primary_key %>" => <%= primary_key %>}, socket) do
+    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= context_scope_prefix %><%= primary_key %>)
+    {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>)
 
     {:noreply, stream_delete(socket, :<%= schema.collection %>, <%= schema.singular %>)}
-  end
+  end<%= if scope do %>
+
+  @impl true
+  def handle_info({type, %<%= inspect schema.module %>{}}, socket)
+      when type in [:created, :updated, :deleted] do
+    {:noreply, stream(socket, :<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>(<%= socket_scope %>), reset: true)}
+  end<% end %>
 end

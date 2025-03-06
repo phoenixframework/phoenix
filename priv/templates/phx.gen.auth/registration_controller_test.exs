@@ -21,7 +21,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "POST <%= schema.route_prefix %>/register" do
     @tag :capture_log
-    test "creates account and logs the <%= schema.singular %> in", %{conn: conn} do
+    test "creates account but does not log in", %{conn: conn} do
       email = unique_<%= schema.singular %>_email()
 
       conn =
@@ -29,27 +29,22 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           "<%= schema.singular %>" => valid_<%= schema.singular %>_attributes(email: email)
         })
 
-      assert get_session(conn, :<%= schema.singular %>_token)
-      assert redirected_to(conn) == ~p"/"
+      refute get_session(conn, :<%= schema.singular %>_token)
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
 
-      # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
-      response = html_response(conn, 200)
-      assert response =~ email
-      assert response =~ ~p"<%= schema.route_prefix %>/settings"
-      assert response =~ ~p"<%= schema.route_prefix %>/log-out"
+      assert conn.assigns.flash["info"] =~
+               ~r/An email was sent to .*, please access it to confirm your account/
     end
 
     test "render errors for invalid data", %{conn: conn} do
       conn =
         post(conn, ~p"<%= schema.route_prefix %>/register", %{
-          "<%= schema.singular %>" => %{"email" => "with spaces", "password" => "too short"}
+          "<%= schema.singular %>" => %{"email" => "with spaces"}
         })
 
       response = html_response(conn, 200)
       assert response =~ "Register"
       assert response =~ "must have the @ sign and no spaces"
-      assert response =~ "should be at least 12 character"
     end
   end
 end

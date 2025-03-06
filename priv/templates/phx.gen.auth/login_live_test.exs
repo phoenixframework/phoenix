@@ -4,56 +4,76 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   import Phoenix.LiveViewTest
   import <%= inspect context.module %>Fixtures
 
-  describe "Log in page" do
-    test "renders log in page", %{conn: conn} do
+  describe "login page" do
+    test "renders login page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       assert html =~ "Log in"
       assert html =~ "Register"
-      assert html =~ "Forgot your password?"
-    end
-
-    test "redirects if already logged in", %{conn: conn} do
-      result =
-        conn
-        |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture())
-        |> live(~p"<%= schema.route_prefix %>/log-in")
-        |> follow_redirect(conn, ~p"/")
-
-      assert {:ok, _conn} = result
+      assert html =~ "Log in with email"
     end
   end
 
-  describe "<%= schema.singular %> login" do
-    test "redirects if <%= schema.singular %> login with valid credentials", %{conn: conn} do
-      password = "123456789abcd"
-      <%= schema.singular %> = <%= schema.singular %>_fixture(%{password: password})
+  describe "<%= schema.singular %> login - magic link" do
+    test "sends magic link email when <%= schema.singular %> exists", %{conn: conn} do
+      <%= schema.singular %> = <%= schema.singular %>_fixture()
+
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
+
+      {:ok, _lv, html} =
+        form(lv, "#login_form_magic", <%= schema.singular %>: %{email: <%= schema.singular %>.email})
+        |> render_submit()
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
+
+      assert html =~ "If your email is in our system"
+
+      assert <%= inspect schema.repo %>.get_by!(<%= inspect context.module %>.<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id).context ==
+               "login"
+    end
+
+    test "does not disclose if <%= schema.singular %> is registered", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
+
+      {:ok, _lv, html} =
+        form(lv, "#login_form_magic", <%= schema.singular %>: %{email: "idonotexist@example.com"})
+        |> render_submit()
+        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
+
+      assert html =~ "If your email is in our system"
+    end
+  end
+
+  describe "<%= schema.singular %> login - password" do
+    test "redirects if <%= schema.singular %> logs in with valid credentials", %{conn: conn} do
+      <%= schema.singular %> = <%= schema.singular %>_fixture() |> set_password()
 
       {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       form =
-        form(lv, "#login_form", <%= schema.singular %>: %{email: <%= schema.singular %>.email, password: password, remember_me: true})
+        form(lv, "#login_form_password",
+          <%= schema.singular %>: %{email: <%= schema.singular %>.email, password: valid_<%= schema.singular %>_password(), remember_me: true}
+        )
 
       conn = submit_form(form, conn)
 
       assert redirected_to(conn) == ~p"/"
     end
 
-    test "redirects to login page with a flash error if there are no valid credentials", %{
+    test "redirects to login page with a flash error if credentials are invalid", %{
       conn: conn
     } do
       {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       form =
-        form(lv, "#login_form",
+        form(lv, "#login_form_password",
           <%= schema.singular %>: %{email: "test@email.com", password: "123456", remember_me: true}
         )
 
-      conn = submit_form(form, conn)
+      render_submit(form)
 
+      conn = follow_trigger_action(form, conn)
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
-
-      assert redirected_to(conn) == "<%= schema.route_prefix %>/log-in"
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
     end
   end
 
@@ -69,19 +89,23 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       assert login_html =~ "Register"
     end
+  end
 
-    test "redirects to forgot password page when the Forgot Password button is clicked", %{
-      conn: conn
-    } do
-      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
+  describe "re-authentication (sudo mode)" do
+    setup %{conn: conn} do
+      <%= schema.singular %> = <%= schema.singular %>_fixture()
+      %{<%= schema.singular %>: <%= schema.singular %>, conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>)}
+    end
 
-      {:ok, conn} =
-        lv
-        |> element(~s|main a:fl-contains("Forgot your password?")|)
-        |> render_click()
-        |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/reset-password")
+    test "shows login page with email filled in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
-      assert conn.resp_body =~ "Forgot your password?"
+      assert html =~ "You need to reauthenticate"
+      refute html =~ "Register"
+      assert html =~ "Log in with email"
+
+      assert html =~
+               ~s(<input type="email" name="<%= schema.singular %>[email]" id="login_form_magic_email" value="#{<%= schema.singular %>.email}")
     end
   end
 end

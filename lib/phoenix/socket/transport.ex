@@ -3,15 +3,17 @@ defmodule Phoenix.Socket.Transport do
   Outlines the Socket <-> Transport communication.
 
   Each transport, such as websockets and longpolling, must interact
-  with a socket. This module defines said behaviour.
+  with a socket. This module defines the functions a transport will
+  invoke on a given socket implementation.
 
   `Phoenix.Socket` is just one possible implementation of a socket
   that multiplexes events over multiple channels. If you implement
-  this behaviour, then a transport can directly invoke your
+  this behaviour, then existing transports can use your new socket
   implementation, without passing through channels.
 
-  This module also provides convenience functions for implementing
-  transports.
+  This module also provides guidelines and convenience functions for
+  implementing transports. Albeit its primary goal is to aid in the
+  definition of custom sockets.
 
   ## Example
 
@@ -60,7 +62,8 @@ defmodule Phoenix.Socket.Transport do
 
   Sockets are operated by a transport. When a transport is defined,
   it usually receives a socket module and the module will be invoked
-  when certain events happen at the transport level.
+  when certain events happen at the transport level. The functions
+  a transport can invoke are the callbacks defined in this module.
 
   Whenever the transport receives a new connection, it should invoke
   the `c:connect/1` callback with a map of metadata. Different sockets
@@ -81,15 +84,16 @@ defmodule Phoenix.Socket.Transport do
   reason `:closed` can be used to specify that the client terminated
   the connection.
 
-  ## Booting
+  ### Booting
 
-  Whenever your endpoint starts, it will automatically invoke the
-  `child_spec/1` on each listed socket and start that specification
-  under the endpoint supervisor.
+  When you list a socket under `Phoenix.Endpoint.socket/3`, Phoenix
+  will automatically start the socket module under its supervision tree,
+  however Phoenix does not manage any transport.
 
-  Since the socket supervision tree is started by the endpoint,
-  any custom transport must be started after the endpoint in a
-  supervision tree.
+  Whenever your endpoint starts, Phoenix invokes the `child_spec/1` on
+  each listed socket and start that specification under the endpoint
+  supervisor. Since the socket supervision tree is started by the endpoint,
+  any custom transport must be started after the endpoint.
   """
 
   @type state :: term()
@@ -256,8 +260,16 @@ defmodule Phoenix.Socket.Transport do
     {connect_info, config} = Keyword.pop(config, :connect_info, [])
 
     connect_info =
+      if config[:auth_token] do
+        # auth_token is included by default when enabled
+        [:auth_token | connect_info]
+      else
+        connect_info
+      end
+
+    connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers] ->
+        key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers, :sec_websocket_headers, :auth_token] ->
           key
 
         {:session, session} ->
@@ -268,7 +280,7 @@ defmodule Phoenix.Socket.Transport do
 
         other ->
           raise ArgumentError,
-                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :uri, or {:session, config}, " <>
+                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :user_agent, :sec_websocket_headers, :uri, or {:session, config}, " <>
                   "optionally followed by custom keyword pairs, got: #{inspect(other)}"
       end)
 
@@ -458,6 +470,8 @@ defmodule Phoenix.Socket.Transport do
 
     * `:user_agent` - the value of the "user-agent" request header
 
+    * `:sec_websocket_headers` - a list of all request headers that have a "sec-websocket-" prefix
+
   The CSRF check can be disabled by setting the `:check_csrf` option to `false`.
   """
   def connect_info(conn, endpoint, keys, opts \\ []) do
@@ -470,7 +484,7 @@ defmodule Phoenix.Socket.Transport do
           {:trace_context_headers, fetch_trace_context_headers(conn)}
 
         :x_headers ->
-          {:x_headers, fetch_x_headers(conn)}
+          {:x_headers, fetch_headers(conn, "x-")}
 
         :uri ->
           {:uri, fetch_uri(conn)}
@@ -478,8 +492,14 @@ defmodule Phoenix.Socket.Transport do
         :user_agent ->
           {:user_agent, fetch_user_agent(conn)}
 
+        :sec_websocket_headers ->
+          {:sec_websocket_headers, fetch_headers(conn, "sec-websocket-")}
+
         {:session, session} ->
           {:session, connect_session(conn, endpoint, session, opts)}
+
+        :auth_token ->
+          {:auth_token, conn.private[:phoenix_transport_auth_token]}
 
         {key, val} ->
           {key, val}
@@ -512,9 +532,9 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp fetch_x_headers(conn) do
+  defp fetch_headers(conn, prefix) do
     for {header, _} = pair <- conn.req_headers,
-        String.starts_with?(header, "x-"),
+        String.starts_with?(header, prefix),
         do: pair
   end
 
@@ -545,7 +565,7 @@ defmodule Phoenix.Socket.Transport do
     with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
          csrf_state when is_binary(csrf_state) <-
            Plug.CSRFProtection.dump_state_from_session(session[csrf_token_key]) do
-       Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token)
+      Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token)
     end
   end
 

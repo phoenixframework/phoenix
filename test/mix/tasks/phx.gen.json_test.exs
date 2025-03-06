@@ -56,7 +56,8 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                      alarm:time
                      alarm_usec:time_usec
                      secret:uuid:redact announcement_date:date
-                     weight:float user_id:references:users))
+                     weight:float user_id:references:users
+                    ))
 
       assert_file("lib/phoenix/blog/post.ex")
       assert_file("lib/phoenix/blog.ex")
@@ -352,6 +353,26 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       # Clean up test case specific compile artifact so it doesn't leak to other test cases
       :code.purge(module)
       :code.delete(module)
+    end)
+  end
+
+  test "with custom primary key", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Json.run(~w(Blog Post posts title:string --primary-key post_id))
+
+      assert_file "lib/phoenix_web/controllers/post_controller.ex", fn file ->
+        refute file =~ ~s[%{"id" =>]
+        assert file =~ ~s[%{"post_id" =>]
+        assert file =~ "Blog.get_post!(post_id)"
+      end
+
+      assert_file "lib/phoenix_web/controllers/post_json.ex", fn file ->
+        assert file =~ "post_id: post.post_id,"
+      end
+
+      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+        assert file =~ ~s["post_id" => ^post_id,]
+      end
     end)
   end
 end

@@ -28,14 +28,14 @@ defmodule Phx.New.Umbrella do
     project_path = Path.expand(project.base_path <> "_umbrella")
     app_path = Path.join(project_path, "apps/#{project.app}")
 
-    %Project{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
+    %{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
   end
 
   def put_web(%Project{app: app, opts: opts} = project) do
     web_app = :"#{app}_web"
     web_namespace = Module.concat([opts[:web_module] || "#{project.app_mod}Web"])
 
-    %Project{
+    %{
       project
       | web_app: web_app,
         lib_web_name: web_app,
@@ -46,7 +46,7 @@ defmodule Phx.New.Umbrella do
   end
 
   defp put_root_app(%Project{app: app} = project) do
-    %Project{
+    %{
       project
       | root_app: :"#{app}_umbrella",
         root_mod: Module.concat(project.app_mod, "Umbrella")

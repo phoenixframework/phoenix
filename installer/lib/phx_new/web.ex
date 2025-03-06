@@ -61,7 +61,7 @@ defmodule Phx.New.Web do
     web_path = Path.expand(project.base_path)
     project_path = Path.dirname(Path.dirname(web_path))
 
-    %Project{
+    %{
       project
       | in_umbrella?: true,
         project_path: project_path,
