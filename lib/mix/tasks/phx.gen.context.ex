@@ -159,17 +159,18 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
+  def files_to_be_generated(%Context{generate?: false}), do: []
+
   def files_to_be_generated(%Context{schema: schema}) do
-    if schema.generate? do
-      Gen.Schema.files_to_be_generated(schema)
-    else
-      []
-    end
+    Gen.Schema.files_to_be_generated(schema)
   end
 
   @doc false
+  def copy_new_files(%Context{generate?: false} = context, _, _), do: context
+
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
-    if schema.generate?, do: Gen.Schema.copy_new_files(schema, paths, binding)
+    Gen.Schema.copy_new_files(schema, paths, binding)
+
     inject_schema_access(context, paths, binding)
     inject_tests(context, paths, binding)
     inject_test_fixture(context, paths, binding)
@@ -311,12 +312,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
+  def print_shell_instructions(%Context{generate?: false}), do: :ok
+
   def print_shell_instructions(%Context{schema: schema}) do
-    if schema.generate? do
-      Gen.Schema.print_shell_instructions(schema)
-    else
-      :ok
-    end
+    Gen.Schema.print_shell_instructions(schema)
   end
 
   defp schema_access_template(%Context{schema: schema}) do

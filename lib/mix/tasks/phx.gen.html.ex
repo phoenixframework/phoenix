@@ -120,7 +120,6 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       schema: schema,
       primary_key: schema.opts[:primary_key] || :id,
       scope: schema.scope,
-      inputs: inputs(schema),
       conn_scope: conn_scope,
       context_scope_prefix: context_scope_prefix
     ]
@@ -137,16 +136,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   defp prompt_for_conflicts(context) do
     context
     |> files_to_be_generated()
-    |> Kernel.++(context_files(context))
+    |> Kernel.++(Gen.Context.files_to_be_generated(context))
     |> Mix.Phoenix.prompt_for_conflicts()
-  end
-
-  defp context_files(%Context{generate?: true} = context) do
-    Gen.Context.files_to_be_generated(context)
-  end
-
-  defp context_files(%Context{generate?: false}) do
-    []
   end
 
   @doc false
@@ -174,9 +165,12 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
+    Gen.Context.copy_new_files(context, paths, binding)
+
+    binding = Keyword.merge(binding, inputs: inputs(context.schema))
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.html", binding, files)
-    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
+
     context
   end
 
@@ -202,7 +196,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       """)
     end
 
-    if context.generate?, do: Gen.Context.print_shell_instructions(context)
+    Gen.Context.print_shell_instructions(context)
   end
 
   @doc false
