@@ -89,7 +89,16 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = put_format(conn, "print")
     assert layout(conn) == {AppView, :print}
 
-    assert_raise Plug.Conn.AlreadySentError, fn ->
+    message = """
+    the response was already sent.
+
+        Status code: 200
+        Request path: /
+        Method: GET
+        Layout: {AppView, :print}
+    """
+
+    assert_raise Plug.Conn.AlreadySentError, message, fn ->
       put_layout(sent_conn(), {AppView, :print})
     end
   end

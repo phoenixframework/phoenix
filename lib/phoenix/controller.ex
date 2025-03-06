@@ -544,7 +544,16 @@ defmodule Phoenix.Controller do
     put_private_view(conn, :phoenix_view, :replace, formats)
   end
 
-  def put_view(%Plug.Conn{}, _module), do: raise(AlreadySentError)
+  def put_view(%Plug.Conn{} = conn, module) do
+    raise(AlreadySentError, """
+      the response was already sent.
+
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          View module: #{inspect(module)}
+      """)
+  end
 
   defp put_private_view(conn, priv_key, kind, formats) when is_list(formats) do
     formats = Enum.into(formats, %{}, fn {format, value} -> {to_string(format), value} end)
@@ -581,7 +590,16 @@ defmodule Phoenix.Controller do
     put_private_view(conn, :phoenix_view, :new, formats)
   end
 
-  def put_new_view(%Plug.Conn{}, _module), do: raise(AlreadySentError)
+  def put_new_view(%Plug.Conn{} = conn, module) do
+    raise(AlreadySentError, """
+      the response was already sent.
+
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          View module: #{inspect(module)}
+      """)
+  end
 
   @doc """
   Retrieves the current view for the given format.
@@ -645,7 +663,14 @@ defmodule Phoenix.Controller do
     if state in @unsent do
       put_private_layout(conn, :phoenix_layout, :replace, layout)
     else
-      raise AlreadySentError
+      raise AlreadySentError, """
+      the response was already sent.
+
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          Layout: #{inspect(layout)}
+      """
     end
   end
 
@@ -721,7 +746,16 @@ defmodule Phoenix.Controller do
   @spec put_new_layout(Plug.Conn.t(), [{format :: atom, layout}] | layout) :: Plug.Conn.t()
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when (is_tuple(layout) and tuple_size(layout) == 2) or is_list(layout) or layout == false do
-    unless state in @unsent, do: raise(AlreadySentError)
+    unless state in @unsent do
+      raise(AlreadySentError, """
+      the response was already sent.
+
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          Layout: #{inspect(layout)}
+      """)
+    end
     put_private_layout(conn, :phoenix_layout, :new, layout)
   end
 
@@ -762,7 +796,14 @@ defmodule Phoenix.Controller do
     if state in @unsent do
       put_private_layout(conn, :phoenix_root_layout, :replace, layout)
     else
-      raise AlreadySentError
+      raise AlreadySentError, """
+      the response was already sent.
+
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+          Layout: #{inspect(layout)}
+      """
     end
   end
 
@@ -787,7 +828,15 @@ defmodule Phoenix.Controller do
     put_private(conn, :phoenix_layout_formats, formats)
   end
 
-  def put_layout_formats(%Plug.Conn{}, _formats), do: raise(AlreadySentError)
+  def put_layout_formats(%Plug.Conn{} = conn, _formats) do
+    raise(AlreadySentError, """
+      the response was already sent.
+
+          Status code: #{conn.status}
+          Request path: #{conn.request_path}
+          Method: #{conn.method}
+      """)
+  end
 
   @doc """
   Retrieves current layout formats.
