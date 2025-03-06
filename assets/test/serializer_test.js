@@ -34,9 +34,11 @@ describe("binary", () => {
     let buffer = binPayload()
     let bin = "\0\x01\x01\x01\x0101te\x01"
     let decoder = new TextDecoder()
-    Serializer.encode({join_ref: "0", ref: "1", topic: "t", event: "e", payload: buffer}, (result) => {
-      expect(decoder.decode(result)).toBe(bin)
-      done()
+    Serializer.encode({join_ref: "0", ref: "1", topic: "t", event: "e", payload: buffer}, (blob) => {
+      blob.arrayBuffer().then(result => {
+        expect(decoder.decode(result)).toBe(bin)
+        done()
+      })
     })
   })
 
@@ -44,9 +46,11 @@ describe("binary", () => {
     let buffer = binPayload()
     let bin = "\0\x02\x01\x03\x02101topev\x01"
     let decoder = new TextDecoder()
-    Serializer.encode({join_ref: "10", ref: "1", topic: "top", event: "ev", payload: buffer}, (result) => {
-      expect(decoder.decode(result)).toBe(bin)
-      done()
+    Serializer.encode({join_ref: "10", ref: "1", topic: "top", event: "ev", payload: buffer}, (blob) => {
+      blob.arrayBuffer().then(result => {
+        expect(decoder.decode(result)).toBe(bin)
+        done()
+      })
     })
   })
 
