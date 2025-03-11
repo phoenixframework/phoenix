@@ -249,7 +249,7 @@ defmodule Phoenix.MixProject do
 
   defp generate_js_docs(_) do
     Mix.Task.run("app.start")
-    System.cmd("npm", ["run", "docs"], cd: "assets")
+    System.cmd("npm", ["run", "docs"])
   end
 
   defp raise_on_archive_build(_) do
