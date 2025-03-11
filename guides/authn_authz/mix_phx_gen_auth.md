@@ -63,7 +63,7 @@ The following are notes about the generated authentication system.
 
 ### Forbidding access
 
-The generated code ships with an authentication module with a handful of plugs that fetch the current user, require authentication and so on. For instance, in an app named Demo which had `mix phx.gen.auth Accounts User users` run on it, you will find a module named `DemoWeb.UserAuth` with plugs such as:
+The generated code ships with an authentication module with a handful of plugs that fetch the current user, require authentication and so on. For instance, in an app named MyApp which had `mix phx.gen.auth Accounts User users` run on it, you will find a module named `MyAppWeb.UserAuth` with plugs such as:
 
   * `fetch_current_scope_for_user` - fetches the current user information if available and stores it as `:current_scope` assign
   * `require_authenticated_user` - must be invoked after `fetch_current_user` and requires that a current user exists and is authenticated
@@ -72,12 +72,12 @@ The generated code ships with an authentication module with a handful of plugs t
 
 ### Scopes
 
-The generated code includes a scope module. For an app named Demo which had `mix phx.gen.auth Accounts User users` run on it, you will find the following module at `lib/demo/accounts/scope.ex`:
+The generated code includes a scope module. For an app named MyApp which had `mix phx.gen.auth Accounts User users` run on it, you will find the following module at `lib/my_app/accounts/scope.ex`:
 
 ```elixir
-defmodule Demo.Accounts.Scope do
+defmodule MyApp.Accounts.Scope do
   # ...
-  alias Demo.Accounts.User
+  alias MyApp.Accounts.User
 
   defstruct user: nil
 
