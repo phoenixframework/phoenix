@@ -2,7 +2,7 @@
 
 > **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-A scope is a data structure used to keep information about the current request or session, such as the current user logged in, the organization/company it belongs to, and so on. Think about it as a container that holds information that is required in the huge majority of pages in your application. It can also hold important request metadata, such as IP addresses.
+A scope is a data structure used to keep information about the current request or session, such as the current user logged in, the organization/company it belongs to, permissions, and so on. Think about it as a container that holds information that is required in the huge majority of pages in your application. It can also hold important request metadata, such as IP addresses.
 
 Scopes also play a very important role in security. OWASP (Open Worldwide Application Security Project) lists "Broken access control" as the biggest security risk in web applications. That's because most data in an application is not publicly available. Instead, it most often belongs to a user, a team, or an organization. Therefore, it is extremely important that, when you query the database, your queries, inserts, updates, and deletes are properly scoped to the current user/team/organization.
 
@@ -86,13 +86,7 @@ end
 
 ## Integration of scopes in the Phoenix generators
 
-If a `default` scope is defined in your application's config, the generators will generate scoped resources by default. The generated LiveViews / Controllers will automatically pass the scope to the context functions. Let's look at an example:
-
-```console
-$ mix phx.gen.live Blog Post posts title:string body:text
-```
-
-This creates a new `Blog` context, with a `Post` resource. By default, the generators will use the scope that is defined as `default` in the application's config. `mix phx.gen.auth` automatically sets its scope as default, if there is not already a default scope defined:
+If a default scope is defined in your application's config, the generators will generate scoped resources by default. The generated LiveViews / Controllers will automatically pass the scope to the context functions. `mix phx.gen.auth` automatically sets its scope as default, if there is not already a default scope defined:
 
 ```elixir
 # config/config.exs
@@ -105,7 +99,13 @@ config :my_app, :scopes,
 
 We will look at the individual options in the next section.
 
-To ensure the scope is available, for LiveViews the routes in your `router.ex` must be added to a `live_session` that includes at least the `:mount_current_scope` hook. Most of the time, we want to also require authentication, in which case the `:ensure_authenticated` hook is more appropriate:
+Now let's look at the code generated once a default scope is set:
+
+```console
+$ mix phx.gen.live Blog Post posts title:string body:text
+```
+
+This creates a new `Blog` context, with a `Post` resource. To ensure the scope is available, for LiveViews the routes in your `router.ex` must be added to a `live_session` that includes at least the `:mount_current_scope` hook. Most of the time, we want to also require authentication, in which case the `required_authenticated_user` section is more appropriate:
 
 ```diff
    scope "/", MyAppWeb do
@@ -115,7 +115,7 @@ To ensure the scope is available, for LiveViews the routes in your `router.ex` m
        on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}] do
        live "/users/settings", UserLive.Settings, :edit
        live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
-      
+
 +      live "/posts", PostLive.Index, :index
 +      live "/posts/new", PostLive.Form, :new
 +      live "/posts/:id", PostLive.Show, :show
@@ -196,17 +196,7 @@ In this example, the scope is called `user` and it is the `default` scope that i
 
 * `default` - a boolean that indicates if this scope is the default scope. There can only be one default scope defined.
 
-* `module` - the module that defines the struct for this scope. The generators expect this module to have a `for_user/1` function that returns a struct where the identifying field is available under the `access_path` key:
-  ```elixir
-    defstruct user: nil
-
-    def for_user(%{id: id} = user) do
-      %MyApp.Accounts.Scope{
-        user: user
-      }
-    end
-  ```
-  The scope name defines the name of the function. If the scope was called `admin`, the function would be `for_admin/1`.
+* `module` - the module that defines the struct for this scope.
 
 * `assign_key` - the key where the scope struct is assigned to the [socket](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Socket.html#t:t/0) or [conn](https://hexdocs.pm/plug/Plug.Conn.html).
 
@@ -216,7 +206,7 @@ In this example, the scope is called `user` and it is the `default` scope that i
 
 * `schema_type` - the type of the foreign key field in the schema. Typically `:id` or `:binary_id`.
 
-* `schema_migration_type` - the type of the foreign key column in the database. Used for the generated migration.
+* `schema_migration_type` (optional) - the type of the foreign key column in the database. Used for the generated migration. It defaults to the default migration foreign keytype.
 
 * `schema_table` - the name of the table where the foreign key points to.
 
@@ -226,7 +216,7 @@ In this example, the scope is called `user` and it is the `default` scope that i
 
 While the `mix phx.gen.auth` automatically generates a scope, scopes can also be defined manually. This can be useful, for example, to retrofit an existing application with scopes or to define scopes that are not tied to a user.
 
-For this example, we will implement a custom scope that gives each session its own scope. While this might not be useful in most real-world applications as created resources would be inaccessible as soon as the session ends, it is a good example to understand how scopes work.
+For this example, we will implement a custom scope that gives each session its own scope. While this might not be useful in most real-world applications as created resources would be inaccessible as soon as the session ends, it is a good example to understand how scopes work. See the following section for an example on how to augment an existing scope with organizations (teams, companies, or similar).
 
 First, let's define our scope module `lib/my_app/scope.ex`:
 
@@ -258,7 +248,7 @@ Next, we define a plug in our router that assigns a scope to each request:
 +      assign(conn, :current_scope, MyApp.Scope.for_id(id))
 +    else
 +      id = System.unique_integer()
-+       
++
 +      conn
 +      |> put_session(:scope_id, id)
 +      |> assign(:current_scope, MyApp.Scope.for_id(id))
@@ -279,6 +269,7 @@ end
 ```
 
 And then add a `setup` helper to our `test/support/conn_case.ex`:
+
 ```elixir
 defmodule MyAppWeb.ConnCase do
   ...
@@ -401,7 +392,7 @@ def on_mount(:assign_org_to_scope, %{"org" => slug}, _session, socket) do
       %{organization: nil} = scope ->
         org = MyApp.Accounts.get_organization_by_slug!(socket.assigns.current_scope, slug)
         Phoenix.Component.assign(socket, :current_scope, Scope.put_organization(scope, org))
-        
+
       _ ->
         socket
     end
@@ -506,7 +497,7 @@ defmodule MyApp.Accounts.Scope do
       opts[:user] && opts[:org] ->
         user = user(opts[:user])
         org = org(opts[:org])
-        
+
         user
         |> for_user()
         |> put_organization(org)
@@ -523,8 +514,8 @@ defmodule MyApp.Accounts.Scope do
   defp user(id) when is_integer(id) do
     Accounts.get_user!(id)
   end
-  
-  defp user(email) when is_binary(email) do 
+
+  defp user(email) when is_binary(email) do
     Accounts.get_user_by_email(email)
   end
 
