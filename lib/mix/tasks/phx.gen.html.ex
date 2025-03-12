@@ -126,7 +126,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       scope_conn_route_prefix: Scope.route_prefix(conn_scope, schema),
       scope_param_route_prefix: Scope.route_prefix("scope", schema),
       scope_assign_route_prefix: scope_assign_route_prefix(schema),
-      test_context_scope: if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
+      test_context_scope:
+        if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -186,11 +187,12 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
-    resource_path = if schema.scope && schema.scope.route_prefix do
-      "#{schema.scope.route_prefix}/#{schema.plural}"
-    else
-      "/#{schema.plural}"
-    end
+    resource_path =
+      if schema.scope && schema.scope.route_prefix do
+        "#{schema.scope.route_prefix}/#{schema.plural}"
+      else
+        "/#{schema.plural}"
+      end
 
     if schema.web_namespace do
       Mix.shell().info("""
@@ -213,7 +215,9 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     end
 
     if schema.scope do
-      Mix.shell().info("Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign.")
+      Mix.shell().info(
+        "Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
+      )
     end
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
@@ -288,9 +292,13 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   defp label(key), do: Phoenix.Naming.humanize(to_string(key))
 
-  defp scope_assign_route_prefix(%{scope: %{route_prefix: route_prefix, assign_key: assign_key}} = schema) when not is_nil(route_prefix) do
+  defp scope_assign_route_prefix(
+         %{scope: %{route_prefix: route_prefix, assign_key: assign_key}} = schema
+       )
+       when not is_nil(route_prefix) do
     Scope.route_prefix("@#{assign_key}", schema)
   end
+
   defp scope_assign_route_prefix(_), do: ""
 
   @doc false

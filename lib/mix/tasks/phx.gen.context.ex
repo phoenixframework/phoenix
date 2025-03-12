@@ -109,12 +109,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
 
     {context, schema} = build(args)
+
     binding = [
       context: context,
       schema: schema,
       scope: context.scope,
       primary_key: schema.opts[:primary_key] || :id
     ]
+
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)

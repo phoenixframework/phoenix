@@ -144,7 +144,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       scope_param_prefix: scope_param_prefix(schema),
       scope_socket_route_prefix: Scope.route_prefix(socket_scope, schema),
       scope_assign_route_prefix: scope_assign_route_prefix(schema),
-      test_context_scope: if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
+      test_context_scope:
+        if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -291,7 +292,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     end
 
     if schema.scope do
-      Mix.shell().info("Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign.")
+      Mix.shell().info(
+        "Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
+      )
     end
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
@@ -310,12 +313,13 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   end
 
   defp live_route_instructions(schema) do
-    route_base = if schema.scope && schema.scope.route_prefix do
-      scope_prefix = schema.scope.route_prefix
-      "#{scope_prefix}/#{schema.plural}"
-    else
-      "/#{schema.plural}"
-    end
+    route_base =
+      if schema.scope && schema.scope.route_prefix do
+        scope_prefix = schema.scope.route_prefix
+        "#{scope_prefix}/#{schema.plural}"
+      else
+        "/#{schema.plural}"
+      end
 
     [
       ~s|live "#{route_base}", #{inspect(schema.alias)}Live.Index, :index\n|,
@@ -397,9 +401,11 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
   defp label(key), do: Phoenix.Naming.humanize(to_string(key))
 
-
   defp scope_param(%{scope: nil}), do: ""
-  defp scope_param(%{scope: %{route_prefix: route_prefix}}) when not is_nil(route_prefix), do: "scope"
+
+  defp scope_param(%{scope: %{route_prefix: route_prefix}}) when not is_nil(route_prefix),
+    do: "scope"
+
   defp scope_param(_), do: "_scope"
 
   defp scope_param_prefix(schema) do
@@ -407,8 +413,12 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     if param != "", do: "#{param}, ", else: ""
   end
 
-  defp scope_assign_route_prefix(%{scope: %{route_prefix: route_prefix, assign_key: assign_key}} = schema) when not is_nil(route_prefix) do
+  defp scope_assign_route_prefix(
+         %{scope: %{route_prefix: route_prefix, assign_key: assign_key}} = schema
+       )
+       when not is_nil(route_prefix) do
     Scope.route_prefix("@#{assign_key}", schema)
   end
+
   defp scope_assign_route_prefix(_), do: ""
 end
