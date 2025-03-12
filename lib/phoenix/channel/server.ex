@@ -20,7 +20,8 @@ defmodule Phoenix.Channel.Server do
 
     starter = opts[:starter] || &PoolSupervisor.start_child/3
     assigns = Map.merge(socket.assigns, Keyword.get(opts, :assigns, %{}))
-    socket = %{socket | topic: topic, channel: channel, join_ref: join_ref || ref, assigns: assigns}
+    handover_pid = Keyword.get(opts, :handover_pid, nil)
+    socket = %{socket | topic: topic, channel: channel, join_ref: join_ref || ref, assigns: assigns, handover_pid: handover_pid}
     ref = make_ref()
     from = {self(), ref}
     child_spec = channel.child_spec({socket.endpoint, from})
