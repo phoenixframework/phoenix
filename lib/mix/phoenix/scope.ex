@@ -23,11 +23,17 @@ defmodule Mix.Phoenix.Scope do
     scope = struct!(__MODULE__, opts)
     alias = Module.concat([scope.module |> Module.split() |> List.last()])
 
+    route_access_path =
+      case scope.route_access_path || Enum.drop(scope.access_path, -1) do
+        [] -> scope.access_path
+        rap -> rap
+      end
+
     %{
       scope
       | name: name,
         alias: alias,
-        route_access_path: scope.route_access_path || scope.access_path,
+        route_access_path: route_access_path,
         schema_migration_type: scope.schema_migration_type || scope.schema_type
     }
   end
@@ -113,13 +119,19 @@ defmodule Mix.Phoenix.Scope do
       scope_route_prefix("scope", schema_with_scope)
       # => "/orgs/\#{scope.organization.slug}"
   """
-  def route_prefix(scope_key, %{scope: %{route_prefix: route_prefix, route_access_path: route_access_path}} = _schema) when not is_nil(route_prefix) do
+  def route_prefix(
+        scope_key,
+        %{scope: %{route_prefix: route_prefix, route_access_path: route_access_path}} = _schema
+      )
+      when not is_nil(route_prefix) do
     # Replace any path segment that starts with a colon with route_access_path from the scope
     path_segments = String.split(route_prefix, "/", trim: true)
     param_segments = Enum.filter(path_segments, &String.starts_with?(&1, ":"))
 
     if length(param_segments) > 1 do
-      Mix.raise("The route_prefix option in scope configuration must contain only one parameter. Found: #{inspect(param_segments)}")
+      Mix.raise(
+        "The route_prefix option in scope configuration must contain only one parameter. Found: #{inspect(param_segments)}"
+      )
     end
 
     path_with_placeholders =
@@ -137,5 +149,6 @@ defmodule Mix.Phoenix.Scope do
 
     "/#{path_with_placeholders}"
   end
+
   def route_prefix(_scope_key, _schema), do: ""
 end

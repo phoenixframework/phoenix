@@ -153,6 +153,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
           import Ecto.Changeset
           alias Scopes.Accounts.User
 
+          @derive {Phoenix.Param, key: :slug}
           schema "organizations" do
             field :name, :string
             field :slug, :string
@@ -348,7 +349,6 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
               module: Scopes.Accounts.Scope,
               assign_key: :current_scope,
               access_path: [:organization, :id],
-              route_access_path: [:organization, :slug],
               route_prefix: "/orgs/:slug",
               schema_key: :organization_id,
               schema_type: :id,
@@ -498,10 +498,10 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
           Path.join(app_root_path, "lib/scopes_web/controllers/article_html/index.html.heex"),
           fn file ->
             assert file =~
-                     ~s|href={~p"/orgs/\#{@current_scope.organization.slug}/articles/new"|
+                     ~s|href={~p"/orgs/\#{@current_scope.organization}/articles/new"|
 
             assert file =~
-                     ~s|navigate={~p"/orgs/\#{@current_scope.organization.slug}/articles/\#{article}"|
+                     ~s|navigate={~p"/orgs/\#{@current_scope.organization}/articles/\#{article}"|
           end
         )
 
@@ -509,34 +509,34 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
           Path.join(app_root_path, "lib/scopes_web/controllers/article_controller.ex"),
           fn file ->
             assert file =~
-                     ~s|redirect(to: ~p"/orgs/\#{conn.assigns.current_scope.organization.slug}/articles/\#{article}"|
+                     ~s|redirect(to: ~p"/orgs/\#{conn.assigns.current_scope.organization}/articles/\#{article}"|
           end
         )
 
         assert_file(
           Path.join(app_root_path, "test/scopes_web/controllers/article_controller_test.exs"),
           fn file ->
-            assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/articles"|
+            assert file =~ ~s|~p"/orgs/\#{scope.organization}/articles"|
           end
         )
 
         # Test LiveView generator (Posts)
         assert_file(Path.join(app_root_path, "lib/scopes_web/live/post_live/index.ex"), fn file ->
           assert file =~
-                   ~s|navigate={~p"/orgs/\#{@current_scope.organization.slug}/posts/new"|
+                   ~s|navigate={~p"/orgs/\#{@current_scope.organization}/posts/new"|
 
           assert file =~
-                   ~s|JS.navigate(~p"/orgs/\#{@current_scope.organization.slug}/posts/\#{post}")|
+                   ~s|JS.navigate(~p"/orgs/\#{@current_scope.organization}/posts/\#{post}")|
         end)
 
         assert_file(Path.join(app_root_path, "lib/scopes_web/live/post_live/show.ex"), fn file ->
-          assert file =~ ~s|navigate={~p"/orgs/\#{@current_scope.organization.slug}/posts"|
+          assert file =~ ~s|navigate={~p"/orgs/\#{@current_scope.organization}/posts"|
         end)
 
         assert_file(
           Path.join(app_root_path, "test/scopes_web/live/post_live_test.exs"),
           fn file ->
-            assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts"|
+            assert file =~ ~s|~p"/orgs/\#{scope.organization}/posts"|
           end
         )
 
@@ -545,21 +545,19 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
           Path.join(app_root_path, "lib/scopes_web/controllers/comment_controller.ex"),
           fn file ->
             assert file =~
-                     ~s|~p"/api/orgs/\#{conn.assigns.current_scope.organization.slug}/comments/\#{comment}"|
+                     ~s|~p"/api/orgs/\#{conn.assigns.current_scope.organization}/comments/\#{comment}"|
           end
         )
 
         assert_file(
           Path.join(app_root_path, "test/scopes_web/controllers/comment_controller_test.exs"),
           fn file ->
-            assert file =~ ~s|~p"/api/orgs/\#{scope.organization.slug}/comments"|
+            assert file =~ ~s|~p"/api/orgs/\#{scope.organization}/comments"|
           end
         )
 
         # Final app validations
         assert_no_compilation_warnings(app_root_path)
-        # the URLs are too long to pass the formatter check, therefore we skip it
-        # assert_passes_formatter_check(app_root_path)
         drop_test_database(app_root_path)
         assert_tests_pass(app_root_path)
       end)

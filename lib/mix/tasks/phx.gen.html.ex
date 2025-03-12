@@ -186,10 +186,16 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
+    scope_message = if schema.scope && schema.scope.route_prefix do
+      "\nEnsure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
+    else
+      ""
+    end
+
     if schema.web_namespace do
       Mix.shell().info("""
 
-      Add the resource to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
+      Add the resource to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:#{scope_message}
 
           scope "/#{schema.web_path}", #{inspect(Module.concat(context.web_module, schema.web_namespace))}, as: :#{schema.web_path} do
             pipe_through :browser
@@ -200,7 +206,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     else
       Mix.shell().info("""
 
-      Add the resource to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
+      Add the resource to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:#{scope_message}
 
           resources "/#{schema.plural}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
       """)

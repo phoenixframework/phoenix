@@ -179,7 +179,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
     scope_message = if schema.scope && schema.scope.route_prefix do
-      "\nPlease ensure that the scope is assigned in your pipeline hooks before accessing these routes."
+      "\nEnsure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
     else
       ""
     end

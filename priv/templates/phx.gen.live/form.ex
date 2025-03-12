@@ -68,7 +68,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> updated successfully")
-         |> push_navigate(to: return_path(<%= context_scope_prefix %>socket.assigns.return_to, <%= schema.singular %>))}
+         <%= if scope do %>|> push_navigate(
+           to: return_path(<%= context_scope_prefix %>socket.assigns.return_to, <%= schema.singular %>)
+         )}<% else %>|> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}<% end %>
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -81,7 +83,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> created successfully")
-         |> push_navigate(to: return_path(<%= context_scope_prefix %>socket.assigns.return_to, <%= schema.singular %>))}
+         <%= if scope do %>|> push_navigate(
+           to: return_path(<%= context_scope_prefix %>socket.assigns.return_to, <%= schema.singular %>)
+         )}<% else %>|> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}<% end %>
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}

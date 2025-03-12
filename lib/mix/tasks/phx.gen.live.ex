@@ -270,7 +270,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     web_path = Mix.Phoenix.web_path(ctx_app)
 
     scope_message = if schema.scope && schema.scope.route_prefix do
-      "\nPlease ensure that the scope is assigned in your pipeline / on_mount hooks before accessing these routes."
+      "\nEnsure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
     else
       ""
     end
