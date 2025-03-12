@@ -1387,11 +1387,13 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
             ],
             accounts_user: [
               default: false,
-              module: MyApp.Accounts.Scope
+              module: MyApp.Accounts.Scope,
+              access_path: []
             ],
             my_app_accounts_user: [
               default: false,
-              module: MyApp.Accounts.Scope
+              module: MyApp.Accounts.Scope,
+              access_path: []
             ]
           ],
           fn ->
