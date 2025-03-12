@@ -400,9 +400,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   defp label(key), do: Phoenix.Naming.humanize(to_string(key))
 
 
-  defp scope_param(%{scope: %{route_prefix: route_prefix}}) when not is_nil(route_prefix), do: "scope"
   defp scope_param(%{scope: nil}), do: ""
-  defp scope_param(_), do: ""
+  defp scope_param(%{scope: %{route_prefix: route_prefix}}) when not is_nil(route_prefix), do: "scope"
+  defp scope_param(_), do: "_scope"
 
   defp scope_param_prefix(schema) do
     param = scope_param(schema)
