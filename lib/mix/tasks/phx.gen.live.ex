@@ -269,16 +269,10 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     prefix = Module.concat(context.web_module, schema.web_namespace)
     web_path = Mix.Phoenix.web_path(ctx_app)
 
-    scope_message = if schema.scope && schema.scope.route_prefix do
-      "\nEnsure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
-    else
-      ""
-    end
-
     if schema.web_namespace do
       Mix.shell().info("""
 
-      Add the live routes to your #{schema.web_namespace} :browser scope in #{web_path}/router.ex:#{scope_message}
+      Add the live routes to your #{schema.web_namespace} :browser scope in #{web_path}/router.ex:
 
           scope "/#{schema.web_path}", #{inspect(prefix)}, as: :#{schema.web_path} do
             pipe_through :browser
@@ -290,10 +284,14 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     else
       Mix.shell().info("""
 
-      Add the live routes to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:#{scope_message}
+      Add the live routes to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
       #{for line <- live_route_instructions(schema), do: "    #{line}"}
       """)
+    end
+
+    if schema.scope do
+      Mix.shell().info("Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign.")
     end
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)

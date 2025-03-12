@@ -186,30 +186,34 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
-    scope_message = if schema.scope && schema.scope.route_prefix do
-      "\nEnsure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
+    resource_path = if schema.scope && schema.scope.route_prefix do
+      "#{schema.scope.route_prefix}/#{schema.plural}"
     else
-      ""
+      "/#{schema.plural}"
     end
 
     if schema.web_namespace do
       Mix.shell().info("""
 
-      Add the resource to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:#{scope_message}
+      Add the resource to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
           scope "/#{schema.web_path}", #{inspect(Module.concat(context.web_module, schema.web_namespace))}, as: :#{schema.web_path} do
             pipe_through :browser
             ...
-            resources "/#{schema.plural}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
+            resources "#{resource_path}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
           end
       """)
     else
       Mix.shell().info("""
 
-      Add the resource to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:#{scope_message}
+      Add the resource to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          resources "/#{schema.plural}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
+          resources "#{resource_path}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
       """)
+    end
+
+    if schema.scope do
+      Mix.shell().info("Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign.")
     end
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
