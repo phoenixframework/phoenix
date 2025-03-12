@@ -464,4 +464,44 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       Mix.Tasks.Phx.Gen.Live.run(~w(Blog Form forms title:string))
     end
   end
-end
+
+  test "respect route_prefix in scopes", config do
+    in_tmp_live_project config.test, fn ->
+      with_scope_env(
+        :phoenix,
+        [
+          organization: [
+            module: Phoenix.Organizations.Scope,
+            assign_key: :current_organization,
+            access_path: [:organization, :id],
+            route_access_path: [:organization, :slug],
+            route_prefix: "/orgs/:slug"
+          ]
+        ],
+        fn ->
+          Gen.Live.run(~w(Blog Post posts title:string --scope organization))
+
+      assert_file "lib/phoenix_web/live/post_live/index.ex", fn file ->
+        assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts|
+        assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts/new"|
+      end
+
+      assert_file "lib/phoenix_web/live/post_live/show.ex", fn file ->
+        assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts"|
+        assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts/\#{@post}/edit|
+      end
+
+      assert_file "lib/phoenix_web/live/post_live/form.ex", fn file ->
+        assert file =~ ~s|defp return_path(scope, "index", _post), do: ~p"/orgs/\#{scope.organization.slug}/posts"|
+      end
+
+      assert_file "test/phoenix_web/live/post_live_test.exs", fn file ->
+        assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts"|
+        assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/new"|
+        assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}"|
+        assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}/edit"|
+      end
+        end)
+      end
+    end
+  end

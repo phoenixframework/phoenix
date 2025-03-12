@@ -189,13 +189,13 @@ defmodule <%= inspect auth_module %>Test do
     end
   end
 
-  describe "on_mount :ensure_authenticated" do
+  describe "on_mount :require_authenticated" do
     test "authenticates current_scope based on a valid <%= schema.singular %>_token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
       {:cont, updated_socket} =
-        <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, %LiveView.Socket{})
+        <%= inspect schema.alias %>Auth.on_mount(:require_authenticated, %{}, session, %LiveView.Socket{})
 
       assert updated_socket.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
     end
@@ -209,7 +209,7 @@ defmodule <%= inspect auth_module %>Test do
         assigns: %{__changed__: %{}, flash: %{}}
       }
 
-      {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
+      {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:require_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_scope == nil
     end
 
@@ -221,12 +221,12 @@ defmodule <%= inspect auth_module %>Test do
         assigns: %{__changed__: %{}, flash: %{}}
       }
 
-      {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:ensure_authenticated, %{}, session, socket)
+      {:halt, updated_socket} = <%= inspect schema.alias %>Auth.on_mount(:require_authenticated, %{}, session, socket)
       assert updated_socket.assigns.current_scope == nil
     end
   end
 
-  describe "on_mount :ensure_sudo_mode" do
+  describe "on_mount :require_sudo_mode" do
     test "allows <%= schema.plural %> that have authenticated in the last 10 minutes", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
@@ -237,7 +237,7 @@ defmodule <%= inspect auth_module %>Test do
       }
 
       assert {:cont, _updated_socket} =
-               <%= inspect schema.alias %>Auth.on_mount(:ensure_sudo_mode, %{}, session, socket)
+               <%= inspect schema.alias %>Auth.on_mount(:require_sudo_mode, %{}, session, socket)
     end
 
     test "redirects when authentication is too old", %{<%= schema.singular %>: <%= schema.singular %>} do
@@ -253,7 +253,7 @@ defmodule <%= inspect auth_module %>Test do
       }
 
       assert {:halt, _updated_socket} =
-               <%= inspect schema.alias %>Auth.on_mount(:ensure_sudo_mode, %{}, %{}, socket)
+               <%= inspect schema.alias %>Auth.on_mount(:require_sudo_mode, %{}, %{}, socket)
     end
   end<% else %>describe "require_sudo_mode/2" do
     test "allows <%= schema.plural %> that have authenticated in the last 10 minutes", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do

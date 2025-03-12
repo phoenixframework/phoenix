@@ -311,7 +311,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    pipe_through [:browser, :require_authenticated_user]
 
                    live_session :require_authenticated_user,
-                     on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}] do
+                     on_mount: [{MyAppWeb.UserAuth, :require_authenticated}] do
                      live "/users/settings", UserLive.Settings, :edit
                      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
                    end
@@ -398,7 +398,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    pipe_through [:browser, :require_authenticated_user]
 
                    live_session :require_authenticated_user,
-                     on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}] do
+                     on_mount: [{MyAppWeb.UserAuth, :require_authenticated}] do
                      live "/users/settings", UserLive.Settings, :edit
                      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
                    end

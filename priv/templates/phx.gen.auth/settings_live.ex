@@ -1,7 +1,7 @@
 defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Settings do
   use <%= inspect context.web_module %>, :live_view
 
-  on_mount {<%= inspect auth_module %>, :ensure_sudo_mode}
+  on_mount {<%= inspect auth_module %>, :require_sudo_mode}
 
   alias <%= inspect context.module %>
 
