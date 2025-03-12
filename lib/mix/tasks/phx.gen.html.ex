@@ -126,7 +126,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       scope_conn_route_prefix: Scope.route_prefix(conn_scope, schema),
       scope_param_route_prefix: Scope.route_prefix("scope", schema),
       scope_assign_route_prefix: scope_assign_route_prefix(schema),
-      test_context_scope: if(schema.scope, do: ", scope: scope", else: "")
+      test_context_scope: if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
     ]
 
     paths = Mix.Phoenix.generator_paths()

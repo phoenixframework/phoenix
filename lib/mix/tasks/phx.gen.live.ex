@@ -144,7 +144,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       scope_param_prefix: scope_param_prefix(schema),
       scope_socket_route_prefix: Scope.route_prefix(socket_scope, schema),
       scope_assign_route_prefix: scope_assign_route_prefix(schema),
-      test_context_scope: if(schema.scope, do: ", scope: scope", else: "")
+      test_context_scope: if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -268,7 +268,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
     prefix = Module.concat(context.web_module, schema.web_namespace)
     web_path = Mix.Phoenix.web_path(ctx_app)
-    
+
     scope_message = if schema.scope && schema.scope.route_prefix do
       "\nPlease ensure that the scope is assigned in your pipeline / on_mount hooks before accessing these routes."
     else

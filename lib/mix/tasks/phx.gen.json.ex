@@ -122,7 +122,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
       context_scope_prefix: context_scope_prefix,
       scope_conn_route_prefix: Scope.route_prefix(conn_scope, schema),
       scope_param_route_prefix: Scope.route_prefix("scope", schema),
-      test_context_scope: if(schema.scope, do: ", scope: scope", else: "")
+      test_context_scope: if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -183,7 +183,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     else
       ""
     end
-    
+
     resource_path = if schema.scope && schema.scope.route_prefix do
       "#{schema.scope.route_prefix}/#{schema.plural}"
     else
