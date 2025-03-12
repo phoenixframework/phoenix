@@ -16,13 +16,13 @@
     key = scope.<%= Enum.join(scope.access_path, ".") %>
 
     Phoenix.PubSub.subscribe(<%= inspect context.base_module %>.PubSub, "<%= scope.name %>:#{key}:<%= schema.plural %>")
-  end
+  end<%= if add_broadcast do %>
 
   defp broadcast(%<%= inspect scope.alias %>{} = scope, message) do
     key = scope.<%= Enum.join(scope.access_path, ".") %>
 
     Phoenix.PubSub.broadcast(<%= inspect context.base_module %>.PubSub, "<%= scope.name %>:#{key}:<%= schema.plural %>", message)
-  end
+  end<% end %>
 
   @doc """
   Returns the list of <%= schema.plural %>.

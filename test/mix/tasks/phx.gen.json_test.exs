@@ -375,4 +375,32 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       end
     end)
   end
-end
+
+  test "respect route_prefix in scopes", config do
+    in_tmp_project(config.test, fn ->
+      with_scope_env(
+        :phoenix,
+        [
+          organization: [
+            module: Phoenix.Organizations.Scope,
+            assign_key: :current_organization,
+            access_path: [:organization, :id],
+            route_access_path: [:organization, :slug],
+            route_prefix: "/orgs/:slug"
+          ]
+        ],
+        fn ->
+          Gen.Json.run(~w(Blog Post posts title:string --scope organization))
+
+      assert_file "lib/phoenix_web/controllers/post_controller.ex", fn file ->
+        assert file =~ ~s|~p"/api/orgs/\#{conn.assigns.current_organization.organization.slug}/posts|
+      end
+
+      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+        assert file =~ ~s|~p"/api/orgs/\#{scope.organization.slug}/posts"|
+        assert file =~ ~s|~p"/api/orgs/\#{scope.organization.slug}/posts/\#{post}"|
+      end
+        end)
+      end)
+    end
+  end

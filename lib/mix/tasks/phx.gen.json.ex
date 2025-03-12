@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   use Mix.Task
 
-  alias Mix.Phoenix.Context
+  alias Mix.Phoenix.{Context, Scope}
   alias Mix.Tasks.Phx.Gen
 
   @doc false
@@ -119,7 +119,11 @@ defmodule Mix.Tasks.Phx.Gen.Json do
       gettext?: Code.ensure_loaded?(Module.concat(context.web_module, "Gettext")),
       primary_key: schema.opts[:primary_key] || :id,
       conn_scope: conn_scope,
-      context_scope_prefix: context_scope_prefix
+      context_scope_prefix: context_scope_prefix,
+      scope_conn_route_prefix: Scope.route_prefix(conn_scope, schema),
+      scope_param_route_prefix: Scope.route_prefix("scope", schema),
+      test_context_scope:
+        if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -175,6 +179,13 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
+    resource_path =
+      if schema.scope && schema.scope.route_prefix do
+        "#{schema.scope.route_prefix}/#{schema.plural}"
+      else
+        "/#{schema.plural}"
+      end
+
     if schema.web_namespace do
       Mix.shell().info("""
 
@@ -183,7 +194,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
           scope "/#{schema.web_path}", #{inspect(Module.concat(context.web_module, schema.web_namespace))}, as: :#{schema.web_path} do
             pipe_through :api
             ...
-            resources "/#{schema.plural}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
+            resources "#{resource_path}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
           end
       """)
     else
@@ -191,8 +202,14 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
       Add the resource to the "#{Application.get_env(ctx_app, :generators)[:api_prefix] || "/api"}" scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          resources "/#{schema.plural}", #{inspect(schema.alias)}Controller, except: [:new, :edit]#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
+          resources "#{resource_path}", #{inspect(schema.alias)}Controller, except: [:new, :edit]#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
       """)
+    end
+
+    if schema.scope do
+      Mix.shell().info(
+        "Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
+      )
     end
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)

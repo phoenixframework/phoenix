@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   """
   use Mix.Task
 
-  alias Mix.Phoenix.{Context, Schema}
+  alias Mix.Phoenix.{Context, Schema, Scope}
   alias Mix.Tasks.Phx.Gen
 
   @doc false
@@ -122,7 +122,12 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       scope: schema.scope,
       inputs: inputs(schema),
       conn_scope: conn_scope,
-      context_scope_prefix: context_scope_prefix
+      context_scope_prefix: context_scope_prefix,
+      scope_conn_route_prefix: Scope.route_prefix(conn_scope, schema),
+      scope_param_route_prefix: Scope.route_prefix("scope", schema),
+      scope_assign_route_prefix: scope_assign_route_prefix(schema),
+      test_context_scope:
+        if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -182,6 +187,13 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
+    resource_path =
+      if schema.scope && schema.scope.route_prefix do
+        "#{schema.scope.route_prefix}/#{schema.plural}"
+      else
+        "/#{schema.plural}"
+      end
+
     if schema.web_namespace do
       Mix.shell().info("""
 
@@ -190,7 +202,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
           scope "/#{schema.web_path}", #{inspect(Module.concat(context.web_module, schema.web_namespace))}, as: :#{schema.web_path} do
             pipe_through :browser
             ...
-            resources "/#{schema.plural}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
+            resources "#{resource_path}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
           end
       """)
     else
@@ -198,8 +210,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
       Add the resource to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          resources "/#{schema.plural}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
+          resources "#{resource_path}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
       """)
+    end
+
+    if schema.scope do
+      Mix.shell().info(
+        "Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
+      )
     end
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
@@ -273,6 +291,15 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   defp default_options({:array, _}), do: []
 
   defp label(key), do: Phoenix.Naming.humanize(to_string(key))
+
+  defp scope_assign_route_prefix(
+         %{scope: %{route_prefix: route_prefix, assign_key: assign_key}} = schema
+       )
+       when not is_nil(route_prefix) do
+    Scope.route_prefix("@#{assign_key}", schema)
+  end
+
+  defp scope_assign_route_prefix(_), do: ""
 
   @doc false
   def indent_inputs(inputs, column_padding) do

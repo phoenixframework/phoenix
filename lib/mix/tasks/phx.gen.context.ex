@@ -109,12 +109,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
 
     {context, schema} = build(args)
+
     binding = [
       context: context,
       schema: schema,
       scope: context.scope,
       primary_key: schema.opts[:primary_key] || :id
     ]
+
     paths = Mix.Phoenix.generator_paths()
 
     prompt_for_conflicts(context)
@@ -189,6 +191,13 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   defp inject_schema_access(%Context{file: file} = context, paths, binding) do
     ensure_context_file_exists(context, paths, binding)
+
+    binding =
+      if File.exists?(file) and File.read!(file) =~ "defp broadcast" do
+        [{:add_broadcast, false} | binding]
+      else
+        [{:add_broadcast, true} | binding]
+      end
 
     paths
     |> Mix.Phoenix.eval_from(

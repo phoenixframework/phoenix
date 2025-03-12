@@ -2,7 +2,7 @@
   <%= schema.human_singular %> {@<%= schema.singular %>.<%= primary_key %>}
   <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
   <:actions>
-    <.link class={button_classes()} href={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
+    <.link class={button_classes()} href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
       Edit <%= schema.singular %>
     </.link>
   </:actions>
@@ -12,4 +12,4 @@
   <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{@<%= schema.singular %>.<%= k %>}</:item><% end %>
 </.list>
 
-<.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
+<.back navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>

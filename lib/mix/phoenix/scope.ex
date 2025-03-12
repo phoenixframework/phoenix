@@ -7,6 +7,8 @@ defmodule Mix.Phoenix.Scope do
             alias: nil,
             assign_key: nil,
             access_path: nil,
+            route_prefix: nil,
+            route_access_path: nil,
             schema_table: nil,
             schema_key: nil,
             schema_type: nil,
@@ -21,10 +23,17 @@ defmodule Mix.Phoenix.Scope do
     scope = struct!(__MODULE__, opts)
     alias = Module.concat([scope.module |> Module.split() |> List.last()])
 
+    route_access_path =
+      case scope.route_access_path || Enum.drop(scope.access_path, -1) do
+        [] -> scope.access_path
+        rap -> rap
+      end
+
     %{
       scope
       | name: name,
         alias: alias,
+        route_access_path: route_access_path,
         schema_migration_type: scope.schema_migration_type || scope.schema_type
     }
   end
@@ -91,4 +100,55 @@ defmodule Mix.Phoenix.Scope do
       """)
     end)
   end
+
+  @doc """
+  Generates a route prefix string with placeholders for the access path.
+
+  Takes a scope_key (what to use for accessing the scope) and a schema with scope information.
+  If the schema doesn't have a scope with route_prefix, returns an empty string.
+  Otherwise, it processes the route_prefix, replacing param segments with dynamic path elements.
+
+  ## Examples
+
+      scope_route_prefix("socket.assigns.current_scope", schema_with_scope)
+      # => "/orgs/\#{socket.assigns.current_scope.organization.slug}"
+
+      scope_route_prefix("@current_scope", schema_with_scope)
+      # => "/orgs/\#{@current_scope.organization.slug}"
+
+      scope_route_prefix("scope", schema_with_scope)
+      # => "/orgs/\#{scope.organization.slug}"
+  """
+  def route_prefix(
+        scope_key,
+        %{scope: %{route_prefix: route_prefix, route_access_path: route_access_path}} = _schema
+      )
+      when not is_nil(route_prefix) do
+    # Replace any path segment that starts with a colon with route_access_path from the scope
+    path_segments = String.split(route_prefix, "/", trim: true)
+    param_segments = Enum.filter(path_segments, &String.starts_with?(&1, ":"))
+
+    if length(param_segments) > 1 do
+      Mix.raise(
+        "The route_prefix option in scope configuration must contain only one parameter. Found: #{inspect(param_segments)}"
+      )
+    end
+
+    path_with_placeholders =
+      path_segments
+      |> Enum.map(fn segment ->
+        if String.starts_with?(segment, ":") do
+          # Extract parameter name without the colon
+          access_string = Enum.join(route_access_path, ".")
+          "\#{#{scope_key}.#{access_string}}"
+        else
+          segment
+        end
+      end)
+      |> Enum.join("/")
+
+    "/#{path_with_placeholders}"
+  end
+
+  def route_prefix(_scope_key, _schema), do: ""
 end

@@ -130,7 +130,7 @@ defmodule <%= inspect auth_module %> do
       to socket assigns based on <%= schema.singular %>_token, or nil if
       there's no <%= schema.singular %>_token or no matching <%= schema.singular %>.
 
-    * `:ensure_authenticated` - Authenticates the <%= schema.singular %> from the session,
+    * `:require_authenticated` - Authenticates the <%= schema.singular %> from the session,
       and assigns the current_scope to socket assigns based
       on <%= schema.singular %>_token.
       Redirects to login page if there's no logged <%= schema.singular %>.
@@ -149,7 +149,7 @@ defmodule <%= inspect auth_module %> do
 
   Or use the `live_session` of your router to invoke the on_mount callback:
 
-      live_session :authenticated, on_mount: [{<%= inspect auth_module %>, :ensure_authenticated}] do
+      live_session :authenticated, on_mount: [{<%= inspect auth_module %>, :require_authenticated}] do
         live "/profile", ProfileLive, :index
       end
   """
@@ -157,7 +157,7 @@ defmodule <%= inspect auth_module %> do
     {:cont, mount_current_scope(socket, session)}
   end
 
-  def on_mount(:ensure_authenticated, _params, session, socket) do
+  def on_mount(:require_authenticated, _params, session, socket) do
     socket = mount_current_scope(socket, session)
 
     if socket.assigns.current_scope && socket.assigns.current_scope.<%= schema.singular %> do
@@ -172,7 +172,7 @@ defmodule <%= inspect auth_module %> do
     end
   end
 
-  def on_mount(:ensure_sudo_mode, _params, session, socket) do
+  def on_mount(:require_sudo_mode, _params, session, socket) do
     socket = mount_current_scope(socket, session)
 
     if <%= inspect context.alias %>.sudo_mode?(socket.assigns.current_scope.<%= schema.singular %>, -10) do

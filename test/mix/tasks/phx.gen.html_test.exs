@@ -485,5 +485,52 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         end)
       end)
     end
+
+    test "respect route_prefix in scopes", config do
+      in_tmp_project(config.test, fn ->
+        with_scope_env(
+          :phoenix,
+          [
+            organization: [
+              module: Phoenix.Organizations.Scope,
+              assign_key: :current_organization,
+              access_path: [:organization, :id],
+              route_access_path: [:organization, :slug],
+              route_prefix: "/orgs/:slug"
+            ]
+          ],
+          fn ->
+            Gen.Html.run(~w(Blog Post posts title:string --scope organization))
+
+        assert_file "lib/phoenix_web/controllers/post_controller.ex", fn file ->
+          assert file =~ ~s|redirect(to: ~p"/orgs/\#{conn.assigns.current_organization.organization.slug}/posts|
+        end
+
+        assert_file "lib/phoenix_web/controllers/post_html/index.html.heex", fn file ->
+          assert file =~ ~s|href={~p"/orgs/\#{@current_organization.organization.slug}/posts/new"|
+          assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts/|
+        end
+
+        assert_file "lib/phoenix_web/controllers/post_html/show.html.heex", fn file ->
+          assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts"|
+        end
+
+        assert_file "lib/phoenix_web/controllers/post_html/edit.html.heex", fn file ->
+          assert file =~ ~s|action={~p"/orgs/\#{@current_organization.organization.slug}/posts/\#{@post}"|
+        end
+
+        assert_file "lib/phoenix_web/controllers/post_html/new.html.heex", fn file ->
+          assert file =~ ~s|action={~p"/orgs/\#{@current_organization.organization.slug}/posts"|
+        end
+
+        assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+          assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts"|
+          assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/new"|
+          assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}"|
+          assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}/edit"|
+        end
+          end)
+        end)
+      end
   end
 end
