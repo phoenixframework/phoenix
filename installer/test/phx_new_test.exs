@@ -153,7 +153,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       # tailwind
-      assert_file("phx_blog/assets/css/app.css")
+      assert_file("phx_blog/assets/css/app.css", fn file ->
+        assert file =~ "lib/phx_blog_web"
+      end)
 
       refute File.exists?("phx_blog/priv/static/assets/app.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")

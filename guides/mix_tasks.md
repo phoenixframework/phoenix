@@ -419,10 +419,10 @@ And then `assets/` which should look similar to this:
 
 ```console
 ├── css
-│   ├── app.css
-│   └── tailwind_heroicons.js
+│   └── app.css
 ├── js
 │   └── app.js
+├── tailwind_heroicons.js
 └── vendor
     └── topbar.js
 ```
