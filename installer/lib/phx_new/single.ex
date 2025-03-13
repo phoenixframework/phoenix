@@ -70,7 +70,7 @@ defmodule Phx.New.Single do
   template(:css, [
     {:eex, :web,
      "phx_assets/app.css": "assets/css/app.css",
-     "phx_assets/tailwind.config.js": "assets/tailwind.config.js"}
+     "phx_assets/tailwind_heroicons.js": "assets/tailwind_heroicons.js"}
   ])
 
   template(:js, [
