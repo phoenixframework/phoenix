@@ -630,7 +630,7 @@ defmodule Phoenix.Router do
           end
 
           def __verify_route__(unquote(path)) do
-            {{unquote(plug), unquote(forward), unquote(plug_opts)}, unquote(warn_on_verify?)}
+            {{unquote(plug), unquote(forward), unquote(Macro.escape(plug_opts))}, unquote(warn_on_verify?)}
           end
         end
 
