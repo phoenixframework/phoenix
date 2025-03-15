@@ -623,14 +623,14 @@ defmodule Phoenix.Router do
     warn_on_verify? = Enum.all?(routes, & &1.warn_on_verify?)
 
     case Enum.find(routes, &(&1.kind == :forward)) do
-      %{metadata: %{forward: forward}, plug: plug} ->
+      %{metadata: %{forward: forward}, plug: plug, plug_opts: plug_opts} ->
         quote generated: true do
           def __forward__(unquote(plug)) do
             unquote(forward)
           end
 
           def __verify_route__(unquote(path)) do
-            {{unquote(plug), unquote(forward)}, unquote(warn_on_verify?)}
+            {{unquote(plug), unquote(forward), unquote(plug_opts)}, unquote(warn_on_verify?)}
           end
         end
 

@@ -10,12 +10,34 @@ defmodule Phoenix.Router.ConsoleFormatter do
   @longpoll_verbs ["GET", "POST"]
 
   def format(router, endpoint \\ nil) do
-    routes = Phoenix.Router.routes(router)
+    routes = 
+      router
+      |> Phoenix.Router.routes()
+      |> expand_dynamic_routes()
+
     column_widths = calculate_column_widths(router, routes, endpoint)
 
     routes
     |> Enum.map_join("", &format_route(&1, router, column_widths))
     |> Kernel.<>(format_endpoint(endpoint, router, column_widths))
+  end
+
+  defp expand_dynamic_routes(routes) do
+    Enum.flat_map(routes, fn route -> 
+      if function_exported?(route.plug, :phoenix_routes, 1) do
+        route.plug_opts
+        |> route.plug.phoenix_routes()
+        |> Enum.map(fn nested_route -> 
+          %{route | 
+            path: Path.join(route.path, nested_route.path),
+            verb: nested_route.verb
+          }
+          |> Map.put(:label, nested_route.label)
+        end)
+      else
+        [route]
+      end
+    end)
   end
 
   defp format_endpoint(nil, _router, _), do: ""
@@ -122,13 +144,20 @@ defmodule Phoenix.Router.ConsoleFormatter do
         _ -> plug
       end
 
+    label =  
+      case Map.get(route, :label, "") do
+        label when label in [nil, ""] -> 
+          inspect(plug_opts)
+        label -> label
+      end
+
     String.pad_leading(route_name, route_name_len) <>
       "  " <>
       String.pad_trailing(verb, verb_len) <>
       "  " <>
       String.pad_trailing(path, path_len) <>
       "  " <>
-      "#{inspect(log_module)} #{inspect(plug_opts)}\n"
+      "#{inspect(log_module)} #{label}\n"
   end
 
   defp route_name(_router, nil), do: ""

@@ -852,11 +852,18 @@ defmodule Phoenix.VerifiedRoutes do
       {nil = _forward_plug, false = _warn_on_verify?} ->
         true
 
-      {{router, script_name}, false = _warn_on_verify?} ->
-        if function_exported?(router, :__routes__, 0) do
-          match_route?(router, split_path -- script_name)
-        else
-          true
+      {{router, script_name, plug_opts}, false = _warn_on_verify?} ->
+        Code.ensure_compiled(router)
+
+        cond do
+          function_exported?(router, :__routes__, 0) ->
+            match_route?(router, split_path -- script_name)
+
+          function_exported?(router, :phoenix_routes, 1) ->
+            Phoenix.Router.PlugWithRoutes.verify_route(router, plug_opts, split_path -- script_name)
+
+          true ->
+            true
         end
 
       :error ->
