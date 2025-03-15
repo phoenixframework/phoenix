@@ -14,6 +14,7 @@ defmodule Phoenix.Router.Route do
     * `:kind` - the kind of route, either `:match` or `:forward`
     * `:path` - the normalized path as string
     * `:hosts` - the list of request hosts or host prefixes
+    * `:label` - A custom string label for the route
     * `:plug` - the plug module
     * `:plug_opts` - the plug options
     * `:helper` - the name of the helper as a string (may be nil)
@@ -31,6 +32,7 @@ defmodule Phoenix.Router.Route do
     :kind,
     :path,
     :hosts,
+    :label,
     :plug,
     :plug_opts,
     :helper,
