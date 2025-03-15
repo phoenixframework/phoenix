@@ -13,34 +13,33 @@ defmodule Phoenix.Router.ConsoleFormatter do
     routes = Phoenix.Router.routes(router)
     column_widths = calculate_column_widths(router, routes, endpoint)
 
-    routes
-    |> Enum.map_join("", &format_route(&1, router, column_widths))
-    |> Kernel.<>(format_endpoint(endpoint, router, column_widths))
+    IO.iodata_to_binary([
+      Enum.map(routes, &format_route(&1, router, column_widths)),
+      format_endpoint(endpoint, column_widths)
+    ])
   end
 
-  defp format_endpoint(nil, _router, _), do: ""
+  defp format_endpoint(nil, _), do: ""
 
-  defp format_endpoint(endpoint, router, widths) do
+  defp format_endpoint(endpoint, widths) do
     case endpoint.__sockets__() do
       [] ->
         ""
 
       sockets ->
-        Enum.map_join(sockets, "", fn socket ->
-          format_websocket(socket, router, widths) <>
-            format_longpoll(socket, router, widths)
+        Enum.map(sockets, fn socket ->
+          [format_websocket(socket, widths), format_longpoll(socket, widths)]
         end)
     end
   end
 
-  defp format_websocket({_path, Phoenix.LiveReloader.Socket, _opts}, _router, _), do: ""
+  defp format_websocket({_path, Phoenix.LiveReloader.Socket, _opts}, _), do: ""
 
-  defp format_websocket({path, module, opts}, router, widths) do
+  defp format_websocket({path, module, opts}, widths) do
     if opts[:websocket] != false do
-      prefix = if router.__helpers__(), do: "websocket", else: ""
       {verb_len, path_len, route_name_len} = widths
 
-      String.pad_leading(prefix, route_name_len) <>
+      String.duplicate(" ", route_name_len) <>
         "  " <>
         String.pad_trailing(@socket_verb, verb_len) <>
         "  " <>
@@ -53,16 +52,14 @@ defmodule Phoenix.Router.ConsoleFormatter do
     end
   end
 
-  defp format_longpoll({_path, Phoenix.LiveReloader.Socket, _opts}, _router, _), do: ""
+  defp format_longpoll({_path, Phoenix.LiveReloader.Socket, _opts}, _), do: ""
 
-  defp format_longpoll({path, module, opts}, router, widths) do
+  defp format_longpoll({path, module, opts}, widths) do
     if opts[:longpoll] != false do
-      prefix = if router.__helpers__(), do: "longpoll", else: ""
-
       for method <- @longpoll_verbs, into: "" do
         {verb_len, path_len, route_name_len} = widths
 
-        String.pad_leading(prefix, route_name_len) <>
+        String.duplicate(" ", route_name_len) <>
           "  " <>
           String.pad_trailing(method, verb_len) <>
           "  " <>
@@ -92,13 +89,14 @@ defmodule Phoenix.Router.ConsoleFormatter do
 
     Enum.reduce(sockets, widths, fn {path, _mod, opts}, acc ->
       {verb_len, path_len, route_name_len} = acc
-      prefix = if router.__helpers__(), do: "websocket", else: ""
 
       verb_length =
-        socket_verbs(opts) |> Enum.map(&String.length/1) |> Enum.max(&>=/2, fn -> 0 end)
+        socket_verbs(opts)
+        |> Enum.map(&String.length/1)
+        |> Enum.max(&>=/2, fn -> 0 end)
 
       {max(verb_len, verb_length), max(path_len, String.length(path <> "/websocket")),
-       max(route_name_len, String.length(prefix))}
+       route_name_len}
     end)
   end
 
