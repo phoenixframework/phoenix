@@ -10,7 +10,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <%= schema.human_singular %> {@<%= schema.singular %>.<%= primary_key %>}
       <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
       <:actions>
-        <.link class={button_classes()} navigate={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
+        <.link class={button_classes()} navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
           Edit <%= schema.singular %>
         </.link>
       </:actions>
@@ -20,7 +20,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{@<%= schema.singular %>.<%= k %>}</:item><% end %>
     </.list>
 
-    <.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
+    <.back navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
     """
   end
 
@@ -49,6 +49,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:noreply,
      socket
      |> put_flash(:error, "The current <%= schema.singular %> was deleted.")
-     |> push_navigate(to: ~p"<%= schema.route_prefix %>")}
+     |> push_navigate(to: ~p"<%= scope_socket_route_prefix %><%= schema.route_prefix %>")}
   end<% end %>
 end

@@ -202,6 +202,10 @@ In this example, the scope is called `user` and it is the `default` scope that i
 
 * `access_path` - a list of keys that define the path to the identifying field in the scope struct. The generators generate code like `where: schema_key == ^scope.user.id`.
 
+* `route_prefix` - (optional) a path template string for how resources should be nested. For example, `/orgs/:org` would generate routes like `/orgs/:org/posts`. The parameter segment (`:org`) will be replaced with the appropriate scope access value in templates and LiveViews.
+
+* `route_access_path` - (optional) list of keys that define the path to the field used in route generation (if `route_prefix` is set). This is particularly useful for user-friendly URLs where you might want to use a slug instead of an ID. If not specified, it defaults to `Enum.drop(scope.access_path, -1)` or `access_path` if the former is empty. For example, if the `access_path` is `[:organization, :id]`, it defaults to `[:organization]`, assuming that the value at `scope.organization` implements the `Phoenix.Param` protocol.
+
 * `schema_key` - the foreign key that ties the resource to the scope. New scoped schemas are created with a foreign key field named `schema_key` of type `schema_type` to the `schema_table` table.
 
 * `schema_type` - the type of the foreign key field in the schema. Typically `:id` or `:binary_id`.
@@ -325,11 +329,13 @@ defmodule MyApp.Accounts.Organization do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Phoenix.Param, key: :slug}
   schema "organizations" do
     field :name, :string
+    field :slug, :string
     ...
 
-    has_many :users, MyApp.Accounts.User
+    many_to_many :users, MyApp.Accounts.User, join_through: "organizations_users"
 
     timestamps(type: :utc_datetime)
   end
@@ -403,7 +409,7 @@ end
 def on_mount(:assign_org_to_scope, _params, _session, socket), do: {:cont, socket}
 ```
 
-This way, if a route is defined like `live /organizations/:org/posts`, the `maybe_add_org_to_scope` plug would fetch the organization from the path and assign it to the scope. This code assumes that `get_organization_by_slug!/2` raises an
+This way, if a route is defined like `live /organizations/:org/posts`, the `assign_org_to_scope` plug would fetch the organization from the path and assign it to the scope. This code assumes that `get_organization_by_slug!/2` raises an
 `Ecto.NoResultsError` which would be automatically converted to `404`, but you could also handle the error explicitly and,
 for example, set an error flash and redirect to another page, like a dashboard. The `get_organization_by_slug!/2` function
 should also rely on the current scope to filter the organizations to those the user has access to.
@@ -419,6 +425,7 @@ config :my_app, :scopes,
     module: MyApp.Accounts.Scope,
     assign_key: :current_scope,
     access_path: [:organization, :id],
+    route_prefix: "/orgs/:org",
     schema_key: :org_id,
     schema_type: :id,
     schema_table: :organizations,
@@ -451,20 +458,10 @@ defmodule MyAppWeb.ConnCase do
 end
 ```
 
-As the organization is part of the URL path, we also need to adjust all the paths that are generated, e.g. for `phx.gen.live` to include the correct organization. Assuming we scope the Blog example from previously to the organization, this would look like this:
+Now that our scope configuration includes the `route_prefix` and `route_access_path`, we can generate resources scoped to the organization, and all paths will be automatically generated with the correct organization slug:
 
 ```console
 $ mix phx.gen.live Blog Post posts title:string body:text --scope organization
-```
-
-```diff
-     test "lists all posts", %{conn: conn, post: post} do
--      {:ok, _index_live, html} = live(conn, ~p"/posts")
-+      {:ok, _index_live, html} = live(conn, ~p"/organizations/#{post.organization}/posts")
-
-       assert html =~ "Listing Posts"
-       assert html =~ post.title
-     end
 ```
 
 This shows that scopes are quite flexible, allowing you to keep a well-defined data structure, even when your application grows.

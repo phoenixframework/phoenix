@@ -102,7 +102,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   """
   use Mix.Task
 
-  alias Mix.Phoenix.{Context, Schema}
+  alias Mix.Phoenix.{Context, Schema, Scope}
   alias Mix.Tasks.Phx.Gen
 
   @doc false
@@ -120,12 +120,13 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
     Gen.Context.prompt_for_code_injection(context)
 
-    {socket_scope, context_scope_prefix} =
+    {socket_scope, context_scope_prefix, assign_scope, assign_scope_prefix} =
       if schema.scope do
-        base = "socket.assigns.#{schema.scope.assign_key}"
-        {base, "#{base}, "}
+        base_socket = "socket.assigns.#{schema.scope.assign_key}"
+        base_assign = "@#{schema.scope.assign_key}"
+        {base_socket, "#{base_socket}, ", base_assign, "#{base_assign}, "}
       else
-        {"", ""}
+        {"", "", "", ""}
       end
 
     binding = [
@@ -135,7 +136,16 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       scope: schema.scope,
       inputs: inputs(schema),
       socket_scope: socket_scope,
-      context_scope_prefix: context_scope_prefix
+      context_scope_prefix: context_scope_prefix,
+      assign_scope: assign_scope,
+      assign_scope_prefix: assign_scope_prefix,
+      scope_param_route_prefix: Scope.route_prefix("scope", schema),
+      scope_param: scope_param(schema),
+      scope_param_prefix: scope_param_prefix(schema),
+      scope_socket_route_prefix: Scope.route_prefix(socket_scope, schema),
+      scope_assign_route_prefix: scope_assign_route_prefix(schema),
+      test_context_scope:
+        if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -281,6 +291,12 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       """)
     end
 
+    if schema.scope do
+      Mix.shell().info(
+        "Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
+      )
+    end
+
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
     maybe_print_upgrade_info()
   end
@@ -297,11 +313,19 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   end
 
   defp live_route_instructions(schema) do
+    route_base =
+      if schema.scope && schema.scope.route_prefix do
+        scope_prefix = schema.scope.route_prefix
+        "#{scope_prefix}/#{schema.plural}"
+      else
+        "/#{schema.plural}"
+      end
+
     [
-      ~s|live "/#{schema.plural}", #{inspect(schema.alias)}Live.Index, :index\n|,
-      ~s|live "/#{schema.plural}/new", #{inspect(schema.alias)}Live.Form, :new\n|,
-      ~s|live "/#{schema.plural}/:#{schema.opts[:primary_key] || :id}", #{inspect(schema.alias)}Live.Show, :show\n|,
-      ~s|live "/#{schema.plural}/:#{schema.opts[:primary_key] || :id}/edit", #{inspect(schema.alias)}Live.Form, :edit|
+      ~s|live "#{route_base}", #{inspect(schema.alias)}Live.Index, :index\n|,
+      ~s|live "#{route_base}/new", #{inspect(schema.alias)}Live.Form, :new\n|,
+      ~s|live "#{route_base}/:#{schema.opts[:primary_key] || :id}", #{inspect(schema.alias)}Live.Show, :show\n|,
+      ~s|live "#{route_base}/:#{schema.opts[:primary_key] || :id}/edit", #{inspect(schema.alias)}Live.Form, :edit|
     ]
   end
 
@@ -376,4 +400,25 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   defp default_options({:array, _}), do: []
 
   defp label(key), do: Phoenix.Naming.humanize(to_string(key))
+
+  defp scope_param(%{scope: nil}), do: ""
+
+  defp scope_param(%{scope: %{route_prefix: route_prefix}}) when not is_nil(route_prefix),
+    do: "scope"
+
+  defp scope_param(_), do: "_scope"
+
+  defp scope_param_prefix(schema) do
+    param = scope_param(schema)
+    if param != "", do: "#{param}, ", else: ""
+  end
+
+  defp scope_assign_route_prefix(
+         %{scope: %{route_prefix: route_prefix, assign_key: assign_key}} = schema
+       )
+       when not is_nil(route_prefix) do
+    Scope.route_prefix("@#{assign_key}", schema)
+  end
+
+  defp scope_assign_route_prefix(_), do: ""
 end

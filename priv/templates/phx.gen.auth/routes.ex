@@ -12,7 +12,7 @@
     pipe_through [:browser, :require_authenticated_<%= schema.singular %>]<%= if live? do %>
 
     live_session :require_authenticated_<%= schema.singular %>,
-      on_mount: [{<%= inspect auth_module %>, :ensure_authenticated}] do
+      on_mount: [{<%= inspect auth_module %>, :require_authenticated}] do
       live "/<%= schema.plural %>/settings", <%= inspect schema.alias %>Live.Settings, :edit
       live "/<%= schema.plural %>/settings/confirm-email/:token", <%= inspect schema.alias %>Live.Settings, :confirm_email
     end

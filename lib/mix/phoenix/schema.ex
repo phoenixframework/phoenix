@@ -149,7 +149,7 @@ defmodule Mix.Phoenix.Schema do
       web_path: web_path,
       route_helper: route_helper(web_path, singular),
       route_prefix: route_prefix(web_path, schema_plural),
-      api_route_prefix: api_route_prefix(web_path, schema_plural, api_prefix),
+      api_route_prefix: api_prefix,
       sample_id: sample_id(opts),
       context_app: ctx_app,
       generate?: generate?,
@@ -554,11 +554,6 @@ defmodule Mix.Phoenix.Schema do
 
   defp route_prefix(web_path, plural) do
     path = Path.join(for str <- [web_path, plural], do: to_string(str))
-    "/" <> String.trim_leading(path, "/")
-  end
-
-  defp api_route_prefix(web_path, plural, api_prefix) do
-    path = Path.join(for str <- [api_prefix, web_path, plural], do: to_string(str))
     "/" <> String.trim_leading(path, "/")
   end
 
