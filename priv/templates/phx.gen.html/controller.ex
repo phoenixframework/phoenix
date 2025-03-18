@@ -24,7 +24,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, <%= schema.singular %>} ->
         conn
         |> put_flash(:info, "<%= schema.human_singular %> created successfully.")
-        |> redirect(to: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")
+        |> redirect(to: ~p"<%= scope_conn_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, :new, changeset: changeset)
@@ -49,7 +49,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, <%= schema.singular %>} ->
         conn
         |> put_flash(:info, "<%= schema.human_singular %> updated successfully.")
-        |> redirect(to: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}")
+        |> redirect(to: ~p"<%= scope_conn_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}")
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, :edit, <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
@@ -62,6 +62,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     conn
     |> put_flash(:info, "<%= schema.human_singular %> deleted successfully.")
-    |> redirect(to: ~p"<%= schema.route_prefix %>")
+    |> redirect(to: ~p"<%= scope_conn_route_prefix %><%= schema.route_prefix %>")
   end
 end
