@@ -135,7 +135,9 @@ When we ran `mix phx.gen.auth`, it generated a `MyAppWeb.UserAuth` module with s
 
 ```elixir
 def fetch_current_scope_for_api_user(conn, _opts) do
-  with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
+  with [<<bearer::binary-size(6), " ", token::binary>>] <-
+         get_req_header(conn, "authorization"),
+       true <- String.downcase(bearer) == "bearer",
        {:ok, user} <- Accounts.fetch_user_by_api_token(token) do
     assign(conn, :current_scope, Scope.for_user(user))
   else
