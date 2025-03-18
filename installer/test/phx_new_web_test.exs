@@ -68,9 +68,8 @@ defmodule Mix.Tasks.Phx.New.WebTest do
     in_tmp_umbrella_project "new with defaults", fn ->
       Mix.Tasks.Phx.New.Web.run(["testweb"])
 
-      assert_file "testweb/assets/tailwind.config.js", fn file ->
-        assert file =~ "testweb.ex"
-        assert file =~ "testweb/**/*.*ex"
+      assert_file "testweb/assets/tailwind_heroicons.js", fn file ->
+        assert file =~ "/deps/heroicons/optimized"
       end
     end
   end

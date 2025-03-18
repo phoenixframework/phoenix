@@ -181,11 +181,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, ".gitignore"), "/priv/static/assets/")
       assert_file(web_path(@app, ".gitignore"), "#{@app}_web-*.tar")
       assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
-      assert_file(web_path(@app, "assets/css/app.css"))
-
-      assert_file(web_path(@app, "assets/tailwind.config.js"), fn file ->
-        assert file =~ "phx_umb_web.ex"
-        assert file =~ "phx_umb_web/**/*.*ex"
+      assert_file(web_path(@app, "assets/css/app.css"), fn file ->
+        assert file =~ "lib/phx_umb_web"
       end)
 
       assert_file(web_path(@app, "priv/static/favicon.ico"))
