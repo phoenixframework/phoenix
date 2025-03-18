@@ -422,7 +422,7 @@ And then `assets/` which should look similar to this:
 │   └── app.css
 ├── js
 │   └── app.js
-├── tailwind.config.js
+├── tailwind_heroicons.js
 └── vendor
     └── topbar.js
 ```
