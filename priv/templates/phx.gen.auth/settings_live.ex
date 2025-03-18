@@ -12,64 +12,46 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <:subtitle>Manage your account email address and password settings</:subtitle>
     </.header>
 
-    <div class="space-y-12 divide-y">
-      <div>
-        <.simple_form
-          for={@email_form}
-          id="email_form"
-          phx-submit="update_email"
-          phx-change="validate_email"
-        >
-          <.input
-            field={@email_form[:email]}
-            type="email"
-            label="Email"
-            autocomplete="username"
-            required
-          />
-          <:actions>
-            <.button phx-disable-with="Changing...">Change Email</.button>
-          </:actions>
-        </.simple_form>
-      </div>
-      <div>
-        <.simple_form
-          for={@password_form}
-          id="password_form"
-          action={~p"<%= schema.route_prefix %>/update-password"}
-          method="post"
-          phx-change="validate_password"
-          phx-submit="update_password"
-          phx-trigger-action={@trigger_submit}
-        >
-          <input
-            name={@password_form[:email].name}
-            type="hidden"
-            id="hidden_<%= schema.singular %>_email"
-            autocomplete="username"
-            value={@current_email}
-          />
-          <.input
-            field={@password_form[:password]}
-            type="password"
-            label="New password"
-            autocomplete="new-password"
-            required
-          />
-          <.input
-            field={@password_form[:password_confirmation]}
-            type="password"
-            label="Confirm new password"
-            autocomplete="new-password"
-          />
-          <:actions>
-            <.button phx-disable-with="Saving...">
-              Save Password
-            </.button>
-          </:actions>
-        </.simple_form>
-      </div>
-    </div>
+    <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
+      <.input field={@email_form[:email]} type="email" label="Email" autocomplete="username" required />
+      <.button phx-disable-with="Changing...">Change Email</.button>
+    </.form>
+
+    <div class="divider" />
+
+    <.form
+      for={@password_form}
+      id="password_form"
+      action={~p"<%= schema.route_prefix %>/update-password"}
+      method="post"
+      phx-change="validate_password"
+      phx-submit="update_password"
+      phx-trigger-action={@trigger_submit}
+    >
+      <input
+        name={@password_form[:email].name}
+        type="hidden"
+        id="hidden_<%= schema.singular %>_email"
+        autocomplete="username"
+        value={@current_email}
+      />
+      <.input
+        field={@password_form[:password]}
+        type="password"
+        label="New password"
+        autocomplete="new-password"
+        required
+      />
+      <.input
+        field={@password_form[:password_confirmation]}
+        type="password"
+        label="Confirm new password"
+        autocomplete="new-password"
+      />
+      <.button phx-disable-with="Saving...">
+        Save Password
+      </.button>
+    </.form>
     """
   end
 

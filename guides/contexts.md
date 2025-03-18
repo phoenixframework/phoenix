@@ -518,9 +518,7 @@ With our `category_opts` function in place, we can open up `lib/hello_web/contro
 
 + <.input field={f[:category_ids]} type="select" multiple options={category_opts(@changeset)} />
 
-  <:actions>
-    <.button>Save Product</.button>
-  </:actions>
+  <.button>Save Product</.button>
 ```
 
 We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to the list in `lib/hello_web/controllers/product_html/show.html.heex`:
@@ -1015,22 +1013,20 @@ Next we can create the template at `lib/hello_web/controllers/cart_html/show.htm
 </.header>
 
 <div :if={@cart.items !== []}>
-  <.simple_form :let={f} for={@changeset} action={~p"/cart"}>
+  <.form :let={f} for={@changeset} action={~p"/cart"}>
     <.inputs_for :let={%{data: item} = item_form} field={f[:items]}>
       <.input field={item_form[:quantity]} type="number" label={item.product.title} />
       {currency_to_str(ShoppingCart.total_item_price(item))}
     </.inputs_for>
-    <:actions>
-      <.button>Update cart</.button>
-    </:actions>
-  </.simple_form>
+    <.button>Update cart</.button>
+  </.form>
   <b>Total</b>: {currency_to_str(ShoppingCart.total_cart_price(@cart))}
 </div>
 
 <.back navigate={~p"/products"}>Back to products</.back>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `simple_form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
+We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
 
 We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
 

@@ -103,7 +103,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       end
 
       assert_file "lib/phoenix_web/live/post_live/form.ex", fn file ->
-        assert file =~ ~s(<.simple_form)
+        assert file =~ ~s(<.form)
         assert file =~ ~s(<.input field={@form[:title]} type="text")
         assert file =~ ~s(<.input field={@form[:content]} type="textarea")
         assert file =~ ~s(<.input field={@form[:votes]} type="number")

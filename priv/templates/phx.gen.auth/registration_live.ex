@@ -18,17 +18,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </:subtitle>
       </.header>
 
-      <.simple_form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
+      <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
         <.error :if={@check_errors}>
           Oops, something went wrong! Please check the errors below.
         </.error>
 
         <.input field={@form[:email]} type="email" label="Email" autocomplete="username" required />
 
-        <:actions>
-          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
-        </:actions>
-      </.simple_form>
+        <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+      </.form>
     </div>
     """
   end

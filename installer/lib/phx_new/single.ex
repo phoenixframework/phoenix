@@ -70,7 +70,8 @@ defmodule Phx.New.Single do
   template(:css, [
     {:eex, :web,
      "phx_assets/app.css": "assets/css/app.css",
-     "phx_assets/tailwind_heroicons.js": "assets/tailwind_heroicons.js"}
+     "phx_assets/heroicons.js": "assets/vendor/heroicons.js",
+     "phx_assets/daisyui.js": "assets/vendor/daisyui.js"}
   ])
 
   template(:js, [
@@ -85,7 +86,7 @@ defmodule Phx.New.Single do
   template(:no_css, [
     {:text, :web,
      "phx_static/app.css": "priv/static/assets/app.css",
-     "phx_static/home.css": "priv/static/assets/home.css"}
+     "phx_static/default.css": "priv/static/assets/default.css"}
   ])
 
   template(:static, [
