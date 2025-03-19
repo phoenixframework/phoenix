@@ -456,13 +456,16 @@ export default class Socket {
     if(!this.conn){
       return callback && callback()
     }
+    let connectClock = this.connectClock
 
     this.waitForBufferDone(() => {
+      if(connectClock !== this.connectClock){ return }
       if(this.conn){
         if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
       }
 
       this.waitForSocketClosed(() => {
+        if(connectClock !== this.connectClock){ return }
         if(this.conn){
           this.conn.onopen = function (){ } // noop
           this.conn.onerror = function (){ } // noop
