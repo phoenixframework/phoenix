@@ -4,10 +4,6 @@
 </.header>
 
 <.form :let={f} for={@email_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_email">
-  <.error :if={@email_changeset.action}>
-    Oops, something went wrong! Please check the errors below.
-  </.error>
-
   <input type="hidden" name="action" value="update_email" />
 
   <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
@@ -18,10 +14,6 @@
 <div class="divider" />
 
 <.form :let={f} for={@password_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_password">
-  <.error :if={@password_changeset.action}>
-    Oops, something went wrong! Please check the errors below.
-  </.error>
-
   <input type="hidden" name="action" value="update_password" />
 
   <.input

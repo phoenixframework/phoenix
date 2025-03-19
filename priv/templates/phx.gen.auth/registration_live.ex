@@ -19,10 +19,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.header>
 
       <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
-        <.error :if={@check_errors}>
-          Oops, something went wrong! Please check the errors below.
-        </.error>
-
         <.input field={@form[:email]} type="email" label="Email" autocomplete="username" required />
 
         <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
@@ -39,12 +35,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def mount(_params, _session, socket) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(%<%= inspect schema.alias %>{})
 
-    socket =
-      socket
-      |> assign(check_errors: false)
-      |> assign_form(changeset)
-
-    {:ok, socket, temporary_assigns: [form: nil]}
+    {:ok, assign_form(socket, changeset), temporary_assigns: [form: nil]}
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
@@ -65,7 +56,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
          |> push_navigate(to: ~p"<%= schema.route_prefix %>/log-in")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
+        {:noreply, assign_form(socket, changeset)}
     end
   end
 
@@ -76,11 +67,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     form = to_form(changeset, as: "<%= schema.singular %>")
-
-    if changeset.valid? do
-      assign(socket, form: form, check_errors: false)
-    else
-      assign(socket, form: form)
-    end
+    assign(socket, form: form)
   end
 end

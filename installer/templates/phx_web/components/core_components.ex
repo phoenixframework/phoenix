@@ -287,12 +287,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
     """
   end
 
-  @doc """
-  Generates a generic error message.
-  """
-  slot :inner_block, required: true
-
-  def error(assigns) do
+  # Helper used by inputs to generate form errors
+  defp error(assigns) do
     ~H"""
     <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
       <.icon name="hero-exclamation-circle-mini" class="h-5 w-5" />

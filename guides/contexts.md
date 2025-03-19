@@ -102,13 +102,7 @@ $ mix ecto.migrate
 14:09:02.273 [info] == Migrated 20250201185747 in 0.0s
 ```
 
-Before we jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/products](http://localhost:4000/products). Let's follow the "New Product" link and click the "Save" button without providing any input. We should be greeted with the following output:
-
-```text
-Oops, something went wrong! Please check the errors below.
-```
-
-When we submit the form, we can see all the validation errors inline with the inputs. Nice! Out of the box, the context generator included the schema fields in our form template and we can see our default validations for required inputs are in effect. Let's enter some example product data and resubmit the form:
+Before we jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/products](http://localhost:4000/products). Let's follow the "New Product" link and click the "Save" button without providing any input. When we submit the form, we can see all the validation errors inline with the inputs. Nice! Out of the box, the context generator included the schema fields in our form template and we can see our default validations for required inputs are in effect. Let's enter some example product data and resubmit the form:
 
 ```text
 Product created successfully.
