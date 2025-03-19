@@ -3,53 +3,34 @@
   <:subtitle>Manage your account email address and password settings</:subtitle>
 </.header>
 
-<div class="space-y-12 divide-y">
-  <div>
-    <.simple_form :let={f} for={@email_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_email">
-      <.error :if={@email_changeset.action}>
-        Oops, something went wrong! Please check the errors below.
-      </.error>
+<.form :let={f} for={@email_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_email">
+  <input type="hidden" name="action" value="update_email" />
 
-      <input type="hidden" name="action" value="update_email" />
+  <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
 
-      <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
-      <:actions>
-        <.button phx-disable-with="Changing...">Change Email</.button>
-      </:actions>
-    </.simple_form>
-  </div>
-  <div>
-    <.simple_form
-      :let={f}
-      for={@password_changeset}
-      action={~p"<%= schema.route_prefix %>/settings"}
-      id="update_password"
-    >
-      <.error :if={@password_changeset.action}>
-        Oops, something went wrong! Please check the errors below.
-      </.error>
+  <.button phx-disable-with="Changing...">Change Email</.button>
+</.form>
 
-      <input type="hidden" name="action" value="update_password" />
+<div class="divider" />
 
-      <.input
-        field={f[:password]}
-        type="password"
-        label="New password"
-        autocomplete="new-password"
-        required
-      />
-      <.input
-        field={f[:password_confirmation]}
-        type="password"
-        label="Confirm new password"
-        autocomplete="new-password"
-        required
-      />
-      <:actions>
-        <.button phx-disable-with="Changing...">
-          Save Password
-        </.button>
-      </:actions>
-    </.simple_form>
-  </div>
-</div>
+<.form :let={f} for={@password_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_password">
+  <input type="hidden" name="action" value="update_password" />
+
+  <.input
+    field={f[:password]}
+    type="password"
+    label="New password"
+    autocomplete="new-password"
+    required
+  />
+  <.input
+    field={f[:password_confirmation]}
+    type="password"
+    label="Confirm new password"
+    autocomplete="new-password"
+    required
+  />
+  <.button phx-disable-with="Changing...">
+    Save Password
+  </.button>
+</.form>

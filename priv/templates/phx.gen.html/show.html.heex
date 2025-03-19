@@ -2,7 +2,7 @@
   <%= schema.human_singular %> {@<%= schema.singular %>.<%= primary_key %>}
   <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
   <:actions>
-    <.link class={button_classes()} href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
+    <.link class="btn" href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
       Edit <%= schema.singular %>
     </.link>
   </:actions>
