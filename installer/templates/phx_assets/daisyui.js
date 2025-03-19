@@ -1,9 +1,9 @@
 /**
- * DaisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
+ * daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
  * 
  * curl -sLo daisyui.js https://cdn.jsdelivr.net/npm/daisyui@5/index.js/+esm
  * 
- * Make sure to look at the DaisyUI changelog: https://daisyui.com/docs/changelog/
+ * Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/
  * 
  * =================================================================================
  * 
