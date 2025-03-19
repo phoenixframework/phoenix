@@ -13,7 +13,7 @@ var closure = (value) => {
 // js/phoenix/constants.js
 var globalSelf = typeof self !== "undefined" ? self : null;
 var phxWindow = typeof window !== "undefined" ? window : null;
-var global = globalSelf || phxWindow || global;
+var global = globalSelf || phxWindow || globalThis;
 var DEFAULT_VSN = "2.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var DEFAULT_TIMEOUT = 1e4;
@@ -39,6 +39,7 @@ var TRANSPORTS = {
 var XHR_STATES = {
   complete: 4
 };
+var AUTH_TOKEN_PREFIX = "base64url.bearer.phx.";
 
 // js/phoenix/push.js
 var Push = class {
@@ -500,13 +501,13 @@ var Channel = class {
 
 // js/phoenix/ajax.js
 var Ajax = class {
-  static request(method, endPoint, accept, body, timeout, ontimeout, callback) {
+  static request(method, endPoint, headers, body, timeout, ontimeout, callback) {
     if (global.XDomainRequest) {
       let req = new global.XDomainRequest();
       return this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
     } else {
       let req = new global.XMLHttpRequest();
-      return this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback);
+      return this.xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback);
     }
   }
   static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback) {
@@ -524,10 +525,12 @@ var Ajax = class {
     req.send(body);
     return req;
   }
-  static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback) {
+  static xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback) {
     req.open(method, endPoint, true);
     req.timeout = timeout;
-    req.setRequestHeader("Content-Type", accept);
+    for (let [key, value] of Object.entries(headers)) {
+      req.setRequestHeader(key, value);
+    }
     req.onerror = () => callback && callback(null);
     req.onreadystatechange = () => {
       if (req.readyState === XHR_STATES.complete && callback) {
@@ -547,7 +550,7 @@ var Ajax = class {
     }
     try {
       return JSON.parse(resp);
-    } catch (e) {
+    } catch {
       console && console.log("failed to parse JSON response", resp);
       return null;
     }
@@ -588,7 +591,10 @@ var arrayBufferToBase64 = (buffer) => {
   return btoa(binary);
 };
 var LongPoll = class {
-  constructor(endPoint) {
+  constructor(endPoint, protocols) {
+    if (protocols && protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)) {
+      this.authToken = atob(protocols[1].slice(AUTH_TOKEN_PREFIX.length));
+    }
     this.endPoint = null;
     this.token = null;
     this.skipHeartbeat = true;
@@ -627,7 +633,11 @@ var LongPoll = class {
     return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting;
   }
   poll() {
-    this.ajax("GET", "application/json", null, () => this.ontimeout(), (resp) => {
+    const headers = { "Accept": "application/json" };
+    if (this.authToken) {
+      headers["X-Phoenix-AuthToken"] = this.authToken;
+    }
+    this.ajax("GET", headers, null, () => this.ontimeout(), (resp) => {
       if (resp) {
         var { status, token, messages } = resp;
         this.token = token;
@@ -684,7 +694,7 @@ var LongPoll = class {
   }
   batchSend(messages) {
     this.awaitingBatchAck = true;
-    this.ajax("POST", "application/x-ndjson", messages.join("\n"), () => this.onerror("timeout"), (resp) => {
+    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, messages.join("\n"), () => this.onerror("timeout"), (resp) => {
       this.awaitingBatchAck = false;
       if (!resp || resp.status !== 200) {
         this.onerror(resp && resp.status);
@@ -710,13 +720,13 @@ var LongPoll = class {
       this.onclose(opts);
     }
   }
-  ajax(method, contentType, body, onCallerTimeout, callback) {
+  ajax(method, headers, body, onCallerTimeout, callback) {
     let req;
     let ontimeout = () => {
       this.reqs.delete(req);
       onCallerTimeout();
     };
-    req = Ajax.request(method, this.endpointURL(), contentType, body, this.timeout, ontimeout, (resp) => {
+    req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, (resp) => {
       this.reqs.delete(req);
       if (this.isActive()) {
         callback(resp);
@@ -1060,6 +1070,7 @@ var Socket = class {
     this.reconnectTimer = new Timer(() => {
       this.teardown(() => this.connect());
     }, this.reconnectAfterMs);
+    this.authToken = opts.authToken;
   }
   /**
    * Returns the LongPoll transport reference
@@ -1231,7 +1242,11 @@ var Socket = class {
   transportConnect() {
     this.connectClock++;
     this.closeWasClean = false;
-    this.conn = new this.transport(this.endPointURL());
+    let protocols = void 0;
+    if (this.authToken) {
+      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`];
+    }
+    this.conn = new this.transport(this.endPointURL(), protocols);
     this.conn.binaryType = this.binaryType;
     this.conn.timeout = this.longpollerTimeout;
     this.conn.onopen = () => this.onConnOpen();
