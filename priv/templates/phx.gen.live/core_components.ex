@@ -9,10 +9,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
   them in any way you want, based on your application growth and needs.
 
   The foundation for styling is Tailwind CSS, a utility-first CSS framework,
-  augmented with Daisy UI, a Tailwind CSS plugin that provides UI components
+  augmented with daisyUI, a Tailwind CSS plugin that provides UI components
   and themes. Here are useful references:
 
-    * [Daisy UI](https://daisyui.com/docs/intro/) - a good place to get
+    * [daisyUI](https://daisyui.com/docs/intro/) - a good place to get
       started and see the available components.
 
     * [Tailwind CSS](https://tailwindcss.com) - the foundational framework
