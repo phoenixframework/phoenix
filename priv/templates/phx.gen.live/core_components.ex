@@ -372,8 +372,12 @@ defmodule <%= @web_namespace %>.CoreComponents do
           >
             {render_slot(col, @row_item.(row))}
           </td>
-          <td :for={action <- @action} class="p-0 font-semibold">
-            {render_slot(action, @row_item.(row))}
+          <td :if={@action != []} class="w-0 font-semibold">
+            <div class="flex gap-4">
+              <%%= for action <- @action do %>
+                {render_slot(action, @row_item.(row))}
+              <%% end %>
+            </div>
           </td>
         </tr>
       </tbody>
