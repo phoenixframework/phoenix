@@ -17,12 +17,12 @@ jobs:
           - elixir: 1.15.8
             otp: 25.3.2.9
 
-          - elixir: 1.17.3
+          - elixir: 1.18.3
             otp: 27.2
             lint: true
             installer: true
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
