@@ -7,11 +7,36 @@
     <.live_title default="<%= @app_module %>" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
     </.live_title>
-    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} /><%= if not @css do %>
+    <link phx-track-static rel="stylesheet" href={~p"/assets/default.css"} /><% end %>
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
-    </script>
+    </script><%= if @css do %>
+    <script>
+      // Script used to power the theme switcher in layouts/app.html.heex
+      (() => {
+        const handleTheme = (theme) => {
+          if (!theme || theme === "system") {
+            window.localStorage.removeItem("theme")
+            document.documentElement.removeAttribute("data-theme", theme);
+            return;
+          }
+          window.localStorage.setItem("theme", theme)
+          document.documentElement.setAttribute("data-theme", theme);
+        }
+
+        handleTheme(localStorage.getItem("theme"));
+
+        window.addEventListener('storage', (e) => {
+          e.key === "theme" && handleTheme(e.newValue);
+        });
+
+        window.addEventListener("phx:set-theme", ({ detail: { theme }}) => {
+          handleTheme(theme);
+        });
+      })();
+    </script><% end %>
   </head>
-  <body class="bg-white">
+  <body class="bg-base-100">
     {@inner_content}
   </body>
 </html>

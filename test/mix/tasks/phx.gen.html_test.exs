@@ -151,7 +151,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end)
 
       assert_file("lib/phoenix_web/controllers/post_html/post_form.html.heex", fn file ->
-        assert file =~ ~S(<.simple_form :let={f} for={@changeset} action={@action}>)
+        assert file =~ ~S(<.form :let={f} for={@changeset} action={@action}>)
         assert file =~ ~s(<.input field={f[:title]} type="text")
         assert file =~ ~s(<.input field={f[:content]} type="textarea")
         assert file =~ ~s(<.input field={f[:votes]} type="number")

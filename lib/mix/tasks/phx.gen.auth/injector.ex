@@ -170,48 +170,24 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   def app_layout_menu_code_to_inject(%Schema{} = schema, padding \\ 4, newline \\ "\n") do
     already_injected_str = "#{schema.route_prefix}/log-in"
 
-    base_tailwind_classes = "text-[0.8125rem] leading-6 text-zinc-900"
-    link_tailwind_classes = "#{base_tailwind_classes} font-semibold hover:text-zinc-700"
-
     template = """
-    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+    <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
       <%= if @current_scope do %>
-        <li class="#{base_tailwind_classes}">
+        <li>
           {@current_scope.#{schema.singular}.email}
         </li>
         <li>
-          <.link
-            href={~p"#{schema.route_prefix}/settings"}
-            class="#{link_tailwind_classes}"
-          >
-            Settings
-          </.link>
+          <.link href={~p"#{schema.route_prefix}/settings"}>Settings</.link>
         </li>
         <li>
-          <.link
-            href={~p"#{schema.route_prefix}/log-out"}
-            method="delete"
-            class="#{link_tailwind_classes}"
-          >
-            Log out
-          </.link>
+          <.link href={~p"#{schema.route_prefix}/log-out"} method="delete">Log out</.link>
         </li>
       <% else %>
         <li>
-          <.link
-            href={~p"#{schema.route_prefix}/register"}
-            class="#{link_tailwind_classes}"
-          >
-            Register
-          </.link>
+          <.link href={~p"#{schema.route_prefix}/register"}>Register</.link>
         </li>
         <li>
-          <.link
-            href={~p"#{schema.route_prefix}/log-in"}
-            class="#{link_tailwind_classes}"
-          >
-            Log in
-          </.link>
+          <.link href={~p"#{schema.route_prefix}/log-in"}>Log in</.link>
         </li>
       <% end %>
     </ul>\

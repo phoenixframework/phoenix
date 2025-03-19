@@ -549,16 +549,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/controllers/warehouse/user_session_html/new.html.heex",
         fn file ->
           assert file =~
-                   ~S|<.simple_form :let={f} for={@form} as={:user} id="login_form_magic" action={~p"/warehouse/users/log-in"}>|
+                   ~S|<.form :let={f} for={@form} as={:user} id="login_form_magic" action={~p"/warehouse/users/log-in"}>|
 
           assert file =~ """
-                   <.simple_form
-                     :let={f}
-                     for={@form}
-                     as={:user}
-                     id="login_form_password"
-                     action={~p"/warehouse/users/log-in"}
-                   >
+                   <.form :let={f} for={@form} as={:user} id="login_form_password" action={~p"/warehouse/users/log-in"}>
                  """
 
           assert file =~
@@ -585,10 +579,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         "lib/my_app_web/controllers/warehouse/user_settings_html/edit.html.heex",
         fn file ->
           assert file =~
-                   ~S|<.simple_form :let={f} for={@email_changeset} action={~p"/warehouse/users/settings"} id="update_email">|
+                   ~S|<.form :let={f} for={@email_changeset} action={~p"/warehouse/users/settings"} id="update_email">|
 
           assert file =~
-                   ~s|<.simple_form\n      :let={f}\n      for={@password_changeset}\n      action={~p"/warehouse/users/settings"}\n      id="update_password"\n    >|
+                   ~s|<.form :let={f} for={@password_changeset} action={~p\"/warehouse/users/settings\"} id=\"update_password\">|
         end
       )
 
@@ -1221,44 +1215,23 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                layout file, please add the following code to it where you'd
                like the user menu items to be rendered.
 
-                   <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+                   <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
                      <%= if @current_scope do %>
-                       <li class="text-[0.8125rem] leading-6 text-zinc-900">
+                       <li>
                          {@current_scope.user.email}
                        </li>
                        <li>
-                         <.link
-                           href={~p"/users/settings"}
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                         >
-                           Settings
-                         </.link>
+                         <.link href={~p"/users/settings"}>Settings</.link>
                        </li>
                        <li>
-                         <.link
-                           href={~p"/users/log-out"}
-                           method="delete"
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                         >
-                           Log out
-                         </.link>
+                         <.link href={~p"/users/log-out"} method="delete">Log out</.link>
                        </li>
                      <% else %>
                        <li>
-                         <.link
-                           href={~p"/users/register"}
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                         >
-                           Register
-                         </.link>
+                         <.link href={~p"/users/register"}>Register</.link>
                        </li>
                        <li>
-                         <.link
-                           href={~p"/users/log-in"}
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                         >
-                           Log in
-                         </.link>
+                         <.link href={~p"/users/log-in"}>Log in</.link>
                        </li>
                      <% end %>
                    </ul>
@@ -1285,44 +1258,23 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         Add the following user menu items to your lib/my_app_web/components/layouts/root.html.heex layout file:
 
-            <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+            <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_scope do %>
-                <li class="text-[0.8125rem] leading-6 text-zinc-900">
+                <li>
                   {@current_scope.user.email}
                 </li>
                 <li>
-                  <.link
-                    href={~p"/users/settings"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                  >
-                    Settings
-                  </.link>
+                  <.link href={~p"/users/settings"}>Settings</.link>
                 </li>
                 <li>
-                  <.link
-                    href={~p"/users/log-out"}
-                    method="delete"
-                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                  >
-                    Log out
-                  </.link>
+                  <.link href={~p"/users/log-out"} method="delete">Log out</.link>
                 </li>
               <% else %>
                 <li>
-                  <.link
-                    href={~p"/users/register"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                  >
-                    Register
-                  </.link>
+                  <.link href={~p"/users/register"}>Register</.link>
                 </li>
                 <li>
-                  <.link
-                    href={~p"/users/log-in"}
-                    class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                  >
-                    Log in
-                  </.link>
+                  <.link href={~p"/users/log-in"}>Log in</.link>
                 </li>
               <% end %>
             </ul>

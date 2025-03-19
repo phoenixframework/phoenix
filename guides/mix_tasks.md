@@ -422,9 +422,10 @@ And then `assets/` which should look similar to this:
 │   └── app.css
 ├── js
 │   └── app.js
-├── tailwind_heroicons.js
 └── vendor
-    └── topbar.js
+    ├── topbar.js
+    ├── heroicons.js
+    └── daisyui.js
 ```
 
 All of these files are our static assets. Now let's run the `mix phx.digest` task.

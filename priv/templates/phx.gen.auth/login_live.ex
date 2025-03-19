@@ -21,7 +21,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </:subtitle>
       </.header>
 
-      <.simple_form
+      <.form
         :let={f}
         for={@form}
         id="login_form_magic"
@@ -39,15 +39,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <.button class="w-full">
           Log in with email <span aria-hidden="true">→</span>
         </.button>
-      </.simple_form>
+      </.form>
 
-      <div class="flex items-center mt-8 -mb-6 text-sm">
-        <hr class="flex-grow border-t-2 border-gray-300" />
-        <span class="mx-2 text-gray-500">or</span>
-        <hr class="flex-grow border-t-2 border-gray-300" />
-      </div>
+      <div class="divider">or</div>
 
-      <.simple_form
+      <.form
         :let={f}
         for={@form}
         id="login_form_password"
@@ -78,13 +74,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <.button class="w-full">
           Log in <span aria-hidden="true">→</span>
         </.button>
-      </.simple_form>
+      </.form>
 
-      <div :if={local_mail_adapter?()} class="mt-8 p-4 border text-center">
-        <p>You are running the local mail adapter.</p>
-        <p>
-          To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
-        </p>
+      <div :if={local_mail_adapter?()} class="alert alert-outline mt-8">
+        <div>
+          <p>You are running the local mail adapter.</p>
+          <p>
+            To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
+          </p>
+        </div>
       </div>
     </div>
     """

@@ -5,28 +5,22 @@
 @source "../css";
 @source "../js";
 @source "../../lib/<%= @lib_web_name || @app_name %>";
-@plugin "@tailwindcss/forms";
-@plugin "../tailwind_heroicons.js";
+
+@plugin "../vendor/heroicons";
+@plugin "../vendor/daisyui" {
+  /* In practice, you will likely ship only with two themes, as below: */
+  /* themes: light --default, dark --prefersdark; */
+  themes: all;
+}
+
 @custom-variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
 @custom-variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
 @custom-variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
-@theme {
-  --color-brand: oklch(66.64% 0.2202 37.57);
-}
 
 /*
  * Make LiveView wrapper divs transparent for layout.
  * This makes it possible to use LiveViews as flex children for example.
  */
 [data-phx-root-id] { display: contents }
-
-/* Helper class for the default table component style that adds
- * rounded corners to the table rows.
- */
-@utility rounded-table-corner {
-  @apply
-    first:before:absolute first:before:h-full first:before:w-4 first:before:top-0 first:before:-left-4 group-hover:first:before:bg-zinc-50 first:before:sm:rounded-l-xl
-    last:before:absolute last:before:h-full last:before:w-4 last:before:top-0 last:before:-right-4 group-hover:last:before:bg-zinc-50 last:before:sm:rounded-r-xl;
-}
 
 /* This file is for your main application CSS */

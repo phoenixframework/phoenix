@@ -12,12 +12,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
     </.header>
 
-    <.simple_form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
+    <.form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
 <%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 6) %>
-      <:actions>
-        <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
-      </:actions>
-    </.simple_form>
+      <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
+    </.form>
 
     <.back navigate={return_path(<%= assign_scope_prefix %>@return_to, @<%= schema.singular %>)}>Back</.back>
     """

@@ -8,7 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <div class="mx-auto max-w-sm">
       <.header class="text-center">Welcome {@<%= schema.singular %>.email}</.header>
 
-      <.simple_form
+      <.form
         :if={!@<%= schema.singular %>.confirmed_at}
         for={@form}
         id="confirmation_form"
@@ -23,12 +23,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           type="checkbox"
           label="Keep me logged in"
         />
-        <:actions>
-          <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
-        </:actions>
-      </.simple_form>
+        <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
+      </.form>
 
-      <.simple_form
+      <.form
         :if={@<%= schema.singular %>.confirmed_at}
         for={@form}
         id="login_form"
@@ -43,12 +41,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           type="checkbox"
           label="Keep me logged in"
         />
-        <:actions>
-          <.button phx-disable-with="Logging in..." class="w-full">Log in</.button>
-        </:actions>
-      </.simple_form>
+        <.button phx-disable-with="Logging in..." class="w-full">Log in</.button>
+      </.form>
 
-      <p :if={!@<%= schema.singular %>.confirmed_at} class="mt-8 p-4 border text-center">
+      <p :if={!@<%= schema.singular %>.confirmed_at} class="alert alert-outline mt-8">
         Tip: If you prefer passwords, you can enable them in the <%= schema.singular %> settings.
       </p>
     </div>
