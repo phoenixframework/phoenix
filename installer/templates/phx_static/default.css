@@ -1549,6 +1549,9 @@
   .h-full {
     height: 100%;
   }
+  .w-0 {
+    width: calc(var(--spacing) * 0);
+  }
   .w-3 {
     width: calc(var(--spacing) * 3);
   }
@@ -1735,9 +1738,6 @@
   .checkbox-sm {
     padding: 0.1875rem;
     --size: calc(var(--size-selector, 0.25rem) * 5);
-  }
-  .p-0 {
-    padding: calc(var(--spacing) * 0);
   }
   .badge-sm {
     --size: calc(var(--size-selector, 0.25rem) * 5);
@@ -2438,3 +2438,4 @@
     transform: rotate(360deg);
   }
 }
+
