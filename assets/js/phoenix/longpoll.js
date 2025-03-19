@@ -19,7 +19,7 @@ export default class LongPoll {
   constructor(endPoint, protocols){
     // we only support subprotocols for authToken
     // ["phoenix", "base64url.bearer.phx.BASE64_ENCODED_TOKEN"]
-    if (protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)) {
+    if(protocols && protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)){
       this.authToken = atob(protocols[1].slice(AUTH_TOKEN_PREFIX.length))
     }
     this.endPoint = null
@@ -144,7 +144,7 @@ export default class LongPoll {
 
   batchSend(messages){
     this.awaitingBatchAck = true
-    this.ajax("POST", "application/x-ndjson", messages.join("\n"), () => this.onerror("timeout"), resp => {
+    this.ajax("POST", {"Content-Type": "application/x-ndjson"}, messages.join("\n"), () => this.onerror("timeout"), resp => {
       this.awaitingBatchAck = false
       if(!resp || resp.status !== 200){
         this.onerror(resp && resp.status)

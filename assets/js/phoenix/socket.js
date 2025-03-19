@@ -349,11 +349,11 @@ export default class Socket {
   transportConnect(){
     this.connectClock++
     this.closeWasClean = false
-    let protocols = ["phoenix"]
+    let protocols = undefined
     // Sec-WebSocket-Protocol based token
     // (longpoll uses Authorization header instead)
-    if (this.authToken) {
-      protocols.push(`${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`)
+    if(this.authToken){
+      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`]
     }
     this.conn = new this.transport(this.endPointURL(), protocols)
     this.conn.binaryType = this.binaryType
