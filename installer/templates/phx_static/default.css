@@ -22,7 +22,6 @@
     --text-lg: 1.125rem;
     --text-lg--line-height: calc(1.75 / 1.125);
     --font-weight-normal: 400;
-    --font-weight-medium: 500;
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
     --tracking-tighter: -0.05em;
@@ -38,7 +37,6 @@
     --default-mono-font-family: var(--font-mono);
     --default-mono-font-feature-settings: var(--font-mono--font-feature-settings);
     --default-mono-font-variation-settings: var(--font-mono--font-variation-settings);
-    --color-brand: oklch(66.64% 0.2202 37.57);
   }
 }
 @layer base {
@@ -913,6 +911,27 @@
       cursor: not-allowed;
     }
   }
+  .menu-horizontal {
+    display: inline-flex;
+    flex-direction: row;
+    & > li:not(.menu-title) > details > ul {
+      position: absolute;
+      margin-inline-start: calc(0.25rem * 0);
+      margin-top: calc(0.25rem * 4);
+      padding-block: calc(0.25rem * 2);
+      padding-inline-end: calc(0.25rem * 2);
+    }
+    & > li > details > ul {
+      &:before {
+        content: none;
+      }
+    }
+    :where(& > li:not(.menu-title) > details > ul) {
+      border-radius: var(--radius-box);
+      background-color: var(--color-base-100);
+      box-shadow: 0 1px 3px 0 oklch(0% 0 0/0.1), 0 1px 2px -1px oklch(0% 0 0/0.1);
+    }
+  }
   .checkbox {
     border: var(--border) solid var(--input-color, color-mix(in oklab, var(--color-base-content) 20%, #0000));
     position: relative;
@@ -1314,6 +1333,45 @@
     background-image: radial-gradient( circle at 35% 30%, oklch(1 0 0 / calc(var(--depth) * 0.5)), #0000 );
     box-shadow: 0 2px 3px -1px color-mix(in oklab, currentColor calc(var(--depth) * 100%), #0000);
   }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(0.25rem * 2);
+    border-radius: var(--radius-selector);
+    vertical-align: middle;
+    color: var(--color-base-content);
+    border: var(--border) solid var(--badge-color, var(--color-base-200));
+    font-size: 0.875rem;
+    width: fit-content;
+    padding-inline: calc(0.25rem * 3 - var(--border));
+    background-size: auto, calc(var(--noise) * 100%);
+    background-image: none, var(--fx-noise);
+    background-color: var(--badge-color, var(--color-base-100));
+    --size: calc(var(--size-selector, 0.25rem) * 6);
+    height: var(--size);
+    &.badge-outline {
+      color: var(--badge-color, var(--color-base-content));
+      border-color: currentColor;
+      background-color: transparent;
+      background-image: none;
+      box-shadow: none;
+    }
+    &.badge-dash {
+      color: var(--badge-color, var(--color-base-content));
+      background-color: transparent;
+      border-style: dashed;
+      background-image: none;
+      box-shadow: none;
+    }
+    &.badge-soft {
+      color: var(--badge-color, var(--color-base-content));
+      background-color: color-mix( in oklab, var(--badge-color, var(--color-base-content)) 8%, var(--color-base-100) );
+      border-color: color-mix( in oklab, var(--badge-color, var(--color-base-content)) 10%, var(--color-base-100) );
+      background-image: none;
+      box-shadow: none;
+    }
+  }
   .hero-arrow-left-solid {
     --hero-arrow-left-solid: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22currentColor%22%20aria-hidden%3D%22true%22%20data-slot%3D%22icon%22%3E%20%20%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M11.03%203.97a.75.75%200%200%201%200%201.06l-6.22%206.22H21a.75.75%200%200%201%200%201.5H4.81l6.22%206.22a.75.75%200%201%201-1.06%201.06l-7.5-7.5a.75.75%200%200%201%200-1.06l7.5-7.5a.75.75%200%200%201%201.06%200Z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E');
     -webkit-mask: var(--hero-arrow-left-solid);
@@ -1634,10 +1692,6 @@
   .rounded-lg {
     border-radius: var(--radius-lg);
   }
-  .border {
-    border-style: var(--tw-border-style);
-    border-width: 1px;
-  }
   .alert-error {
     border-color: var(--color-error);
     color: var(--color-error-content);
@@ -1675,9 +1729,6 @@
   .bg-base-200 {
     background-color: var(--color-base-200);
   }
-  .bg-warning {
-    background-color: var(--color-warning);
-  }
   .fill-base-content\/40 {
     fill: color-mix(in oklab, var(--color-base-content) 40%, transparent);
   }
@@ -1688,8 +1739,10 @@
   .p-0 {
     padding: calc(var(--spacing) * 0);
   }
-  .p-4 {
-    padding: calc(var(--spacing) * 4);
+  .badge-sm {
+    --size: calc(var(--size-selector, 0.25rem) * 5);
+    font-size: 0.75rem;
+    padding-inline: calc(0.25rem * 2.5 - var(--border));
   }
   .px-1 {
     padding-inline: calc(var(--spacing) * 1);
@@ -1736,9 +1789,6 @@
     font-size: var(--text-xs);
     line-height: var(--tw-leading, var(--text-xs--line-height));
   }
-  .text-\[0\.8125rem\] {
-    font-size: 0.8125rem;
-  }
   .text-\[2rem\] {
     font-size: 2rem;
   }
@@ -1762,10 +1812,6 @@
     --tw-font-weight: var(--font-weight-bold);
     font-weight: var(--font-weight-bold);
   }
-  .font-medium {
-    --tw-font-weight: var(--font-weight-medium);
-    font-weight: var(--font-weight-medium);
-  }
   .font-normal {
     --tw-font-weight: var(--font-weight-normal);
     font-weight: var(--font-weight-normal);
@@ -1784,8 +1830,9 @@
   .text-wrap {
     text-wrap: wrap;
   }
-  .text-base-content {
-    color: var(--color-base-content);
+  .badge-warning {
+    --badge-color: var(--color-warning);
+    color: var(--color-warning-content);
   }
   .text-base-content\/70 {
     color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
@@ -1793,14 +1840,8 @@
   .text-base-content\/80 {
     color: color-mix(in oklab, var(--color-base-content) 80%, transparent);
   }
-  .text-brand {
-    color: var(--color-brand);
-  }
   .text-error {
     color: var(--color-error);
-  }
-  .text-warning-content {
-    color: var(--color-warning-content);
   }
   .capitalize {
     text-transform: capitalize;
@@ -1926,13 +1967,6 @@
     &:hover {
       @media (hover: hover) {
         color: var(--color-base-content);
-      }
-    }
-  }
-  .hover\:text-base-content\/80 {
-    &:hover {
-      @media (hover: hover) {
-        color: color-mix(in oklab, var(--color-base-content) 80%, transparent);
       }
     }
   }
@@ -2303,11 +2337,6 @@
   syntax: "*";
   inherits: false;
   initial-value: 0;
-}
-@property --tw-border-style {
-  syntax: "*";
-  inherits: false;
-  initial-value: solid;
 }
 @property --tw-leading {
   syntax: "*";

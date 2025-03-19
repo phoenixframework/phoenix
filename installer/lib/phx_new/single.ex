@@ -84,9 +84,29 @@ defmodule Phx.New.Single do
   ])
 
   template(:no_css, [
-    {:text, :web,
-     "phx_static/app.css": "priv/static/assets/app.css",
-     "phx_static/default.css": "priv/static/assets/default.css"}
+    {
+      :text,
+      :web,
+      # the default.css file can be re-created like this:
+      #
+      # cd installer && \
+      #   mix phx.new dayzee --dev --database sqlite3 --install && \
+      #   cd dayzee && mix phx.gen.auth Accounts User users --live && \
+      #   mix phx.gen.live Blog Post posts title:string body:text
+      #
+      # next, edit the app.css file to only include two themes:
+      #
+      # @plugin "../vendor/daisyui" {
+      #   themes: light --default, dark --prefersdark;
+      # }
+      #
+      # Then, run tailwind:
+      # mix tailwind dayzee
+      #
+      # and finally use the priv/static/app.css as default.css
+      "phx_static/app.css": "priv/static/assets/app.css",
+      "phx_static/default.css": "priv/static/assets/default.css"
+    }
   ])
 
   template(:static, [

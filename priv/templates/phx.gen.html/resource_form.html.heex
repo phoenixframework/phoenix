@@ -1,7 +1,4 @@
 <.form :let={f} for={@changeset} action={@action}>
-  <.error :if={@changeset.action}>
-    Oops, something went wrong! Please check the errors below.
-  </.error>
 <%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 2) %>
   <.button>Save <%= schema.human_singular %></.button>
 </.form>
