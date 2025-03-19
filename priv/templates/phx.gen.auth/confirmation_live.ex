@@ -44,7 +44,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <.button phx-disable-with="Logging in..." class="w-full">Log in</.button>
       </.form>
 
-      <p :if={!@<%= schema.singular %>.confirmed_at} class="mt-8 p-4 border text-center">
+      <p :if={!@<%= schema.singular %>.confirmed_at} class="alert alert-outline mt-8">
         Tip: If you prefer passwords, you can enable them in the <%= schema.singular %> settings.
       </p>
     </div>
