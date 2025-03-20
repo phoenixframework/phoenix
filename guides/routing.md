@@ -35,6 +35,7 @@ defmodule HelloWeb.Router do
   # scope "/api", HelloWeb do
   #   pipe_through :api
   # end
+
   # ...
 end
 ```
