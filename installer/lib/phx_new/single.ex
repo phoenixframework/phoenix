@@ -88,7 +88,7 @@ defmodule Phx.New.Single do
       :text,
       :web,
       # the default.css file can be re-created by using the recreate_default_css.exs file
-      # in the project root: `elixir recreate_default_css.exs`
+      # in the installer folder: `elixir installer/recreate_default_css.exs`
       "phx_static/app.css": "priv/static/assets/app.css",
       "phx_static/default.css": "priv/static/assets/default.css"
     }
