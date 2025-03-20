@@ -10,7 +10,8 @@ defmodule Phoenix.Router.ConsoleFormatter do
   @longpoll_verbs ["GET", "POST"]
 
   def format(router, endpoint \\ nil) do
-    routes = Phoenix.Router.routes(router)
+    routes = router.formatted_routes([])
+
     column_widths = calculate_column_widths(router, routes, endpoint)
 
     IO.iodata_to_binary([
@@ -19,7 +20,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
     ])
   end
 
-  defp format_endpoint(nil, _), do: ""
+  defp format_endpoint(nil, _router), do: ""
 
   defp format_endpoint(endpoint, widths) do
     case endpoint.__sockets__() do
@@ -104,21 +105,12 @@ defmodule Phoenix.Router.ConsoleFormatter do
     %{
       verb: verb,
       path: path,
-      plug: plug,
-      metadata: metadata,
-      plug_opts: plug_opts,
-      helper: helper
+      label: label
     } = route
 
     verb = verb_name(verb)
-    route_name = route_name(router, helper)
+    route_name = route_name(router, Map.get(route, :helper))
     {verb_len, path_len, route_name_len} = column_widths
-
-    log_module =
-      case metadata[:mfa] do
-        {mod, _fun, _arity} -> mod
-        _ -> plug
-      end
 
     String.pad_leading(route_name, route_name_len) <>
       "  " <>
@@ -126,7 +118,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
       "  " <>
       String.pad_trailing(path, path_len) <>
       "  " <>
-      "#{inspect(log_module)} #{inspect(plug_opts)}\n"
+      label <> "\n"
   end
 
   defp route_name(_router, nil), do: ""

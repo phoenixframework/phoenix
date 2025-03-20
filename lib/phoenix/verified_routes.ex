@@ -181,6 +181,35 @@ defmodule Phoenix.VerifiedRoutes do
   Finally, for even more complex use cases, where the whole URL needs to localized,
   see projects such as [`routex`](https://hex.pm/packages/routex) and
   [`ex_cldr_routes`](https://hex.pm/packages/ex_cldr_routes).
+
+  ## Usage with custom plugs
+
+  Sometimes, when we want to do dynamic routing, we will forward to custom plugs.
+  It is possible to make these dynamic routers support `mix phx.routes` and verified
+  routes at compile time by adopting the `Phoenix.VerifiedRoutes` behaviour. 
+  For example:
+
+      defmodule MyApp.LocaleRouter do
+        use Plug.Router
+        @behaviour Phoenix.VerifiedRoutes
+
+        # custom routing rules
+
+        # for displaying in `mix phx.routes`
+        def formatted_routes(plug_opts) do
+          for locale <- supported_locales(plug_opts) do
+            %{verb: "GET", path: "/#{locale}/*subpath"}
+          end
+        end
+
+        def verified_route?(plug_opts, path) do
+          plug_opts
+          |> supported_locales()
+          |> Enum.any?(fn locale -> 
+            Enum.at(path, 0) == locale
+          end)
+        end
+      end
   '''
   @doc false
   defstruct router: nil,
@@ -238,6 +267,29 @@ defmodule Phoenix.VerifiedRoutes do
     })
   end
 
+  @type plug_opts :: any()
+  @type formatted_route :: %{
+          required(:verb) => String.t(),
+          required(:path) => String.t(),
+          required(:label) => String.t()
+        }
+
+  @doc """
+  Returns the necessary information about routes for display in `mix phx.routes`.
+  
+  The `plug_opts` is typically only passed when the router is mounted within
+  a `Phoenix.Router`. Otherwise it defaults to `[]`.
+  """
+  @callback formatted_routes(plug_opts()) :: [formatted_route()]
+
+  @doc """
+  Returns `true` if the path is verified, and false if not.
+  
+  The `plug_opts` is typically only passed when the router is mounted within
+  a `Phoenix.Router`. Otherwise it defaults to `[]`.
+  """
+  @callback verified_route?(plug_opts(), [String.t()]) :: boolean()
+
   @after_verify_supported Version.match?(System.version(), ">= 1.14.0")
 
   defmacro __before_compile__(_env) do
@@ -256,13 +308,23 @@ defmodule Phoenix.VerifiedRoutes do
   @doc false
   def __verify__(routes) when is_list(routes) do
     Enum.each(routes, fn %__MODULE__{} = route ->
-      unless match_route?(route.router, route.test_path) do
+      test_path = split_test_path(route.test_path)
+
+      unless route.router.verified_route?([], test_path) do
         IO.warn(
           "no route path for #{inspect(route.router)} matches #{route.inspected_route}",
           route.warn_location
         )
       end
     end)
+  end
+
+  defp split_test_path(test_path) do
+    test_path
+    |> String.split("#")
+    |> Enum.at(0)
+    |> String.split("/")
+    |> Enum.filter(fn segment -> segment != "" end)
   end
 
   defp expand_alias({:__aliases__, _, _} = alias, env),
@@ -832,37 +894,6 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(false), do: "false"
   defp to_param(true), do: "true"
   defp to_param(data), do: Phoenix.Param.to_param(data)
-
-  defp match_route?(router, test_path) when is_binary(test_path) do
-    split_path =
-      test_path
-      |> String.split("#")
-      |> Enum.at(0)
-      |> String.split("/")
-      |> Enum.filter(fn segment -> segment != "" end)
-
-    match_route?(router, split_path)
-  end
-
-  defp match_route?(router, split_path) when is_list(split_path) do
-    case router.__verify_route__(split_path) do
-      {_forward_plug, true = _warn_on_verify?} ->
-        false
-
-      {nil = _forward_plug, false = _warn_on_verify?} ->
-        true
-
-      {{router, script_name}, false = _warn_on_verify?} ->
-        if function_exported?(router, :__routes__, 0) do
-          match_route?(router, split_path -- script_name)
-        else
-          true
-        end
-
-      :error ->
-        false
-    end
-  end
 
   defp build_route(route_ast, sigil_p, env, endpoint_ctx, router) do
     config = Module.get_attribute(env.module, :phoenix_verified_config, [])
