@@ -48,8 +48,8 @@ config :tailwind,
   version: "4.0.9",
   <%= @app_name %>: [
     args: ~w(
-      --input=assets/css/app.css
-      --output=priv/static/assets/app.css
+      --input=assets/css/main.css
+      --output=priv/static/assets/main.css
     ),
     cd: Path.expand("..<%= if @in_umbrella, do: "/apps/#{@app_name}" %>", __DIR__),
   ]<% end %>

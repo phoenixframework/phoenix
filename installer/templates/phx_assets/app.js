@@ -14,6 +14,8 @@
 //
 //     import "some-package"
 //
+// If you have dependencies that try to import CSS, esbuild will generate a separate `app.css` file.
+// To load it, simply add a second `<link>` to your `root.html.heex` file.
 <%= if @html do %>
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html"
