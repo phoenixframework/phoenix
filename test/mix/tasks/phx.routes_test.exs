@@ -48,7 +48,7 @@ defmodule PhoenixTestWeb.PlugRouterWithVerifiedRoutes do
 
   @impl Phoenix.VerifiedRoutes
   def verified_route?(_plug_opts, path) do
-    path == "/foo"
+    path == ["foo"]
   end
 end
 
