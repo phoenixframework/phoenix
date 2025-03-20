@@ -280,7 +280,6 @@ defmodule Phoenix.Router do
   within an actual Phoenix application.
   """
 
-  # TODO: Deprecate trailing_slash?
   alias Phoenix.Router.{Resource, Scope, Route, Helpers}
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]

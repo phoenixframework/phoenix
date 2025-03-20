@@ -39,7 +39,7 @@ defmodule Phoenix.Router.Scope do
     assigns = Keyword.get(opts, :assigns, %{})
     as = Keyword.get_lazy(opts, :as, fn -> Phoenix.Naming.resource_name(plug, "Controller") end)
     alias? = Keyword.get(opts, :alias, true)
-    trailing_slash? = Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
+    trailing_slash? = deprecated_trailing_slash(opts, top)
     warn_on_verify? = Keyword.get(opts, :warn_on_verify, false)
 
     if to_string(as) == "static" do
@@ -171,8 +171,24 @@ defmodule Phoenix.Router.Scope do
       private: Map.merge(top.private, private),
       assigns: Map.merge(top.assigns, assigns),
       log: Keyword.get(opts, :log, top.log),
-      trailing_slash?: Keyword.get(opts, :trailing_slash, top.trailing_slash?) == true
+      trailing_slash?: deprecated_trailing_slash(opts, top)
     })
+  end
+
+  defp deprecated_trailing_slash(opts, top) do
+    case Keyword.fetch(opts, :trailing_slash) do
+      {:ok, value} ->
+        IO.warn(
+          "the :trailing_slash option in the router is deprecated. " <>
+            "If you are using Phoenix.VerifiedRoutes, it has no effect. " <>
+            "If you are using the generated helpers, migrate to Phoenix.VerifiedRoutes"
+        )
+
+        value == true
+
+      :error ->
+        top.trailing_slash?
+    end
   end
 
   defp validate_hosts!(nil), do: []
