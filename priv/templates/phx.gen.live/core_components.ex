@@ -233,7 +233,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <fieldset class="fieldset mb-2">
       <label>
-        <span class="fieldset-label mb-1">{@label}</span>
+        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <select
           id={@id}
           name={@name}
@@ -254,7 +254,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <fieldset class="fieldset mb-2">
       <label>
-        <span class="fieldset-label mb-1">{@label}</span>
+        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <textarea
           id={@id}
           name={@name}
@@ -272,7 +272,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <fieldset class="fieldset mb-2">
       <label>
-        <span class="fieldset-label mb-1">{@label}</span>
+        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <input
           type={@type}
           name={@name}
