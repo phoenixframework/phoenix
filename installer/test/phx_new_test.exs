@@ -153,11 +153,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       # tailwind
-      assert_file("phx_blog/assets/css/app.css", fn file ->
+      assert_file("phx_blog/assets/css/main.css", fn file ->
         assert file =~ "lib/phx_blog_web"
       end)
 
-      refute File.exists?("phx_blog/priv/static/assets/app.css")
+      refute File.exists?("phx_blog/priv/static/assets/main.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")
       assert File.exists?("phx_blog/assets/vendor")
 
@@ -327,7 +327,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\]/)
 
       # No assets & No HTML
-      refute_file("phx_blog/priv/static/assets/app.css")
+      refute_file("phx_blog/priv/static/assets/main.css")
       refute_file("phx_blog/priv/static/assets/app.js")
 
       # No Ecto
@@ -532,7 +532,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/.gitignore")
       assert_file("phx_blog/.gitignore", ~r/\n$/)
-      assert_file("phx_blog/priv/static/assets/app.css")
+      assert_file("phx_blog/priv/static/assets/main.css")
       assert_file("phx_blog/priv/static/assets/app.js")
       assert_file("phx_blog/priv/static/favicon.ico")
 
