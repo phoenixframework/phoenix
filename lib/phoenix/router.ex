@@ -196,27 +196,8 @@ defmodule Phoenix.Router do
       end
 
   The route above will dispatch to `MyAppWeb.PageController`. This syntax
-  is not only convenient for developers, since we don't have to repeat
-  the `MyAppWeb.` prefix on all routes, but it also allows Phoenix to put
-  less pressure on the Elixir compiler. If instead we had written:
-
-      get "/pages/:id", MyAppWeb.PageController, :show
-
-  The Elixir compiler would infer that the router depends directly on
-  `MyAppWeb.PageController`, which is not true. By using scopes, Phoenix
-  can properly hint to the Elixir compiler the controller is not an
-  actual dependency of the router. This provides more efficient
-  compilation times.
-
-  Scopes allow us to scope on any path or even on the helper name:
-
-      scope "/api/v1", MyAppWeb, as: :api_v1 do
-        get "/pages/:id", PageController, :show
-      end
-
-  For example, the route above will match on the path `"/api/v1/pages/1"`
-  and the named helper will be `api_v1_page_path`, as expected from the
-  values given to `scope/4` option.
+  is convenient for developers, since we don't have to repeat `MyAppWeb.`
+  prefix on all routes
 
   Like all paths, you can define dynamic segments that will be applied as
   parameters in the controller:
@@ -233,7 +214,7 @@ defmodule Phoenix.Router do
   to generate "RESTful" routes to a given resource:
 
       defmodule MyAppWeb.Router do
-        use Phoenix.Router
+        use Phoenix.Router, helpers: false
 
         resources "/pages", PageController, only: [:show]
         resources "/users", UserController, except: [:delete]
@@ -244,14 +225,14 @@ defmodule Phoenix.Router do
   routes included in the router above:
 
       $ mix phx.routes
-      page_path  GET    /pages/:id       PageController.show/2
-      user_path  GET    /users           UserController.index/2
-      user_path  GET    /users/:id/edit  UserController.edit/2
-      user_path  GET    /users/new       UserController.new/2
-      user_path  GET    /users/:id       UserController.show/2
-      user_path  POST   /users           UserController.create/2
-      user_path  PATCH  /users/:id       UserController.update/2
-                 PUT    /users/:id       UserController.update/2
+      GET    /pages/:id       PageController.show/2
+      GET    /users           UserController.index/2
+      GET    /users/:id/edit  UserController.edit/2
+      GET    /users/new       UserController.new/2
+      GET    /users/:id       UserController.show/2
+      POST   /users           UserController.create/2
+      PATCH  /users/:id       UserController.update/2
+      PUT    /users/:id       UserController.update/2
 
   One can also pass a router explicitly as an argument to the task:
 
@@ -293,58 +274,10 @@ defmodule Phoenix.Router do
   Note that router pipelines are only invoked after a route is found.
   No plug is invoked in case no matches were found.
 
-  ## How to organize my routes?
+  ## Learn more
 
-  In Phoenix, we tend to define several pipelines, that provide specific
-  functionality. For example, the `pipeline :browser` above includes plugs
-  that are common for all routes that are meant to be accessed by a browser.
-  Similarly, if you are also serving `:api` requests, you would have a separate
-  `:api` pipeline that validates information specific to your endpoints.
-
-  Perhaps more importantly, it is also very common to define pipelines specific
-  to authentication and authorization. For example, you might have a pipeline
-  that requires all users are authenticated. Another pipeline may enforce only
-  admin users can access certain routes. Since routes are matched top to bottom,
-  it is recommended to place the authenticated/authorized routes before the
-  less restricted routes to ensure they are matched first.
-
-  Once your pipelines are defined, you reuse the pipelines in the desired
-  scopes, grouping your routes around their pipelines. For example, imagine
-  you are building a blog. Anyone can read a post, but only authenticated
-  users can create them. Your routes could look like this:
-
-      pipeline :browser do
-        plug :fetch_session
-        plug :accepts, ["html"]
-      end
-
-      pipeline :auth do
-        plug :ensure_authenticated
-      end
-
-      scope "/" do
-        pipe_through [:browser, :auth]
-
-        get "/posts/new", PostController, :new
-        post "/posts", PostController, :create
-      end
-
-      scope "/" do
-        pipe_through [:browser]
-
-        get "/posts", PostController, :index
-        get "/posts/:id", PostController, :show
-      end
-
-  Note in the above how the routes are split across different scopes.
-  While the separation can be confusing at first, it has one big upside:
-  it is very easy to inspect your routes and see all routes that, for
-  example, require authentication and which ones do not. This helps with
-  auditing and making sure your routes have the proper scope.
-
-  You can create as few or as many scopes as you want. Because pipelines
-  are reusable across scopes, they help encapsulate common functionality
-  and you can compose them as necessary on each scope you define.
+  See the [Routing](routing.md) guide for more information and examples
+  within an actual Phoenix application.
   """
 
   # TODO: Deprecate trailing_slash?
