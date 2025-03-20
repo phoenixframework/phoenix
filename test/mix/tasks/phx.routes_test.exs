@@ -24,6 +24,34 @@ defmodule PhoenixTestLiveWeb.Router do
   get "/", PageController, :index, metadata: %{mfa: {PageController.Live, :init, 1}}
 end
 
+defmodule PhoenixTestWeb.ForwardedRouter do
+  use Phoenix.Router
+
+  forward "/", PhoenixTestWeb.PlugRouterWithVerifiedRoutes
+end
+
+defmodule PhoenixTestWeb.PlugRouterWithVerifiedRoutes do
+  use Plug.Router
+
+  @behaviour Phoenix.VerifiedRoutes
+
+  get "/foo" do
+    send_resp(conn, 200, "ok")
+  end
+
+  @impl Phoenix.VerifiedRoutes
+  def formatted_routes(_plug_opts) do
+    [
+      %{verb: "GET", path: "/foo", label: "Hello"}
+    ]
+  end
+
+  @impl Phoenix.VerifiedRoutes
+  def verified_route?(_plug_opts, path) do
+    path == ["foo"]
+  end
+end
+
 defmodule Mix.Tasks.Phx.RoutesTest do
   use ExUnit.Case, async: true
 
@@ -31,6 +59,12 @@ defmodule Mix.Tasks.Phx.RoutesTest do
     Mix.Tasks.Phx.Routes.run(["PhoenixTestWeb.Router", "--no-compile"])
     assert_received {:mix_shell, :info, [routes]}
     assert routes =~ "page_path  GET  /  PageController :index"
+  end
+
+  test "format routes for forwarded router that implements verified routes" do
+    Mix.Tasks.Phx.Routes.run(["PhoenixTestWeb.ForwardedRouter", "--no-compile"])
+    assert_received {:mix_shell, :info, [routes]}
+    assert routes =~ "GET  /foo  Hello"
   end
 
   test "prints error when explicit router cannot be found" do
