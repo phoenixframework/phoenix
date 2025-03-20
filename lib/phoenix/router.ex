@@ -1308,12 +1308,13 @@ defmodule Phoenix.Router do
         route.plug_opts
         |> route.plug.formatted_routes()
         |> Enum.map(fn nested_route ->
-          %{
+          route = %{
             route
             | path: Path.join(route.path, nested_route.path),
-              verb: nested_route.verb,
-              plug_opts: nested_route.plug_opts
+              verb: nested_route.verb
           }
+
+          Map.put(route, :label, nested_route.label)
         end)
       else
         plug =
