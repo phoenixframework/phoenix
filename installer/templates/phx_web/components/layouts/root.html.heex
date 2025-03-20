@@ -7,7 +7,7 @@
     <.live_title default="<%= @app_module %>" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
     </.live_title>
-    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} /><%= if not @css do %>
+    <link phx-track-static rel="stylesheet" href={~p"/assets/main.css"} /><%= if not @css do %>
     <link phx-track-static rel="stylesheet" href={~p"/assets/default.css"} /><% end %>
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script><%= if @css do %>
