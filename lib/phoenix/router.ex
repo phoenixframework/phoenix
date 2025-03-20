@@ -358,6 +358,7 @@ defmodule Phoenix.Router do
       unquote(prelude(opts))
       unquote(defs())
       unquote(match_dispatch())
+      unquote(verified_routes())
     end
   end
 
@@ -537,6 +538,20 @@ defmodule Phoenix.Router do
     end
   end
 
+  defp verified_routes() do
+    quote location: :keep, generated: true do
+      @behaviour Phoenix.VerifiedRoutes
+
+      def formatted_routes(_) do
+        Phoenix.Router.__formatted_routes__(__MODULE__)
+      end
+
+      def verified_route?(_, split_path) do
+        Phoenix.Router.__verified_route__?(__MODULE__, split_path)
+      end
+    end
+  end
+
   @doc false
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse()
@@ -623,14 +638,15 @@ defmodule Phoenix.Router do
     warn_on_verify? = Enum.all?(routes, & &1.warn_on_verify?)
 
     case Enum.find(routes, &(&1.kind == :forward)) do
-      %{metadata: %{forward: forward}, plug: plug} ->
+      %{metadata: %{forward: forward}, plug: plug, plug_opts: plug_opts} ->
         quote generated: true do
           def __forward__(unquote(plug)) do
             unquote(forward)
           end
 
           def __verify_route__(unquote(path)) do
-            {{unquote(plug), unquote(forward)}, unquote(warn_on_verify?)}
+            {{unquote(plug), unquote(forward), unquote(Macro.escape(plug_opts))},
+             unquote(warn_on_verify?)}
           end
         end
 
@@ -1280,6 +1296,66 @@ defmodule Phoenix.Router do
     with {metadata, _prepare, _pipeline, {_plug, _opts}} <-
            router.__match_route__(split_path, method, host) do
       Map.delete(metadata, :conn)
+    end
+  end
+
+  @doc false
+  def __formatted_routes__(router) do
+    Enum.flat_map(router.__routes__(), fn route ->
+      Code.ensure_loaded(route.plug)
+
+      if function_exported?(route.plug, :formatted_routes, 1) do
+        route.plug_opts
+        |> route.plug.formatted_routes()
+        |> Enum.map(fn nested_route ->
+          %{
+            route
+            | path: Path.join(route.path, nested_route.path),
+              verb: nested_route.verb,
+              plug_opts: nested_route.plug_opts
+          }
+        end)
+      else
+        plug =
+          case route.metadata[:mfa] do
+            {module, _, _} -> module
+            _ -> route.plug
+          end
+
+        label = "#{inspect(plug)} #{inspect(route.plug_opts)}"
+
+        [
+          %{
+            helper: route.helper,
+            verb: route.verb,
+            path: route.path,
+            label: label
+          }
+        ]
+      end
+    end)
+  end
+
+  @doc false
+  def __verified_route__?(router, split_path) do
+    case router.__verify_route__(split_path) do
+      {_forward_plug, true = _warn_on_verify?} ->
+        false
+
+      {nil = _forward_plug, false = _warn_on_verify?} ->
+        true
+
+      {{router, script_name, plug_opts}, false = _warn_on_verify?} ->
+        Code.ensure_loaded(router)
+
+        if function_exported?(router, :verified_route?, 2) do
+          router.verified_route?(plug_opts, split_path -- script_name)
+        else
+          true
+        end
+
+      :error ->
+        false
     end
   end
 end
