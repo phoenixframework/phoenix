@@ -275,7 +275,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # Mailer
       assert_file(app_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:swoosh, \"~> 1.16\"}"
-        assert file =~ "{:req, \"~> 0.5.4\"}"
+        assert file =~ "{:req, \"~> 0.5\"}"
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/mailer.ex"), fn file ->
