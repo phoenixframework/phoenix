@@ -53,6 +53,7 @@ defmodule <%= @web_namespace %> do
   def live_view do
     quote do
       use Phoenix.LiveView,
+        # Do not change this to :root if you are using LiveView
         layout: {<%= @web_namespace %>.Layouts, :app}
 
       unquote(html_helpers())
