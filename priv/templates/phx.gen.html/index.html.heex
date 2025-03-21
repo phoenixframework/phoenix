@@ -1,23 +1,25 @@
-<.header>
-  Listing <%= schema.human_plural %>
-  <:actions>
-    <.link class="btn" href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/new"}>
-      New <%= schema.human_singular %>
-    </.link>
-  </:actions>
-</.header>
+<Layouts.app flash={@flash}<%= if scope do %> <%= scope.assign_key %>={@<%= scope.assign_key %>}<% end %>>
+  <.header>
+    Listing <%= schema.human_plural %>
+    <:actions>
+      <.link class="btn" href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/new"}>
+        New <%= schema.human_singular %>
+      </.link>
+    </:actions>
+  </.header>
 
-<.table id="<%= schema.plural %>" rows={@<%= schema.collection %>} row_click={&JS.navigate(~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{&1}")}><%= for {k, _} <- schema.attrs do %>
-  <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{<%= schema.singular %>.<%= k %>}</:col><% end %>
-  <:action :let={<%= schema.singular %>}>
-    <div class="sr-only">
-      <.link navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>
-    </div>
-    <.link navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link>
-  </:action>
-  <:action :let={<%= schema.singular %>}>
-    <.link href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}"} method="delete" data-confirm="Are you sure?">
-      Delete
-    </.link>
-  </:action>
-</.table>
+  <.table id="<%= schema.plural %>" rows={@<%= schema.collection %>} row_click={&JS.navigate(~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{&1}")}><%= for {k, _} <- schema.attrs do %>
+    <:col :let={<%= schema.singular %>} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{<%= schema.singular %>.<%= k %>}</:col><% end %>
+    <:action :let={<%= schema.singular %>}>
+      <div class="sr-only">
+        <.link navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>
+      </div>
+      <.link navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link>
+    </:action>
+    <:action :let={<%= schema.singular %>}>
+      <.link href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}"} method="delete" data-confirm="Are you sure?">
+        Delete
+      </.link>
+    </:action>
+  </.table>
+</Layouts.app>

@@ -1203,15 +1203,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
         assert error == """
 
-               Unable to find an application layout file to inject user menu items.
+               Unable to find the root layout file to inject user menu items.
 
                Missing files:
 
                  * lib/my_app_web/components/layouts/root.html.heex
-                 * lib/my_app_web/components/layouts/app.html.heex
 
                Please ensure this phoenix app was not generated with
-               --no-html. If you have changed the name of your application
+               --no-html. If you have changed the name of your root
                layout file, please add the following code to it where you'd
                like the user menu items to be rendered.
 
