@@ -295,8 +295,8 @@ Our last addition will be to add the "complete order" button to our cart page to
   <.header>
     My Cart
 +   <:actions>
-+     <.link href={~p"/orders"} method="post">
-+       <.button>Complete order</.button>
++     <.link class="btn" href={~p"/orders"} method="post">
++       Complete order
 +     </.link>
 +   </:actions>
   </.header>

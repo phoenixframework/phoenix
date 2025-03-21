@@ -656,8 +656,8 @@ Here's what the `schema_migrations` table looks like.
 hello_dev=# select * from schema_migrations;
 version        |     inserted_at
 ---------------+---------------------
-20150317170448 | 2015-03-17 21:07:26
-20150318001628 | 2015-03-18 01:45:00
+20250317170448 | 2025-03-17 21:07:26
+20250318001628 | 2025-03-18 01:45:00
 (2 rows)
 ```
 
