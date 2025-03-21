@@ -7,6 +7,10 @@
 @source "../../lib/<%= @lib_web_name || @app_name %>";
 
 @plugin "../vendor/heroicons";
+/* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
+   curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
+   Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
+
 @plugin "../vendor/daisyui" {
   /* In practice, you will likely ship only with two themes, as below: */
   /* themes: light --default, dark --prefersdark; */

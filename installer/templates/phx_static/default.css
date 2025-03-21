@@ -421,6 +421,9 @@
     }
   }
   .btn {
+    :where(&) {
+      width: unset;
+    }
     display: inline-flex;
     flex-shrink: 0;
     cursor: pointer;
@@ -470,11 +473,6 @@
       &:hover {
         --btn-bg: color-mix(in oklab, var(--btn-color, var(--color-base-200)), #000 7%);
       }
-    }
-    &.btn-active {
-      --btn-bg: color-mix(in oklab, var(--btn-color, var(--color-base-200)), #000 7%);
-      --btn-shadow: 0 0 0 0 oklch(0% 0 0/0), 0 0 0 0 oklch(0% 0 0/0);
-      isolation: isolate;
     }
     &:focus-visible {
       outline-width: 2px;
@@ -882,7 +880,6 @@
       background: inherit;
       border-radius: inherit;
       border-style: none;
-      background-image: none;
       &:focus, &:focus-within {
         --tw-outline-style: none;
         outline-style: none;
@@ -890,6 +887,10 @@
           outline: 2px solid transparent;
           outline-offset: 2px;
         }
+      }
+      &:not(:last-child) {
+        margin-inline-end: calc(0.25rem * -5.5);
+        background-image: none;
       }
     }
     &:focus, &:focus-within {
@@ -1340,36 +1341,34 @@
     gap: calc(0.25rem * 2);
     border-radius: var(--radius-selector);
     vertical-align: middle;
-    color: var(--color-base-content);
+    color: var(--badge-fg);
     border: var(--border) solid var(--badge-color, var(--color-base-200));
     font-size: 0.875rem;
     width: fit-content;
     padding-inline: calc(0.25rem * 3 - var(--border));
     background-size: auto, calc(var(--noise) * 100%);
     background-image: none, var(--fx-noise);
-    background-color: var(--badge-color, var(--color-base-100));
+    background-color: var(--badge-bg);
+    --badge-bg: var(--badge-color, var(--color-base-100));
+    --badge-fg: var(--color-base-content);
     --size: calc(var(--size-selector, 0.25rem) * 6);
     height: var(--size);
     &.badge-outline {
-      color: var(--badge-color, var(--color-base-content));
-      border-color: currentColor;
-      background-color: transparent;
+      --badge-fg: var(--badge-color);
+      --badge-bg: #0000;
       background-image: none;
-      box-shadow: none;
     }
     &.badge-dash {
-      color: var(--badge-color, var(--color-base-content));
-      background-color: transparent;
+      --badge-fg: var(--badge-color);
+      --badge-bg: #0000;
       border-style: dashed;
       background-image: none;
-      box-shadow: none;
     }
     &.badge-soft {
       color: var(--badge-color, var(--color-base-content));
       background-color: color-mix( in oklab, var(--badge-color, var(--color-base-content)) 8%, var(--color-base-100) );
       border-color: color-mix( in oklab, var(--badge-color, var(--color-base-content)) 10%, var(--color-base-100) );
       background-image: none;
-      box-shadow: none;
     }
   }
   .hero-arrow-left-solid {
@@ -1450,7 +1449,7 @@
     align-items: center;
     gap: calc(0.25rem * 1.5);
     color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
-    &:is(label, a), &:has(input) {
+    &:has(input) {
       cursor: pointer;
     }
   }
@@ -1466,7 +1465,7 @@
     justify-content: start;
     justify-items: start;
     grid-auto-flow: column;
-    grid-template-columns: auto minmax(auto, 1fr);
+    grid-template-columns: auto;
     text-align: start;
     border: var(--border) solid var(--color-base-200);
     font-size: 0.875rem;
@@ -1474,6 +1473,9 @@
     background-size: auto, calc(var(--noise) * 100%);
     background-image: none, var(--fx-noise);
     box-shadow: 0 3px 0 -2px oklch(100% 0 0 / calc(var(--depth) * 0.08)) inset, 0 1px color-mix( in oklab, color-mix(in oklab, #000 20%, var(--alert-color, var(--color-base-200))) calc(var(--depth) * 20%), #0000 ), 0 4px 3px -2px oklch(0% 0 0 / calc(var(--depth) * 0.08));
+    &:has(:nth-child(2)) {
+      grid-template-columns: auto minmax(auto, 1fr);
+    }
     &.alert-outline {
       background-color: transparent;
       color: var(--alert-color);
@@ -1830,10 +1832,6 @@
   .text-wrap {
     text-wrap: wrap;
   }
-  .badge-warning {
-    --badge-color: var(--color-warning);
-    color: var(--color-warning-content);
-  }
   .text-base-content\/70 {
     color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
   }
@@ -1908,6 +1906,10 @@
     --fontsize: 0.75rem;
     --btn-p: 0.75rem;
     --size: calc(var(--size-field, 0.25rem) * 8);
+  }
+  .badge-warning {
+    --badge-color: var(--color-warning);
+    --badge-fg: var(--color-warning-content);
   }
   .btn-primary {
     --btn-color: var(--color-primary);
@@ -2247,8 +2249,7 @@
   }
 }
 @layer base {
-  :root,
-[data-theme] {
+  :root, [data-theme] {
     background-color: var(--root-bg, var(--color-base-100));
     color: var(--color-base-content);
   }
@@ -2262,15 +2263,7 @@
   }
 }
 @layer base {
-  :where(
-  :root:has(
-      .modal-open,
-      .modal[open],
-      .modal:target,
-      .modal-toggle:checked,
-      .drawer:not(.drawer-open) > .drawer-toggle:checked
-    )
-) {
+  :where( :root:has( .modal-open, .modal[open], .modal:target, .modal-toggle:checked, .drawer:not(.drawer-open) > .drawer-toggle:checked ) ) {
     scrollbar-gutter: stable;
     background-image: linear-gradient(var(--color-base-100), var(--color-base-100));
     --root-bg: color-mix(in srgb, var(--color-base-100), oklch(0% 0 0) 40%);
