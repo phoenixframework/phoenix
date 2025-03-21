@@ -42,7 +42,7 @@ $ mix phx.new hello
 >
 > - [Phoenix.LiveView](https://hexdocs.pm/phoenix_live_view/) for building realtime and interactive web applications. You can skip this with `--no-live`.
 >
-> Read the [Mix Tasks Guide](mix_tasks.html#phoenix-specific-mix-tasks) for the full list of things that can be excluded, among other options.
+> Run `mix help phx.new` to learn all options.
 
 ```console
 mix phx.new hello
@@ -85,9 +85,9 @@ You can also run your app inside IEx (Interactive Elixir) as:
 
 Once our dependencies are installed, the task will prompt us to change into our project directory and start our application.
 
-Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the [Mix Tasks Guide](mix_tasks.html#ecto-specific-mix-tasks) to learn more about the `mix ecto.create` task.
+Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". Let's give it a try.
 
-Ok, let's give it a try. First, we'll `cd` into the `hello/` directory we've just created:
+First, we'll `cd` into the `hello/` directory we've just created:
 
 ```console
 $ cd hello
@@ -102,9 +102,7 @@ Generated hello app
 The database for Hello.Repo has been created
 ```
 
-In case the database could not be created, see the guides for the [`mix ecto.create`](mix_tasks.html#mix-ecto-create) for general troubleshooting.
-
-> Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
+In case the database could not be created, see [our Ecto section on Mix tasks](ecto.html#mix-tasks) or run `mix help ecto.create`.
 
 And finally, we'll start the Phoenix server:
 
