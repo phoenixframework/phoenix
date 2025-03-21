@@ -14,7 +14,13 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       </.header>
 
       <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
-        <.input field={@email_form[:email]} type="email" label="Email" autocomplete="username" required />
+        <.input
+          field={@email_form[:email]}
+          type="email"
+          label="Email"
+          autocomplete="username"
+          required
+        />
         <.button phx-disable-with="Changing...">Change Email</.button>
       </.form>
 
