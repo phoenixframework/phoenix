@@ -23,12 +23,12 @@ File.cd!("installer", fn ->
   shell_in_daisy!.("mix deps.get")
   shell_in_daisy!.("mix phx.gen.live Blog Post posts title:string body:text")
 
-  css = File.read!("dayzee/assets/css/app.css")
-  File.write!("dayzee/assets/css/app.css", String.replace(css, "themes: all;", "themes: light --default, dark --prefersdark;"))
+  css = File.read!("dayzee/assets/css/main.css")
+  File.write!("dayzee/assets/css/main.css", String.replace(css, "themes: all;", "themes: light --default, dark --prefersdark;"))
 
   shell_in_daisy!.("mix tailwind dayzee")
 
-  content = File.read!("dayzee/priv/static/assets/app.css")
+  content = File.read!("dayzee/priv/static/assets/main.css")
 
   File.write!("templates/phx_static/default.css", """
   /* These are daisyUI styles for styling the default CoreComponents and generator files
