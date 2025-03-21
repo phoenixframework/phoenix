@@ -63,7 +63,7 @@ defmodule Phoenix.Integration.MixProject do
        app: false,
        compile: false,
        depth: 1},
-      {:req, "~> 0.5.4"}
+      {:req, "~> 0.5"}
     ]
   end
 end

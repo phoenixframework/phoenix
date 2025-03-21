@@ -256,7 +256,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       # Mailer
       assert_file("phx_blog/mix.exs", fn file ->
         assert file =~ "{:swoosh, \"~> 1.16\"}"
-        assert file =~ "{:req, \"~> 0.5.4\"}"
+        assert file =~ "{:req, \"~> 0.5\"}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/mailer.ex", fn file ->
