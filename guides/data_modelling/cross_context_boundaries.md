@@ -15,7 +15,7 @@ From the description, it's clear we need a `Cart` resource for storing the user'
 
 ## Adding authentication
 
-Most of the cart functionality is tied to a specific user. Therefore, in order to allow each user to manage their own cart (and only their own carts), we must be able to authentication users. To do so, we will use Phoenix' built-in `mix phx.gen.auth` generator to scaffold a solution for us:
+Most of the cart functionality is tied to a specific user. Therefore, in order to allow each user to manage their own cart (and only their own carts), we must be able to authenticate users. To do so, we will use Phoenix's built-in `mix phx.gen.auth` generator to scaffold a solution for us:
 
 ```console
 mix phx.gen.auth Accounts User user
@@ -44,9 +44,9 @@ to create your account and then access "/dev/mailbox" to
 see the account confirmation email.
 ```
 
-After following the instructions to re-fetch dependencies and migrating the database, we can start the server with `mix phx.server` and re-visit the home page [`http://localhost:4000/`](http://localhost:4000/) and should see new registration and login links at the top of the page. On the registration page, create a new user. In development, an confirmation email is sent to the dev mailbox, which is accessible at [`http://localhost:4000/dev/mailbox`](http://localhost:4000/dev/mailbox). After clicking the confirmation link, you should be successfully logged in.
+After following the instructions to re-fetch dependencies and migrating the database, we can start the server with `mix phx.server` and re-visit the home page [`http://localhost:4000/`](http://localhost:4000/). There, we should see new registration and login links at the top of the page. On the registration page, create a new user. In development, a confirmation email is sent to the dev mailbox, which is accessible at [`http://localhost:4000/dev/mailbox`](http://localhost:4000/dev/mailbox). After clicking the confirmation link, you should be successfully logged in.
 
-One of the benefits of `mix phx.gen.auth` is that it also generates a scope file at `lib/hello/accounts/scope.ex`. In a nutshell, authentication tells us who a user based on their email address, but it doesn't tell us the resources the user owns or has access to. In order to do so, we need authorization. Scopes helps us tie generated resources, such as the Cart we will create, to users. Let's open up the file:
+One of the benefits of `mix phx.gen.auth` is that it also generates a scope file at `lib/hello/accounts/scope.ex`. In a nutshell, authentication tells us who a user based on their email address, but it doesn't tell us the resources the user owns or has access to. In order to do so, we need authorization. Scopes help us tie generated resources, such as the Cart we will create, to users. Let's open up the file:
 
 ```elixir
 defmodule Hello.Accounts.Scope do
@@ -345,7 +345,7 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
             |> Repo.insert() do
        broadcast(scope, {:created, cart})
 -      {:ok, cart}
-+      {:ok, get_cart!(scope, cart.id)}
++      {:ok, get_cart(scope, cart.id)}
      end
    end
 +
@@ -388,11 +388,11 @@ With our new cart functions in place, we can now expose the "Add to cart" button
 
 ```diff
 ...
-     <.link href={~p"/products/#{@product}/edit"}>
-       <.button>Edit product</.button>
+     <.link class="btn" href={~p"/products/#{@product}/edit"}>
+       Edit product
      </.link>
-+    <.link href={~p"/cart_items?product_id=#{@product.id}"} method="post">
-+      <.button>Add to cart</.button>
++    <.link class="btn" href={~p"/cart_items?product_id=#{@product.id}"} method="post">
++      Add to cart
 +    </.link>
 ...
 ```
