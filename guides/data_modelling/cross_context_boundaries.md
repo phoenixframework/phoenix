@@ -149,8 +149,6 @@ $ mix ecto.migrate
 
 16:59:51.988 [info] create table cart_items
 
-16:59:51.998 [info] create index cart_items_cart_id_index
-
 16:59:52.000 [info] create index cart_items_product_id_index
 
 16:59:52.001 [info] create index cart_items_cart_id_product_id_index
