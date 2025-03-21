@@ -546,13 +546,13 @@ defmodule Phoenix.Controller do
 
   def put_view(%Plug.Conn{} = conn, module) do
     raise(AlreadySentError, """
-      the response was already sent.
+    the response was already sent.
 
-          Status code: #{conn.status}
-          Request path: #{conn.request_path}
-          Method: #{conn.method}
-          View module: #{inspect(module)}
-      """)
+        Status code: #{conn.status}
+        Request path: #{conn.request_path}
+        Method: #{conn.method}
+        View module: #{inspect(module)}
+    """)
   end
 
   defp put_private_view(conn, priv_key, kind, formats) when is_list(formats) do
@@ -592,13 +592,13 @@ defmodule Phoenix.Controller do
 
   def put_new_view(%Plug.Conn{} = conn, module) do
     raise(AlreadySentError, """
-      the response was already sent.
+    the response was already sent.
 
-          Status code: #{conn.status}
-          Request path: #{conn.request_path}
-          Method: #{conn.method}
-          View module: #{inspect(module)}
-      """)
+        Status code: #{conn.status}
+        Request path: #{conn.request_path}
+        Method: #{conn.method}
+        View module: #{inspect(module)}
+    """)
   end
 
   @doc """
@@ -756,6 +756,7 @@ defmodule Phoenix.Controller do
           Layout: #{inspect(layout)}
       """)
     end
+
     put_private_layout(conn, :phoenix_layout, :new, layout)
   end
 
@@ -830,12 +831,12 @@ defmodule Phoenix.Controller do
 
   def put_layout_formats(%Plug.Conn{} = conn, _formats) do
     raise(AlreadySentError, """
-      the response was already sent.
+    the response was already sent.
 
-          Status code: #{conn.status}
-          Request path: #{conn.request_path}
-          Method: #{conn.method}
-      """)
+        Status code: #{conn.status}
+        Request path: #{conn.request_path}
+        Method: #{conn.method}
+    """)
   end
 
   @doc """
@@ -1074,9 +1075,10 @@ defmodule Phoenix.Controller do
     conn
     |> put_private(:phoenix_template, template <> "." <> format)
     |> Map.update!(:assigns, fn prev ->
+      # Add __changed__: nil for compatibility with LiveView's assign
       prev
       |> Map.merge(assigns)
-      |> Map.put(:layout, layout)
+      |> Map.merge(%{layout: layout, __changed__: nil})
     end)
   end
 
