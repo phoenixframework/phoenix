@@ -40,7 +40,12 @@
         autocomplete="username"
         required
       />
-      <.input field={f[:password]} type="password" label="Password" autocomplete="current-password" />
+      <.input
+        field={f[:password]}
+        type="password"
+        label="Password"
+        autocomplete="current-password"
+      />
       <.input
         :if={!@current_scope}
         field={f[:remember_me]}
