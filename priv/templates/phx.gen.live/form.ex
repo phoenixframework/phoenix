@@ -7,17 +7,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      {@page_title}
-      <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
-    </.header>
+    <Layouts.app flash={@flash}<%= if scope do %> <%= scope.assign_key %>={@<%= scope.assign_key %>}<% end %>>
+      <.header>
+        {@page_title}
+        <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
+      </.header>
 
-    <.form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
-<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 6) %>
-      <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
-    </.form>
+      <.form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
+<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 8) %>
+        <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
+      </.form>
 
-    <.back navigate={return_path(<%= assign_scope_prefix %>@return_to, @<%= schema.singular %>)}>Back</.back>
+      <.back navigate={return_path(<%= assign_scope_prefix %>@return_to, @<%= schema.singular %>)}>Back</.back>
+    </Layouts.app>
     """
   end
 

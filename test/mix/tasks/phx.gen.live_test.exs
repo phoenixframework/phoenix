@@ -109,10 +109,10 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ ~s(<.input field={@form[:votes]} type="number")
         assert file =~ ~s(<.input field={@form[:cost]} type="number" label="Cost" step="any")
         assert file =~ """
-              <.input
-                field={@form[:tags]}
-                type="select"
-                multiple
+                <.input
+                  field={@form[:tags]}
+                  type="select"
+                  multiple
         """
         assert file =~ ~s(<.input field={@form[:popular]} type="checkbox")
         assert file =~ ~s(<.input field={@form[:drafted_at]} type="datetime-local")
@@ -123,9 +123,9 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ ~s(<.input field={@form[:secret]} type="text" label="Secret" />)
         refute file =~ ~s(<field={@form[:metadata]})
         assert file =~ """
-              <.input
-                field={@form[:status]}
-                type="select"
+                <.input
+                  field={@form[:status]}
+                  type="select"
         """
         assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
 
