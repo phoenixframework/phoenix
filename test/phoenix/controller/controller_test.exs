@@ -2,6 +2,7 @@ defmodule Phoenix.Controller.ControllerTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
+  import ExUnit.CaptureIO
   import Phoenix.Controller
   alias Plug.Conn
 
@@ -53,11 +54,17 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = put_layout(conn, {AppView, "app.html"})
     assert layout(conn) == {AppView, "app.html"}
 
-    conn = put_layout(conn, "print.html")
-    assert layout(conn) == {AppView, "print.html"}
+    assert capture_io(:stderr, fn ->
+             conn = put_layout(conn, "print.html")
+             assert layout(conn) == {AppView, "print.html"}
+           end) =~
+             "specifying put_layout(conn, template) or put_new_layout(conn, template) is deprecated"
 
-    conn = put_layout(conn, :print)
-    assert layout(conn) == {AppView, :print}
+    assert capture_io(:stderr, fn ->
+             conn = put_layout(conn, :print)
+             assert layout(conn) == {AppView, :print}
+           end) =~
+             "specifying put_layout(conn, template) or put_new_layout(conn, template) is deprecated"
 
     conn = put_layout(conn, false)
     assert layout(conn) == false
@@ -78,8 +85,11 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = put_layout(conn, html: {AppView, :app})
     assert layout(conn) == {AppView, :app}
 
-    conn = put_layout(conn, html: :print)
-    assert layout(conn) == {AppView, :print}
+    assert capture_io(:stderr, fn ->
+             conn = put_layout(conn, html: :print)
+             assert layout(conn) == {AppView, :print}
+           end) =~
+             "specifying a layout without module is deprecated, use html: {AppView, :print} instead"
 
     conn = put_layout(conn, html: {AppView, :app}, print: {AppView, :print})
 
@@ -110,11 +120,17 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = put_root_layout(conn, {AppView, "root.html"})
     assert root_layout(conn) == {AppView, "root.html"}
 
-    conn = put_root_layout(conn, "bare.html")
-    assert root_layout(conn) == {AppView, "bare.html"}
+    assert capture_io(:stderr, fn ->
+             conn = put_root_layout(conn, "bare.html")
+             assert root_layout(conn) == {AppView, "bare.html"}
+           end) =~
+             "specifying put_layout(conn, template) or put_new_layout(conn, template) is deprecated"
 
-    conn = put_root_layout(conn, :print)
-    assert root_layout(conn) == {AppView, :print}
+    assert capture_io(:stderr, fn ->
+             conn = put_root_layout(conn, :print)
+             assert root_layout(conn) == {AppView, :print}
+           end) =~
+             "specifying put_layout(conn, template) or put_new_layout(conn, template) is deprecated"
 
     conn = put_root_layout(conn, false)
     assert root_layout(conn) == false
@@ -135,8 +151,11 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = put_root_layout(conn, html: {AppView, :app})
     assert root_layout(conn) == {AppView, :app}
 
-    conn = put_root_layout(conn, html: :print)
-    assert root_layout(conn) == {AppView, :print}
+    assert capture_io(:stderr, fn ->
+             conn = put_root_layout(conn, html: :print)
+             assert root_layout(conn) == {AppView, :print}
+           end) =~
+             "specifying a layout without module is deprecated, use html: {AppView, :print} instead"
 
     conn = put_root_layout(conn, html: {AppView, :app}, print: {AppView, :print})
 
@@ -854,39 +873,60 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
-  test "__view__ returns the view module based on controller module" do
-    assert Phoenix.Controller.__view__(MyApp.UserController, []) == MyApp.UserView
-    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, []) == MyApp.Admin.UserView
+  describe "__using__" do
+    defp new_layout(module, opts), do: Phoenix.Controller.__plugs__(module, opts) |> elem(0)
+    defp new_view(module, opts), do: Phoenix.Controller.__plugs__(module, opts) |> elem(1)
 
-    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, :json]) ==
-             [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserJSON]
+    test "deprecated when lacking formats" do
+      assert capture_io(:stderr, fn ->
+               assert Phoenix.Controller.__plugs__(UserController, []) ==
+                        {{LayoutView, :app}, UserView}
+             end) =~
+               "use UserController must receive the :formats option with the formats you intend to render"
 
-    assert Phoenix.Controller.__view__(MyApp.Admin.UserController, formats: [:html, json: "View"]) ==
-             [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserView]
-  end
+      assert capture_io(:stderr, fn ->
+               assert Phoenix.Controller.__plugs__(MyApp.UserController, []) ==
+                        {{MyApp.LayoutView, :app}, MyApp.UserView}
+             end) =~
+               "use MyApp.UserController must receive the :formats option with the formats you intend to render"
 
-  test "__layout__ returns the layout module based on controller module" do
-    assert Phoenix.Controller.__layout__(UserController, []) ==
-             {LayoutView, :app}
+      assert capture_io(:stderr, fn ->
+               assert Phoenix.Controller.__plugs__(MyApp.Admin.UserController, []) ==
+                        {{MyApp.LayoutView, :app}, MyApp.Admin.UserView}
+             end) =~
+               "use MyApp.Admin.UserController must receive the :formats option with the formats you intend to render"
+    end
 
-    assert Phoenix.Controller.__layout__(MyApp.UserController, []) ==
-             {MyApp.LayoutView, :app}
+    test "deprecated namespace" do
+      assert capture_io(:stderr, fn ->
+               assert new_layout(MyApp.Admin.UserController, namespace: MyApp.Admin, formats: []) ==
+                        {MyApp.Admin.LayoutView, :app}
+             end) =~ "the :namespace option given to MyApp.Admin.UserController is deprecated"
+    end
 
-    assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, []) ==
-             {MyApp.LayoutView, :app}
+    test "returns view modules based on format" do
+      assert new_view(MyApp.Admin.UserController, formats: [:html, :json]) ==
+               [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserJSON]
 
-    assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, namespace: MyApp.Admin) ==
-             {MyApp.Admin.LayoutView, :app}
+      assert new_view(MyApp.Admin.UserController, formats: [:html, json: "View"]) ==
+               [html: MyApp.Admin.UserHTML, json: MyApp.Admin.UserView]
+    end
 
-    opts = [layouts: [html: MyApp.LayoutHTML]]
+    test "returns the layout module based on controller module" do
+      assert new_layout(MyApp.Admin.UserController, formats: []) == []
 
-    assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, opts) ==
-             [html: {MyApp.LayoutHTML, :app}]
+      assert new_layout(MyApp.Admin.UserController,
+               layouts: [html: MyApp.LayoutHTML],
+               formats: []
+             ) ==
+               [html: {MyApp.LayoutHTML, :app}]
 
-    opts = [layouts: [html: {MyApp.LayoutHTML, :application}]]
-
-    assert Phoenix.Controller.__layout__(MyApp.Admin.UserController, opts) ==
-             [html: {MyApp.LayoutHTML, :application}]
+      assert new_layout(MyApp.Admin.UserController,
+               layouts: [html: {MyApp.LayoutHTML, :application}],
+               formats: []
+             ) ==
+               [html: {MyApp.LayoutHTML, :application}]
+    end
   end
 
   defp sent_conn do

@@ -3,7 +3,7 @@ defmodule Phoenix.Router.ResourcesTest do
   use RouterHelper
 
   defmodule UserController do
-    use Phoenix.Controller
+    use Phoenix.Controller, formats: []
     def show(conn, _params), do: text(conn, "show users")
     def index(conn, _params), do: text(conn, "index users")
     def new(conn, _params), do: text(conn, "new users")
@@ -14,14 +14,14 @@ defmodule Phoenix.Router.ResourcesTest do
   end
 
   defmodule Api.FileController do
-    use Phoenix.Controller
+    use Phoenix.Controller, formats: []
     def show(conn, _params), do: text(conn, "show files")
     def index(conn, _params), do: text(conn, "index files")
     def new(conn, _params), do: text(conn, "new files")
   end
 
   defmodule Api.CommentController do
-    use Phoenix.Controller
+    use Phoenix.Controller, formats: []
     def show(conn, _params), do: text(conn, "show comments")
     def index(conn, _params), do: text(conn, "index comments")
     def new(conn, _params), do: text(conn, "new comments")
