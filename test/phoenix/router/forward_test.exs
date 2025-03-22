@@ -1,5 +1,5 @@
-defmodule Phoenix.Test.HealthController do
-  use Phoenix.Controller
+defmodule Phoenix.Router.HealthController do
+  use Phoenix.Controller, formats: []
   def health(conn, _params), do: text(conn, "health")
 end
 
@@ -8,8 +8,7 @@ defmodule Phoenix.Router.ForwardTest do
   use RouterHelper
 
   defmodule Controller do
-    use Phoenix.Controller
-
+    use Phoenix.Controller, formats: []
     plug :assign_fwd_script
 
     def index(conn, _params), do: text(conn, "admin index")
@@ -25,7 +24,7 @@ defmodule Phoenix.Router.ForwardTest do
     get "/", Controller, :api_root
     get "/users", Controller, :api_users
 
-    scope "/health", Phoenix.Test do
+    scope "/health", Phoenix.Router do
       forward "/", HealthController, :health
     end
   end

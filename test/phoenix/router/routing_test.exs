@@ -10,7 +10,7 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   defmodule UserController do
-    use Phoenix.Controller
+    use Phoenix.Controller, formats: []
     def index(conn, _params), do: text(conn, "users index")
     def show(conn, _params), do: text(conn, "users show")
     def top(conn, _params), do: text(conn, "users top")
@@ -323,6 +323,7 @@ defmodule Phoenix.Router.RoutingTest do
         end,
         nil
       )
+
       on_exit(fn -> :telemetry.detach(test_name) end)
     end
 
