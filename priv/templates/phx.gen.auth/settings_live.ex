@@ -7,51 +7,59 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <.header class="text-center">
-      Account Settings
-      <:subtitle>Manage your account email address and password settings</:subtitle>
-    </.header>
+    <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
+      <.header class="text-center">
+        Account Settings
+        <:subtitle>Manage your account email address and password settings</:subtitle>
+      </.header>
 
-    <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
-      <.input field={@email_form[:email]} type="email" label="Email" autocomplete="username" required />
-      <.button phx-disable-with="Changing...">Change Email</.button>
-    </.form>
+      <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
+        <.input
+          field={@email_form[:email]}
+          type="email"
+          label="Email"
+          autocomplete="username"
+          required
+        />
+        <.button phx-disable-with="Changing...">Change Email</.button>
+      </.form>
 
-    <div class="divider" />
+      <div class="divider" />
 
-    <.form
-      for={@password_form}
-      id="password_form"
-      action={~p"<%= schema.route_prefix %>/update-password"}
-      method="post"
-      phx-change="validate_password"
-      phx-submit="update_password"
-      phx-trigger-action={@trigger_submit}
-    >
-      <input
-        name={@password_form[:email].name}
-        type="hidden"
-        id="hidden_<%= schema.singular %>_email"
-        autocomplete="username"
-        value={@current_email}
-      />
-      <.input
-        field={@password_form[:password]}
-        type="password"
-        label="New password"
-        autocomplete="new-password"
-        required
-      />
-      <.input
-        field={@password_form[:password_confirmation]}
-        type="password"
-        label="Confirm new password"
-        autocomplete="new-password"
-      />
-      <.button phx-disable-with="Saving...">
-        Save Password
-      </.button>
-    </.form>
+      <.form
+        for={@password_form}
+        id="password_form"
+        action={~p"<%= schema.route_prefix %>/update-password"}
+        method="post"
+        phx-change="validate_password"
+        phx-submit="update_password"
+        phx-trigger-action={@trigger_submit}
+      >
+        <input
+          name={@password_form[:email].name}
+          type="hidden"
+          id="hidden_<%= schema.singular %>_email"
+          autocomplete="username"
+          value={@current_email}
+        />
+        <.input
+          field={@password_form[:password]}
+          type="password"
+          label="New password"
+          autocomplete="new-password"
+          required
+        />
+        <.input
+          field={@password_form[:password_confirmation]}
+          type="password"
+          label="Confirm new password"
+          autocomplete="new-password"
+        />
+        <.button phx-disable-with="Saving...">
+          Save Password
+        </.button>
+      </.form>
+    </Layouts.app>
     """
   end
 

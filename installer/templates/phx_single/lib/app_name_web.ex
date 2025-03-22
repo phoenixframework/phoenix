@@ -38,9 +38,7 @@ defmodule <%= @web_namespace %> do
 
   def controller do
     quote do
-      use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: {<%= @web_namespace %>.Layouts, :app}]<%= if @gettext do %>
+      use Phoenix.Controller, formats: [:html, :json]<%= if @gettext do %>
 
       use Gettext, backend: <%= @web_namespace %>.Gettext<% end %>
 
@@ -52,8 +50,7 @@ defmodule <%= @web_namespace %> do
 
   def live_view do
     quote do
-      use Phoenix.LiveView,
-        layout: {<%= @web_namespace %>.Layouts, :app}
+      use Phoenix.LiveView
 
       unquote(html_helpers())
     end
@@ -89,6 +86,8 @@ defmodule <%= @web_namespace %> do
       import Phoenix.HTML
       # Core UI components
       import <%= @web_namespace %>.CoreComponents
+      # Layouts
+      alias <%= @web_namespace %>.Layouts
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

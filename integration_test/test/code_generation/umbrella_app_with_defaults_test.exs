@@ -152,6 +152,8 @@ defmodule Phoenix.Integration.CodeGeneration.UmbrellaAppWithDefaultsTest do
     test "has a passing test suite" do
       with_installer_tmp("umbrella_app_with_defaults", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "rainy_day", ["--umbrella", "--live"])
+        IO.puts(tmp_dir)
+        Process.sleep(100000)
         web_root_path = Path.join(app_root_path, "apps/rainy_day_web")
 
         mix_run!(~w(phx.gen.live Blog Post posts title body:string status:enum:unpublished:published:deleted), web_root_path)
