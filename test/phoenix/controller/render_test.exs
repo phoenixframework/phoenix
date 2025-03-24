@@ -116,7 +116,6 @@ defmodule Phoenix.Controller.RenderTest do
     conn = render(conn(), "index.html", title: "Hello")
     assert conn.resp_body == "Hello\n"
     assert conn.assigns.title == "Hello"
-    assert conn.assigns.__changed__ == nil
   end
 
   test "uses connection assigns" do

@@ -1075,10 +1075,9 @@ defmodule Phoenix.Controller do
     conn
     |> put_private(:phoenix_template, template <> "." <> format)
     |> Map.update!(:assigns, fn prev ->
-      # Add __changed__: nil for compatibility with LiveView's assign
       prev
       |> Map.merge(assigns)
-      |> Map.merge(%{layout: layout, __changed__: nil})
+      |> Map.put(:layout, layout)
     end)
   end
 
