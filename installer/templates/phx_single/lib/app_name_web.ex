@@ -86,11 +86,10 @@ defmodule <%= @web_namespace %> do
       import Phoenix.HTML
       # Core UI components
       import <%= @web_namespace %>.CoreComponents
-      # Layouts
-      alias <%= @web_namespace %>.Layouts
 
-      # Shortcut for generating JS commands
+      # Common modules used in templates
       alias Phoenix.LiveView.JS
+      alias <%= @web_namespace %>.Layouts
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())
