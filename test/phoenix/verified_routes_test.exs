@@ -10,6 +10,28 @@ for module <- modules do
   end
 end
 
+defmodule PlugRouterWithVerifiedRoutes do
+  use Plug.Router
+
+  @behaviour Phoenix.VerifiedRoutes
+
+  get "/foo" do
+    send_resp(conn, 200, "ok")
+  end
+
+  @impl Phoenix.VerifiedRoutes
+  def formatted_routes(_plug_opts) do
+    [
+      %{verb: "GET", path: "/foo", label: "Hello"}
+    ]
+  end
+
+  @impl Phoenix.VerifiedRoutes
+  def verified_route?(_plug_opts, path) do
+    path == ["foo"]
+  end
+end
+
 defmodule Phoenix.VerifiedRoutesTest do
   use ExUnit.Case, async: true
   import Plug.Test
@@ -65,29 +87,7 @@ defmodule Phoenix.VerifiedRoutesTest do
   defmodule ForwardedRouter do
     use Phoenix.Router
 
-    forward "/", PhoenixTestWeb.PlugRouterWithVerifiedRoutes
-  end
-
-  defmodule PlugRouterWithVerifiedRoutes do
-    use Plug.Router
-
-    @behaviour Phoenix.VerifiedRoutes
-
-    get "/foo" do
-      send_resp(conn, 200, "ok")
-    end
-
-    @impl Phoenix.VerifiedRoutes
-    def formatted_routes(_plug_opts) do
-      [
-        %{verb: "GET", path: "/foo", label: "Hello"}
-      ]
-    end
-
-    @impl Phoenix.VerifiedRoutes
-    def verified_route?(_plug_opts, path) do
-      path == ["foo"]
-    end
+    forward "/", PlugRouterWithVerifiedRoutes
   end
 
   # Emulate regular endpoint functions
