@@ -167,9 +167,11 @@ lib/hello_web
 A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, let's create an `index.html.heex` file at `lib/hello_web/controllers/hello_html/index.html.heex`:
 
 ```heex
-<section>
-  <h2>Hello World, from Phoenix!</h2>
-</section>
+<Layouts.app flash={@flash}>
+  <section>
+    <h2>Hello World, from Phoenix!</h2>
+  </section>
+</Layouts.app>
 ```
 
 Template files are compiled into the module as function components themselves, there is no runtime or performance difference between the two styles.
@@ -178,13 +180,15 @@ Now that we've got the route, controller, view, and template, we should be able 
 
 ![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into layouts: first it renders `lib/hello_web/components/layouts/root.html.heex` which renders `lib/hello_web/components/layouts/app.html.heex` which finally includes our content. If you open those files, you'll see a line that looks like this at the bottom:
+There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into a separate layout: `lib/hello_web/components/layouts/root.html.heex`, which contains the basic HTML skeleton of the page. If you open this files, you'll see a line that looks like this at the bottom:
 
 ```heex
 {@inner_content}
 ```
 
 This line injects our template into the layout before the HTML is sent off to the browser. We will talk more about layouts in the Controllers guide.
+
+The rest of the page structure is included in the `app` component the is defined in the `lib/hello_web/components/layouts.ex` module.
 
 > A note on hot code reloading: some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
 

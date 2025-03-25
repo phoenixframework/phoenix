@@ -1188,7 +1188,6 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
     test "when layout file is not found", config do
       in_tmp_phx_project(config.test, fn ->
         File.rm!("lib/my_app_web/components/layouts/root.html.heex")
-        File.rm!("lib/my_app_web/components/layouts/app.html.heex")
 
         send(self(), {:mix_shell_input, :yes?, false})
 

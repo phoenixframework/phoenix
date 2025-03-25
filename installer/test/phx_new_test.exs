@@ -134,7 +134,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()} />|
       end)
 
-      assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex")
       assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex")
 
       # assets
@@ -451,10 +450,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name, "--no-dashboard"])
 
       assert_file("phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard"))
-
-      assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex", fn file ->
-        refute file =~ ~s|LiveDashboard|
-      end)
 
       assert_file("phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
         assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|

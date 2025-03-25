@@ -97,7 +97,6 @@ lib/hello_web
 │   ├── core_components.ex
 │   ├── layouts.ex
 │   └── layouts
-│       ├── app.html.heex
 │       └── root.html.heex
 ├── endpoint.ex
 ├── gettext.ex

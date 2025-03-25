@@ -52,8 +52,6 @@ defmodule Phx.New.Single do
        "test/:lib_web_name/controllers/page_controller_test.exs",
      "phx_web/components/layouts/root.html.heex":
        "lib/:lib_web_name/components/layouts/root.html.heex",
-     "phx_web/components/layouts/app.html.heex":
-       "lib/:lib_web_name/components/layouts/app.html.heex",
      "phx_web/components/layouts.ex": "lib/:lib_web_name/components/layouts.ex"},
     {:eex, :web, "phx_assets/logo.svg": "priv/static/images/logo.svg"}
   ])

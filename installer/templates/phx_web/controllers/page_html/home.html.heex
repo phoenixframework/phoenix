@@ -1,4 +1,4 @@
-<.flash_group flash={@flash} />
+<Layouts.flash_group flash={@flash} />
 <div class="left-[40rem] fixed inset-y-0 right-0 z-0 hidden lg:block xl:left-[50rem]">
   <svg
     viewBox="0 0 1480 957"
@@ -122,36 +122,7 @@ export PATH=$HOME/<%= @elixir_install_bin_path %>:$PATH</code><% end %>
           v{Application.spec(:phoenix, :vsn)}
         </small>
       </h1><%= if @css do %>
-      <%%!-- Example theme switcher, powered by JavaScript in layouts/root.html.heex --%>
-      <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-sm">
-          Theme
-          <span aria-hidden="true" class="text-xs font-normal">
-            <.icon class="size-4" name="hero-chevron-down-micro" />
-          </span>
-        </div>
-        <ul
-          tabindex="0"
-          class="dropdown-content menu bg-base-100 flex flex-row rounded-field z-1 w-52 mt-2 shadow-sm h-64 overflow-y-scroll"
-        >
-          <li
-            :for={
-              theme <-
-                ~w(system light dark abyss acid aqua autumn black bumblebee business caramellatte cmyk coffee) ++
-                  ~w(corporate cupcake cyberpunk dark dim dracula emerald fantasy forest garden halloween) ++
-                  ~w(lemonade lofi luxurynight nord pastel retro silk sunset synthwave valentine winter wireframe)
-            }
-            class="w-full"
-          >
-            <a
-              class="capitalize"
-              phx-click={JS.dispatch("phx:set-theme", detail: %{theme: theme})}
-            >
-              {theme}
-            </a>
-          </li>
-        </ul>
-      </div><% end %>
+      <Layouts.theme_switcher /><% end %>
     </div>
 
     <p class="text-[2rem] mt-4 font-semibold leading-10 tracking-tighter text-balance">

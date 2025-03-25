@@ -52,8 +52,7 @@ defmodule Phx.New.Web do
        "test/:web_app/controllers/page_controller_test.exs",
      "phx_test/controllers/error_html_test.exs": "test/:web_app/controllers/error_html_test.exs",
      "phx_assets/topbar.js": "assets/vendor/topbar.js",
-     "phx_web/components/layouts/root.html.heex": "lib/:web_app/components/layouts/root.html.heex",
-     "phx_web/components/layouts/app.html.heex": "lib/:web_app/components/layouts/app.html.heex"},
+     "phx_web/components/layouts/root.html.heex": "lib/:web_app/components/layouts/root.html.heex"},
     {:eex, :web, "phx_assets/logo.svg": "priv/static/images/logo.svg"}
   ])
 
