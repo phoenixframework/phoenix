@@ -24,14 +24,10 @@ defmodule <%= @web_namespace %>.Layouts do
       <div class="flex-none">
         <ul class="flex flex-column px-1 space-x-4">
           <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">
-              Website
-            </a>
+            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
           </li>
           <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">
-              GitHub
-            </a>
+            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
           </li><%= if @css do %>
           <li>
             <.theme_switcher />
