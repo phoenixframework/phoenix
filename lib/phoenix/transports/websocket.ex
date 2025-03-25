@@ -36,7 +36,9 @@ defmodule Phoenix.Transports.WebSocket do
 
   def init(opts), do: opts
 
-  def call(%{method: "GET"} = conn, {endpoint, handler, opts}) do
+  def call(%{method: "GET"} = conn, {handler, opts}) do
+    endpoint = conn.private.phoenix_endpoint
+
     subprotocols =
       if opts[:auth_token] do
         # when using Sec-WebSocket-Protocol for passing an auth token

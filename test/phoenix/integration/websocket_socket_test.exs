@@ -86,70 +86,17 @@ defmodule Phoenix.Integration.WebSocketTest do
     def terminate(_reason, _state), do: :ok
   end
 
-  defmodule WebsocketPlug do
-    def init(opts) do
-      {endpoint, opts} = Keyword.pop!(opts, :endpoint)
-      {user_socket, opts} = Keyword.pop!(opts, :user_socket)
-
-      common_config = [
-        :path,
-        :serializer,
-        :transport_log,
-        :check_origin,
-        :check_csrf,
-        :code_reloader,
-        :connect_info,
-        :auth_token
-      ]
-
-      websocket =
-        Keyword.validate!(
-          opts[:websocket],
-          common_config ++
-            [
-              :timeout,
-              :max_frame_size,
-              :fullsweep_after,
-              :compress,
-              :subprotocols,
-              :error_handler
-            ]
-        )
-
-      websocket = put_auth_token(websocket, opts[:auth_token])
-      config = Phoenix.Socket.Transport.load_config(websocket, Phoenix.Transports.WebSocket)
-      Phoenix.Transports.WebSocket.init({endpoint, user_socket, config})
-    end
-
-    def call(conn, opts) do
-      Phoenix.Transports.WebSocket.call(conn, opts)
-    end
-
-    defp put_auth_token(true, enabled), do: [auth_token: enabled]
-    defp put_auth_token(opts, enabled), do: Keyword.put(opts, :auth_token, enabled)
-  end
-
   defmodule Router do
     use Phoenix.Router
+    import Phoenix.Socket.Router
 
-    scope "/ws" do
-      # potentially still have a macro here for the routes (could also be Plug.Builder in what is not WebsocketPlug)
-      # extract stuff from Phoenix.Transports.WebSocket, which
-      # can now simply be part of the endpoint (Plug.Session, …)
-      match :*, "/websocket", WebsocketPlug,
-        endpoint: Endpoint,
-        user_socket: UserSocket,
-        websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200],
-        custom: :value
-    end
-  end
+    # potentially still have a macro here for the routes (could also be Plug.Builder in what is not WebsocketPlug)
+    # extract stuff from Phoenix.Transports.WebSocket, which
+    # can now simply be part of the endpoint (Plug.Session, …)
 
-  defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
-
-    # socket "/ws", UserSocket,
-    #   websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200],
-    #   custom: :value
+    socket "/ws", UserSocket,
+      websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200],
+      custom: :value
 
     socket "/custom/some_path", UserSocket,
       websocket: [path: "nested/path", check_origin: ["//example.com"], timeout: 200],
@@ -160,6 +107,10 @@ defmodule Phoenix.Integration.WebSocketTest do
       custom: :value
 
     socket "/ws/ping", PingSocket, websocket: true
+  end
+
+  defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
 
     plug Router
   end

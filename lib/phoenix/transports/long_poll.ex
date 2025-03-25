@@ -22,7 +22,9 @@ defmodule Phoenix.Transports.LongPoll do
 
   def init(opts), do: opts
 
-  def call(conn, {endpoint, handler, opts}) do
+  def call(conn, {handler, opts}) do
+    endpoint = conn.private.phoenix_endpoint
+
     conn
     |> fetch_query_params()
     |> put_resp_header("access-control-allow-origin", "*")
