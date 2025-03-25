@@ -108,14 +108,13 @@ defmodule Mix.Tasks.Phx.NewTest do
         ~r/defmodule PhxBlogWeb.ErrorJSON/
       )
 
-      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
-        assert file =~ "defmodule PhxBlogWeb.CoreComponents"
-        assert file =~ ~S|aria-label={gettext("close")}|
+      assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.Layouts"
         assert file =~ ~S|gettext("Attempting to reconnect")|
       end)
 
-      assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
-        assert file =~ "defmodule PhxBlogWeb.Layouts"
+      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
+        assert file =~ ~S|gettext("close")|
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/router.ex", fn file ->
@@ -134,7 +133,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()} />|
       end)
 
-      assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex")
       assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex")
 
       # assets
@@ -452,10 +450,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard"))
 
-      assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex", fn file ->
-        refute file =~ ~s|LiveDashboard|
-      end)
-
       assert_file("phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
         assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|
         assert file =~ ~s|  socket "/live"|
@@ -563,10 +557,14 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp("new with no_gettext", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--no-gettext"])
 
-      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
-        assert file =~ ~S|aria-label="close"|
+      assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
         assert file =~ ~S|Attempting to reconnect|
         refute file =~ ~S|gettext("Attempting to reconnect")|
+      end)
+
+      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
+        assert file =~ ~S|aria-label="close"|
+        refute file =~ ~S|gettext("close")|
       end)
     end)
   end

@@ -1,34 +1,36 @@
-<div class="mx-auto max-w-sm">
-  <.header class="text-center">Welcome {@<%= schema.singular %>.email}</.header>
+<Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
+  <div class="mx-auto max-w-sm">
+    <.header class="text-center">Welcome {@<%= schema.singular %>.email}</.header>
 
-  <.form
-    :if={!@<%= schema.singular %>.confirmed_at}
-    for={@form}
-    id="confirmation_form"
-    action={~p"<%= schema.route_prefix %>/log-in?_action=confirmed"}
-  >
-    <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
-    <.input
-      :if={!@current_scope}
-      field={@form[:remember_me]}
-      type="checkbox"
-      label="Keep me logged in"
-    />
-    <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
-  </.form>
+    <.form
+      :if={!@<%= schema.singular %>.confirmed_at}
+      for={@form}
+      id="confirmation_form"
+      action={~p"<%= schema.route_prefix %>/log-in?_action=confirmed"}
+    >
+      <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
+      <.input
+        :if={!@current_scope}
+        field={@form[:remember_me]}
+        type="checkbox"
+        label="Keep me logged in"
+      />
+      <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
+    </.form>
 
-  <.form :if={@<%= schema.singular %>.confirmed_at} for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log-in"}>
-    <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
-    <.input
-      :if={!@current_scope}
-      field={@form[:remember_me]}
-      type="checkbox"
-      label="Keep me logged in"
-    />
-    <.button phx-disable-with="Logging in..." class="w-full">Log in</.button>
-  </.form>
+    <.form :if={@<%= schema.singular %>.confirmed_at} for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log-in"}>
+      <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
+      <.input
+        :if={!@current_scope}
+        field={@form[:remember_me]}
+        type="checkbox"
+        label="Keep me logged in"
+      />
+      <.button phx-disable-with="Logging in..." class="w-full">Log in</.button>
+    </.form>
 
-  <p :if={!@<%= schema.singular %>.confirmed_at} class="alert alert-outline mt-8">
-    Tip: If you prefer passwords, you can enable them in the <%= schema.singular %> settings.
-  </p>
-</div>
+    <p :if={!@<%= schema.singular %>.confirmed_at} class="alert alert-outline mt-8">
+      Tip: If you prefer passwords, you can enable them in the <%= schema.singular %> settings.
+    </p>
+  </div>
+</Layouts.app>

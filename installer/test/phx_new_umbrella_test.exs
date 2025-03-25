@@ -175,8 +175,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()} />|
       end)
 
-      assert_file(web_path(@app, "lib/#{@app}_web/components/layouts/app.html.heex"))
-
       # assets
       assert_file(web_path(@app, ".gitignore"), "/priv/static/assets/")
       assert_file(web_path(@app, ".gitignore"), "#{@app}_web-*.tar")
@@ -436,10 +434,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-dashboard"])
 
       assert_file(web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_dashboard"))
-
-      assert_file(web_path(@app, "lib/#{@app}_web/components/layouts/app.html.heex"), fn file ->
-        refute file =~ ~s|LiveDashboard|
-      end)
 
       assert_file(web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
         assert file =~ ~s|defmodule PhxUmbWeb.Endpoint|
@@ -823,7 +817,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file("another/lib/another/router.ex", "defmodule Another.Router")
         assert_file("another/lib/another.ex", "defmodule Another")
         assert_file("another/lib/another/components/layouts/root.html.heex")
-        assert_file("another/lib/another/components/layouts/app.html.heex")
 
         # assets
         assert_file("another/.gitignore", ~r/\n$/)

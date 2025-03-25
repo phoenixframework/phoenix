@@ -1,18 +1,20 @@
-<div class="mx-auto max-w-sm">
-  <.header class="text-center">
-    Register for an account
-    <:subtitle>
-      Already registered?
-      <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="font-semibold text-brand hover:underline">
-        Log in
-      </.link>
-      to your account now.
-    </:subtitle>
-  </.header>
+<Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
+  <div class="mx-auto max-w-sm">
+    <.header class="text-center">
+      Register for an account
+      <:subtitle>
+        Already registered?
+        <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="font-semibold text-brand hover:underline">
+          Log in
+        </.link>
+        to your account now.
+      </:subtitle>
+    </.header>
 
-  <.form :let={f} for={@changeset} action={~p"<%= schema.route_prefix %>/register"}>
-    <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
+    <.form :let={f} for={@changeset} action={~p"<%= schema.route_prefix %>/register"}>
+      <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
 
-    <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
-  </.form>
-</div>
+      <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+    </.form>
+  </div>
+</Layouts.app>

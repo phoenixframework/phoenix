@@ -751,14 +751,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
       Mix.shell().error("""
 
-      Unable to find an application layout file to inject user menu items.
+      Unable to find the root layout file to inject user menu items.
 
       Missing files:
 
       #{missing}
 
       Please ensure this phoenix app was not generated with
-      --no-html. If you have changed the name of your application
+      --no-html. If you have changed the name of your root
       layout file, please add the following code to it where you'd
       like the #{schema.singular} menu items to be rendered.
 
@@ -778,7 +778,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   defp potential_layout_file_paths(%Context{context_app: ctx_app}) do
     web_prefix = Mix.Phoenix.web_path(ctx_app)
 
-    for file_name <- ~w(root.html.heex app.html.heex) do
+    for file_name <- ~w(root.html.heex) do
       Path.join([web_prefix, "components", "layouts", file_name])
     end
   end

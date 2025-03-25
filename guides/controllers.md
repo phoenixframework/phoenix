@@ -181,20 +181,13 @@ What it doesn't have is a view for rendering JSON. Phoenix Controller hands off 
   def controller do
     quote do
       use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: {HelloWeb.Layouts, :app}]
+        formats: [:html, :json]
       ...
     end
   end
 ```
 
 So out of the box Phoenix will look for a `HTML` and `JSON` view modules based on the request format and the controller name. We can also explicitly tell Phoenix in our controller which view(s) to use for each format. For example, what Phoenix does by default can be explicitly set with the following in your controller:
-
-```elixir
-plug :put_view, html: {HelloWeb.PageHTML, :app}, json: {HelloWeb.PageJSON, :app}
-```
-
-The layout name can be omitted, in which case the default layout name `:app` is used, so the above is equivalent to:
 
 ```elixir
 plug :put_view, html: HelloWeb.PageHTML, json: HelloWeb.PageJSON
