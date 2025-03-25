@@ -117,17 +117,14 @@ defmodule <%= @web_namespace %>.Layouts do
           }
           class="w-full"
         >
-          <a
-            class="capitalize"
-            phx-click={JS.dispatch("phx:set-theme", detail: %{theme: theme})}
-          >
+          <a class="capitalize" phx-click={JS.dispatch("phx:set-theme", detail: %{theme: theme})}>
             {theme}
           </a>
         </li>
       </ul>
     </div>
     """
-  end
+  end<%= if @css do %>
 
   # Script used to power the theme switcher in the app layout + home page
   defp theme_switcher_script(assigns) do
@@ -156,5 +153,5 @@ defmodule <%= @web_namespace %>.Layouts do
       })();
     </script>
     """
-  end
+  end<% end %>
 end
