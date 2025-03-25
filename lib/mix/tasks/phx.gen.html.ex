@@ -105,6 +105,16 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     Mix.Phoenix.ensure_live_view_compat!(__MODULE__)
 
     {context, schema} = Gen.Context.build(args)
+
+    if schema.attrs == [] do
+      Mix.raise("""
+      No attributes provided. The phx.gen.html generator requires at least one attribute. For example:
+
+        mix phx.gen.html Accounts User users name:string
+
+      """)
+    end
+
     Gen.Context.prompt_for_code_injection(context)
 
     {conn_scope, context_scope_prefix} =
