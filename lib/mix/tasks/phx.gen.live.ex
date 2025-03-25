@@ -8,17 +8,17 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   $ mix phx.gen.live Accounts User users name:string age:integer
   ```
 
-  The first argument is the context module.  The context is an Elixir module
+  The first argument is the context module. The context is an Elixir module
   that serves as an API boundary for the given resource. A context often holds
-  many related resources.  Therefore, if the context already exists, it will be
+  many related resources. Therefore, if the context already exists, it will be
   augmented with functions for the given resource.
 
-  The second argument is the schema module.  The schema is responsible for
+  The second argument is the schema module. The schema is responsible for
   mapping the database fields into an Elixir struct.
 
   The remaining arguments are the schema module plural name (used as the schema
-  table name), and an optional list of attributes as their respective names and
-  types.  See `mix help phx.gen.schema` for more information on attributes.
+  table name), and a list of attributes as their respective names and
+  types. See `mix help phx.gen.schema` for more information on attributes.
 
   When this command is run for the first time, a `Components` module will be
   created if it does not exist, along with the resource level LiveViews,
@@ -67,7 +67,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   Alternatively, the `--context-app` option may be supplied to the generator:
 
   ```console
-  $ mix phx.gen.live Accounts User users --context-app warehouse
+  $ mix phx.gen.live Accounts User users --context-app warehouse name:string
   ```
 
   ## Web namespace
@@ -77,7 +77,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   module name, for example:
 
   ```console
-  $ mix phx.gen.live Accounts User users --web Sales
+  $ mix phx.gen.live Accounts User users --web Sales name:string
   ```
 
   Which would generate the LiveViews in `lib/app_web/live/sales/user_live/`,
@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   for file generation control.
 
   ```console
-  $ mix phx.gen.live Accounts User users --no-context --no-schema
+  $ mix phx.gen.live Accounts User users --no-context --no-schema name:string
   ```
 
   In the cases above, tests are still generated, but they will all fail.
@@ -117,6 +117,15 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
     {context, schema} = Gen.Context.build(args)
     validate_context!(context)
+
+    if schema.attrs == [] do
+      Mix.raise("""
+      No attributes provided. The phx.gen.live generator requires at least one attribute. For example:
+
+        mix phx.gen.live Accounts User users name:string
+
+      """)
+    end
 
     Gen.Context.prompt_for_code_injection(context)
 
