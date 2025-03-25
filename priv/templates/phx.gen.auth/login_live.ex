@@ -5,86 +5,88 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
-      <.header class="text-center">
-        <p>Log in</p>
-        <:subtitle>
-          <%%= if @current_scope do %>
-            You need to reauthenticate to perform sensitive actions on your account.
-          <%% else %>
-            Don't have an account? <.link
-              navigate={~p"<%= schema.route_prefix %>/register"}
-              class="font-semibold text-brand hover:underline"
-              phx-no-format
-            >Sign up</.link> for an account now.
-          <%% end %>
-        </:subtitle>
-      </.header>
+    <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
+      <div class="mx-auto max-w-sm">
+        <.header class="text-center">
+          <p>Log in</p>
+          <:subtitle>
+            <%%= if @current_scope do %>
+              You need to reauthenticate to perform sensitive actions on your account.
+            <%% else %>
+              Don't have an account? <.link
+                navigate={~p"<%= schema.route_prefix %>/register"}
+                class="font-semibold text-brand hover:underline"
+                phx-no-format
+              >Sign up</.link> for an account now.
+            <%% end %>
+          </:subtitle>
+        </.header>
 
-      <.form
-        :let={f}
-        for={@form}
-        id="login_form_magic"
-        action={~p"<%= schema.route_prefix %>/log-in"}
-        phx-submit="submit_magic"
-      >
-        <.input
-          readonly={!!@current_scope}
-          field={f[:email]}
-          type="email"
-          label="Email"
-          autocomplete="username"
-          required
-        />
-        <.button class="w-full">
-          Log in with email <span aria-hidden="true">→</span>
-        </.button>
-      </.form>
+        <.form
+          :let={f}
+          for={@form}
+          id="login_form_magic"
+          action={~p"<%= schema.route_prefix %>/log-in"}
+          phx-submit="submit_magic"
+        >
+          <.input
+            readonly={!!@current_scope}
+            field={f[:email]}
+            type="email"
+            label="Email"
+            autocomplete="username"
+            required
+          />
+          <.button class="w-full">
+            Log in with email <span aria-hidden="true">→</span>
+          </.button>
+        </.form>
 
-      <div class="divider">or</div>
+        <div class="divider">or</div>
 
-      <.form
-        :let={f}
-        for={@form}
-        id="login_form_password"
-        action={~p"<%= schema.route_prefix %>/log-in"}
-        phx-submit="submit_password"
-        phx-trigger-action={@trigger_submit}
-      >
-        <.input
-          readonly={!!@current_scope}
-          field={f[:email]}
-          type="email"
-          label="Email"
-          autocomplete="username"
-          required
-        />
-        <.input
-          field={@form[:password]}
-          type="password"
-          label="Password"
-          autocomplete="current-password"
-        />
-        <.input
-          :if={!@current_scope}
-          field={f[:remember_me]}
-          type="checkbox"
-          label="Keep me logged in"
-        />
-        <.button class="w-full">
-          Log in <span aria-hidden="true">→</span>
-        </.button>
-      </.form>
+        <.form
+          :let={f}
+          for={@form}
+          id="login_form_password"
+          action={~p"<%= schema.route_prefix %>/log-in"}
+          phx-submit="submit_password"
+          phx-trigger-action={@trigger_submit}
+        >
+          <.input
+            readonly={!!@current_scope}
+            field={f[:email]}
+            type="email"
+            label="Email"
+            autocomplete="username"
+            required
+          />
+          <.input
+            field={@form[:password]}
+            type="password"
+            label="Password"
+            autocomplete="current-password"
+          />
+          <.input
+            :if={!@current_scope}
+            field={f[:remember_me]}
+            type="checkbox"
+            label="Keep me logged in"
+          />
+          <.button class="w-full">
+            Log in <span aria-hidden="true">→</span>
+          </.button>
+        </.form>
 
-      <div :if={local_mail_adapter?()} class="alert alert-outline mt-8">
-        <div>
-          <p>You are running the local mail adapter.</p>
-          <p>
-            To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
-          </p>
+        <div :if={local_mail_adapter?()} class="alert alert-outline mt-8">
+          <div>
+            <p>You are running the local mail adapter.</p>
+            <p>
+              To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </Layouts.app>
     """
   end
 

@@ -6,36 +6,38 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      Listing <%= schema.human_plural %>
-      <:actions>
-        <.link class="btn" navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/new"}>
-          New <%= schema.human_singular %>
-        </.link>
-      </:actions>
-    </.header>
+    <Layouts.app flash={@flash}<%= if scope do %> <%= scope.assign_key %>={@<%= scope.assign_key %>}<% end %>>
+      <.header>
+        Listing <%= schema.human_plural %>
+        <:actions>
+          <.link class="btn" navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/new"}>
+            New <%= schema.human_singular %>
+          </.link>
+        </:actions>
+      </.header>
 
-    <.table
-      id="<%= schema.plural %>"
-      rows={@streams.<%= schema.collection %>}
-      row_click={fn {_id, <%= schema.singular %>} -> JS.navigate(~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}") end}
-    ><%= for {k, _} <- schema.attrs do %>
-      <:col :let={{_id, <%= schema.singular %>}} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{<%= schema.singular %>.<%= k %>}</:col><% end %>
-      <:action :let={{_id, <%= schema.singular %>}}>
-        <div class="sr-only">
-          <.link navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>
-        </div>
-        <.link navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link>
-      </:action>
-      <:action :let={{id, <%= schema.singular %>}}>
-        <.link
-          phx-click={JS.push("delete", value: %{<%= primary_key %>: <%= schema.singular %>.<%= primary_key %>}) |> hide("##{id}")}
-          data-confirm="Are you sure?"
-        >
-          Delete
-        </.link>
-      </:action>
-    </.table>
+      <.table
+        id="<%= schema.plural %>"
+        rows={@streams.<%= schema.collection %>}
+        row_click={fn {_id, <%= schema.singular %>} -> JS.navigate(~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}") end}
+      ><%= for {k, _} <- schema.attrs do %>
+        <:col :let={{_id, <%= schema.singular %>}} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{<%= schema.singular %>.<%= k %>}</:col><% end %>
+        <:action :let={{_id, <%= schema.singular %>}}>
+          <div class="sr-only">
+            <.link navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>
+          </div>
+          <.link navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}/edit"}>Edit</.link>
+        </:action>
+        <:action :let={{id, <%= schema.singular %>}}>
+          <.link
+            phx-click={JS.push("delete", value: %{<%= primary_key %>: <%= schema.singular %>.<%= primary_key %>}) |> hide("##{id}")}
+            data-confirm="Are you sure?"
+          >
+            Delete
+          </.link>
+        </:action>
+      </.table>
+    </Layouts.app>
     """
   end
 

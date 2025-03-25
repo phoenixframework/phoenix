@@ -6,24 +6,26 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
-      <.header class="text-center">
-        Register for an account
-        <:subtitle>
-          Already registered?
-          <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="font-semibold text-brand hover:underline">
-            Log in
-          </.link>
-          to your account now.
-        </:subtitle>
-      </.header>
+    <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
+      <div class="mx-auto max-w-sm">
+        <.header class="text-center">
+          Register for an account
+          <:subtitle>
+            Already registered?
+            <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="font-semibold text-brand hover:underline">
+              Log in
+            </.link>
+            to your account now.
+          </:subtitle>
+        </.header>
 
-      <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
-        <.input field={@form[:email]} type="email" label="Email" autocomplete="username" required />
+        <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
+          <.input field={@form[:email]} type="email" label="Email" autocomplete="username" required />
 
-        <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
-      </.form>
-    </div>
+          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+        </.form>
+      </div>
+    </Layouts.app>
     """
   end
 
