@@ -167,20 +167,26 @@ lib/hello_web
 A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, let's create an `index.html.heex` file at `lib/hello_web/controllers/hello_html/index.html.heex`:
 
 ```heex
-<Layouts.app flash={@flash}>
-  <section>
-    <h2>Hello World, from Phoenix!</h2>
-  </section>
-</Layouts.app>
+<section>
+  <h2>Hello World, from Phoenix!</h2>
+</section>
 ```
 
-Template files are compiled into the module as function components themselves, there is no runtime or performance difference between the two styles.
+Phoenix will see the template file and compile it into an `index(assigns)` function, similar as before. There is no runtime or performance difference between the two styles.
 
-Now that we've got the route, controller, view, and template, we should be able to point our browser at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix! (In case you stopped the server along the way, the task to restart it is `mix phx.server`.)
+Now that we've got the route, controller, view, and template, we should be able to point our browser at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix!
 
 ![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and restart the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into a separate layout: `lib/hello_web/components/layouts/root.html.heex`, which contains the basic HTML skeleton of the page. If you open this files, you'll see a line that looks like this at the bottom:
+In case you stopped the server along the way, the task to restart it is `mix phx.server`. If you didn't stop it, everything should update on the fly: Phoenix has hot code reloading!
+
+> A note on hot code reloading: some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
+
+## Layouts
+
+
+
+Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into a separate layout: `lib/hello_web/components/layouts/root.html.heex`, which contains the basic HTML skeleton of the page. If you open this files, you'll see a line that looks like this at the bottom:
 
 ```heex
 {@inner_content}
@@ -189,8 +195,6 @@ There are a couple of interesting things to notice about what we just did. We di
 This line injects our template into the layout before the HTML is sent off to the browser. We will talk more about layouts in the Controllers guide.
 
 The rest of the page structure is included in the `app` component the is defined in the `lib/hello_web/components/layouts.ex` module.
-
-> A note on hot code reloading: some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
 
 ## From endpoint to views
 
@@ -227,7 +231,7 @@ At this moment, you may be thinking this can be a lot of steps to simply render 
 
   * view - the view handles the structured data from the controller and converts it to a presentation to be shown to users. Views are often named after the content format they are rendering.
 
-Let's do a quick recap on how the last three components work together by adding another page.
+Let's do a quick recap on how the last three components work together by adding another page. This time, we will use some additional features, such as layout components and content interpolation.
 
 ## Another new page
 
@@ -275,28 +279,28 @@ It's good to remember that the keys of the `params` map will always be strings, 
 
 ### Another new template
 
-For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/controllers/hello_html` directory and be called `show.html.heex`. It will look surprisingly like our `index.html.heex` template, except that we will need to display the name of our messenger.
-
-To do that, we'll use the special HEEx tags for executing Elixir expressions: `{...}` and `<%= %>`. Notice that EEx tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
-
-Remember our templates are written in HEEx (HTML+EEx). HEEx is a superset of EEx, and thereby supports the EEx `<%= %>` interpolation syntax for interpolating arbitrary blocks of code. In general, the HEEx `{...}` interpolation syntax is preferred anytime there is HTML-aware interpolation to be done – such as within attributes or inline values with a body.
-
-The only times `EEx` `<%= %>` interpolation is necessary is for interpolating arbitrary blocks of markup, such as branching logic that injects separate markup trees, or for interpolating values within `<script>` or `<style>` tags.
-
-This is what the `hello_html/show.html.heex` template should look like:
+For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of `HelloController`, it will go into the `lib/hello_web/controllers/hello_html` directory and be called `show.html.heex`. It will look surprisingly like our `index.html.heex` template, except that we will need to display the name of our messenger. Let's write the new template down and then explain what it does:
 
 ```heex
-<section>
-  <h2>Hello World, from {@messenger}!</h2>
-</section>
+<Layouts.app flash={@flash}>
+  <section>
+    <h2>Hello World, from {@messenger}!</h2>
+  </section>
+</Layouts.app>
 ```
 
-Our messenger appears as `@messenger`.
-
-The values we passed to the view from the controller are collectively called our "assigns". We could access our messenger value via `assigns.messenger` but through some metaprogramming, Phoenix gives us the much cleaner `@` syntax for use in templates.
-
-We're done. If you point your browser to [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
+If you point your browser to [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
 
 ![Frank Greets Us from Phoenix](assets/images/hello-world-from-frank.png)
 
-Play around a bit. Whatever you put after `/hello/` will appear on the page as your messenger.
+Let's break what the template does into parts. This template has the `.heex` extension. HTML templates in Phoenix are written in HEEx, which stands for (HTML + Embedded Elixir). There are three features from HEEx we are using in the template above:
+
+  * Function components, as in `<Layouts.app>` - they are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. This particular component will abstract our app layout, such as menu and sidebar, and then render the contents inside
+
+  * Content interpolation, such as `{@messenger}` - any Elixir code that goes between `{...}` will be executed, and the resulting value will replace the tag in the HTML output
+
+  * Assigns, such as `@messenger` and `@flash` - values we pass to the view from the controller are collectively called our "assigns". We could access our messenger value via `assigns.messenger` and `assigns.flash`, but Phoenix gives us the much cleaner `@` syntax for use in templates.
+
+Also note how these three features compose: we are passing the `@flash` assign as an Elixir value to the `<Layouts.app>` component. As we will learn later, flash messages are used to display temporary messages to the user, such as success or error messages.
+
+We are done! Feel free to play around a bit. Whatever you put after `/hello/` will appear on the page as your messenger.

@@ -9,8 +9,9 @@ defmodule Phoenix.Controller do
 
   # View/Layout deprecation plan
   # 1. DONE! Deprecate :namespace option in favor of :layouts on use
-  # 2. Deprecate setting a non-format view/layout on put_*
-  # 3. Deprecate rendering a view/layout from :_
+  # 2. Deprecate the :layouts option in use Phoenix.Controller
+  # 3. Deprecate setting a non-format view/layout on put_*
+  # 4. Deprecate rendering a view/layout from :_
 
   @type view :: atom()
   @type layout :: {module(), layout_name :: atom()} | false
@@ -59,7 +60,7 @@ defmodule Phoenix.Controller do
   without fully implementing the controller, you can import both
   modules directly instead of `use Phoenix.Controller`.
 
-  ## Rendering and layouts
+  ## Rendering
 
   One of the main features provided by controllers is the ability
   to perform content negotiation and render templates based on
@@ -73,8 +74,7 @@ defmodule Phoenix.Controller do
   This is done by specifying the option `:formats` when defining
   the controller:
 
-      use Phoenix.Controller,
-        formats: [:html, :json]
+      use Phoenix.Controller, formats: [:html, :json]
 
    Now, when invoking `render/3`, a controller named `MyAppWeb.UserController`
    will invoke `MyAppWeb.UserHTML` and `MyAppWeb.UserJSON` respectively
@@ -87,20 +87,37 @@ defmodule Phoenix.Controller do
         render(conn, :show, user: user)
       end
 
-  Some formats are also handy to have layouts, which render content
-  shared across all pages. We can also specify layouts on `use`:
+  You can also specify formats to render by calling `put_view/2`
+  directly with a connection. For example, instead of inferring the
+  the view names from the controller, as done in:
 
-      use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: {MyAppWeb.Layouts, :app}]
+      use Phoenix.Controller, formats: [:html, :json]
 
-  You can also specify formats and layouts to render by calling
-  `put_view/2` and `put_layout/2` directly with a connection.
-  The line above can also be written directly in your actions as:
+  You can write the above explicitly in your actions as:
 
-      conn
-      |> put_view(html: MyAppWeb.UserHTML, json: MyAppWeb.UserJSON)
-      |> put_layout(html: MyAppWeb.Layouts)
+      put_view(conn, html: MyAppWeb.UserHTML, json: MyAppWeb.UserJSON)
+
+  Or as a plug:
+
+      plug :put_view, html: MyAppWeb.UserHTML, json: MyAppWeb.UserJSON
+
+  ## Layouts
+
+  Many applications have shared content that they want to include on every
+  page, most often the `<head>` tag and its contents. In Phoenix, this is
+  done via the `put_root_layout` function:
+
+      put_root_layout(conn, html: {MyAppWeb.Layouts, :root})
+
+  In most applications, this is invoked as a Plug in your application router:
+
+      plug :put_root_layout, html: {MyAppWeb.Layouts, :root}
+
+  This layout is shared by all controllers, and also by `Phoenix.LiveView`.
+
+  However, you can also specify controller-specific layouts using `put_layout/2`,
+  although this functionality is discouraged in Phoenix v1.8 in favor of using
+  function components to build your application.
 
   ## Options
 
@@ -113,21 +130,13 @@ defmodule Phoenix.Controller do
       invoke `MyAppWeb.UserHTML` and `MyAppWeb.UserJSON` when
       respectively rendering each format.
 
-    * `:layouts` - which layouts to render for each format,
-      for example: `[html: DemoWeb.Layouts]`. The value for each
-      format can be a tuple with the layout module and the layout name,
-      or just a module. When just the module is given, the default layout
-      name `:app` is used.
-
   The `:formats` option is required. You may set it to an empty list
   if you don't expect to render any format upfront. If `:formats` is not
   set, the default view is set to `MyAppWeb.UserView` for backwards
   compatibility. This behaviour can be explicitly retained by passing a
   suffix to the `:formats` option:
 
-      use Phoenix.Controller,
-        formats: [html: "View", json: "View"],
-        layouts: [html: MyAppWeb.Layouts]
+      use Phoenix.Controller, formats: [html: "View", json: "View"]
 
   ## Plug pipeline
 
@@ -1914,6 +1923,8 @@ defmodule Phoenix.Controller do
       layouts =
         case Keyword.fetch(opts, :layouts) do
           {:ok, formats} when is_list(formats) ->
+            # TODO: Deprecate passing :layouts altogether in Phoenix v1.9,
+            # use Phoenix.Controller should only set views
             Enum.map(formats, fn
               {format, mod} when is_atom(mod) ->
                 {format, {mod, :app}}
@@ -1930,7 +1941,6 @@ defmodule Phoenix.Controller do
             end)
 
           :error ->
-            # TODO: This whole code branch is deprecated and should return [] in the future
             cond do
               namespace = Keyword.get(opts, :namespace) ->
                 layout = Module.concat(namespace, "LayoutView")
@@ -1938,7 +1948,7 @@ defmodule Phoenix.Controller do
                 IO.warn(
                   """
                   the :namespace option given to #{inspect(controller_module)} is deprecated.
-                  Set layouts: [html: #{inspect(layout)}] instead\
+                  Set "plug :put_layout, html: #{inspect(layout)}" instead\
                   """,
                   []
                 )
