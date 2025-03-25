@@ -13,7 +13,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithSQLite3AdapterTest do
         modify_file(Path.join(app_root_path, "lib/default_sqlite3_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", DefaultMysqlAppWeb do
+            scope "/", DefaultSqlite3AppWeb do
               pipe_through [:browser]
 
               resources "/posts", PostController
@@ -39,7 +39,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithSQLite3AdapterTest do
         modify_file(Path.join(app_root_path, "lib/default_sqlite3_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/api", DefaultMysqlAppWeb do
+            scope "/api", DefaultSqlite3AppWeb do
               pipe_through [:api]
 
               resources "/posts", PostController, except: [:new, :edit]
@@ -65,7 +65,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithSQLite3AdapterTest do
         modify_file(Path.join(app_root_path, "lib/default_sqlite3_app_web/router.ex"), fn file ->
           inject_before_final_end(file, """
 
-            scope "/", DefaultMysqlAppWeb do
+            scope "/", DefaultSqlite3AppWeb do
               pipe_through [:browser]
 
               live "/posts", PostLive.Index, :index
