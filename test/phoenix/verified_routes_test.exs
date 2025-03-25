@@ -651,10 +651,10 @@ defmodule Phoenix.VerifiedRoutesTest do
           end)
 
         assert warnings =~
-                 "no route path for Phoenix.VerifiedRoutesTest.PlugRouterWithVerifiedRoutes matches \"/bar\""
+                 "no route path for PlugRouterWithVerifiedRoutes matches \"/bar\""
 
         refute warnings =~
-                 "no route path for Phoenix.VerifiedRoutesTest.PlugRouterWithVerifiedRoutes matches \"/foo\""
+                 "no route path for PlugRouterWithVerifiedRoutes matches \"/foo\""
       after
         :code.purge(__MODULE__.VerifyForwardedRouter)
         :code.delete(__MODULE__.VerifyForwardedRouter)
