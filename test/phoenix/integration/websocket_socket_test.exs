@@ -90,7 +90,6 @@ defmodule Phoenix.Integration.WebSocketTest do
     use Phoenix.Router
     import Phoenix.Socket.Router
 
-    # potentially still have a macro here for the routes (could also be Plug.Builder in what is not WebsocketPlug)
     # extract stuff from Phoenix.Transports.WebSocket, which
     # can now simply be part of the endpoint (Plug.Session, …)
 
