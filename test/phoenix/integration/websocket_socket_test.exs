@@ -94,6 +94,21 @@ defmodule Phoenix.Integration.WebSocketTest do
     # extract stuff from Phoenix.Transports.WebSocket, which
     # can now simply be part of the endpoint (Plug.Session, …)
 
+    # Alternative route definition API ideas
+    # scope "/ws" do
+    #   websocket "/websocket", UserSocket,
+    #     check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200
+    #
+    #   longpoll "/longpoll", UserSocket
+    # end
+    #
+    # scope "/custom/:socket_var" do
+    #   websocket "/:path_var/path", UserSocket,
+    #     check_origin: ["//example.com"], timeout: 200
+    # end
+    #
+    # match :*, "/:path_var/path", UserSocketController, :socket
+
     socket "/ws", UserSocket,
       websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200]
 
