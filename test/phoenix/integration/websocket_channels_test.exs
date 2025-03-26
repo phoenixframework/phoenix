@@ -162,52 +162,72 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     def handle_error(conn, :rate_limit), do: Plug.Conn.send_resp(conn, 429, "Too many requests")
   end
 
-  defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
+  defmodule SetSession do
+    import Plug.Conn
 
-    @session_config store: :cookie,
-                    key: "_hello_key",
-                    signing_salt: "change_me"
+    def init(opts), do: opts
 
-    socket "/ws", UserSocket,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200,
-        error_handler: {UserSocket, :handle_error, []}
-      ]
-
-    socket "/ws/admin", UserSocket,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200
-      ]
-
-    socket "/ws/connect_info", UserSocketConnectInfo,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200,
-        connect_info: [
-          :trace_context_headers,
-          :x_headers,
-          :peer_data,
-          :uri,
-          :user_agent,
-          :sec_websocket_headers,
-          session: @session_config,
-          signing_salt: "salt",
-        ]
-      ]
-
-    plug Plug.Session, @session_config
-    plug :fetch_session
-    plug Plug.CSRFProtection
-    plug :put_session
-
-    defp put_session(conn, _) do
+    def call(conn, _) do
       conn
       |> put_session(:from_session, "123")
       |> send_resp(200, Plug.CSRFProtection.get_csrf_token())
     end
+  end
+
+  defmodule Router do
+    use Phoenix.Router
+    import Phoenix.Socket.Router
+
+    get "/", SetSession, []
+
+    scope "/ws" do
+      socket "/", UserSocket,
+        websocket: [
+          check_origin: ["//example.com"],
+          timeout: 200,
+          error_handler: {UserSocket, :handle_error, []}
+        ]
+
+      socket "/admin", UserSocket,
+        websocket: [
+          check_origin: ["//example.com"],
+          timeout: 200
+        ]
+
+      socket "/connect_info", UserSocketConnectInfo,
+        websocket: [
+          check_origin: ["//example.com"],
+          timeout: 200,
+          connect_info: [
+            :trace_context_headers,
+            :x_headers,
+            :peer_data,
+            :uri,
+            :user_agent,
+            :sec_websocket_headers,
+            :session,
+            signing_salt: "salt"
+          ]
+        ]
+    end
+  end
+
+  defmodule Endpoint do
+    use Phoenix.Endpoint,
+      otp_app: :phoenix,
+      start_sockets: [
+        {UserSocket, []},
+        {UserSocketConnectInfo, []}
+      ]
+
+    plug Plug.Session,
+      store: :cookie,
+      key: "_hello_key",
+      signing_salt: "change_me"
+
+    plug :fetch_session
+    plug Plug.CSRFProtection
+    plug Router
   end
 
   setup %{adapter: adapter} do
@@ -540,7 +560,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
               {:ok, _} = WebsocketClient.connect(self(), @vsn_path, @serializer)
             end)
 
-          assert log == ""
+          refute log =~ "UserSocket"
         end
 
         test "logs and filter params on join and handle_in" do

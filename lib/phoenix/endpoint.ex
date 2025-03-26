@@ -643,7 +643,7 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc false
-  defmacro __before_compile__(%{module: module}) do
+  defmacro __before_compile__(_env) do
     quote do
       defoverridable call: 2
 

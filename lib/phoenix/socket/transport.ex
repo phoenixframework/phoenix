@@ -290,37 +290,21 @@ defmodule Phoenix.Socket.Transport do
                :user_agent,
                :x_headers,
                :sec_websocket_headers,
-               :auth_token
+               :auth_token,
+               :session
              ] ->
           key
-
-        {:session, session} ->
-          {:session, init_session(session)}
 
         {_, _} = pair ->
           pair
 
         other ->
           raise ArgumentError,
-                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :user_agent, :sec_websocket_headers, :uri, or {:session, config}, " <>
+                ":connect_info keys are expected to be one of :peer_data, :trace_context_headers, :x_headers, :user_agent, :sec_websocket_headers, :uri, or :session, " <>
                   "optionally followed by custom keyword pairs, got: #{inspect(other)}"
       end)
 
     [connect_info: connect_info] ++ config
-  end
-
-  # The original session_config is returned in addition to init value so we can
-  # access special config like :csrf_token_key downstream.
-  defp init_session(session_config) when is_list(session_config) do
-    key = Keyword.fetch!(session_config, :key)
-    store = Plug.Session.Store.get(Keyword.fetch!(session_config, :store))
-    init = store.init(Keyword.drop(session_config, [:store, :key]))
-    csrf_token_key = Keyword.get(session_config, :csrf_token_key, "_csrf_token")
-    {key, store, {csrf_token_key, init}}
-  end
-
-  defp init_session({_, _, _} = mfa) do
-    {:mfa, mfa}
   end
 
   @doc """
@@ -496,7 +480,7 @@ defmodule Phoenix.Socket.Transport do
 
   The CSRF check can be disabled by setting the `:check_csrf` option to `false`.
   """
-  def connect_info(conn, endpoint, keys, opts \\ []) do
+  def connect_info(conn, _endpoint, keys, opts \\ []) do
     for key <- keys, into: %{} do
       case key do
         :peer_data ->
@@ -517,8 +501,8 @@ defmodule Phoenix.Socket.Transport do
         :sec_websocket_headers ->
           {:sec_websocket_headers, fetch_headers(conn, "sec-websocket-")}
 
-        {:session, session} ->
-          {:session, connect_session(conn, endpoint, session, opts)}
+        :session ->
+          {:session, connect_session(conn, opts)}
 
         :auth_token ->
           {:auth_token, conn.private[:phoenix_transport_auth_token]}
@@ -529,28 +513,15 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp connect_session(conn, endpoint, {key, store, {csrf_token_key, init}}, opts) do
-    conn = Plug.Conn.fetch_cookies(conn)
+  defp connect_session(conn, opts) do
+    session = Plug.Conn.get_session(conn)
     check_csrf = Keyword.get(opts, :check_csrf, true)
+    csrf_token_key = Keyword.get(opts, :csrf_token_key, "_csrf_token")
 
-    with cookie when is_binary(cookie) <- conn.cookies[key],
-         conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
-         {_, session} <- store.get(conn, cookie, init),
-         true <- not check_csrf or csrf_token_valid?(conn, session, csrf_token_key) do
+    if not check_csrf or csrf_token_valid?(conn, session, csrf_token_key) do
       session
     else
-      _ -> nil
-    end
-  end
-
-  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}, opts) do
-    case apply(module, function, args) do
-      session_config when is_list(session_config) ->
-        connect_session(conn, endpoint, init_session(session_config), opts)
-
-      other ->
-        raise ArgumentError,
-              "the MFA given to `session_config` must return a keyword list, got: #{inspect(other)}"
+      nil
     end
   end
 

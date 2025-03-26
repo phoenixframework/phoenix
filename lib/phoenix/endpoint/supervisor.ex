@@ -84,9 +84,9 @@ defmodule Phoenix.Endpoint.Supervisor do
       config_children(mod, secret_conf, default_conf) ++
         warmup_children(mod) ++
         pubsub_children(mod, conf) ++
-        socket_children(mod, conf, :child_spec) ++
+        socket_children(mod, :child_spec) ++
         server_children(mod, conf, server?) ++
-        socket_children(mod, conf, :drainer_spec) ++
+        socket_children(mod, :drainer_spec) ++
         watcher_children(mod, conf, server?)
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -118,7 +118,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(endpoint, conf, fun) do
+  defp socket_children(endpoint, fun) do
     for {socket, opts} <- endpoint.__start_sockets__(),
         # TODO is this the correct place for this?
         # Needs to know transport specific config
