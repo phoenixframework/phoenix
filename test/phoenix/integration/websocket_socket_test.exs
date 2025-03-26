@@ -95,22 +95,24 @@ defmodule Phoenix.Integration.WebSocketTest do
     # can now simply be part of the endpoint (Plug.Session, …)
 
     socket "/ws", UserSocket,
-      websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200],
-      custom: :value
+      websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200]
 
     socket "/custom/some_path", UserSocket,
-      websocket: [path: "nested/path", check_origin: ["//example.com"], timeout: 200],
-      custom: :value
+      websocket: [path: "nested/path", check_origin: ["//example.com"], timeout: 200]
 
     socket "/custom/:socket_var", UserSocket,
-      websocket: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200],
-      custom: :value
+      websocket: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200]
 
     socket "/ws/ping", PingSocket, websocket: true
   end
 
   defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
+    use Phoenix.Endpoint,
+      otp_app: :phoenix,
+      start_sockets: [
+        {UserSocket, custom: :value},
+        {PingSocket, []}
+      ]
 
     plug Router
   end

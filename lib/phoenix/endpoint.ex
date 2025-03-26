@@ -411,6 +411,10 @@ defmodule Phoenix.Endpoint do
     quote do
       @behaviour Phoenix.Endpoint
 
+      def __start_sockets__ do
+        unquote(Keyword.get(opts, :start_sockets, []))
+      end
+
       unquote(config(opts))
       unquote(pubsub())
       unquote(plug())

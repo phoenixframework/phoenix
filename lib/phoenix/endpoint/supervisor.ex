@@ -80,13 +80,13 @@ defmodule Phoenix.Endpoint.Supervisor do
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :url)
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :static_url)
 
-    # socket_children(mod, conf, :child_spec) ++
-    # socket_children(mod, conf, :drainer_spec) ++
     children =
       config_children(mod, secret_conf, default_conf) ++
         warmup_children(mod) ++
         pubsub_children(mod, conf) ++
+        socket_children(mod, conf, :child_spec) ++
         server_children(mod, conf, server?) ++
+        socket_children(mod, conf, :drainer_spec) ++
         watcher_children(mod, conf, server?)
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -119,8 +119,10 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp socket_children(endpoint, conf, fun) do
-    for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__(), &elem(&1, 1)),
-        _ = check_origin_or_csrf_checked!(conf, opts),
+    for {socket, opts} <- endpoint.__start_sockets__(),
+        # TODO is this the correct place for this?
+        # Needs to know transport specific config
+        # _ = check_origin_or_csrf_checked!(conf, opts),
         spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
         spec != :ignore do
       spec
