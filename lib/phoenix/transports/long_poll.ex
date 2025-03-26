@@ -12,7 +12,6 @@ defmodule Phoenix.Transports.LongPoll do
   def default_config() do
     [
       window_ms: 10_000,
-      path: "/longpoll",
       pubsub_timeout_ms: 2_000,
       serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
       transport_log: false,
@@ -20,7 +19,22 @@ defmodule Phoenix.Transports.LongPoll do
     ]
   end
 
-  def init(opts), do: opts
+  def init(opts) when is_list(opts) do
+    {user_socket, opts} = Keyword.pop!(opts, :user_socket)
+
+    validated_opts =
+      Keyword.validate!(
+        opts,
+        Phoenix.Socket.Transport.common_config_keys() ++
+          [
+            :window_ms,
+            :pubsub_timeout_ms,
+            :crypto
+          ]
+      )
+
+    {user_socket, Phoenix.Socket.Transport.load_config(validated_opts, __MODULE__)}
+  end
 
   def call(conn, {handler, opts}) do
     endpoint = conn.private.phoenix_endpoint

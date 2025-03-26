@@ -249,6 +249,19 @@ defmodule Phoenix.Socket.Transport do
   require Logger
 
   @doc false
+  def common_config_keys do
+    [
+      :serializer,
+      :transport_log,
+      :check_origin,
+      :check_csrf,
+      :code_reloader,
+      :connect_info,
+      :auth_token
+    ]
+  end
+
+  @doc false
   def load_config(true, module),
     do: module.default_config()
 
@@ -269,7 +282,16 @@ defmodule Phoenix.Socket.Transport do
 
     connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers, :sec_websocket_headers, :auth_token] ->
+        key
+        when key in [
+               :peer_data,
+               :trace_context_headers,
+               :uri,
+               :user_agent,
+               :x_headers,
+               :sec_websocket_headers,
+               :auth_token
+             ] ->
           key
 
         {:session, session} ->

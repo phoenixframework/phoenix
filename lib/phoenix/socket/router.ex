@@ -8,21 +8,14 @@ defmodule Phoenix.Socket.Router do
     ws_quote =
       if websocket do
         websocket = put_auth_token(websocket, opts[:auth_token])
-
-        end_segment =
-          case websocket do
-            true -> "/websocket"
-            list -> Keyword.get(list, :path, "/websocket")
-          end
-
+        {end_segment, websocket} = Keyword.pop(websocket, :path, "/websocket")
         path = Path.join(path, end_segment)
 
         quote do
           match :*,
                 unquote(path),
-                Phoenix.Socket.SocketController,
+                Phoenix.Transports.WebSocket,
                 [
-                  {:transport, Phoenix.Transports.WebSocket},
                   {:user_socket, unquote(user_socket)}
                   | unquote(websocket)
                 ]
@@ -34,21 +27,14 @@ defmodule Phoenix.Socket.Router do
     lp_quote =
       if longpoll do
         longpoll = put_auth_token(longpoll, opts[:auth_token])
-
-        end_segment =
-          case longpoll do
-            true -> "/longpoll"
-            list -> Keyword.get(list, :path, "/longpoll")
-          end
-
+        {end_segment, longpoll} = Keyword.pop(longpoll, :path, "/longpoll")
         path = Path.join(path, end_segment)
 
         quote do
           match :*,
                 unquote(path),
-                Phoenix.Socket.SocketController,
+                Phoenix.Transports.LongPoll,
                 [
-                  {:transport, Phoenix.Transports.LongPoll},
                   {:user_socket, unquote(user_socket)}
                   | unquote(longpoll)
                 ]
