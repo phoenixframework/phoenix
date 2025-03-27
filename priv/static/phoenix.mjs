@@ -1005,6 +1005,7 @@ var Socket = class {
     this.defaultEncoder = serializer_default.encode.bind(serializer_default);
     this.defaultDecoder = serializer_default.decode.bind(serializer_default);
     this.closeWasClean = false;
+    this.disconnecting = false;
     this.binaryType = opts.binaryType || "arraybuffer";
     this.connectClock = 1;
     if (this.transport !== LongPoll) {
@@ -1121,10 +1122,14 @@ var Socket = class {
    */
   disconnect(callback, code, reason) {
     this.connectClock++;
+    this.disconnecting = true;
     this.closeWasClean = true;
     clearTimeout(this.fallbackTimer);
     this.reconnectTimer.reset();
-    this.teardown(callback, code, reason);
+    this.teardown(() => {
+      this.disconnecting = false;
+      callback && callback();
+    }, code, reason);
   }
   /**
    *
@@ -1138,7 +1143,7 @@ var Socket = class {
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor");
       this.params = closure(params);
     }
-    if (this.conn) {
+    if (this.conn && !this.disconnecting) {
       return;
     }
     if (this.longPollFallbackMs && this.transport !== LongPoll) {
@@ -1294,6 +1299,7 @@ var Socket = class {
     if (this.hasLogger())
       this.log("transport", `${this.transport.name} connected to ${this.endPointURL()}`);
     this.closeWasClean = false;
+    this.disconnecting = false;
     this.establishedConnections++;
     this.flushSendBuffer();
     this.reconnectTimer.reset();
@@ -1326,7 +1332,11 @@ var Socket = class {
     if (!this.conn) {
       return callback && callback();
     }
+    let connectClock = this.connectClock;
     this.waitForBufferDone(() => {
+      if (connectClock !== this.connectClock) {
+        return;
+      }
       if (this.conn) {
         if (code) {
           this.conn.close(code, reason || "");
@@ -1335,6 +1345,9 @@ var Socket = class {
         }
       }
       this.waitForSocketClosed(() => {
+        if (connectClock !== this.connectClock) {
+          return;
+        }
         if (this.conn) {
           this.conn.onopen = function() {
           };
