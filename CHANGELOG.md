@@ -46,7 +46,7 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
-## 1.7.21
+## 1.7.21 (2025-03-27)
 
 ### Bug fixes
   * Fix socket sometimes not reconnecting after pagehide/pageshow ([#6103](https://github.com/phoenixframework/phoenix/issues/6103))
