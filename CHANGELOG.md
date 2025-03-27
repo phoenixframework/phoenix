@@ -46,6 +46,15 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.21
+
+### Bug fixes
+  * Fix socket sometimes not reconnecting after pagehide/pageshow ([#6103](https://github.com/phoenixframework/phoenix/issues/6103))
+  * Check if priv folder exists before re-linking in CodeReloader ([#6124](https://github.com/phoenixframework/phoenix/pull/6124))
+
+### Enhancements
+  * Relax LiveView dependency for new projects
+
 ## 1.7.20 (2025-02-20)
 
 ### Enhancements
