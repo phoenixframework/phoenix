@@ -113,7 +113,7 @@ defmodule <%= @web_namespace %>.Layouts do
             theme <-
               ~w(system light dark abyss acid aqua autumn black bumblebee business caramellatte cmyk coffee) ++
                 ~w(corporate cupcake cyberpunk dark dim dracula emerald fantasy forest garden halloween) ++
-                ~w(lemonade lofi luxurynight nord pastel retro silk sunset synthwave valentine winter wireframe)
+                ~w(lemonade lofi luxury night nord pastel retro silk sunset synthwave valentine winter wireframe)
           }
           class="w-full"
         >
