@@ -119,7 +119,14 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp socket_children(endpoint, fun) do
-    for {socket, opts} <- endpoint.__start_sockets__(),
+    sockets =
+      if function_exported?(endpoint, :sockets, 0) do
+        endpoint.sockets()
+      else
+        []
+      end
+
+    for {socket, opts} <- Enum.map(sockets, &normalize_module_spec/1),
         # TODO is this the correct place for this?
         # Needs to know transport specific config
         # _ = check_origin_or_csrf_checked!(conf, opts),
@@ -128,6 +135,9 @@ defmodule Phoenix.Endpoint.Supervisor do
       spec
     end
   end
+
+  defp normalize_module_spec(module) when is_atom(module), do: {module, []}
+  defp normalize_module_spec({module, kw}) when is_atom(module) and is_list(kw), do: {module, kw}
 
   defp apply_or_ignore(socket, fun, args) do
     # If the module is not loaded, we want to invoke and crash

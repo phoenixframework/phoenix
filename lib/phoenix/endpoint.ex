@@ -361,6 +361,13 @@ defmodule Phoenix.Endpoint do
   # Channels
 
   @doc """
+  Provide module specs for sockets to start and drain with the endpoint.
+
+  See `Phoenix.Socket.Transport` for more information.
+  """
+  @callback sockets() :: [{module(), keyword()} | module()]
+
+  @doc """
   Subscribes the caller to the given topic.
 
   See `Phoenix.PubSub.subscribe/3` for options.
@@ -406,14 +413,12 @@ defmodule Phoenix.Endpoint do
   """
   @callback local_broadcast_from(from :: pid, topic, event, msg) :: :ok
 
+  @optional_callbacks sockets: 0
+
   @doc false
   defmacro __using__(opts) do
     quote do
       @behaviour Phoenix.Endpoint
-
-      def __start_sockets__ do
-        unquote(Keyword.get(opts, :start_sockets, []))
-      end
 
       unquote(config(opts))
       unquote(pubsub())

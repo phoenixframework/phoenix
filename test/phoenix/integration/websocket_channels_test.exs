@@ -214,11 +214,14 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
   defmodule Endpoint do
     use Phoenix.Endpoint,
-      otp_app: :phoenix,
-      start_sockets: [
-        {UserSocket, []},
-        {UserSocketConnectInfo, []}
+      otp_app: :phoenix
+
+    def sockets do
+      [
+        UserSocket,
+        UserSocketConnectInfo
       ]
+    end
 
     plug Plug.Session,
       store: :cookie,

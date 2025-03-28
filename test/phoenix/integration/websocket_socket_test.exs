@@ -115,11 +115,14 @@ defmodule Phoenix.Integration.WebSocketTest do
 
   defmodule Endpoint do
     use Phoenix.Endpoint,
-      otp_app: :phoenix,
-      start_sockets: [
+      otp_app: :phoenix
+
+    def sockets do
+      [
         {UserSocket, custom: :value},
-        {PingSocket, []}
+        PingSocket
       ]
+    end
 
     plug Router
   end
