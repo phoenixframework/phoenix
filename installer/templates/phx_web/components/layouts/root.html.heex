@@ -11,7 +11,30 @@
     <link phx-track-static rel="stylesheet" href={~p"/assets/default.css"} /><% end %>
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script><%= if @css do %>
-    <.theme_switcher_script /><% end %>
+    <script>
+      // Code that enables theme switcher. Must be loaded early.
+      (() => {
+        const handleTheme = (theme) => {
+          if (!theme || theme === "system") {
+            window.localStorage.removeItem("theme")
+            document.documentElement.removeAttribute("data-theme", theme);
+            return;
+          }
+          window.localStorage.setItem("theme", theme)
+          document.documentElement.setAttribute("data-theme", theme);
+        }
+
+        handleTheme(localStorage.getItem("theme"));
+
+        window.addEventListener('storage', (e) => {
+          e.key === "theme" && handleTheme(e.newValue);
+        });
+
+        window.addEventListener("phx:set-theme", ({ detail: { theme }}) => {
+          handleTheme(theme);
+        });
+      })();
+    </script><% end %>
   </head>
   <body class="bg-base-100">
     {@inner_content}

@@ -93,8 +93,8 @@ defmodule <%= @web_namespace %>.Layouts do
     """
   end
 
-  # Example daisyUI theme switcher, powered by the theme_switcher_sceipt/1
-  # included in layouts/root.html.heex
+  # Example daisyUI theme switcher, powered by a theme switcher script
+  # included in layouts/root.html.heex.
   def theme_switcher(assigns) do
     ~H"""
     <div class="dropdown dropdown-end">
@@ -113,7 +113,7 @@ defmodule <%= @web_namespace %>.Layouts do
             theme <-
               ~w(system light dark abyss acid aqua autumn black bumblebee business caramellatte cmyk coffee) ++
                 ~w(corporate cupcake cyberpunk dark dim dracula emerald fantasy forest garden halloween) ++
-                ~w(lemonade lofi luxurynight nord pastel retro silk sunset synthwave valentine winter wireframe)
+                ~w(lemonade lofi luxury night nord pastel retro silk sunset synthwave valentine winter wireframe)
           }
           class="w-full"
         >
@@ -124,34 +124,5 @@ defmodule <%= @web_namespace %>.Layouts do
       </ul>
     </div>
     """
-  end<%= if @css do %>
-
-  # Script used to power the theme switcher in the app layout + home page
-  defp theme_switcher_script(assigns) do
-    ~H"""
-    <script>
-      (() => {
-        const handleTheme = (theme) => {
-          if (!theme || theme === "system") {
-            window.localStorage.removeItem("theme")
-            document.documentElement.removeAttribute("data-theme", theme);
-            return;
-          }
-          window.localStorage.setItem("theme", theme)
-          document.documentElement.setAttribute("data-theme", theme);
-        }
-
-        handleTheme(localStorage.getItem("theme"));
-
-        window.addEventListener('storage', (e) => {
-          e.key === "theme" && handleTheme(e.newValue);
-        });
-
-        window.addEventListener("phx:set-theme", ({ detail: { theme }}) => {
-          handleTheme(theme);
-        });
-      })();
-    </script>
-    """
-  end<% end %>
+  end
 end
