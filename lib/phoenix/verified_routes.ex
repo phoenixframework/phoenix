@@ -50,7 +50,7 @@ defmodule Phoenix.VerifiedRoutes do
 
       get "/login", SessionController, :create, as: :login
 
-  And now you could generate the route usnig the `login_path` function.
+  And now you could generate the route using the `login_path` function.
 
   Named routes exist to avoid hardcoding routes in your templates, if you wrote `<a href="/login">`
   and then changed your router, the link would point to a page that no longer exist. By using
