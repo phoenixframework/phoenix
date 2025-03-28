@@ -106,17 +106,9 @@ defmodule <%= @web_namespace %>.Layouts do
       </div>
       <ul
         tabindex="0"
-        class="dropdown-content menu bg-base-200 flex flex-row rounded-field z-1 w-52 mt-2 shadow-sm h-64 overflow-y-scroll"
+        class="dropdown-content menu bg-base-200 flex flex-row rounded-field z-1 w-52 mt-2 shadow-sm"
       >
-        <li
-          :for={
-            theme <-
-              ~w(system light dark abyss acid aqua autumn black bumblebee business caramellatte cmyk coffee) ++
-                ~w(corporate cupcake cyberpunk dark dim dracula emerald fantasy forest garden halloween) ++
-                ~w(lemonade lofi luxury night nord pastel retro silk sunset synthwave valentine winter wireframe)
-          }
-          class="w-full"
-        >
+        <li :for={theme <-~w(system light dark)} class="w-full">
           <a class="capitalize" phx-click={JS.dispatch("phx:set-theme", detail: %{theme: theme})}>
             {theme}
           </a>
