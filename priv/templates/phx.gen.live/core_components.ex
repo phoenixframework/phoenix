@@ -80,23 +80,31 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   @doc """
-  Renders a button.
+  Renders a button with navigation support.
 
   ## Examples
 
       <.button>Send!</.button>
-      <.button phx-click="go" class="ml-2">Send!</.button>
+      <.button phx-click="go">Send!</.button>
+      <.button navigate={~p"/"}>Home</.button>
   """
-  attr :class, :string, default: nil
-  attr :rest, :global
+  attr :rest, :global, include: ~w(href navigate patch)
   slot :inner_block, required: true
 
-  def button(assigns) do
-    ~H"""
-    <button class={["btn", @class]} {@rest}>
-      {render_slot(@inner_block)}
-    </button>
-    """
+  def button(%{rest: rest} = assigns) do
+    if rest[:href] || rest[:navigate] || rest[:patch] do
+      ~H"""
+      <.link class="btn btn-primary" {@rest}>
+        {render_slot(@inner_block)}
+      </.link>
+      """
+    else
+      ~H"""
+      <button class="btn btn-primary" {@rest}>
+        {render_slot(@inner_block)}
+      </button>
+      """
+    end
   end
 
   @doc """
