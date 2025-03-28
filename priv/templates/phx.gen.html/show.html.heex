@@ -3,9 +3,9 @@
     <%= schema.human_singular %> {@<%= schema.singular %>.<%= primary_key %>}
     <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
     <:actions>
-      <.link class="btn" href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
+      <.button href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
         Edit <%= schema.singular %>
-      </.link>
+      </.button>
     </:actions>
   </.header>
 
@@ -13,5 +13,5 @@
     <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{@<%= schema.singular %>.<%= k %>}</:item><% end %>
   </.list>
 
-  <.back navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
+  <.button navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>Back to <%= schema.plural %></.button>
 </Layouts.app>

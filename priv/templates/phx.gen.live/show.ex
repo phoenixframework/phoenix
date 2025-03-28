@@ -11,9 +11,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <%= schema.human_singular %> {@<%= schema.singular %>.<%= primary_key %>}
         <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
         <:actions>
-          <.link class="btn" navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
-            Edit <%= schema.singular %>
-          </.link>
+          <.button navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
+            <.icon name="hero-pencil-square" /> Edit <%= schema.singular %>
+          </.button>
         </:actions>
       </.header>
 
@@ -21,7 +21,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{@<%= schema.singular %>.<%= k %>}</:item><% end %>
       </.list>
 
-      <.back navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
+      <.button navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>
+        <.icon name="hero-arrow-left" /> Back to <%= schema.plural %>
+      </.button>
     </Layouts.app>
     """
   end

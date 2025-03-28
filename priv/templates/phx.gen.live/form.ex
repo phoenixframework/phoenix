@@ -15,10 +15,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       <.form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
 <%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 8) %>
-        <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
+        <footer>
+          <.button navigate={return_path(<%= assign_scope_prefix %>@return_to, @<%= schema.singular %>)}>Cancel</.button>
+          <.button phx-disable-with="Saving..." variant="primary">Save <%= schema.human_singular %></.button>
+        </footer>
       </.form>
 
-      <.back navigate={return_path(<%= assign_scope_prefix %>@return_to, @<%= schema.singular %>)}>Back</.back>
     </Layouts.app>
     """
   end

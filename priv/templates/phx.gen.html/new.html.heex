@@ -6,5 +6,5 @@
 
   <.<%= schema.singular %>_form changeset={@changeset} action={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"} />
 
-  <.back navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
+  <.button navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>Back to <%= schema.plural %></.button>
 </Layouts.app>
