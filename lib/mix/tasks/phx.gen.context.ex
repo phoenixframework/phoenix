@@ -30,13 +30,19 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   The generated migration can be skipped with `--no-migration`.
 
+  ## Scopes
+
+  If your application configures its own default [scope](scopes.md), then this generator
+  will automatically make sure all of your context operations are correctly scoped.
+  You can pass the `--no-scope` flag to disable the scoping.
+
   ## Generating without a schema
 
   In some cases, you may wish to bootstrap the context module and
   tests, but leave internal implementation of the context and schema
   to yourself. Use the `--no-schema` flags to accomplish this.
 
-  ## table
+  ## `--table`
 
   By default, the table name for the migration and schema will be
   the plural name provided for the resource. To customize this value,
@@ -44,7 +50,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
       $ mix phx.gen.context Accounts User users --table cms_users
 
-  ## binary_id
+  ## `--binary-id`
 
   Generated migration can use `binary_id` for schema's primary key
   and its references with option `--binary-id`.

@@ -37,6 +37,12 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   If the context already exists, this generator injects functions for the given resource into
   the context, context test, and context test helper modules.
 
+  ## Scopes
+
+  If your application configures its own default [scope](scopes.md), then this generator
+  will automatically make sure all of your context operations are correctly scoped.
+  You can pass the `--no-scope` flag to disable the scoping.
+
   ## Umbrella app configuration
 
   By default, Phoenix injects both web and domain specific functionality into the same
@@ -57,14 +63,6 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   $ mix phx.gen.html Sales User users --context-app my_app
   ```
 
-  If you delete the `:context_app` configuration option, Phoenix will automatically put generated web files in
-  `my_app_umbrella/apps/my_app_web_web`.
-
-  If you change the value of `:context_app` to `:new_value`, `my_app_umbrella/apps/new_value_web`
-  must already exist or you will get the following error:
-
-     ** (Mix) no directory for context_app :new_value found in my_app_web's deps.
-
   ## Web namespace
 
   By default, the controller and HTML view will be namespaced by the schema name.
@@ -83,7 +81,13 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   In some cases, you may wish to bootstrap HTML templates, controllers,
   and controller tests, but leave internal implementation of the context
   or schema to yourself. You can use the `--no-context` and `--no-schema`
-  flags for file generation control.
+  flags for file generation control. Note `--no-context` implies `--no-schema`:
+
+  ```console
+  $ mix phx.gen.live Accounts User users --no-context name:string
+  ```
+
+  In the cases above, tests are still generated, but they will all fail.
 
   You can also change the table name or configure the migrations to
   use binary ids for primary keys, see `mix phx.gen.schema` for more

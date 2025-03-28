@@ -47,27 +47,30 @@ defmodule Mix.Tasks.Phx.Gen.Live do
         live "/users/:id", UserLive.Show, :show
         live "/users/:id/edit", UserLive.Form, :edit
 
-  ## The context app
+  ## Scopes
 
-  A migration file for the repository and test files for the context and
-  controller features will also be generated.
+  If your application configures its own default [scope](scopes.md), then this generator
+  will automatically make sure all of your context operations are correctly scoped.
+  You can pass the `--no-scope` flag to disable the scoping.
 
-  The location of the web files (LiveView's, views, templates, etc.) in an
-  umbrella application will vary based on the `:context_app` config located
-  in your applications `:generators` configuration. When set, the Phoenix
-  generators will generate web files directly in your lib and test folders
-  since the application is assumed to be isolated to web specific functionality.
-  If `:context_app` is not set, the generators will place web related lib
-  and test files in a `web/` directory since the application is assumed
-  to be handling both web and domain specific functionality.
-  Example configuration:
+  ## Umbrella app configuration
 
-      config :my_app_web, :generators, context_app: :my_app
+  By default, Phoenix injects both web and domain specific functionality into the same
+  application. When using umbrella applications, those concerns are typically broken
+  into two separate apps, your context application - let's call it `my_app` - and its web
+  layer, which Phoenix assumes to be `my_app_web`.
+
+  You can teach Phoenix to use this style via the `:context_app` configuration option
+  in your `my_app_umbrella/config/config.exs`:
+
+      config :my_app_web,
+        ecto_repos: [Stuff.Repo],
+        generators: [context_app: :my_app]
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
   ```console
-  $ mix phx.gen.live Accounts User users --context-app warehouse name:string
+  $ mix phx.gen.html Sales User users --context-app my_app
   ```
 
   ## Web namespace
@@ -88,10 +91,10 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   In some cases, you may wish to bootstrap HTML templates, LiveViews,
   and tests, but leave internal implementation of the context or schema
   to yourself. You can use the `--no-context` and `--no-schema` flags
-  for file generation control.
+  flags for file generation control. Note `--no-context` implies `--no-schema`:
 
   ```console
-  $ mix phx.gen.live Accounts User users --no-context --no-schema name:string
+  $ mix phx.gen.live Accounts User users --no-context name:string
   ```
 
   In the cases above, tests are still generated, but they will all fail.

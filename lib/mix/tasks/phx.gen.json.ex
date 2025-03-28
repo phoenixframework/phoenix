@@ -42,29 +42,35 @@ defmodule Mix.Tasks.Phx.Gen.Json do
       config :your_app, :generators,
         api_prefix: "/api/v1"
 
-  ## The context app
+  ## Scopes
 
-  The location of the web files (controllers, json views, etc) in an
-  umbrella application will vary based on the `:context_app` config located
-  in your applications `:generators` configuration. When set, the Phoenix
-  generators will generate web files directly in your lib and test folders
-  since the application is assumed to be isolated to web specific functionality.
-  If `:context_app` is not set, the generators will place web related lib
-  and test files in a `web/` directory since the application is assumed
-  to be handling both web and domain specific functionality.
-  Example configuration:
+  If your application configures its own default [scope](scopes.md), then this generator
+  will automatically make sure all of your context operations are correctly scoped.
+  You can pass the `--no-scope` flag to disable the scoping.
 
-      config :my_app_web, :generators, context_app: :my_app
+  ## Umbrella app configuration
+
+  By default, Phoenix injects both web and domain specific functionality into the same
+  application. When using umbrella applications, those concerns are typically broken
+  into two separate apps, your context application - let's call it `my_app` - and its web
+  layer, which Phoenix assumes to be `my_app_web`.
+
+  You can teach Phoenix to use this style via the `:context_app` configuration option
+  in your `my_app_umbrella/config/config.exs`:
+
+      config :my_app_web,
+        ecto_repos: [Stuff.Repo],
+        generators: [context_app: :my_app]
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
   ```console
-  $ mix phx.gen.json Sales User users --context-app warehouse
+  $ mix phx.gen.html Sales User users --context-app my_app
   ```
 
   ## Web namespace
 
-  By default, the controller and json view will be namespaced by the schema name.
+  By default, the controller and JSON view will be namespaced by the schema name.
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
@@ -80,7 +86,13 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   In some cases, you may wish to bootstrap JSON views, controllers,
   and controller tests, but leave internal implementation of the context
   or schema to yourself. You can use the `--no-context` and `--no-schema`
-  flags for file generation control.
+  flags for file generation control. Note `--no-context` implies `--no-schema`:
+
+  ```console
+  $ mix phx.gen.live Accounts User users --no-context name:string
+  ```
+
+  In the cases above, tests are still generated, but they will all fail.
 
   You can also change the table name or configure the migrations to
   use binary ids for primary keys, see `mix phx.gen.schema` for more
