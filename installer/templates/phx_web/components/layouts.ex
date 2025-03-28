@@ -108,9 +108,9 @@ defmodule <%= @web_namespace %>.Layouts do
         tabindex="0"
         class="dropdown-content menu bg-base-200 flex flex-row rounded-field z-1 w-52 mt-2 shadow-sm"
       >
-        <li :for={theme <-~w(system light dark)} class="w-full">
+        <li :for={{theme, icon} <-[system: "hero-cog-6-tooth", light: "hero-sun", dark: "hero-moon"]} class="w-full">
           <a class="capitalize" phx-click={JS.dispatch("phx:set-theme", detail: %{theme: theme})}>
-            {theme}
+            <.icon name={icon} /> {theme}
           </a>
         </li>
       </ul>
