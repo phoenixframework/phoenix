@@ -106,7 +106,7 @@ defmodule <%= @web_namespace %>.Layouts do
       </div>
       <ul
         tabindex="0"
-        class="dropdown-content menu bg-base-100 flex flex-row rounded-field z-1 w-52 mt-2 shadow-sm h-64 overflow-y-scroll"
+        class="dropdown-content menu bg-base-200 flex flex-row rounded-field z-1 w-52 mt-2 shadow-sm h-64 overflow-y-scroll"
       >
         <li
           :for={
