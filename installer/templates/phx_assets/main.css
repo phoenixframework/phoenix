@@ -15,6 +15,9 @@
   /* In practice, you will likely ship only with two themes, as below: */
   /* themes: light --default, dark --prefersdark; */
   themes: all;
+
+  /* If you want to define your own themes, you must install the daisyui-theme plugin:
+     curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui-theme.js */
 }
 
 @custom-variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
