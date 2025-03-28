@@ -93,7 +93,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-soft"}
+    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
     assigns = assign(assigns, :class, Map.fetch!(variants, assigns[:variant]))
 
     if rest[:href] || rest[:navigate] || rest[:patch] do

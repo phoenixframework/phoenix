@@ -14,7 +14,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           <.button navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>
             <.icon name="hero-arrow-left" />
           </.button>
-          <.button navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
+          <.button variant="primary" navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
             <.icon name="hero-pencil-square" /> Edit <%= schema.singular %>
           </.button>
         </:actions>
