@@ -20,7 +20,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           <.button navigate={return_path(<%= assign_scope_prefix %>@return_to, @<%= schema.singular %>)}>Cancel</.button>
         </footer>
       </.form>
-
     </Layouts.app>
     """
   end

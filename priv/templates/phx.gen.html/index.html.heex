@@ -3,7 +3,7 @@
     Listing <%= schema.human_plural %>
     <:actions>
       <.button href={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/new"}>
-        New <%= schema.human_singular %>
+        <.icon name="hero-plus" /> New <%= schema.human_singular %>
       </.button>
     </:actions>
   </.header>
