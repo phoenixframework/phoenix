@@ -1,4 +1,7 @@
 <.form :let={f} for={@changeset} action={@action}>
 <%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 2) %>
-  <.button>Save <%= schema.human_singular %></.button>
+  <footer>
+    <.button variant="primary">Save <%= schema.human_singular %></.button>
+    <.button :if={@return_to} href={@return_to}>Cancel</.button>
+  </footer>
 </.form>

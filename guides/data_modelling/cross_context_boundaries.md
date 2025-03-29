@@ -388,12 +388,12 @@ With our new cart functions in place, we can now expose the "Add to cart" button
 
 ```diff
 ...
-     <.link class="btn" href={~p"/products/#{@product}/edit"}>
+     <.button href={~p"/products/#{@product}/edit"}>
        Edit product
-     </.link>
-+    <.link class="btn" href={~p"/cart_items?product_id=#{@product.id}"} method="post">
+     </.button>
++    <.button href={~p"/cart_items?product_id=#{@product.id}"} method="post">
 +      Add to cart
-+    </.link>
++    </.button>
 ...
 ```
 
@@ -477,7 +477,7 @@ Next we can create the template at `lib/hello_web/controllers/cart_html/show.htm
   <b>Total</b>: {currency_to_str(ShoppingCart.total_cart_price(@cart))}
 </div>
 
-<.back navigate={~p"/products"}>Back to products</.back>
+<.button navigate={~p"/products"}>Back to products</.button>
 ```
 
 We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
