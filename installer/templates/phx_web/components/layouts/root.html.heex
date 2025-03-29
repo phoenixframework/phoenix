@@ -23,7 +23,7 @@
           }
         };
         setTheme(localStorage.getItem("phx:theme") || "system");
-        window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue));
+        window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
         window.addEventListener("phx:set-theme", ({ detail: { theme } }) => setTheme(theme));
       })();
     </script><% end %>
