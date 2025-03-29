@@ -103,11 +103,11 @@ defmodule <%= @web_namespace %>.Layouts do
     <label phx-click={JS.dispatch("phx:toggle-theme")} class="swap group">
       <.icon
         name="hero-moon"
-        class="size-7 opacity-75 group-hover:opacity-100 [[data-theme=light]_&]:opacity-0 [[data-theme=light]_&]:-rotate-45"
+        class="size-7 opacity-75 group-hover:opacity-100 [[data-theme=light]_&]:opacity-0 [[data-theme=light]_&]:rotate-45"
       />
       <.icon
         name="hero-sun"
-        class="size-7 opacity-75 group-hover:opacity-100 [[data-theme=dark]_&]:opacity-0 [[data-theme=dark]_&]:rotate-45"
+        class="size-7 opacity-75 group-hover:opacity-100 [[data-theme=dark]_&]:opacity-0"
       />
     </label>
     """
