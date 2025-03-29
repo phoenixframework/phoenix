@@ -25,7 +25,6 @@ defmodule Phoenix.Transports.WebSocket do
 
   def default_config() do
     [
-      path: "/websocket",
       serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
       error_handler: {__MODULE__, :handle_error, []},
       timeout: 60_000,
@@ -34,9 +33,29 @@ defmodule Phoenix.Transports.WebSocket do
     ]
   end
 
-  def init(opts), do: opts
+  def init(opts) when is_list(opts) do
+    {user_socket, opts} = Keyword.pop!(opts, :user_socket)
 
-  def call(%{method: "GET"} = conn, {endpoint, handler, opts}) do
+    validated_opts =
+      Keyword.validate!(
+        opts,
+        Phoenix.Socket.Transport.common_config_keys() ++
+          [
+            :timeout,
+            :max_frame_size,
+            :fullsweep_after,
+            :compress,
+            :subprotocols,
+            :error_handler
+          ]
+      )
+
+    {user_socket, Phoenix.Socket.Transport.load_config(validated_opts, __MODULE__)}
+  end
+
+  def call(%{method: "GET"} = conn, {handler, opts}) do
+    endpoint = conn.private.phoenix_endpoint
+
     subprotocols =
       if opts[:auth_token] do
         # when using Sec-WebSocket-Protocol for passing an auth token
