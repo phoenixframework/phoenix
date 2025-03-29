@@ -28,8 +28,8 @@ defmodule <%= @web_namespace %>.Layouts do
           <li>
             <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
           </li><%= if @css do %>
-          <li>
-            <.theme_switcher />
+          <li class="py-1">
+            <.theme_toggle />
           </li><% end %>
           <li>
             <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
@@ -91,30 +91,25 @@ defmodule <%= @web_namespace %>.Layouts do
       </.flash>
     </div>
     """
-  end
+  end<%= if @css do %>
 
-  # Example daisyUI theme switcher, powered by a theme switcher script
-  # included in layouts/root.html.heex.
-  def theme_switcher(assigns) do
+  @doc """
+  Provides dark vs light theme toggle based on themes defined in main.css.
+
+  See <head> in root.html.heex which applies the theme before page load.
+  """
+  def theme_toggle(assigns) do
     ~H"""
-    <div class="dropdown dropdown-end">
-      <div tabindex="0" role="button" class="btn">
-        Theme
-        <span aria-hidden="true" class="text-xs font-normal">
-          <.icon class="size-4" name="hero-chevron-down-micro" />
-        </span>
-      </div>
-      <ul
-        tabindex="0"
-        class="dropdown-content menu bg-base-200 flex flex-row rounded-field z-1 w-52 mt-2 shadow-sm"
-      >
-        <li :for={{theme, icon} <-[system: "hero-cog-6-tooth", light: "hero-sun", dark: "hero-moon"]} class="w-full">
-          <a class="capitalize" phx-click={JS.dispatch("phx:set-theme", detail: %{theme: theme})}>
-            <.icon name={icon} /> {theme}
-          </a>
-        </li>
-      </ul>
-    </div>
+    <label phx-click={JS.dispatch("phx:toggle-theme")} class="swap">
+      <.icon
+        name="hero-moon"
+        class="size-7 opacity-0 [[data-theme=dark]_&]:opacity-100 [[data-theme=light]_&]:-rotate-45"
+      />
+      <.icon
+        name="hero-sun"
+        class="size-7 opacity-0 [[data-theme=light]_&]:opacity-100 [[data-theme=dark]_&]:rotate-45"
+      />
+    </label>
     """
-  end
+  end<% end %>
 end
