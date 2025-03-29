@@ -284,7 +284,7 @@ Next we can create the template at `lib/hello_web/controllers/order_html/show.ht
 <strong>Total price:</strong>
 {HelloWeb.CartHTML.currency_to_str(@order.total_price)}
 
-<.back navigate={~p"/products"}>Back to products</.back>
+<.button navigate={~p"/products"}>Back to products</.button>
 ```
 
 To show our completed order, we displayed the order's user, followed by the line item listing with product title, quantity, and the price we "transacted" when completing the order, along with the total price.
@@ -295,9 +295,9 @@ Our last addition will be to add the "complete order" button to our cart page to
   <.header>
     My Cart
 +   <:actions>
-+     <.link class="btn" href={~p"/orders"} method="post">
++     <.button href={~p"/orders"} method="post">
 +       Complete order
-+     </.link>
++     </.button>
 +   </:actions>
   </.header>
 ```

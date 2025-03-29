@@ -1,4 +1,3 @@
-// A Tailwind plugin that makes "hero-#{ICON}" classes available
 const plugin = require("tailwindcss/plugin")
 const fs = require("fs")
 const path = require("path")

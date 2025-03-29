@@ -4,7 +4,5 @@
     <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
   </.header>
 
-  <.<%= schema.singular %>_form changeset={@changeset} action={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"} />
-
-  <.back navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
+  <.<%= schema.singular %>_form changeset={@changeset} action={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"} return_to={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"} />
 </Layouts.app>
