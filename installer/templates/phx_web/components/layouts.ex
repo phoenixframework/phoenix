@@ -21,16 +21,16 @@ defmodule <%= @web_namespace %>.Layouts do
         </a>
       </div>
       <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center"><%= if @css do %>
-          <li>
-            <.theme_toggle />
-          </li><% end %>
+        <ul class="flex flex-column px-1 space-x-4 items-center">
           <li>
             <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
           </li>
           <li>
             <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li>
+          </li><%= if @css do %>
+          <li>
+            <.theme_toggle />
+          </li><% end %>
           <li>
             <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
               Get Started <span aria-hidden="true">&rarr;</span>
@@ -100,19 +100,20 @@ defmodule <%= @web_namespace %>.Layouts do
   """
   def theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row bg-base-300 border-2 border-base-300 overflow-hidden">
-      <div class="absolute w-8 h-full bg-base-100 left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=dark]_&]:left-[67%] transition-[left]" />
-      <label phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})} class="p-2 cursor-pointer">
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 group-hover:opacity-100" />
-      </label>
+    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
+      <div class="absolute w-[33%] h-full rounded-full border-1 border-base-200 bg-base-100 left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=dark]_&]:left-[66%] transition-[left]" />
 
-      <label phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})} class="p-2 cursor-pointer">
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 group-hover:opacity-100" />
-      </label>
+      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})} class="flex p-2">
+        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+      </button>
 
-        <label phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})} class="p-2 cursor-pointer">
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 group-hover:opacity-100" />
-      </label>
+      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})} class="flex p-2">
+        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
+      </button>
+
+      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})} class="flex p-2">
+        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
+      </button>
     </div>
     """
   end<% end %>
