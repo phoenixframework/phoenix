@@ -21,16 +21,16 @@ defmodule <%= @web_namespace %>.Layouts do
         </a>
       </div>
       <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4">
+        <ul class="flex flex-column px-1 space-x-4 items-center"><%= if @css do %>
+          <li>
+            <.theme_toggle />
+          </li><% end %>
           <li>
             <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
           </li>
           <li>
             <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li><%= if @css do %>
-          <li class="py-1">
-            <.theme_toggle />
-          </li><% end %>
+          </li>
           <li>
             <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
               Get Started <span aria-hidden="true">&rarr;</span>
@@ -100,14 +100,14 @@ defmodule <%= @web_namespace %>.Layouts do
   """
   def theme_toggle(assigns) do
     ~H"""
-    <label phx-click={JS.dispatch("phx:toggle-theme")} class="swap">
+    <label phx-click={JS.dispatch("phx:toggle-theme")} class="swap group">
       <.icon
         name="hero-moon"
-        class="size-7 opacity-0 [[data-theme=dark]_&]:opacity-100 [[data-theme=light]_&]:-rotate-45"
+        class="size-7 opacity-75 group-hover:opacity-100 [[data-theme=light]_&]:opacity-0 [[data-theme=light]_&]:-rotate-45"
       />
       <.icon
         name="hero-sun"
-        class="size-7 opacity-0 [[data-theme=light]_&]:opacity-100 [[data-theme=dark]_&]:rotate-45"
+        class="size-7 opacity-75 group-hover:opacity-100 [[data-theme=dark]_&]:opacity-0 [[data-theme=dark]_&]:rotate-45"
       />
     </label>
     """
