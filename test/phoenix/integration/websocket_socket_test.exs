@@ -90,19 +90,14 @@ defmodule Phoenix.Integration.WebSocketTest do
     use Phoenix.Router
     import Phoenix.Socket.Router
 
-    # extract stuff from Phoenix.Transports.WebSocket, which
-    # can now simply be part of the endpoint (Plug.Session, …)
+    # socket "/ws", UserSocket,
+    #       websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200]
+    scope "/ws" do
+      websocket "/websocket", UserSocket,
+        check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200
 
-    # Manual route definition API
-    # scope "/ws" do
-    #   match :*, "/websocket", Phoenix.Transports.WebSocket,
-    #     user_socket: UserSocket, check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200
-    #
-    #   match :*, "/longpoll", Phoenix.Transports.LongPoll, user_socket: UserSocket
-    # end
-
-    socket "/ws", UserSocket,
-      websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200]
+      longpoll "/longpoll", UserSocket
+    end
 
     socket "/custom/some_path", UserSocket,
       websocket: [path: "nested/path", check_origin: ["//example.com"], timeout: 200]

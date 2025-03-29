@@ -181,12 +181,20 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     get "/", SetSession, []
 
     scope "/ws" do
-      socket "/", UserSocket,
-        websocket: [
+      # socket "/", UserSocket,
+      #   websocket: [
+      #     check_origin: ["//example.com"],
+      #     timeout: 200,
+      #     error_handler: {UserSocket, :handle_error, []}
+      #   ]
+      scope "/" do
+        websocket "/websocket", UserSocket,
           check_origin: ["//example.com"],
           timeout: 200,
           error_handler: {UserSocket, :handle_error, []}
-        ]
+
+        longpoll "/longpoll", UserSocket
+      end
 
       socket "/admin", UserSocket,
         websocket: [

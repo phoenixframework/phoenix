@@ -12,13 +12,7 @@ defmodule Phoenix.Socket.Router do
         path = Path.join(path, end_segment)
 
         quote do
-          match :*,
-                unquote(path),
-                Phoenix.Transports.WebSocket,
-                [
-                  {:user_socket, unquote(user_socket)}
-                  | unquote(websocket)
-                ]
+          websocket unquote(path), unquote(user_socket), unquote(websocket)
         end
       else
         []
@@ -31,13 +25,7 @@ defmodule Phoenix.Socket.Router do
         path = Path.join(path, end_segment)
 
         quote do
-          match :*,
-                unquote(path),
-                Phoenix.Transports.LongPoll,
-                [
-                  {:user_socket, unquote(user_socket)}
-                  | unquote(longpoll)
-                ]
+          longpoll unquote(path), unquote(user_socket), unquote(longpoll)
         end
       else
         []
@@ -46,6 +34,30 @@ defmodule Phoenix.Socket.Router do
     quote do
       unquote(ws_quote)
       unquote(lp_quote)
+    end
+  end
+
+  defmacro websocket(path, user_socket, opts \\ []) do
+    quote do
+      match :*,
+            unquote(path),
+            Phoenix.Transports.WebSocket,
+            [
+              {:user_socket, unquote(user_socket)}
+              | unquote(opts)
+            ]
+    end
+  end
+
+  defmacro longpoll(path, user_socket, opts \\ []) do
+    quote do
+      match :*,
+            unquote(path),
+            Phoenix.Transports.LongPoll,
+            [
+              {:user_socket, unquote(user_socket)}
+              | unquote(opts)
+            ]
     end
   end
 
