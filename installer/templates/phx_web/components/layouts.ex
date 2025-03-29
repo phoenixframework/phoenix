@@ -100,8 +100,8 @@ defmodule <%= @web_namespace %>.Layouts do
   """
   def theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row bg-base-200 overflow-hidden">
-      <div class="absolute w-8 h-full bg-neutral left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=dark]_&]:left-[66%] transition-[left]" />
+    <div class="card relative flex flex-row bg-base-300 border-2 border-base-300 overflow-hidden">
+      <div class="absolute w-8 h-full bg-base-100 left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=dark]_&]:left-[67%] transition-[left]" />
       <label phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})} class="p-2 cursor-pointer">
         <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 group-hover:opacity-100" />
       </label>
