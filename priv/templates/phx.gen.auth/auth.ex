@@ -142,7 +142,7 @@ defmodule <%= inspect auth_module %> do
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
       if token = conn.cookies[@remember_me_cookie] do
-        {token, put_token_in_session(conn, token)}
+        {token, conn |> put_token_in_session(token) |> put_session(:<%= schema.singular %>_remember_me, true)}
       else
         {nil, conn}
       end
