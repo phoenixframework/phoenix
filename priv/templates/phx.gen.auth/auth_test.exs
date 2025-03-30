@@ -4,11 +4,15 @@ defmodule <%= inspect auth_module %>Test do
   <%= if live? do %>alias Phoenix.LiveView
   <% end %>alias <%= inspect context.module %>
   alias <%= inspect context.module %>.<%= inspect scope_config.scope.alias %>
+  alias <%= inspect schema.module %>Token
+  alias <%= inspect schema.repo %>
   alias <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Auth
 
   import <%= inspect context.module %>Fixtures
+  import Ecto.Query, only: [from: 2]
 
   @remember_me_cookie "_<%= web_app_name %>_<%= schema.singular %>_remember_me"
+  @remember_me_cookie_max_age 60 * 60 * 24 * 60
 
   setup %{conn: conn} do
     conn =
@@ -45,7 +49,7 @@ defmodule <%= inspect auth_module %>Test do
 
       assert %{value: signed_token, max_age: max_age} = conn.resp_cookies[@remember_me_cookie]
       assert signed_token != get_session(conn, :<%= schema.singular %>_token)
-      assert max_age == 5_184_000
+      assert max_age == @remember_me_cookie_max_age
     end<%= if live? do %>
 
     test "redirects to settings when <%= schema.singular %> is already logged in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -69,7 +73,7 @@ defmodule <%= inspect auth_module %>Test do
         |> fetch_cookies()
         |> init_test_session(%{<%= schema.singular %>_remember_me: true})
 
-      # the conn is already logged in and has the remeber_me cookie set,
+      # the conn is already logged in and has the remember_me cookie set,
       # now we log in again and even without explicitly setting remember_me,
       # the cookie should be set again
       conn = conn |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, %{})
@@ -151,6 +155,72 @@ defmodule <%= inspect auth_module %>Test do
       conn = <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>(conn, [])
       refute get_session(conn, :<%= schema.singular %>_token)
       refute conn.assigns.current_scope
+    end
+
+    defp generate_offset_<%= schema.singular %>_session_token(<%= schema.singular %>, amount_to_add, unit) do
+      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      {token, offset_<%= schema.singular %>_token(token, amount_to_add, unit)}
+    end
+
+    defp offset_<%= schema.singular %>_token(token, amount_to_add, unit) do
+      dt = DateTime.add(DateTime.utc_now(), amount_to_add, unit)
+      query = from ut in <%= inspect schema.alias %>Token, where: ut.token == ^token
+      {1, nil} = Repo.update_all(query, set: [inserted_at: dt, refreshed_at: dt])
+      {<%= schema.singular %>_token, _} = <%= inspect context.alias %>.get_<%= schema.singular %>_auth_by_session_token(token)
+      <%= schema.singular %>_token
+    end
+
+    test "does not refresh the session token after only a few hours", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      {token, <%= schema.singular %>_token} = generate_offset_<%= schema.singular %>_session_token(<%= schema.singular %>, -12, :hour)
+      assert <%= inspect schema.alias %>Token.seconds_since_refresh(<%= schema.singular %>_token) >= 12 * 60 * 60
+
+      conn =
+        conn
+        |> put_session(:<%= schema.singular %>_token, token)
+        |> <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>([])
+
+      assert conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
+      assert get_session(conn, :<%= schema.singular %>_token) == token
+      assert {<%= schema.singular %>_token, _} = <%= inspect context.alias %>.get_<%= schema.singular %>_auth_by_session_token(token)
+      assert <%= inspect schema.alias %>Token.seconds_since_refresh(<%= schema.singular %>_token) >= 60 * 60 * 3
+    end
+
+    test "refreshes the session token after a few days", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      {token, <%= schema.singular %>_token} = generate_offset_<%= schema.singular %>_session_token(<%= schema.singular %>, -55, :hour)
+      assert <%= inspect schema.alias %>Token.seconds_since_refresh(<%= schema.singular %>_token) >= 55 * 60 * 60
+
+      conn =
+        conn
+        |> put_session(:<%= schema.singular %>_token, token)
+        |> <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>([])
+
+      assert conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
+      assert get_session(conn, :<%= schema.singular %>_token) == token
+      assert {<%= schema.singular %>_token, _} = <%= inspect context.alias %>.get_<%= schema.singular %>_auth_by_session_token(token)
+      assert <%= inspect schema.alias %>Token.seconds_since_refresh(<%= schema.singular %>_token) < 60
+    end
+
+    test "refreshes the remember_me cookie if the token is refreshed", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      logged_in_conn =
+        conn |> fetch_cookies() |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, %{"remember_me" => "true"})
+
+      token = logged_in_conn.cookies[@remember_me_cookie]
+      %{value: signed_token} = logged_in_conn.resp_cookies[@remember_me_cookie]
+
+      <%= schema.singular %>_token = offset_<%= schema.singular %>_token(token, -48, :hour)
+      assert <%= inspect schema.alias %>Token.seconds_since_refresh(<%= schema.singular %>_token) >= 48 * 60 * 60
+
+      conn =
+        conn
+        |> put_session(:<%= schema.singular %>_token, token)
+        |> put_req_cookie(@remember_me_cookie, signed_token)
+        |> fetch_cookies()
+        |> <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>([])
+
+      assert get_session(conn, :<%= schema.singular %>_token) == conn.cookies[@remember_me_cookie]
+      assert %{value: signed_token, max_age: max_age} = conn.resp_cookies[@remember_me_cookie]
+      assert signed_token != get_session(conn, :<%= schema.singular %>_token)
+      assert max_age == @remember_me_cookie_max_age
     end
   end
 

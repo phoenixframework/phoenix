@@ -5,14 +5,32 @@ defmodule <%= inspect auth_module %> do
   import Phoenix.Controller
 
   alias <%= inspect context.module %>
+  alias <%= inspect schema.module %>Token
   alias <%= inspect scope_config.scope.module %>
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
   # the token expiry itself in <%= inspect schema.alias %>Token.
-  @max_age 60 * 60 * 24 * 60
+  @max_session_age_in_days 60
+
+  # How old the session token should be before it is refreshed. You can reduce this so that
+  # the session token is refreshed more often by an active user, but it will also cause more
+  # database writes. This might be desirable if you want to track more precisely the last time
+  # a given token was used. You may also increase this to reduce the number of database writes.
+  # If you increase it to a value greater than the session token expiry, the session token will
+  # never be refreshed, effectively disabling token refreshing.
+  @session_refresh_age_in_hours 24
+
+  # The remember-me cookie is a signed Phoenix.Token, and the browser is instructed to
+  # only keep it for the duration of the session token, and only send it when the request
+  # is made to the same site. Setting `same_site` to `Strict` may cause users to not be
+  # remembered when they follow links from other sites or emails.
   @remember_me_cookie "_<%= web_app_name %>_<%= schema.singular %>_remember_me"
-  @remember_me_options [sign: true, max_age: @max_age, same_site: "Lax"]
+  @remember_me_options [
+    sign: true,
+    max_age: @max_session_age_in_days * 24 * 60 * 60,
+    same_site: "Lax"
+  ]
 
   @doc """
   Logs the <%= schema.singular %> in.
@@ -100,11 +118,21 @@ defmodule <%= inspect auth_module %> do
   @doc """
   Authenticates the <%= schema.singular %> by looking into the session
   and remember me token.
+
+  Will refresh the session token if it is older than the configured refresh age.
   """
   def fetch_current_scope_for_<%= schema.singular %>(conn, _opts) do
-    {<%= schema.singular %>_token, conn} = ensure_<%= schema.singular %>_token(conn)
-    <%= schema.singular %> = <%= schema.singular %>_token && <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-    assign(conn, :current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
+    {token, conn} = ensure_<%= schema.singular %>_token(conn)
+
+    if token do
+      {<%= schema.singular %>_token, <%= schema.singular %>} = <%= inspect context.alias %>.get_<%= schema.singular %>_auth_by_session_token(token)
+
+      conn
+      |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
+      |> maybe_refresh_<%= schema.singular %>_session_token(<%= schema.singular %>_token)
+    else
+      assign(conn, :current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(nil))
+    end
   end
 
   defp ensure_<%= schema.singular %>_token(conn) do
@@ -118,6 +146,30 @@ defmodule <%= inspect auth_module %> do
       else
         {nil, conn}
       end
+    end
+  end
+
+  # Refresh the session token if it is older than the configured refresh age.
+  defp maybe_refresh_<%= schema.singular %>_session_token(conn, nil), do: conn
+
+  defp maybe_refresh_<%= schema.singular %>_session_token(conn, <%= schema.singular %>_token) do
+    if <%= inspect schema.alias %>Token.seconds_since_refresh(<%= schema.singular %>_token) > @session_refresh_age_in_hours * 60 * 60 do
+      <%= inspect context.alias %>.refresh_<%= schema.singular %>_session_token(<%= schema.singular %>_token.token)
+      maybe_refresh_remember_me_cookie(conn, <%= schema.singular %>_token.token)
+    else
+      conn
+    end
+  end
+
+  # Refresh the remember me cookie if it is set and it is the same as the session token.
+  # This is to ensure the remember me cookie has the same expiration time as the session token.
+  defp maybe_refresh_remember_me_cookie(conn, token) do
+    conn = fetch_cookies(conn, signed: [@remember_me_cookie])
+
+    if conn.cookies[@remember_me_cookie] == token do
+      put_resp_cookie(conn, @remember_me_cookie, token, @remember_me_options)
+    else
+      conn
     end
   end
 

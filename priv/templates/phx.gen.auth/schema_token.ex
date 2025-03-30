@@ -18,6 +18,7 @@ defmodule <%= inspect schema.module %>Token do
     field :token, :binary
     field :context, :string
     field :sent_to, :string
+    field :refreshed_at, :utc_datetime
     belongs_to :<%= schema.singular %>, <%= inspect schema.module %>
 
     timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}, " %>updated_at: false)
@@ -44,26 +45,71 @@ defmodule <%= inspect schema.module %>Token do
   """
   def build_session_token(<%= schema.singular %>) do
     token = :crypto.strong_rand_bytes(@rand_size)
-    {token, %<%= inspect schema.alias %>Token{token: token, context: "session", <%= schema.singular %>_id: <%= schema.singular %>.id}}
+
+    {token,
+     %<%= inspect schema.alias %>Token{
+       token: token,
+       context: "session",
+       <%= schema.singular %>_id: <%= schema.singular %>.id,
+       refreshed_at: DateTime.utc_now(:second)
+     }}
   end
 
   @doc """
-  Checks if the token is valid and returns its underlying lookup query.
+  Returns the number of seconds since the <%= schema.singular %> token was last refreshed.
 
-  The query returns the <%= schema.singular %> found by the token, if any.
+  This is mainly for use with "session" tokens. If the token is a session
+  token that has never refreshed, it returns `0`.
 
-  The token is valid if it matches the value in the database and it has
-  not expired (after @session_validity_in_days).
+  All other token types return `nil`.
   """
-  def verify_session_token_query(token) do
-    query =
-      from token in by_token_and_context_query(token, "session"),
-        join: <%= schema.singular %> in assoc(token, :<%= schema.singular %>),
-        where: token.inserted_at > ago(@session_validity_in_days, "day"),
-        select: <%= schema.singular %>,
-        select_merge: %{authenticated_at: token.inserted_at}
+  def seconds_since_refresh(%<%= inspect schema.alias %>Token{context: "session", refreshed_at: nil}), do: 0
 
-    {:ok, query}
+  def seconds_since_refresh(%<%= inspect schema.alias %>Token{context: "session", refreshed_at: refreshed_at}) do
+    DateTime.diff(DateTime.utc_now(:second), refreshed_at, :second)
+  end
+
+  def seconds_since_refresh(%<%= inspect schema.alias %>Token{refreshed_at: nil}), do: nil
+
+  @doc """
+  Returns a query for all valid session <%= inspect schema.alias %>Tokens for the given token.
+
+  The token is valid if it matches the value in the database, it has
+  a <%= schema.singular %> attached to it, and it has been refreshed in the last
+  @session_validity_in_days days.
+  """
+  def valid_<%= schema.singular %>_token_query(token) do
+    from token in by_token_and_context_query(token, "session"),
+      join: <%= schema.singular %> in assoc(token, :<%= schema.singular %>),
+      where: token.refreshed_at > ago(@session_validity_in_days, "day")
+  end
+
+  @doc """
+  Returns a query for all valid session <%= inspect schema.alias %>Tokens for the given token,
+  along with the related <%= inspect schema.alias %> in a tuple.
+
+  The query will return nothing if the token is invalid or the <%= schema.singular %> is not found.
+
+  The token is valid if it matches the value in the database, it has
+  a <%= schema.singular %> attached to it, and it has been refreshed in the last
+  @session_validity_in_days days.
+  """
+  def valid_<%= schema.singular %>_auth_query(token) do
+    from [token, <%= schema.singular %>] in valid_<%= schema.singular %>_token_query(token),
+      select: {token, %{<%= schema.singular %> | authenticated_at: token.inserted_at}}
+  end
+
+  @doc """
+  Returns a query for <%= schema.plural %> with valid sessions for the given token.
+
+  The token is valid if it matches the value in the database, it has
+  a <%= schema.singular %> attached to it, and it has been refreshed in the last
+  @session_validity_in_days days.
+  """
+  def valid_session_token_query(token) do
+    from [token, <%= schema.singular %>] in valid_<%= schema.singular %>_token_query(token),
+      select: <%= schema.singular %>,
+      select_merge: %{authenticated_at: token.inserted_at}
   end
 
   @doc """
@@ -174,5 +220,34 @@ defmodule <%= inspect schema.module %>Token do
   """
   def delete_all_query(tokens) do
     from t in <%= inspect schema.alias %>Token, where: t.id in ^Enum.map(tokens, & &1.id)
+  end
+
+  @doc """
+  Returns a query that returns all expired tokens for the given context.
+
+  The context must be one of the following:
+  - "login"
+  - "session"
+  - "change_email"
+  """
+  def expired_tokens_for_context_query("login") do
+    from t in <%= inspect schema.alias %>Token,
+      where:
+        t.context == "login" and
+          t.inserted_at < ago(^@magic_link_validity_in_minutes, "minute")
+  end
+
+  def expired_tokens_for_context_query("session") do
+    from t in <%= inspect schema.alias %>Token,
+      where:
+        t.context == "session" and
+          (is_nil(t.refreshed_at) or t.refreshed_at < ago(@session_validity_in_days, "day"))
+  end
+
+  def expired_tokens_for_context_query("change_email") do
+    from t in <%= inspect schema.alias %>Token,
+      where:
+        like(t.context, "change:%") and
+          t.inserted_at < ago(@change_email_validity_in_days, "day")
   end
 end

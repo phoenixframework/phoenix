@@ -182,8 +182,19 @@
   Gets the <%= schema.singular %> with the given signed token.
   """
   def get_<%= schema.singular %>_by_session_token(token) do
-    {:ok, query} = <%= inspect schema.alias %>Token.verify_session_token_query(token)
-    Repo.one(query)
+    <%= inspect schema.alias %>Token.valid_session_token_query(token)
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets the `<%= inspect schema.alias %>Token` and `<%= inspect schema.alias %>` for a given session token.
+
+  This will always return `{<%= schema.singular %>_token, <%= schema.singular %>}, or `{nil, nil}` if
+  the token is invalid or expired.
+  """
+  def get_<%= schema.singular %>_auth_by_session_token(token) do
+    <%= inspect schema.alias %>Token.valid_<%= schema.singular %>_auth_query(token)
+    |> Repo.one() || {nil, nil}
   end
 
   @doc """
@@ -196,6 +207,19 @@
     else
       _ -> nil
     end
+  end
+
+  @doc """
+  Refreshes the `<%= inspect schema.alias %>Token` in the db for the given token.
+
+  Only valid session tokens (not expired or deleted) are refreshed.
+
+  Returns the number of tokens refreshed, which will be 0 or 1.
+  """
+  def refresh_<%= schema.singular %>_session_token(token) do
+    query = <%= inspect schema.alias %>Token.valid_<%= schema.singular %>_token_query(token)
+    {refreshed, nil} = Repo.update_all(query, set: [refreshed_at: DateTime.utc_now(:second)])
+    refreshed
   end
 
   @doc """
@@ -277,6 +301,27 @@
   def delete_<%= schema.singular %>_session_token(token) do
     Repo.delete_all(<%= inspect schema.alias %>Token.by_token_and_context_query(token, "session"))
     :ok
+  end
+
+  ## Maintenance
+
+  @doc """
+  Delete all expired <%= inspect schema.alias %>Tokens.
+
+  This includes all "session" tokens that have not been refreshed in the configured refresh
+  period (or have never been refreshed) and all other tokens that are older than their
+  configured validity periods as configured in `<%= inspect schema.alias %>Token`.
+
+  Returns a list with the number of deleted tokens for each context:
+  - "login" tokens, including all magic link tokens.
+  - "session" tokens stored in the user's session and remember me cookie.
+  - "change_email" tokens sent via email when changing the email address.
+  """
+  def prune_<%= schema.singular %>_tokens() do
+    {l, nil} = <%= inspect schema.alias %>Token.expired_tokens_for_context_query("login") |> Repo.delete_all()
+    {s, nil} = <%= inspect schema.alias %>Token.expired_tokens_for_context_query("session") |> Repo.delete_all()
+    {c, nil} = <%= inspect schema.alias %>Token.expired_tokens_for_context_query("change_email") |> Repo.delete_all()
+    [l, s, c]
   end
 
   ## Token helper
