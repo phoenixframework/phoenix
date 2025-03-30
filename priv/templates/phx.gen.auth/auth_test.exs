@@ -165,7 +165,7 @@ defmodule <%= inspect auth_module %>Test do
 
     defp offset_<%= schema.singular %>_token(token, amount_to_add, unit) do
       dt = DateTime.add(DateTime.utc_now(), amount_to_add, unit)
-      query = from ut in <%= inspect schema.alias %>Token, where: ut.token == ^token
+      query = from(ut in <%= inspect schema.alias %>Token, where: ut.token == ^token)
       {1, nil} = Repo.update_all(query, set: [inserted_at: dt, refreshed_at: dt])
       {<%= schema.singular %>_token, _} = <%= inspect context.alias %>.get_<%= schema.singular %>_auth_by_session_token(token)
       <%= schema.singular %>_token
