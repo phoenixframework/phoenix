@@ -144,8 +144,8 @@ defmodule <%= inspect auth_module %>Test do
         |> <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>([])
 
       assert conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
-      assert get_session(conn, :<%= schema.singular %>_token) == <%= schema.singular %>_token<%= if live? do %>
-      assert get_session(conn, :<%= schema.singular %>_remember_me)
+      assert get_session(conn, :<%= schema.singular %>_token) == <%= schema.singular %>_token
+      assert get_session(conn, :<%= schema.singular %>_remember_me)<%= if live? do %>
 
       assert get_session(conn, :live_socket_id) ==
                "<%= schema.plural %>_sessions:#{Base.url_encode64(<%= schema.singular %>_token)}"<% end %>
