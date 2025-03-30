@@ -18,12 +18,12 @@ defmodule <%= inspect scope_config.scope.module %> do
 
   alias <%= inspect schema.module %>
 
-  defstruct user: nil
+  defstruct <%= schema.singular %>: nil
 
   @doc """
   Creates a scope for the given <%= schema.singular %>.
 
-  Returns nil if no user is given.
+  Returns nil if no <%= schema.singular %> is given.
   """
   def for_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
     %__MODULE__{<%= schema.singular %>: <%= schema.singular %>}
