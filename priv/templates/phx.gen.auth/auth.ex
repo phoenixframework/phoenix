@@ -273,7 +273,7 @@ defmodule <%= inspect auth_module %> do
 
   <%= if live? do %>@doc "Returns the path to redirect to after log in."
   # the <%= schema.singular %> was already logged in, redirect to settings
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %<%= inspect scope_config.scope.alias %>{user: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}}) do
+  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %<%= inspect scope_config.scope.alias %>{<%= schema.singular %>: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}}) do
     ~p"<%= schema.route_prefix %>/settings"
   end
 
