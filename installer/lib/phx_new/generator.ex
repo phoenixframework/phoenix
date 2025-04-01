@@ -468,14 +468,21 @@ defmodule Phx.New.Generator do
   defp phoenix_path_prefix(%Project{in_umbrella?: true}, true = _umbrella_root?), do: ".."
   defp phoenix_path_prefix(%Project{in_umbrella?: true}, false = _umbrella_root?), do: "../../../"
 
-  if @phoenix_version.pre == ["dev"] do
-    defp phoenix_dep("deps/phoenix") do
-      ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
-    end
-  else
-    defp phoenix_dep("deps/phoenix") do
-      ~s[{:phoenix, "~> #{unquote(to_string(@phoenix_version))}"}]
-    end
+  case @phoenix_version do
+    %Version{pre: "dev"} ->
+      defp phoenix_dep("deps/phoenix") do
+        ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+      end
+
+    %Version{pre: ["rc", _]} ->
+      defp phoenix_dep("deps/phoenix") do
+        ~s[{:phoenix, "~> #{unquote(to_string(@phoenix_version))}", override: true}]
+      end
+
+    %Version{} ->
+      defp phoenix_dep("deps/phoenix") do
+        ~s[{:phoenix, "~> #{unquote(to_string(@phoenix_version))}"}]
+      end
   end
 
   defp phoenix_dep(path),
