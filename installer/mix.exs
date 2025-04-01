@@ -68,7 +68,6 @@ defmodule Phx.New.MixProject do
 
   defp aliases do
     [
-      compile: [&copy_core_components/1, "compile"],
       "hex.publish": [&copy_core_components/1, "hex.publish"]
     ]
   end
