@@ -105,7 +105,7 @@ Now let's look at the code generated once a default scope is set:
 $ mix phx.gen.live Blog Post posts title:string body:text
 ```
 
-This creates a new `Blog` context, with a `Post` resource. To ensure the scope is available, for LiveViews the routes in your `router.ex` must be added to a `live_session` that includes at least the `:mount_current_scope` hook. Most of the time, we want to also require authentication, in which case the `required_authenticated_user` section is more appropriate:
+This creates a new `Blog` context, with a `Post` resource. To ensure the scope is available, for LiveViews the routes in your `router.ex` must be added to a `live_session` that ensures the user is authenticated. In which case, within the aptly named `required_authenticated_user` section:
 
 ```diff
    scope "/", MyAppWeb do
