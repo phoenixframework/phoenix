@@ -94,7 +94,7 @@ defmodule <%= @web_namespace %>.Layouts do
   end<%= if @css do %>
 
   @doc """
-  Provides dark vs light theme toggle based on themes defined in main.css.
+  Provides dark vs light theme toggle based on themes defined in app.css.
 
   See <head> in root.html.heex which applies the theme before page load.
   """

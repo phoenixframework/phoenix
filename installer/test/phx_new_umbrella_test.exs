@@ -179,14 +179,14 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, ".gitignore"), "/priv/static/assets/")
       assert_file(web_path(@app, ".gitignore"), "#{@app}_web-*.tar")
       assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
-      assert_file(web_path(@app, "assets/css/main.css"), fn file ->
+      assert_file(web_path(@app, "assets/css/app.css"), fn file ->
         assert file =~ "lib/phx_umb_web"
       end)
 
       assert_file(web_path(@app, "priv/static/favicon.ico"))
 
-      refute File.exists?(web_path(@app, "priv/static/assets/main.css"))
-      refute File.exists?(web_path(@app, "priv/static/assets/app.js"))
+      refute File.exists?(web_path(@app, "priv/static/assets/css/app.css"))
+      refute File.exists?(web_path(@app, "priv/static/assets/js/app.js"))
       assert File.exists?(web_path(@app, "assets/vendor"))
 
       # web deps
@@ -341,8 +341,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(root_path(@app, "config/dev.exs"), ~r/watchers: \[\]/)
 
       # No assets & No HTML
-      refute_file(web_path(@app, "priv/static/assets/app.js"))
-      refute_file(web_path(@app, "priv/static/assets/main.css"))
+      refute_file(web_path(@app, "priv/static/assets/js/app.js"))
+      refute_file(web_path(@app, "priv/static/assets/css/app.css"))
 
       # No Ecto
       config = ~r/config :phx_umb, PhxUmb.Repo,/
@@ -499,8 +499,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       refute File.read!(web_path(@app, ".gitignore")) |> String.contains?("/priv/static/assets/")
       assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
-      assert_file(web_path(@app, "priv/static/assets/app.js"))
-      assert_file(web_path(@app, "priv/static/assets/main.css"))
+      assert_file(web_path(@app, "priv/static/assets/js/app.js"))
+      assert_file(web_path(@app, "priv/static/assets/css/app.css"))
       assert_file(web_path(@app, "priv/static/favicon.ico"))
     end)
   end
@@ -821,10 +821,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         # assets
         assert_file("another/.gitignore", ~r/\n$/)
         assert_file("another/priv/static/favicon.ico")
-        assert_file("another/assets/css/main.css")
+        assert_file("another/assets/css/app.css")
 
-        refute File.exists?("another/priv/static/assets/main.css")
-        refute File.exists?("another/priv/static/assets/app.js")
+        refute File.exists?("another/priv/static/assets/css/app.css")
+        refute File.exists?("another/priv/static/assets/js/app.js")
         assert File.exists?("another/assets/vendor")
 
         # Ecto

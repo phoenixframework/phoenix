@@ -20,7 +20,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </.header>
 
         <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
-          <.input field={@form[:email]} type="email" label="Email" autocomplete="username" required />
+          <.input field={@form[:email]} type="email" label="Email" autocomplete="username" required phx-mounted={JS.focus()} />
 
           <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
         </.form>

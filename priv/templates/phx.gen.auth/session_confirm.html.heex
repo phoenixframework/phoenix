@@ -15,7 +15,7 @@
         type="checkbox"
         label="Keep me logged in"
       />
-      <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
+      <.button variant="primary" phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
     </.form>
 
     <.form :if={@<%= schema.singular %>.confirmed_at} for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log-in"}>
