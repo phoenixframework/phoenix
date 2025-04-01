@@ -36,8 +36,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             label="Email"
             autocomplete="username"
             required
+            phx-mounted={JS.focus()}
           />
-          <.button class="w-full">
+          <.button class="w-full" variant="primary">
             Log in with email <span aria-hidden="true">→</span>
           </.button>
         </.form>
@@ -72,7 +73,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             type="checkbox"
             label="Keep me logged in"
           />
-          <.button class="w-full">
+          <.button class="w-full" variant="primary">
             Log in <span aria-hidden="true">→</span>
           </.button>
         </.form>

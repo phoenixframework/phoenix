@@ -21,7 +21,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           autocomplete="username"
           required
         />
-        <.button phx-disable-with="Changing...">Change Email</.button>
+        <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
       </.form>
 
       <div class="divider" />
@@ -55,7 +55,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           label="Confirm new password"
           autocomplete="new-password"
         />
-        <.button phx-disable-with="Saving...">
+        <.button variant="primary" phx-disable-with="Saving...">
           Save Password
         </.button>
       </.form>

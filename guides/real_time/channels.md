@@ -431,7 +431,7 @@ Next, we need to pass this token to JavaScript. We can do so inside a script tag
 
 ```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
-<script src={~p"/assets/app.js"}></script>
+<script src={~p"/assets/js/app.js"}></script>
 ```
 
 ### Step 4 - Pass the Token to the Socket Constructor and Verify

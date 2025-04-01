@@ -186,7 +186,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   Sometimes, when we want to do dynamic routing, we will forward to custom plugs.
   It is possible to make these dynamic routers support `mix phx.routes` and verified
-  routes at compile time by adopting the `Phoenix.VerifiedRoutes` behaviour. 
+  routes at compile time by adopting the `Phoenix.VerifiedRoutes` behaviour.
   For example:
 
       defmodule MyApp.LocaleRouter do
@@ -205,7 +205,7 @@ defmodule Phoenix.VerifiedRoutes do
         def verified_route?(plug_opts, path) do
           plug_opts
           |> supported_locales()
-          |> Enum.any?(fn locale -> 
+          |> Enum.any?(fn locale ->
             Enum.at(path, 0) == locale
           end)
         end
@@ -276,7 +276,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   @doc """
   Returns the necessary information about routes for display in `mix phx.routes`.
-  
+
   The `plug_opts` is typically only passed when the router is mounted within
   a `Phoenix.Router`. Otherwise it defaults to `[]`.
   """
@@ -284,7 +284,7 @@ defmodule Phoenix.VerifiedRoutes do
 
   @doc """
   Returns `true` if the path is verified, and false if not.
-  
+
   The `plug_opts` is typically only passed when the router is mounted within
   a `Phoenix.Router`. Otherwise it defaults to `[]`.
   """
@@ -571,14 +571,14 @@ defmodule Phoenix.VerifiedRoutes do
 
   ## Examples
 
-      iex> static_url(conn, "/assets/app.js")
-      "https://example.com/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+      iex> static_url(conn, "/assets/js/app.js")
+      "https://example.com/assets/js/app-813dfe33b5c7f8388bccaaa38eec8382.js"
 
-      iex> static_url(socket, "/assets/app.js")
-      "https://example.com/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+      iex> static_url(socket, "/assets/js/app.js")
+      "https://example.com/assets/js/app-813dfe33b5c7f8388bccaaa38eec8382.js"
 
-      iex> static_url(AppWeb.Endpoint, "/assets/app.js")
-      "https://example.com/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+      iex> static_url(AppWeb.Endpoint, "/assets/js/app.js")
+      "https://example.com/assets/js/app-813dfe33b5c7f8388bccaaa38eec8382.js"
   """
   def static_url(conn_or_socket_or_endpoint, path)
 
@@ -657,17 +657,17 @@ defmodule Phoenix.VerifiedRoutes do
 
   ## Examples
 
-      iex> static_path(conn, "/assets/app.js")
-      "/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+      iex> static_path(conn, "/assets/js/app.js")
+      "/assets/js/app-813dfe33b5c7f8388bccaaa38eec8382.js"
 
-      iex> static_path(socket, "/assets/app.js")
-      "/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+      iex> static_path(socket, "assets/js/app.js")
+      "/assets/js/app-813dfe33b5c7f8388bccaaa38eec8382.js"
 
-      iex> static_path(AppWeb.Endpoint, "/assets/app.js")
-      "/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+      iex> static_path(AppWeb.Endpoint, "assets/js/app.js")
+      "/assets/js/app-813dfe33b5c7f8388bccaaa38eec8382.js"
 
-      iex> static_path(%URI{path: "/subresource"}, "/assets/app.js")
-      "/subresource/assets/app-813dfe33b5c7f8388bccaaa38eec8382.js"
+      iex> static_path(%URI{path: "/subresource"}, "/assets/js/app.js")
+      "/subresource/assets/js/app-813dfe33b5c7f8388bccaaa38eec8382.js"
   """
   def static_path(conn_or_socket_or_endpoint_or_uri, path)
 
@@ -856,13 +856,13 @@ defmodule Phoenix.VerifiedRoutes do
 
   ## Examples
 
-      iex> static_integrity(conn, "/assets/app.js")
+      iex> static_integrity(conn, "/assets/js/app.js")
       "813dfe33b5c7f8388bccaaa38eec8382"
 
-      iex> static_integrity(socket, "/assets/app.js")
+      iex> static_integrity(socket, "/assets/js/app.js")
       "813dfe33b5c7f8388bccaaa38eec8382"
 
-      iex> static_integrity(AppWeb.Endpoint, "/assets/app.js")
+      iex> static_integrity(AppWeb.Endpoint, "/assets/js/app.js")
       "813dfe33b5c7f8388bccaaa38eec8382"
   """
   def static_integrity(conn_or_socket_or_endpoint, path)

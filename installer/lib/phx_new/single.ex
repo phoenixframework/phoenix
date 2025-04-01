@@ -67,7 +67,7 @@ defmodule Phx.New.Single do
 
   template(:css, [
     {:eex, :web,
-     "phx_assets/main.css": "assets/css/main.css",
+     "phx_assets/app.css": "assets/css/app.css",
      "phx_assets/heroicons.js": "assets/vendor/heroicons.js",
      "phx_assets/daisyui.js": "assets/vendor/daisyui.js",
      "phx_assets/daisyui-theme.js": "assets/vendor/daisyui-theme.js"}
@@ -79,7 +79,7 @@ defmodule Phx.New.Single do
   ])
 
   template(:no_js, [
-    {:text, :web, "phx_static/app.js": "priv/static/assets/app.js"}
+    {:text, :web, "phx_static/app.js": "priv/static/assets/js/app.js"}
   ])
 
   template(:no_css, [
@@ -88,7 +88,7 @@ defmodule Phx.New.Single do
       :web,
       # the default.css file can be re-created by using the recreate_default_css.exs file
       # in the installer folder: `elixir installer/recreate_default_css.exs`
-      "phx_static/main.css": "priv/static/assets/main.css",
+      "phx_static/app.css": "priv/static/assets/css/app.css",
       "phx_static/default.css": "priv/static/assets/default.css"
     }
   ])

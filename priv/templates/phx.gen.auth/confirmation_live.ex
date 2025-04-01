@@ -24,7 +24,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             type="checkbox"
             label="Keep me logged in"
           />
-          <.button phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
+          <.button variant="primary" phx-disable-with="Confirming..." class="w-full">Confirm my account</.button>
         </.form>
 
         <.form

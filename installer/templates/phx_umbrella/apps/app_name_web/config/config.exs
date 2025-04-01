@@ -22,7 +22,7 @@ config :esbuild,
   version: "0.17.11",
   <%= @web_app_name %>: [
     args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/*),
     cd: Path.expand("../apps/<%= @web_app_name %>/assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]<% end %><%= if @css do %>
@@ -32,8 +32,8 @@ config :tailwind,
   version: "4.0.9",
   <%= @web_app_name %>: [
     args: ~w(
-      --input=assets/css/main.css
-      --output=priv/static/assets/main.css
+      --input=assets/css/app.css
+      --output=priv/static/assets/css/app.css
     ),
     cd: Path.expand("../apps/<%= @web_app_name %>", __DIR__)
   ]<% end %>
