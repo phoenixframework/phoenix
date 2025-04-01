@@ -29,7 +29,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             phx-mounted={JS.focus()}
           />
 
-          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+          <.button variant="primary" phx-disable-with="Creating account..." class="w-full">
+            Create an account
+          </.button>
         </.form>
       </div>
     </Layouts.app>
