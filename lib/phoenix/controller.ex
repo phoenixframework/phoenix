@@ -1689,6 +1689,8 @@ defmodule Phoenix.Controller do
 
   Returns the updated connection.
 
+  See [Flash messages](controllers.md#flash-messages) in the Controllers guide for more details.
+
   ## Examples
 
       iex> conn = put_flash(conn, :info, "Welcome Back!")
