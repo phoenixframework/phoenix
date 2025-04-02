@@ -29,6 +29,11 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
     end)
   end
 
+  test "components are in sync with installer" do
+    assert File.read!("priv/templates/phx.gen.live/core_components.ex") ==
+             File.read!("installer/templates/phx_web/components/core_components.ex")
+  end
+
   test "invalid mix arguments", config do
     in_tmp_live_project config.test, fn ->
       assert_raise Mix.Error, ~r/Expected the context, "blog", to be a valid module name/, fn ->
