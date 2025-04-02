@@ -1687,6 +1687,10 @@ defmodule Phoenix.Controller do
   @doc """
   Persists a value in flash.
 
+  `key` can be any atom or binary value. Phoenix does not enforce which keys
+  are stored in the flash, as long as the values are internally consistent.
+  By default, the Phoenix generators use `:info` and `:error` keys.
+
   Returns the updated connection.
 
   ## Examples
