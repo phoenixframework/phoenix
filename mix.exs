@@ -158,6 +158,7 @@ defmodule Phoenix.MixProject do
       "guides/components.md",
       "guides/ecto.md",
       "guides/json_and_apis.md",
+      "guides/live_view.md",
       "guides/asset_management.md",
       "guides/telemetry.md",
       "guides/authn_authz/authn_authz.md",
