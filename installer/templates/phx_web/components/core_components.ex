@@ -64,15 +64,15 @@ defmodule <%= @web_namespace %>.CoreComponents do
         @kind == :info && "alert-info",
         @kind == :error && "alert-error"
       ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="size-5 shrink-0" />
+        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-5 w-5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-5 w-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
         </div>
         <div class="flex-1" />
         <button type="button" class="group self-start cursor-pointer" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
-          <.icon name="hero-x-mark-solid" class="size-5 opacity-40 group-hover:opacity-70" />
+          <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
         </button>
       </div>
     </div>
@@ -80,35 +80,23 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   @doc """
-  Renders a button with navigation support.
+  Renders a button.
 
   ## Examples
 
       <.button>Send!</.button>
-      <.button phx-click="go" variant="primary">Send!</.button>
-      <.button navigate={~p"/"}>Home</.button>
+      <.button phx-click="go" class="ml-2">Send!</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch)
-  attr :variant, :string, values: ~w(primary)
+  attr :class, :string, default: nil
+  attr :rest, :global
   slot :inner_block, required: true
 
-  def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
-    assigns = assign(assigns, :class, Map.fetch!(variants, assigns[:variant]))
-
-    if rest[:href] || rest[:navigate] || rest[:patch] do
-      ~H"""
-      <.link class={["btn", @class]} {@rest}>
-        {render_slot(@inner_block)}
-      </.link>
-      """
-    else
-      ~H"""
-      <button class={["btn", @class]} {@rest}>
-        {render_slot(@inner_block)}
-      </button>
-      """
-    end
+  def button(assigns) do
+    ~H"""
+    <button class={["btn", @class]} {@rest}>
+      {render_slot(@inner_block)}
+    </button>
+    """
   end
 
   @doc """
@@ -260,7 +248,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   defp error(assigns) do
     ~H"""
     <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle-mini" class="size-5" />
+      <.icon name="hero-exclamation-circle-mini" class="h-5 w-5" />
       {render_slot(@inner_block)}
     </p>
     """
@@ -277,7 +265,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4", @class]}>
+    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-8", @class]}>
       <div>
         <h1 class="text-lg font-semibold leading-8">
           {render_slot(@inner_block)}
@@ -382,6 +370,27 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   @doc """
+  Renders a back navigation link.
+
+  ## Examples
+
+      <.back navigate={~p"/posts"}>Back to posts</.back>
+  """
+  attr :navigate, :any, required: true
+  slot :inner_block, required: true
+
+  def back(assigns) do
+    ~H"""
+    <div class="pt-8">
+      <.link navigate={@navigate} class="text-sm inline-flex gap-2 items-center">
+        <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
+        {render_slot(@inner_block)}
+      </.link>
+    </div>
+    """
+  end
+
+  @doc """
   Renders a [Heroicon](https://heroicons.com).
 
   Heroicons come in three styles – outline, solid, and mini.
@@ -392,15 +401,15 @@ defmodule <%= @web_namespace %>.CoreComponents do
   width, height, and background color classes.
 
   Icons are extracted from the `deps/heroicons` directory and bundled within
-  your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
+  your compiled main.css by the plugin in `assets/vendor/heroicons.js`.
 
   ## Examples
 
       <.icon name="hero-x-mark-solid" />
-      <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+      <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 motion-safe:animate-spin" />
   """
   attr :name, :string, required: true
-  attr :class, :string, default: "size-4"
+  attr :class, :string, default: nil
 
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
