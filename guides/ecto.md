@@ -143,7 +143,7 @@ config :hello, Hello.Repo,
 ...
 ```
 
-We also have similar configuration in `config/test.exs` and `config/runtime.exs` (formerly `config/prod.secret.exs`) which can also be changed to match your actual credentials.
+We also have similar configuration in `config/test.exs` and `config/runtime.exs` which can also be changed to match your actual credentials.
 
 ## The schema
 

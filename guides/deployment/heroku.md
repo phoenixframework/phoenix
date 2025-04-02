@@ -150,7 +150,7 @@ Finally, note that since we are using multiple buildpacks, you might run into an
 
 ## Making our Project ready for Heroku
 
-Every new Phoenix project ships with a config file `config/runtime.exs` (formerly `config/prod.secret.exs`) which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices ([12-factor apps](https://12factor.net/)), so the only work left for us to do is to configure URLs and SSL.
+Every new Phoenix project ships with a config file `config/runtime.exs` which loads configuration and secrets from [environment variables](https://devcenter.heroku.com/articles/config-vars). This aligns well with Heroku best practices ([12-factor apps](https://12factor.net/)), so the only work left for us to do is to configure URLs and SSL.
 
 First let's tell Phoenix to only use the SSL version of the website. Find the endpoint config in your `config/prod.exs`:
 
@@ -169,7 +169,7 @@ config :scaffold, ScaffoldWeb.Endpoint,
 
 `force_ssl` need to be set here because it is a _compile_ time config. It will not work when set from `runtime.exs`.
 
-Then in your `config/runtime.exs` (formerly `config/prod.secret.exs`):
+Then in your `config/runtime.exs`:
 
 ... add `host`
 

@@ -49,7 +49,7 @@ config :hello_phoenix, HelloPhoenix.Repo,
   database: "hello_phoenix_dev"
 ```
 
-If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. You also need to configure the correct values in the `config/test.exs` and `config/runtime.exs` (formerly `config/prod.secret.exs`) files as well.
+If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. You also need to configure the correct values in the `config/test.exs` and `config/runtime.exs` files as well.
 
 The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set the `:adapter` to `Ecto.Adapters.MyXQL`.
 
