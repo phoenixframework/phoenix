@@ -1,6 +1,6 @@
 # 1. Intro to Contexts
 
-The collection of Phoenix "Guides" in the sidebar teach about different parts of a Phoenix application. We've explored [the request life-cycle](request_lifecycle.html), wired up controller actions through our routers, and learned how Ecto allows data to be validated and persisted. Now it's time to tie it all together by writing web-facing features that interact with our greater Elixir application.
+Phoenix guides are broken into several major sections. The main building blocks are outlined under the "Core Concepts" section, where we explored [the request life-cycle](request_lifecycle.html), wired up controller actions through our routers, and learned how Ecto allows data to be validated and persisted. Now it's time to tie it all together by writing web-facing features that interact with our greater Elixir application.
 
 When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but we often assign specific responsibilities to certain modules and give them names: such as controllers, routers, and live views.
 

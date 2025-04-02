@@ -194,8 +194,8 @@ defmodule Phoenix.MixProject do
   defp groups_for_extras do
     [
       Introduction: ~r/guides\/introduction\/.?/,
-      Guides: ~r/guides\/[^\/]+\.md/,
-      "Data modelling": ~r/guides\/data_modelling\/.?/,
+      "Core Concepts": ~r/guides\/[^\/]+\.md/,
+      "Data Modelling": ~r/guides\/data_modelling\/.?/,
       "Authn and Authz": ~r/guides\/authn_authz\/.?/,
       "Real-time": ~r/guides\/real_time\/.?/,
       Testing: ~r/guides\/testing\/.?/,

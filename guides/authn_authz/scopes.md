@@ -1,7 +1,5 @@
 # Scopes
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
-
 A scope is a data structure used to keep information about the current request or session, such as the current user logged in, the organization/company it belongs to, permissions, and so on. Think about it as a container that holds information that is required in the huge majority of pages in your application. It can also hold important request metadata, such as IP addresses.
 
 Scopes also play a very important role in security. OWASP (Open Worldwide Application Security Project) lists "Broken access control" as the biggest security risk in web applications. That's because most data in an application is not publicly available. Instead, it most often belongs to a user, a team, or an organization. Therefore, it is extremely important that, when you query the database, your queries, inserts, updates, and deletes are properly scoped to the current user/team/organization.
@@ -99,13 +97,13 @@ config :my_app, :scopes,
 
 We will look at the individual options in the next section.
 
-Now let's look at the code generated once a default scope is set:
+Now let's look at the code generated once a default scope is set. We will use `mix phx.gen.live` as an example, but the ideas and the overall code will be similar to `mix phx.gen.html` and `mix phx.gen.json` too:
 
 ```console
 $ mix phx.gen.live Blog Post posts title:string body:text
 ```
 
-This creates a new `Blog` context, with a `Post` resource. To ensure the scope is available, for LiveViews the routes in your `router.ex` must be added to a `live_session` that ensures the user is authenticated. In which case, within the aptly named `required_authenticated_user` section:
+This creates a new `Blog` context, with a `Post` resource. To ensure the scope is available, for LiveViews the routes in your `router.ex` must be added to a `live_session` that ensures the user is authenticated. In this case, within the aptly named `required_authenticated_user` section:
 
 ```diff
    scope "/", MyAppWeb do
@@ -125,6 +123,8 @@ This creates a new `Blog` context, with a `Post` resource. To ensure the scope i
      post "/users/update-password", UserSessionController, :update_password
    end
 ```
+
+> Although the router has a `scope` macro, the router `scope` and `current_scope` are ultimately distinct features which have similar purposes: to narrow down access to parts of our application, each acting at distinct layers (one at the router, the other at the data layer).
 
 Now, let's look at the generated LiveView (`lib/my_app_web/live/post_live/index.ex`):
 
