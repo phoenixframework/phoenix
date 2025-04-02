@@ -167,9 +167,11 @@ lib/hello_web
 A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, let's create an `index.html.heex` file at `lib/hello_web/controllers/hello_html/index.html.heex`:
 
 ```heex
-<section>
-  <h2>Hello World, from Phoenix!</h2>
-</section>
+<Layouts.app flash={@flash}>
+  <section>
+    <h2>Hello World, from Phoenix!</h2>
+  </section>
+</Layouts.app>
 ```
 
 Phoenix will see the template file and compile it into an `index(assigns)` function, similar as before. There is no runtime or performance difference between the two styles.
