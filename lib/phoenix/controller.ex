@@ -1689,7 +1689,7 @@ defmodule Phoenix.Controller do
 
   Returns the updated connection.
 
-  See [Flash messages](controllers.md#flash-messages) in the Controllers guide for more details.
+  `key` can be any atom or binary value. Phoenix does not enforce which keys are stored in the flash, as long as the values are internally consistent. By default, the Phoenix generators generate templates for `:info` and `:error` keys.
 
   ## Examples
 
