@@ -16,7 +16,7 @@ Let's explore those steps above one by one.
 
 ## Handling of your application secrets
 
-All Phoenix applications have data that must be kept secure, for example, the username and password for your production database, and the secret Phoenix uses to sign and encrypt important information. The general recommendation is to keep those in environment variables and load them into your application. This is done in `config/runtime.exs` (formerly `config/prod.secret.exs` or `config/releases.exs`), which is responsible for loading secrets and configuration from environment variables.
+All Phoenix applications have data that must be kept secure, for example, the username and password for your production database, and the secret Phoenix uses to sign and encrypt important information. The general recommendation is to keep those in environment variables and load them into your application. This is done in `config/runtime.exs` (formerly `config/prod.secret.exs` or `config/releases.exs`), which is responsible for loading secrets and configuration from environment variables at boot time.
 
 Therefore, you need to make sure the proper relevant variables are set in production:
 
