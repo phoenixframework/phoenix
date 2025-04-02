@@ -4,7 +4,7 @@
 
 > **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
 
-We've already seen how the typical request lifecycle in Phoenix works: A request is matched in the router, a controller handles the request and turns to a view to return a response in the correct format. But what if we want to build interactive pages? In a server rendered application, changing the content of the page either needs a form submission rendering the new page, or moving application logic to the client (JavaScript frameworks like jQuery, React, Vue, etc.) and building an API interface for the client to talk to.
+We've already seen how the typical request lifecycle in Phoenix works: a request is matched in the router, a controller handles the request and turns to a view to return a response in the correct format. But what if we want to build interactive pages? In a typical server rendered application, changing the content of the page either needs a form submission rendering the new page, or moving application logic to the client (JavaScript frameworks like jQuery, React, Vue, etc.) and building an API interface for the client to talk to.
 
 Phoenix LiveView offers a different approach, keeping all the state on the server while providing rich, real-time user experiences with server-rendered HTML. It's an alternative to client-side JavaScript frameworks that allows you to build dynamic, interactive applications with minimal JavaScript code on the client.
 
@@ -16,7 +16,7 @@ The LiveView programming model is declarative: instead of saying "once event X h
 
 LiveView state is nothing more than functional and immutable Elixir data structures. The events are either internal application messages (usually emitted by `Phoenix.PubSub`) or sent by the client/browser.
 
-Every LiveView is first rendered statically as part of a regular HTTP request, which provides quick times for "First Meaningful Paint", in addition to helping search and indexing engines. A persistent connection is then established between the client and server. This allows LiveView applications to react faster to user events as there is less work to be done and less data to be sent compared to stateless requests that have to authenticate, decode, load, and encode data on every request.
+Every LiveView is first rendered statically as part of a regular HTTP request, which provides quick times for "First Meaningful Paint", in addition to helping search and indexing engines. A persistent connection is then established between the client and server to exchange events and changes to the page. This allows LiveView applications to react faster to user events as there is less work to be done and less data to be sent compared to stateless requests that have to authenticate, decode, load, and encode data on every request. You can think of LiveView as "diffs over the wire".
 
 ## LiveView vs Controller + View
 
@@ -24,7 +24,7 @@ While Phoenix controllers and LiveViews serve similar purposes in handling user 
 
 ### Controller + View
 
-- Controllers handle HTTP requests and responses as separate transactions
+- Controllers handle each HTTP request-response pair as separate transactions
 - Each page load or form submission requires a full request/response cycle
 - Controllers are stateless, with data stored externally (database, session)
 - Views are separate modules that render templates with the data from controllers
@@ -40,7 +40,7 @@ While Phoenix controllers and LiveViews serve similar purposes in handling user 
 
 LiveViews combine the concerns of controllers and views into a more unified model.
 
-## Basic Example
+## Basic example
 
 LiveView is included by default in new Phoenix applications. Let's see a simple example:
 
@@ -106,20 +106,22 @@ liveSocket.connect()
 Now the JavaScript client will connect over WebSockets and `mount/3` will be invoked
 inside a spawned LiveView process.
 
-## Key Concepts
+## Key concepts
 
-### Socket and State
+### Socket and state
 
-The LiveView socket is the fundamental data structure that holds all state in a LiveView. It's an immutable structure containing "assigns" - the data available to your templates. Changes to the socket (via `assign/3` or `update/3`) trigger re-renders. All state is maintained on the server, with only the diffs sent to the client, minimizing network traffic.
+The LiveView socket is the fundamental data structure that holds all state in a LiveView. It's an immutable structure containing "assigns" - the data available to your templates. While controllers have `conn`, LiveViews have `socket`.
 
-### LiveView Lifecycle
+Changes to the socket (via `assign/3` or `update/3`) trigger re-renders. All state is maintained on the server, with only the diffs sent to the client, minimizing network traffic.
+
+### LiveView lifecycle
 
 LiveViews have several important lifecycle stages:
 
 - [`mount`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:mount/3) - initializes the LiveView with parameters, session data, and socket
 - [`handle_params`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:handle_params/3) - responds to URL changes and updates LiveView state accordingly
 - [`handle_event`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:handle_event/3) - responds to user interactions coming from the client
-- [`handle_info`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:handle_info/2) - responds to regular BEAM messages
+- [`handle_info`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:handle_info/2) - responds to regular process messages
 
 ### DOM Bindings
 
@@ -133,17 +135,6 @@ LiveView provides DOM bindings for convenient client-server interaction:
 
 These bindings automatically send events to the server when the specified browser events occur, which are then handled in `handle_event/3`.
 
-## When to Use LiveView
-
-LiveView is ideal for:
-- Applications requiring real-time updates
-- Interactive forms with immediate validation
-- CRUD interfaces with complex state management
-- Dashboards and monitoring interfaces
-- Collaborative features
-
-However, for purely static content or applications requiring extensive client-side processing, traditional controller-based views or single-page applications might be more appropriate. Also, because LiveViews keep their state on the server, they are not a fit for applications that need to work offline.
-
 ## Getting Started
 
 Phoenix includes code generators for LiveView. Try:
@@ -152,6 +143,6 @@ Phoenix includes code generators for LiveView. Try:
 $ mix phx.gen.live Blog Post posts title:string body:text
 ```
 
-This generates a complete LiveView CRUD implementation, similar to `phx.gen.html`.
+This generates a complete LiveView CRUD implementation, similar to `mix phx.gen.html`.
 
 To learn more about LiveView, please refer to the [Phoenix LiveView documentation](https://hexdocs.pm/phoenix_live_view).
