@@ -274,14 +274,7 @@ defmodule Phoenix.MixProject do
 
   defp copy_core_components(_) do
     source =
-      Path.join([
-        __DIR__,
-        "installer",
-        "templates",
-        "phx_web",
-        "components",
-        "core_components.ex"
-      ])
+      Path.join(__DIR__, "installer/templates/phx_web/components/core_components.ex")
 
     destination_dir = Path.join([__DIR__, "priv", "templates", "phx.gen.live"])
     destination = Path.join(destination_dir, "core_components.ex")
