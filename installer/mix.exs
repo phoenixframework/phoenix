@@ -35,11 +35,10 @@ defmodule Phx.New.MixProject do
         ],
         licenses: ["MIT"],
         links: %{"GitHub" => @scm_url},
-        files: ~w(lib templates mix.exs README.md templates/phx_web/components/core_components.ex)
+        files: ~w(lib templates mix.exs README.md)
       ],
       source_url: @scm_url,
       docs: docs(),
-      aliases: aliases(),
       homepage_url: "https://www.phoenixframework.org",
       description: """
       Phoenix framework project generator.
@@ -66,22 +65,9 @@ defmodule Phx.New.MixProject do
     ]
   end
 
-  defp aliases do
-    [
-      "hex.publish": [&copy_core_components/1, "hex.publish"]
-    ]
-  end
-
   defp docs do
     [
       source_url_pattern: "#{@scm_url}/blob/v#{@version}/installer/%{path}#L%{line}"
     ]
-  end
-
-  defp copy_core_components(_) do
-    source = Path.join([__DIR__, "..", "priv", "templates", "phx.gen.live", "core_components.ex"])
-    destination_dir = Path.join([__DIR__, "templates", "phx_web", "components"])
-    destination = Path.join(destination_dir, "core_components.ex")
-    File.cp!(source, destination)
   end
 end
