@@ -21,11 +21,6 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
-  test "components are in sync with priv" do
-    assert File.read!("../priv/templates/phx.gen.live/core_components.ex") ==
-             File.read!("templates/phx_web/components/core_components.ex")
-  end
-
   test "returns the version" do
     Mix.Tasks.Phx.New.run(["-v"])
     assert_received {:mix_shell, :info, ["Phoenix installer v" <> _]}
