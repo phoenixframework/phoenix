@@ -14,7 +14,7 @@ You may wonder how to organize the code inside contexts. For example, should you
 
 One important benefit of contexts is that this decision does not matter much. The context is your public API, the other modules are private. Contexts isolate these modules into small groups so the surface area of your application is the context and not _all of your code_.
 
-So while you and your team could establish patterns for organizing these private modules, it is also our opinion it is completely fine for them to be different. The major focus should be on how the contexts are defined and how they interact with each other (and with your web application).
+So while you and your team could establish patterns for organizing these private modules, it is also our opinion that it is completely fine for them to be different. The major focus should be on how the contexts are defined and how they interact with each other (and with your web application).
 
 Think about it as a well-kept neighbourhood. Your contexts are houses, you want to keep them well-preserved, well-connected, etc. Inside the houses, they may all be a little bit different, and that's fine.
 
