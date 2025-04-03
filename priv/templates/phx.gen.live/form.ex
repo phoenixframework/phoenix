@@ -55,12 +55,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @impl true
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
-    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %>socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params)
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %>socket.assigns.<%= schema.singular %>, transform_params(<%= schema.singular %>_params))
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
-    save_<%= schema.singular %>(socket, socket.assigns.live_action, <%= schema.singular %>_params)
+    save_<%= schema.singular %>(socket, socket.assigns.live_action, transform_params(<%= schema.singular %>_params))
   end
 
   defp save_<%= schema.singular %>(socket, :edit, <%= schema.singular %>_params) do
@@ -95,4 +95,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   defp return_path(<%= scope_param_prefix %>"index", _<%= schema.singular %>), do: ~p"<%= scope_param_route_prefix %><%= schema.route_prefix %>"
   defp return_path(<%= scope_param_prefix %>"show", <%= schema.singular %>), do: ~p"<%= scope_param_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}"
+
+  defp transform_params(params) do
+<%= if Enum.any?(schema.attrs, fn {_, v} -> v == :map end) do %>
+    Enum.reduce(<%= inspect(schema.attrs |> Enum.filter(fn {_, v} -> v == :map end) |> Enum.map(fn {k, _} -> k end)) %>, params, fn attr, acc ->
+      with {:ok, json_val} <- Map.fetch(acc, to_string(attr)),
+           {:ok, parsed} <- Jason.decode(json_val) do
+        Map.put(acc, "#{attr}", parsed)
+      else
+        _ -> acc
+      end
+    end)
+<% else %>
+    params
+<% end %>
+  end
 end

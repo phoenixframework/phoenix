@@ -344,7 +344,6 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   @doc false
   def inputs(%Schema{} = schema) do
     schema.attrs
-    |> Enum.reject(fn {_key, type} -> type == :map end)
     |> Enum.map(fn
       {_, {:references, _}} ->
         nil
@@ -362,6 +361,9 @@ defmodule Mix.Tasks.Phx.Gen.Live do
         ~s(<.input field={@form[#{inspect(key)}]} type="checkbox" label="#{label(key)}" />)
 
       {key, :text} ->
+        ~s(<.input field={@form[#{inspect(key)}]} type="textarea" label="#{label(key)}" />)
+
+      {key, :map} ->
         ~s(<.input field={@form[#{inspect(key)}]} type="textarea" label="#{label(key)}" />)
 
       {key, :date} ->

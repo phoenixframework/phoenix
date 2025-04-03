@@ -20,8 +20,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         id="<%= schema.plural %>"
         rows={@streams.<%= schema.collection %>}
         row_click={fn {_id, <%= schema.singular %>} -> JS.navigate(~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}") end}
-      ><%= for {k, _} <- schema.attrs do %>
-        <:col :let={{_id, <%= schema.singular %>}} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{<%= schema.singular %>.<%= k %>}</:col><% end %>
+      ><%= for {k, t} <- schema.attrs do %>
+        <:col :let={{_id, <%= schema.singular %>}} label="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%= if t == :map do %>{Jason.encode!(@<%= schema.singular %>.<%= k %>, pretty: true)}<% else %>{@<%= schema.singular %>.<%= k %>}<% end %></:col><% end %>
         <:action :let={{_id, <%= schema.singular %>}}>
           <div class="sr-only">
             <.link navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}"}>Show</.link>

@@ -20,8 +20,8 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </:actions>
       </.header>
 
-      <.list><%= for {k, _} <- schema.attrs do %>
-        <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{@<%= schema.singular %>.<%= k %>}</:item><% end %>
+      <.list><%= for {k, t} <- schema.attrs do %>
+        <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>"><%= if t in [:map] do %>{Jason.encode!(@<%= schema.singular %>.<%= k %>, pretty: true)}<% else %>{@<%= schema.singular %>.<%= k %>}<% end %></:item><% end %>
       </.list>
     </Layouts.app>
     """
