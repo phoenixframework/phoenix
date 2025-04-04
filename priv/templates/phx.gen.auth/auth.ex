@@ -35,7 +35,7 @@ defmodule <%= inspect auth_module %> do
     remember_me = get_session(conn, :<%= schema.singular %>_remember_me)
 
     conn
-    |> renew_session()
+    |> renew_session(user)
     |> put_token_in_session(token)
     |> maybe_write_remember_me_cookie(token, params, remember_me)
     |> redirect(to: <%= schema.singular %>_return_to || signed_in_path(conn))
@@ -61,7 +61,8 @@ defmodule <%= inspect auth_module %> do
   # you must explicitly fetch the session data before clearing
   # and then immediately set it after clearing, for example:
   #
-  #     defp renew_session(conn) do
+  #     defp renew_session(conn, _user) do
+  #       delete_csrf_token()
   #       preferred_locale = get_session(conn, :preferred_locale)
   #
   #       conn
@@ -70,7 +71,15 @@ defmodule <%= inspect auth_module %> do
   #       |> put_session(:preferred_locale, preferred_locale)
   #     end
   #
-  defp renew_session(conn) do
+  defp renew_session(conn, <%= schema.singular %> \\ nil)
+
+  # do not renew session if the user is already logged in (sudo mode reauthentication)
+  # to prevent CSRF errors for tabs that are still open
+  defp renew_session(conn, <%= schema.singular %>) when conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id do
+    conn
+  end
+
+  defp renew_session(conn, _user) do
     delete_csrf_token()
 
     conn
