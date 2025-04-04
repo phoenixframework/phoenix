@@ -11,6 +11,20 @@ defmodule <%= @web_namespace %>.Layouts do
 
   embed_templates "layouts/*"
 
+  @doc """
+  Renders the app layout
+
+  ## Examples
+
+      <Layouts.app flash={@flash}>
+        <h1>Content</h1>
+      </Layout.app>
+      
+  """
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+
+  slot :inner_block, required: true
+
   def app(assigns) do
     ~H"""
     <header class="navbar px-4 sm:px-6 lg:px-8">
