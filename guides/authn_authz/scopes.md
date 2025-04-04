@@ -390,6 +390,21 @@ end
 
 For LiveViews, we'll also need to add a new `:on_mount` hook and add it to `live_session`'s `on_mount` option in the router:
 
+```diff
+  # router.ex
+  scope "/", MyAppWeb do
+    pipe_through [:browser]
+
+    live_session :current_user,
+      on_mount: [
+        {MyAppWeb.UserAuth, :mount_current_scope},
++       {MyAppWeb.UserAuth, :assign_org_to_scope}
+      ] do
+      ...
+    end
+  end
+```
+
 ```elixir
 # user_auth.ex
 def on_mount(:assign_org_to_scope, %{"org" => slug}, _session, socket) do
