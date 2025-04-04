@@ -1,5 +1,4 @@
 defmodule Phoenix.Digester do
-  @digested_file_regex ~r/(-[a-fA-F\d]{32})/
   @manifest_version 1
   @empty_manifest %{
     "version" => @manifest_version,
@@ -156,7 +155,9 @@ defmodule Phoenix.Digester do
   defp manifest_join(path, filename), do: Path.join(path, filename)
 
   defp compiled_file?(file_path) do
-    Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
+    digested_file_regex = ~r/(-[a-fA-F\d]{32})/
+
+    Regex.match?(digested_file_regex, Path.basename(file_path)) ||
       Path.extname(file_path) in compressed_extensions() ||
       Path.basename(file_path) == "cache_manifest.json"
   end
@@ -240,12 +241,12 @@ defmodule Phoenix.Digester do
     %{file | digested_content: digested_content}
   end
 
-  @stylesheet_url_regex ~r{(url\(\s*)(\S+?)(\s*\))}
-  @quoted_text_regex ~r{\A(['"])(.+)\1\z}
-
   defp digest_stylesheet_asset_references(file, latest, with_vsn?) do
-    Regex.replace(@stylesheet_url_regex, file.content, fn _, open, url, close ->
-      case Regex.run(@quoted_text_regex, url) do
+    stylesheet_url_regex = ~r{(url\(\s*)(\S+?)(\s*\))}
+    quoted_text_regex = ~r{\A(['"])(.+)\1\z}
+
+    Regex.replace(stylesheet_url_regex, file.content, fn _, open, url, close ->
+      case Regex.run(quoted_text_regex, url) do
         [_, quote_symbol, url] ->
           open <>
             quote_symbol <> digested_url(url, file, latest, with_vsn?) <> quote_symbol <> close
@@ -256,18 +257,18 @@ defmodule Phoenix.Digester do
     end)
   end
 
-  @javascript_source_map_regex ~r{(//#\s*sourceMappingURL=\s*)(\S+)}
-
   defp digest_javascript_asset_references(file, latest) do
-    Regex.replace(@javascript_source_map_regex, file.content, fn _, source_map_text, url ->
+    javascript_source_map_regex = ~r{(//#\s*sourceMappingURL=\s*)(\S+)}
+
+    Regex.replace(javascript_source_map_regex, file.content, fn _, source_map_text, url ->
       source_map_text <> digested_url(url, file, latest, false)
     end)
   end
 
-  @javascript_map_file_regex ~r{(['"]file['"]:['"])([^,"']+)(['"])}
-
   defp digest_javascript_map_asset_references(file, latest) do
-    Regex.replace(@javascript_map_file_regex, file.content, fn _, open_text, url, close_text ->
+    javascript_map_file_regex = ~r{(['"]file['"]:['"])([^,"']+)(['"])}
+
+    Regex.replace(javascript_map_file_regex, file.content, fn _, open_text, url, close_text ->
       open_text <> digested_url(url, file, latest, false) <> close_text
     end)
   end
