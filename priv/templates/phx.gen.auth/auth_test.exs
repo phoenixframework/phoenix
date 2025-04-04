@@ -17,7 +17,7 @@ defmodule <%= inspect auth_module %>Test do
       |> Map.replace!(:secret_key_base, <%= inspect endpoint_module %>.config(:secret_key_base))
       |> init_test_session(%{})
 
-    %{<%= schema.singular %>: %{<%= schema.singular %>_fixture() | authenticated_at: <%= inspect datetime_module %>.utc_now(:second)}, conn: conn}
+    %{<%= schema.singular %>: %{<%= schema.singular %>_fixture() | authenticated_at: <%= datetime_now %>}, conn: conn}
   end
 
   describe "log_in_<%= schema.singular %>/3" do
@@ -165,8 +165,7 @@ defmodule <%= inspect auth_module %>Test do
       token = logged_in_conn.cookies[@remember_me_cookie]
       %{value: signed_token} = logged_in_conn.resp_cookies[@remember_me_cookie]
 
-      <%= schema.singular %>_token = offset_<%= schema.singular %>_token(token, -10, :day)
-      assert DateTime.diff(DateTime.utc_now(), <%= schema.singular %>_token.inserted_at) >= 10 * 24 * 60 * 60
+      offset_<%= schema.singular %>_token(token, -10, :day)
       {<%= schema.singular %>, _} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
 
       conn =
@@ -273,11 +272,11 @@ defmodule <%= inspect auth_module %>Test do
     end
 
     test "redirects when authentication is too old", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      eleven_minutes_ago = DateTime.utc_now(:second) |> DateTime.add(-11, :minute)
+      eleven_minutes_ago = <%= datetime_now %> |> <%= inspect datetime_module %>.add(-11, :minute)
       <%= schema.singular %> = %{<%= schema.singular %> | authenticated_at: eleven_minutes_ago}
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       {<%= schema.singular %>, token_inserted_at} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-      assert DateTime.compare(token_inserted_at, <%= schema.singular %>.authenticated_at) == :gt
+      assert <%= inspect datetime_module %>.compare(token_inserted_at, <%= schema.singular %>.authenticated_at) == :gt
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
       socket = %LiveView.Socket{
@@ -301,11 +300,11 @@ defmodule <%= inspect auth_module %>Test do
     end
 
     test "redirects when authentication is too old", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      eleven_minutes_ago = DateTime.utc_now(:second) |> DateTime.add(-11, :minute)
+      eleven_minutes_ago = <%= datetime_now %> |> <%= inspect datetime_module %>.add(-11, :minute)
       <%= schema.singular %> = %{<%= schema.singular %> | authenticated_at: eleven_minutes_ago}
       <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       {<%= schema.singular %>, token_inserted_at} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-      assert DateTime.compare(token_inserted_at, <%= schema.singular %>.authenticated_at) == :gt
+      assert <%= inspect datetime_module %>.compare(token_inserted_at, <%= schema.singular %>.authenticated_at) == :gt
 
       conn =
         conn

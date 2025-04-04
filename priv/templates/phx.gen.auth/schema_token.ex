@@ -18,7 +18,7 @@ defmodule <%= inspect schema.module %>Token do
     field :token, :binary
     field :context, :string
     field :sent_to, :string
-    field :authenticated_at, :utc_datetime
+    field :authenticated_at, <%= inspect schema.timestamp_type %>
     belongs_to :<%= schema.singular %>, <%= inspect schema.module %>
 
     timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}, " %>updated_at: false)
@@ -45,7 +45,7 @@ defmodule <%= inspect schema.module %>Token do
   """
   def build_session_token(<%= schema.singular %>) do
     token = :crypto.strong_rand_bytes(@rand_size)
-    dt = <%= schema.singular %>.authenticated_at || DateTime.utc_now(:second)
+    dt = <%= schema.singular %>.authenticated_at || <%= datetime_now %>
     {token, %<%= inspect schema.alias %>Token{token: token, context: "session", <%= schema.singular %>_id: <%= schema.singular %>.id, authenticated_at: dt}}
   end
 

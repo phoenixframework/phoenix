@@ -141,7 +141,7 @@ defmodule <%= inspect auth_module %> do
 
   # Reissue the session token if it is older than the configured reissue age.
   defp maybe_reissue_<%= schema.singular %>_session_token(conn, <%= schema.singular %>, token_inserted_at) do
-    token_age = DateTime.diff(DateTime.utc_now(), token_inserted_at, :day)
+    token_age = <%= inspect datetime_module %>.diff(<%= datetime_now %>, token_inserted_at, :day)
 
     if token_age >= @session_reissue_age_in_days do
       new_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)

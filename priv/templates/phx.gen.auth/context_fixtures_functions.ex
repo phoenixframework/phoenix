@@ -2,7 +2,6 @@
 
   alias <%= inspect context.module %>
   alias <%= inspect scope_config.scope.module %>
-  alias <%= inspect schema.module %>Token
 
   def unique_<%= schema.singular %>_email, do: "<%= schema.singular %>#{System.unique_integer()}@example.com"
   def valid_<%= schema.singular %>_password, do: "hello world!"
@@ -73,12 +72,10 @@
   end
 
   def offset_<%= schema.singular %>_token(token, amount_to_add, unit) do
-    dt = DateTime.add(DateTime.utc_now(), amount_to_add, unit)
+    dt = <%= inspect datetime_module %>.add(<%= datetime_now %>, amount_to_add, unit)
 
     <%= inspect schema.repo %>.update_all(
-      from(ut in <%= inspect schema.alias %>Token, where: ut.token == ^token),
+      from(ut in <%= inspect context.alias %>.<%= inspect schema.alias %>Token, where: ut.token == ^token),
       set: [inserted_at: dt, authenticated_at: dt]
     )
-
-    <%= inspect schema.repo %>.get_by(<%= inspect schema.alias %>Token, token: token)
   end
