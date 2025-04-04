@@ -22,10 +22,6 @@ File.cd!("installer", fn ->
   shell_in_daisy!.("mix phx.gen.auth Accounts User users --live")
   shell_in_daisy!.("mix deps.get")
   shell_in_daisy!.("mix phx.gen.live Blog Post posts title:string body:text")
-
-  css = File.read!("dayzee/assets/css/app.css")
-  File.write!("dayzee/assets/css/app.css", String.replace(css, "themes: all;", "themes: light --default, dark --prefersdark;"))
-
   shell_in_daisy!.("mix tailwind dayzee")
 
   content = File.read!("dayzee/priv/static/assets/css/app.css")
