@@ -123,7 +123,7 @@ defmodule <%= @web_namespace %>.Layouts do
         type="button"
         phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})}
         class="flex p-2"
-      >>
+      >
         <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
     </div>
