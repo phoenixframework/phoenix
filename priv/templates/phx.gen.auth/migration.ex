@@ -21,6 +21,7 @@ defmodule <%= inspect schema.repo %>.Migrations.Create<%= Macro.camelize(schema.
       <%= migration.column_definitions[:token] %>
       add :context, :string, null: false
       add :sent_to, :string
+      add :authenticated_at, <%= inspect schema.timestamp_type %>
 
       timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}, " %>updated_at: false)
     end

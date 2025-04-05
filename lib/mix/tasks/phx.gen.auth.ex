@@ -211,6 +211,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       test_case_options: test_case_options(ecto_adapter),
       live?: Keyword.fetch!(context.opts, :live),
       datetime_module: datetime_module(schema),
+      datetime_now: datetime_now(schema),
       scope_config: scope_config(context, opts[:scope])
     ]
 
@@ -1028,6 +1029,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   defp datetime_module(%{timestamp_type: :naive_datetime}), do: NaiveDateTime
   defp datetime_module(%{timestamp_type: :utc_datetime}), do: DateTime
   defp datetime_module(%{timestamp_type: :utc_datetime_usec}), do: DateTime
+
+  defp datetime_now(%{timestamp_type: :naive_datetime}), do: "NaiveDateTime.utc_now(:second)"
+  defp datetime_now(%{timestamp_type: :utc_datetime}), do: "DateTime.utc_now(:second)"
+  defp datetime_now(%{timestamp_type: :utc_datetime_usec}), do: "DateTime.utc_now()"
 
   defp put_live_option(schema) do
     opts =

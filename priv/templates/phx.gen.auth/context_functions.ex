@@ -180,6 +180,8 @@
 
   @doc """
   Gets the <%= schema.singular %> with the given signed token.
+
+  If the token is valid `{<%= schema.singular %>, token_inserted_at}` is returned, otherwise `nil` is returned.
   """
   def get_<%= schema.singular %>_by_session_token(token) do
     {:ok, query} = <%= inspect schema.alias %>Token.verify_session_token_query(token)

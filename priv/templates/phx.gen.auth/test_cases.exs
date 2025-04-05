@@ -249,6 +249,7 @@
       token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
       assert <%= schema.singular %>_token = Repo.get_by(<%= inspect schema.alias %>Token, token: token)
       assert <%= schema.singular %>_token.context == "session"
+      assert <%= schema.singular %>_token.authenticated_at != nil
 
       # Creating the same token for another <%= schema.singular %> should fail
       assert_raise Ecto.ConstraintError, fn ->
@@ -258,6 +259,14 @@
           context: "session"
         })
       end
+    end
+
+    test "duplicates the authenticated_at of given <%= schema.singular %> in new token", %{<%= schema.singular %>: <%= schema.singular %>} do
+      <%= schema.singular %> = %{<%= schema.singular %> | authenticated_at: <%= inspect datetime_module %>.add(<%= datetime_now %>, -3600)}
+      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      assert <%= schema.singular %>_token = Repo.get_by(<%= inspect schema.alias %>Token, token: token)
+      assert <%= schema.singular %>_token.authenticated_at == <%= schema.singular %>.authenticated_at
+      assert <%= inspect datetime_module %>.compare(<%= schema.singular %>_token.inserted_at, <%= schema.singular %>.authenticated_at) == :gt
     end
   end
 
@@ -269,8 +278,10 @@
     end
 
     test "returns <%= schema.singular %> by token", %{<%= schema.singular %>: <%= schema.singular %>, token: token} do
-      assert session_<%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
+      assert {session_<%= schema.singular %>, token_inserted_at} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
       assert session_<%= schema.singular %>.id == <%= schema.singular %>.id
+      assert session_<%= schema.singular %>.authenticated_at != nil
+      assert token_inserted_at != nil
     end
 
     test "does not return <%= schema.singular %> for invalid token" do
@@ -278,7 +289,8 @@
     end
 
     test "does not return <%= schema.singular %> for expired token", %{token: token} do
-      {1, nil} = Repo.update_all(<%= inspect schema.alias %>Token, set: [inserted_at: ~N[2020-01-01 00:00:00]])
+      dt = ~N[2020-01-01 00:00:00]
+      {1, nil} = Repo.update_all(<%= inspect schema.alias %>Token, set: [inserted_at: dt, authenticated_at: dt])
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
     end
   end
