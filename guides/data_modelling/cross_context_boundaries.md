@@ -18,7 +18,7 @@ From the description, it's clear we need a `Cart` resource for storing the user'
 Most of the cart functionality is tied to a specific user. Therefore, in order to allow each user to manage their own cart (and only their own carts), we must be able to authenticate users. To do so, we will use Phoenix's built-in `mix phx.gen.auth` generator to scaffold a solution for us:
 
 ```console
-mix phx.gen.auth Accounts User user
+mix phx.gen.auth Accounts User users
 
 An authentication system can be created in two different ways:
 - Using Phoenix.LiveView (default)
@@ -39,7 +39,7 @@ Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
 
-Once you are ready, visit "/user/register"
+Once you are ready, visit "/users/register"
 to create your account and then access "/dev/mailbox" to
 see the account confirmation email.
 ```
