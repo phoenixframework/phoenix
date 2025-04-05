@@ -33,6 +33,31 @@ defmodule <%= inspect auth_module %>Test do
       refute get_session(conn, :to_be_removed)
     end
 
+    test "keeps session when re-authenticating", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      conn =
+        conn
+        |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
+        |> put_session(:to_be_removed, "value")
+        |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
+
+      assert get_session(conn, :to_be_removed)
+    end
+
+    test "clears session when <%= schema.singular %> does not match when re-authenticating", %{
+      conn: conn,
+      <%= schema.singular %>: <%= schema.singular %>
+    } do
+      other_<%= schema.singular %> = <%= schema.singular %>_fixture()
+
+      conn =
+        conn
+        |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(other_<%= schema.singular %>))
+        |> put_session(:to_be_removed, "value")
+        |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
+
+      refute get_session(conn, :to_be_removed)
+    end
+
     test "redirects to the configured path", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = conn |> put_session(:<%= schema.singular %>_return_to, "/hello") |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
       assert redirected_to(conn) == "/hello"
