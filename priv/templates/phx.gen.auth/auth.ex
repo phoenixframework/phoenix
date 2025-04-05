@@ -55,7 +55,7 @@ defmodule <%= inspect auth_module %> do
     |> put_resp_cookie(@remember_me_cookie, token, @remember_me_options)
   end
 
-  # do not renew session if the <%= schema.singular %> is already logged in (sudo mode reauthentication)
+  # Do not renew session if the <%= schema.singular %> is already logged in (sudo mode reauthentication)
   # to prevent CSRF errors for tabs that are still open
   defp renew_session(conn, <%= schema.singular %>) when conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id do
     conn
