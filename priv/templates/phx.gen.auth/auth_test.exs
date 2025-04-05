@@ -43,7 +43,10 @@ defmodule <%= inspect auth_module %>Test do
       assert get_session(conn, :to_be_removed)
     end
 
-    test "clears session when <%= schema.singular %> does not match when re-authenticating", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+    test "clears session when <%= schema.singular %> does not match when re-authenticating", %{
+      conn: conn,
+      <%= schema.singular %>: <%= schema.singular %>
+    } do
       other_<%= schema.singular %> = <%= schema.singular %>_fixture()
 
       conn =
