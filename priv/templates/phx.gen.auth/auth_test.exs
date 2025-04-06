@@ -9,6 +9,7 @@ defmodule <%= inspect auth_module %>Test do
   import <%= inspect context.module %>Fixtures
 
   @remember_me_cookie "_<%= web_app_name %>_<%= schema.singular %>_remember_me"
+  @remember_me_cookie_max_age 60 * 60 * 24 * 14
 
   setup %{conn: conn} do
     conn =
@@ -16,7 +17,7 @@ defmodule <%= inspect auth_module %>Test do
       |> Map.replace!(:secret_key_base, <%= inspect endpoint_module %>.config(:secret_key_base))
       |> init_test_session(%{})
 
-    %{<%= schema.singular %>: %{<%= schema.singular %>_fixture() | authenticated_at: <%= inspect datetime_module %>.utc_now()}, conn: conn}
+    %{<%= schema.singular %>: %{<%= schema.singular %>_fixture() | authenticated_at: <%= datetime_now %>}, conn: conn}
   end
 
   describe "log_in_<%= schema.singular %>/3" do
@@ -70,7 +71,7 @@ defmodule <%= inspect auth_module %>Test do
 
       assert %{value: signed_token, max_age: max_age} = conn.resp_cookies[@remember_me_cookie]
       assert signed_token != get_session(conn, :<%= schema.singular %>_token)
-      assert max_age == 5_184_000
+      assert max_age == @remember_me_cookie_max_age
     end<%= if live? do %>
 
     test "redirects to settings when <%= schema.singular %> is already logged in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -94,13 +95,13 @@ defmodule <%= inspect auth_module %>Test do
         |> fetch_cookies()
         |> init_test_session(%{<%= schema.singular %>_remember_me: true})
 
-      # the conn is already logged in and has the remeber_me cookie set,
+      # the conn is already logged in and has the remember_me cookie set,
       # now we log in again and even without explicitly setting remember_me,
       # the cookie should be set again
       conn = conn |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, %{})
       assert %{value: signed_token, max_age: max_age} = conn.resp_cookies[@remember_me_cookie]
       assert signed_token != get_session(conn, :<%= schema.singular %>_token)
-      assert max_age == 5_184_000
+      assert max_age == @remember_me_cookie_max_age
       assert get_session(conn, :<%= schema.singular %>_remember_me) == true
     end
   end
@@ -150,6 +151,8 @@ defmodule <%= inspect auth_module %>Test do
         conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>([])
 
       assert conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
+      assert conn.assigns.current_scope.<%= schema.singular %>.authenticated_at == <%= schema.singular %>.authenticated_at
+      assert get_session(conn, :<%= schema.singular %>_token) == <%= schema.singular %>_token
     end
 
     test "authenticates <%= schema.singular %> from cookies", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -165,7 +168,9 @@ defmodule <%= inspect auth_module %>Test do
         |> <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>([])
 
       assert conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
-      assert get_session(conn, :<%= schema.singular %>_token) == <%= schema.singular %>_token<%= if live? do %>
+      assert conn.assigns.current_scope.<%= schema.singular %>.authenticated_at == <%= schema.singular %>.authenticated_at
+      assert get_session(conn, :<%= schema.singular %>_token) == <%= schema.singular %>_token
+      assert get_session(conn, :<%= schema.singular %>_remember_me)<%= if live? do %>
 
       assert get_session(conn, :live_socket_id) ==
                "<%= schema.plural %>_sessions:#{Base.url_encode64(<%= schema.singular %>_token)}"<% end %>
@@ -176,6 +181,32 @@ defmodule <%= inspect auth_module %>Test do
       conn = <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>(conn, [])
       refute get_session(conn, :<%= schema.singular %>_token)
       refute conn.assigns.current_scope
+    end
+
+    test "reissues a new token after a few days and refreshes cookie", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      logged_in_conn =
+        conn |> fetch_cookies() |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, %{"remember_me" => "true"})
+
+      token = logged_in_conn.cookies[@remember_me_cookie]
+      %{value: signed_token} = logged_in_conn.resp_cookies[@remember_me_cookie]
+
+      offset_<%= schema.singular %>_token(token, -10, :day)
+      {<%= schema.singular %>, _} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
+
+      conn =
+        conn
+        |> put_session(:<%= schema.singular %>_token, token)
+        |> put_session(:<%= schema.singular %>_remember_me, true)
+        |> put_req_cookie(@remember_me_cookie, signed_token)
+        |> <%= inspect schema.alias %>Auth.fetch_current_scope_for_<%= schema.singular %>([])
+
+      assert conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id
+      assert conn.assigns.current_scope.<%= schema.singular %>.authenticated_at == <%= schema.singular %>.authenticated_at
+      assert new_token = get_session(conn, :<%= schema.singular %>_token)
+      assert new_token != token
+      assert %{value: new_signed_token, max_age: max_age} = conn.resp_cookies[@remember_me_cookie]
+      assert new_signed_token != signed_token
+      assert max_age == @remember_me_cookie_max_age
     end
   end
 
@@ -265,20 +296,21 @@ defmodule <%= inspect auth_module %>Test do
                <%= inspect schema.alias %>Auth.on_mount(:require_sudo_mode, %{}, session, socket)
     end
 
-    test "redirects when authentication is too old", %{<%= schema.singular %>: <%= schema.singular %>} do
-      eleven_minutes_ago = DateTime.utc_now() |> DateTime.add(-11, :minute)
+    test "redirects when authentication is too old", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      eleven_minutes_ago = <%= datetime_now %> |> <%= inspect datetime_module %>.add(-11, :minute)
+      <%= schema.singular %> = %{<%= schema.singular %> | authenticated_at: eleven_minutes_ago}
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      {<%= schema.singular %>, token_inserted_at} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+      assert <%= inspect datetime_module %>.compare(token_inserted_at, <%= schema.singular %>.authenticated_at) == :gt
+      session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
       socket = %LiveView.Socket{
-        endpoint: AuthAppWeb.Endpoint,
-        assigns: %{
-          __changed__: %{},
-          flash: %{},
-          current_scope: <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(%{<%= schema.singular %> | authenticated_at: eleven_minutes_ago})
-        }
+        endpoint: <%= inspect context.web_module %>.Endpoint,
+        assigns: %{__changed__: %{}, flash: %{}}
       }
 
       assert {:halt, _updated_socket} =
-               <%= inspect schema.alias %>Auth.on_mount(:require_sudo_mode, %{}, %{}, socket)
+               <%= inspect schema.alias %>Auth.on_mount(:require_sudo_mode, %{}, session, socket)
     end
   end<% else %>describe "require_sudo_mode/2" do
     test "allows <%= schema.plural %> that have authenticated in the last 10 minutes", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
@@ -293,15 +325,16 @@ defmodule <%= inspect auth_module %>Test do
     end
 
     test "redirects when authentication is too old", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      eleven_minutes_ago = DateTime.utc_now() |> DateTime.add(-11, :minute)
+      eleven_minutes_ago = <%= datetime_now %> |> <%= inspect datetime_module %>.add(-11, :minute)
+      <%= schema.singular %> = %{<%= schema.singular %> | authenticated_at: eleven_minutes_ago}
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      {<%= schema.singular %>, token_inserted_at} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
+      assert <%= inspect datetime_module %>.compare(token_inserted_at, <%= schema.singular %>.authenticated_at) == :gt
 
       conn =
         conn
         |> fetch_flash()
-        |> assign(
-          :current_scope,
-          <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(%{<%= schema.singular %> | authenticated_at: eleven_minutes_ago})
-        )
+        |> assign(:current_scope, Scope.for_<%= schema.singular %>(<%= schema.singular %>))
         |> <%= inspect schema.alias %>Auth.require_sudo_mode([])
 
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"

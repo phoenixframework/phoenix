@@ -19,7 +19,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"
     end
 
-    @tag token_inserted_at: <%= inspect datetime_module %>.add(<%= inspect datetime_module %>.utc_now(), -11, :minute)
+    @tag token_authenticated_at: <%= inspect datetime_module %>.add(<%= datetime_now %>, -11, :minute)
     test "redirects if <%= schema.singular %> is not in sudo mode", %{conn: conn} do
       conn = get(conn, ~p"<%= schema.route_prefix %>/settings")
       assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/log-in"

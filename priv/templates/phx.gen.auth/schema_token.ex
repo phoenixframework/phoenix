@@ -10,7 +10,7 @@ defmodule <%= inspect schema.module %>Token do
   # since someone with access to the email may take over the account.
   @magic_link_validity_in_minutes 15
   @change_email_validity_in_days 7
-  @session_validity_in_days 60
+  @session_validity_in_days 14
 <%= if schema.binary_id do %>
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id<% end %>
@@ -18,6 +18,7 @@ defmodule <%= inspect schema.module %>Token do
     field :token, :binary
     field :context, :string
     field :sent_to, :string
+    field :authenticated_at, <%= inspect schema.timestamp_type %>
     belongs_to :<%= schema.singular %>, <%= inspect schema.module %>
 
     timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}, " %>updated_at: false)
@@ -44,13 +45,14 @@ defmodule <%= inspect schema.module %>Token do
   """
   def build_session_token(<%= schema.singular %>) do
     token = :crypto.strong_rand_bytes(@rand_size)
-    {token, %<%= inspect schema.alias %>Token{token: token, context: "session", <%= schema.singular %>_id: <%= schema.singular %>.id}}
+    dt = <%= schema.singular %>.authenticated_at || <%= datetime_now %>
+    {token, %<%= inspect schema.alias %>Token{token: token, context: "session", <%= schema.singular %>_id: <%= schema.singular %>.id, authenticated_at: dt}}
   end
 
   @doc """
   Checks if the token is valid and returns its underlying lookup query.
 
-  The query returns the <%= schema.singular %> found by the token, if any.
+  The query returns the <%= schema.singular %> found by the token, if any, along with the token's creation time.
 
   The token is valid if it matches the value in the database and it has
   not expired (after @session_validity_in_days).
@@ -60,8 +62,7 @@ defmodule <%= inspect schema.module %>Token do
       from token in by_token_and_context_query(token, "session"),
         join: <%= schema.singular %> in assoc(token, :<%= schema.singular %>),
         where: token.inserted_at > ago(@session_validity_in_days, "day"),
-        select: <%= schema.singular %>,
-        select_merge: %{authenticated_at: token.inserted_at}
+        select: {%{<%= schema.singular %> | authenticated_at: token.authenticated_at}, token.inserted_at}
 
     {:ok, query}
   end
