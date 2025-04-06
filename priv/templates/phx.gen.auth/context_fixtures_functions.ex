@@ -56,12 +56,12 @@
     token
   end
 
-  def override_token_inserted_at(token, inserted_at) when is_binary(token) do
+  def override_token_authenticated_at(token, authenticated_at) when is_binary(token) do
     <%= inspect schema.repo %>.update_all(
       from(t in <%= inspect context.alias %>.<%= inspect schema.alias %>Token,
         where: t.token == ^token
       ),
-      set: [inserted_at: inserted_at]
+      set: [authenticated_at: authenticated_at]
     )
   end
 
@@ -69,4 +69,13 @@
     {encoded_token, <%= schema.singular %>_token} = <%= inspect context.alias %>.<%= inspect schema.alias %>Token.build_email_token(<%= schema.singular %>, "login")
     <%= inspect schema.repo %>.insert!(<%= schema.singular %>_token)
     {encoded_token, <%= schema.singular %>_token.token}
+  end
+
+  def offset_<%= schema.singular %>_token(token, amount_to_add, unit) do
+    dt = <%= inspect datetime_module %>.add(<%= datetime_now %>, amount_to_add, unit)
+
+    <%= inspect schema.repo %>.update_all(
+      from(ut in <%= inspect context.alias %>.<%= inspect schema.alias %>Token, where: ut.token == ^token),
+      set: [inserted_at: dt, authenticated_at: dt]
+    )
   end

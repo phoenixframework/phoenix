@@ -7,12 +7,24 @@ defmodule <%= inspect auth_module %> do
   alias <%= inspect context.module %>
   alias <%= inspect scope_config.scope.module %>
 
-  # Make the remember me cookie valid for 60 days.
-  # If you want bump or reduce this value, also change
-  # the token expiry itself in <%= inspect schema.alias %>Token.
-  @max_age 60 * 60 * 24 * 60
+  # Make the remember me cookie valid for 14 days. This should match
+  # the session validity setting in <%= inspect schema.alias %>Token.
+  @max_cookie_age_in_days 14
   @remember_me_cookie "_<%= web_app_name %>_<%= schema.singular %>_remember_me"
-  @remember_me_options [sign: true, max_age: @max_age, same_site: "Lax"]
+  @remember_me_options [
+    sign: true,
+    max_age: @max_cookie_age_in_days * 24 * 60 * 60,
+    same_site: "Lax"
+  ]
+
+  # How old the session token should be before a new one is issued. When a request is made
+  # with a session token older than this value, then a new session token will be created
+  # and the session and remember-me cookies (if set) will be updated with the new token.
+  # Lowering this value will result in more tokens being created by active users. Increasing
+  # it will result in less time before a session token expires for a user to get issued a new
+  # token. This can be set to a value greater than `@max_cookie_age_in_days` to disable
+  # the reissuing of tokens completely.
+  @session_reissue_age_in_days 7
 
   @doc """
   Logs the <%= schema.singular %> in.
@@ -105,13 +117,19 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  Authenticates the <%= schema.singular %> by looking into the session
-  and remember me token.
+  Authenticates the <%= schema.singular %> by looking into the session and remember me token.
+
+  Will reissue the session token if it is older than the configured age.
   """
   def fetch_current_scope_for_<%= schema.singular %>(conn, _opts) do
-    {<%= schema.singular %>_token, conn} = ensure_<%= schema.singular %>_token(conn)
-    <%= schema.singular %> = <%= schema.singular %>_token && <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-    assign(conn, :current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
+    with {token, conn} <- ensure_<%= schema.singular %>_token(conn),
+         {<%= schema.singular %>, token_inserted_at} <- <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token) do
+      conn
+      |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
+      |> maybe_reissue_<%= schema.singular %>_session_token(<%= schema.singular %>, token_inserted_at)
+    else
+      nil -> assign(conn, :current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(nil))
+    end
   end
 
   defp ensure_<%= schema.singular %>_token(conn) do
@@ -121,10 +139,34 @@ defmodule <%= inspect auth_module %> do
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
 
       if token = conn.cookies[@remember_me_cookie] do
-        {token, put_token_in_session(conn, token)}
+        {token, conn |> put_token_in_session(token) |> put_session(:<%= schema.singular %>_remember_me, true)}
       else
-        {nil, conn}
+        nil
       end
+    end
+  end
+
+  # Reissue the session token if it is older than the configured reissue age.
+  defp maybe_reissue_<%= schema.singular %>_session_token(conn, <%= schema.singular %>, token_inserted_at) do
+    token_age = <%= inspect datetime_module %>.diff(<%= datetime_now %>, token_inserted_at, :day)
+
+    if token_age >= @session_reissue_age_in_days do
+      new_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+
+      conn
+      |> put_token_in_session(new_token)
+      |> maybe_refresh_remember_me_cookie(new_token)
+    else
+      conn
+    end
+  end
+
+  # Refresh the remember me cookie with the new token and new expiration date.
+  defp maybe_refresh_remember_me_cookie(conn, new_token) do
+    if get_session(conn, :<%= schema.singular %>_remember_me) do
+      put_resp_cookie(conn, @remember_me_cookie, new_token, @remember_me_options)
+    else
+      conn
     end
   end
 
@@ -196,10 +238,10 @@ defmodule <%= inspect auth_module %> do
 
   defp mount_current_scope(socket, session) do
     Phoenix.Component.assign_new(socket, :current_scope, fn ->
-      <%= schema.singular %> =
+      {<%= schema.singular %>, _} =
         if <%= schema.singular %>_token = session["<%= schema.singular %>_token"] do
           <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
-        end
+        end || {nil, nil}
 
       <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>)
     end)
