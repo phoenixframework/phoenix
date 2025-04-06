@@ -167,7 +167,7 @@ defmodule <%= inspect auth_module %> do
     |> put_session(:<%= schema.singular %>_token, token)
     |> put_session(:live_socket_id, <%= schema.singular %>_session_topic(token))
   end
-  
+
   @doc """
   Disconnects existing sockets for the given tokens.
   """
@@ -178,7 +178,7 @@ defmodule <%= inspect auth_module %> do
   end
 
   defp <%= schema.singular %>_session_topic(token), do: "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}"
-  
+
   @doc """
   Handles mounting and authenticating the current_scope in LiveViews.
 
