@@ -27,8 +27,7 @@ defmodule <%= inspect auth_module %> do
   @session_reissue_age_in_days 7
 
   @doc """
-  Logs the <%= schema.singular %> in and redirects to the session's
-  `:<%= schema.singular %>_return_to` path or falls back to the `signed_in_path/1`.
+  Logs the <%= schema.singular %> in.
 
   It renews the session ID and clears the whole session
   to avoid fixation attacks. See the renew_session
@@ -41,6 +40,9 @@ defmodule <%= inspect auth_module %> do
 
   In case the <%= schema.singular %> re-authenticates for sudo mode,
   the existing remember_me setting is kept, writing a new remember_me cookie.
+
+  Redirects to the session's `:<%= schema.singular %>_return_to` path
+  or falls back to the `signed_in_path/1`.
   """
   def log_in_<%= schema.singular %>(conn, <%= schema.singular %>, params \\ %{}) do
     <%= schema.singular %>_return_to = get_session(conn, :<%= schema.singular %>_return_to)
