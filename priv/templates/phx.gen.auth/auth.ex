@@ -27,7 +27,8 @@ defmodule <%= inspect auth_module %> do
   @session_reissue_age_in_days 7
 
   @doc """
-  Logs the <%= schema.singular %> in.
+  Logs the <%= schema.singular %> in and redirects to the session's
+  `:<%= schema.singular %>_return_to` path or falls back to the `signed_in_path/1`.
 
   It renews the session ID and clears the whole session
   to avoid fixation attacks. See the renew_session
@@ -42,15 +43,21 @@ defmodule <%= inspect auth_module %> do
   the existing remember_me setting is kept, writing a new remember_me cookie.
   """
   def log_in_<%= schema.singular %>(conn, <%= schema.singular %>, params \\ %{}) do
-    token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
     <%= schema.singular %>_return_to = get_session(conn, :<%= schema.singular %>_return_to)
+
+    conn
+    |> create_or_extend_session(<%= schema.singular %>, params)
+    |> redirect(to: <%= schema.singular %>_return_to || signed_in_path(conn))
+  end
+
+  defp create_or_extend_session(conn, <%= schema.singular %>, params) do
+    token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
     remember_me = get_session(conn, :<%= schema.singular %>_remember_me)
 
     conn
     |> renew_session(<%= schema.singular %>)
     |> put_token_in_session(token)
     |> maybe_write_remember_me_cookie(token, params, remember_me)
-    |> redirect(to: <%= schema.singular %>_return_to || signed_in_path(conn))
   end
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}, _),
@@ -151,20 +158,7 @@ defmodule <%= inspect auth_module %> do
     token_age = <%= inspect datetime_module %>.diff(<%= datetime_now %>, token_inserted_at, :day)
 
     if token_age >= @session_reissue_age_in_days do
-      new_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
-
-      conn
-      |> put_token_in_session(new_token)
-      |> maybe_refresh_remember_me_cookie(new_token)
-    else
-      conn
-    end
-  end
-
-  # Refresh the remember me cookie with the new token and new expiration date.
-  defp maybe_refresh_remember_me_cookie(conn, new_token) do
-    if get_session(conn, :<%= schema.singular %>_remember_me) do
-      put_resp_cookie(conn, @remember_me_cookie, new_token, @remember_me_options)
+      create_or_extend_session(conn, <%= schema.singular %>, %{})
     else
       conn
     end

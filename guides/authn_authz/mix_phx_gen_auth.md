@@ -94,7 +94,7 @@ end
 
 The scope data structure is stored in the assigns and available to your Controllers and LiveViews. As your application grows in complexity, this data structure can store important metadata such as the teams, companies, or organizations the user belongs to, permissions, telemetry information such as IP address and so forth.
 
-Furthermore, future Phoenix generators will automatically pass this data structure to your Controllers and LiveViews to most of [your context operations](contexts.md), making sure that future data is scoped to the current user/team/company/organization. Scopes are essential to enforce the user can only access data it owns. You can learn more about them in the [Scopes](scopes.md) guide.
+Furthermore, future Phoenix generator invocations will automatically pass this data structure from your Controllers and LiveViews to most of [your context operations](contexts.md), making sure that future data is scoped to the current user/team/company/organization. Scopes are essential to enforce the user can only access data they own. You can learn more about them in the [Scopes](scopes.md) guide.
 
 ### Password hashing
 
