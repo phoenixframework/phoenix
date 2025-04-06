@@ -284,7 +284,7 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  Used for routes that require the <%= schema.singular %> to not be authenticated.
+  Plug for routes that require the <%= schema.singular %> to not be authenticated.
   """
   def redirect_if_<%= schema.singular %>_is_authenticated(conn, _opts) do
     if conn.assigns.current_scope do
