@@ -3,7 +3,7 @@ const fs = require("fs")
 const path = require("path")
 
 module.exports = plugin(function({matchComponents, theme}) {
-  let iconsDir = path.join(__dirname, "..<%= if @in_umbrella, do: "/.." %>/../deps/heroicons/optimized")
+  let iconsDir = path.join(__dirname, "..<%= if @in_umbrella, do: "/../.." %>/../deps/heroicons/optimized")
   let values = {}
   let icons = [
     ["", "/24/outline"],
