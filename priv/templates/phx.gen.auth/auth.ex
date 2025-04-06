@@ -262,7 +262,7 @@ defmodule <%= inspect auth_module %> do
     ~p"<%= schema.route_prefix %>/settings"
   end
 
-  def signed_in_path(_), do: ~p"/"<% else %>defp signed_in_path(_conn), do: ~p"/"
+  def signed_in_path(_), do: ~p"/"
 
   <% else %>defp put_token_in_session(conn, token) do
     put_session(conn, :<%= schema.singular %>_token, token)
@@ -295,6 +295,8 @@ defmodule <%= inspect auth_module %> do
       conn
     end
   end
+
+  defp signed_in_path(_conn), do: ~p"/"
 
   <% end %>@doc """
   Plug for routes that require the <%= schema.singular %> to be authenticated.
