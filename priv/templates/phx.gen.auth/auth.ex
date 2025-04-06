@@ -269,7 +269,7 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  Used for routes that require sudo mode.
+  Plug for routes that require sudo mode.
   """
   def require_sudo_mode(conn, _opts) do
     if <%= inspect context.alias %>.sudo_mode?(conn.assigns.current_scope.<%= schema.singular %>, -10) do
