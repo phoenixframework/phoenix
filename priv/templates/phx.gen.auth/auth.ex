@@ -29,72 +29,15 @@ defmodule <%= inspect auth_module %> do
   @doc """
   Logs the <%= schema.singular %> in.
 
-  It renews the session ID and clears the whole session
-  to avoid fixation attacks. See the renew_session
-  function to customize this behaviour.
-
-  It also sets a `:live_socket_id` key in the session,
-  so LiveView sessions are identified and automatically
-  disconnected on log out. The line can be safely removed
-  if you are not using LiveView.
-
-  In case the <%= schema.singular %> re-authenticates for sudo mode,
-  the existing remember_me setting is kept, writing a new remember_me cookie.
+  Redirects to the session's `:<%= schema.singular %>_return_to` path
+  or falls back to the `signed_in_path/1`.
   """
   def log_in_<%= schema.singular %>(conn, <%= schema.singular %>, params \\ %{}) do
-    token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
     <%= schema.singular %>_return_to = get_session(conn, :<%= schema.singular %>_return_to)
-    remember_me = get_session(conn, :<%= schema.singular %>_remember_me)
 
     conn
-    |> renew_session(<%= schema.singular %>)
-    |> put_token_in_session(token)
-    |> maybe_write_remember_me_cookie(token, params, remember_me)
+    |> create_or_extend_session(<%= schema.singular %>, params)
     |> redirect(to: <%= schema.singular %>_return_to || signed_in_path(conn))
-  end
-
-  defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}, _),
-    do: write_remember_me_cookie(conn, token)
-
-  defp maybe_write_remember_me_cookie(conn, token, _params, true),
-    do: write_remember_me_cookie(conn, token)
-
-  defp maybe_write_remember_me_cookie(conn, _token, _params, _), do: conn
-
-  defp write_remember_me_cookie(conn, token) do
-    conn
-    |> put_session(:<%= schema.singular %>_remember_me, true)
-    |> put_resp_cookie(@remember_me_cookie, token, @remember_me_options)
-  end
-
-  # Do not renew session if the <%= schema.singular %> is already logged in (sudo mode reauthentication)
-  # to prevent CSRF errors for tabs that are still open
-  defp renew_session(conn, <%= schema.singular %>) when conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id do
-    conn
-  end
-
-  # This function renews the session ID and erases the whole
-  # session to avoid fixation attacks. If there is any data
-  # in the session you may want to preserve after log in/log out,
-  # you must explicitly fetch the session data before clearing
-  # and then immediately set it after clearing, for example:
-  #
-  #     defp renew_session(conn, _<%= schema.singular %>) do
-  #       delete_csrf_token()
-  #       preferred_locale = get_session(conn, :preferred_locale)
-  #
-  #       conn
-  #       |> configure_session(renew: true)
-  #       |> clear_session()
-  #       |> put_session(:preferred_locale, preferred_locale)
-  #     end
-  #
-  defp renew_session(conn, _<%= schema.singular %>) do
-    delete_csrf_token()
-
-    conn
-    |> configure_session(renew: true)
-    |> clear_session()
   end
 
   @doc """
@@ -151,26 +94,92 @@ defmodule <%= inspect auth_module %> do
     token_age = <%= inspect datetime_module %>.diff(<%= datetime_now %>, token_inserted_at, :day)
 
     if token_age >= @session_reissue_age_in_days do
-      new_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
-
-      conn
-      |> put_token_in_session(new_token)
-      |> maybe_refresh_remember_me_cookie(new_token)
+      create_or_extend_session(conn, <%= schema.singular %>, %{})
     else
       conn
     end
   end
 
-  # Refresh the remember me cookie with the new token and new expiration date.
-  defp maybe_refresh_remember_me_cookie(conn, new_token) do
-    if get_session(conn, :<%= schema.singular %>_remember_me) do
-      put_resp_cookie(conn, @remember_me_cookie, new_token, @remember_me_options)
-    else
-      conn
-    end
+  # This function is the one responsible for creating session tokens
+  # and storing them safely in the session and cookies. It may be called
+  # either when logging in, during sudo mode, or to renew a session which
+  # will soon expire.
+  #
+  # When the session is created, rather than extended, the renew_session
+  # function will clear the session to avoid fixation attacks. See the
+  # renew_session function to customize this behaviour.
+  defp create_or_extend_session(conn, <%= schema.singular %>, params) do
+    token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+    remember_me = get_session(conn, :<%= schema.singular %>_remember_me)
+
+    conn
+    |> renew_session(<%= schema.singular %>)
+    |> put_token_in_session(token)
+    |> maybe_write_remember_me_cookie(token, params, remember_me)
   end
 
-  <%= if live? do %>@doc """
+  # Do not renew session if the <%= schema.singular %> is already logged in
+  # to prevent CSRF errors or data being last in tabs that are still open
+  defp renew_session(conn, <%= schema.singular %>) when conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id do
+    conn
+  end
+
+  # This function renews the session ID and erases the whole
+  # session to avoid fixation attacks. If there is any data
+  # in the session you may want to preserve after log in/log out,
+  # you must explicitly fetch the session data before clearing
+  # and then immediately set it after clearing, for example:
+  #
+  #     defp renew_session(conn, _<%= schema.singular %>) do
+  #       delete_csrf_token()
+  #       preferred_locale = get_session(conn, :preferred_locale)
+  #
+  #       conn
+  #       |> configure_session(renew: true)
+  #       |> clear_session()
+  #       |> put_session(:preferred_locale, preferred_locale)
+  #     end
+  #
+  defp renew_session(conn, _<%= schema.singular %>) do
+    delete_csrf_token()
+
+    conn
+    |> configure_session(renew: true)
+    |> clear_session()
+  end
+
+  defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}, _),
+    do: write_remember_me_cookie(conn, token)
+
+  defp maybe_write_remember_me_cookie(conn, token, _params, true),
+    do: write_remember_me_cookie(conn, token)
+
+  defp maybe_write_remember_me_cookie(conn, _token, _params, _), do: conn
+
+  defp write_remember_me_cookie(conn, token) do
+    conn
+    |> put_session(:<%= schema.singular %>_remember_me, true)
+    |> put_resp_cookie(@remember_me_cookie, token, @remember_me_options)
+  end
+
+  <%= if live? do %>defp put_token_in_session(conn, token) do
+    conn
+    |> put_session(:<%= schema.singular %>_token, token)
+    |> put_session(:live_socket_id, <%= schema.singular %>_session_topic(token))
+  end
+
+  @doc """
+  Disconnects existing sockets for the given tokens.
+  """
+  def disconnect_sessions(tokens) do
+    Enum.each(tokens, fn %{token: token} ->
+      <%= inspect endpoint_module %>.broadcast(<%= schema.singular %>_session_topic(token), "disconnect", %{})
+    end)
+  end
+
+  defp <%= schema.singular %>_session_topic(token), do: "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}"
+
+  @doc """
   Handles mounting and authenticating the current_scope in LiveViews.
 
   ## `on_mount` arguments
@@ -247,8 +256,20 @@ defmodule <%= inspect auth_module %> do
     end)
   end
 
-  <% else %>@doc """
-  Used for routes that require sudo mode.
+  @doc "Returns the path to redirect to after log in."
+  # the <%= schema.singular %> was already logged in, redirect to settings
+  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %<%= inspect scope_config.scope.alias %>{<%= schema.singular %>: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}}) do
+    ~p"<%= schema.route_prefix %>/settings"
+  end
+
+  def signed_in_path(_), do: ~p"/"
+
+  <% else %>defp put_token_in_session(conn, token) do
+    put_session(conn, :<%= schema.singular %>_token, token)
+  end
+
+  @doc """
+  Plug for routes that require sudo mode.
   """
   def require_sudo_mode(conn, _opts) do
     if <%= inspect context.alias %>.sudo_mode?(conn.assigns.current_scope.<%= schema.singular %>, -10) do
@@ -263,7 +284,7 @@ defmodule <%= inspect auth_module %> do
   end
 
   @doc """
-  Used for routes that require the <%= schema.singular %> to not be authenticated.
+  Plug for routes that require the <%= schema.singular %> to not be authenticated.
   """
   def redirect_if_<%= schema.singular %>_is_authenticated(conn, _opts) do
     if conn.assigns.current_scope do
@@ -275,11 +296,10 @@ defmodule <%= inspect auth_module %> do
     end
   end
 
-  <% end %>@doc """
-  Used for routes that require the <%= schema.singular %> to be authenticated.
+  defp signed_in_path(_conn), do: ~p"/"
 
-  If you want to enforce the <%= schema.singular %> email is confirmed before
-  they use the application at all, here would be a good place.
+  <% end %>@doc """
+  Plug for routes that require the <%= schema.singular %> to be authenticated.
   """
   def require_authenticated_<%= schema.singular %>(conn, _opts) do
     if conn.assigns.current_scope && conn.assigns.current_scope.<%= schema.singular %> do
@@ -293,38 +313,9 @@ defmodule <%= inspect auth_module %> do
     end
   end
 
-  <%= if live? do %>defp put_token_in_session(conn, token) do
-    conn
-    |> put_session(:<%= schema.singular %>_token, token)
-    |> put_session(:live_socket_id, <%= schema.singular %>_session_topic(token))
-  end
-
-  @doc """
-  Disconnects existing sockets for the given tokens.
-  """
-  def disconnect_sessions(tokens) do
-    Enum.each(tokens, fn %{token: token} ->
-      <%= inspect endpoint_module %>.broadcast(<%= schema.singular %>_session_topic(token), "disconnect", %{})
-    end)
-  end
-
-  defp <%= schema.singular %>_session_topic(token), do: "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}"
-
-  <% else %>defp put_token_in_session(conn, token) do
-    put_session(conn, :<%= schema.singular %>_token, token)
-  end
-
-  <% end %>defp maybe_store_return_to(%{method: "GET"} = conn) do
+  defp maybe_store_return_to(%{method: "GET"} = conn) do
     put_session(conn, :<%= schema.singular %>_return_to, current_path(conn))
   end
 
   defp maybe_store_return_to(conn), do: conn
-
-  <%= if live? do %>@doc "Returns the path to redirect to after log in."
-  # the <%= schema.singular %> was already logged in, redirect to settings
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %<%= inspect scope_config.scope.alias %>{<%= schema.singular %>: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}}) do
-    ~p"<%= schema.route_prefix %>/settings"
-  end
-
-  def signed_in_path(_), do: ~p"/"<% else %>defp signed_in_path(_conn), do: ~p"/"<% end %>
 end
