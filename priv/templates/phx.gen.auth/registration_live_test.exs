@@ -72,7 +72,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
       {:ok, _login_live, login_html} =
         lv
-        |> element(~s|main a:fl-contains("Log in")|)
+        |> element("main a", "Log in")
         |> render_click()
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")
 
