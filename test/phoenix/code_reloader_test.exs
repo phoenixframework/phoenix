@@ -8,7 +8,7 @@ defmodule Phoenix.CodeReloaderTest do
   end
 
   def reload(_, _) do
-    {:error, "oops"}
+    {:error, "oops \e[31merror"}
   end
 
   @tag :capture_log
@@ -59,7 +59,7 @@ defmodule Phoenix.CodeReloaderTest do
 
     assert conn.state == :sent
     assert conn.status == 500
-    assert conn.resp_body =~ "oops"
+    assert conn.resp_body =~ "oops error"
     assert conn.resp_body =~ "CompileError"
     assert conn.resp_body =~ "Compilation error"
   end
