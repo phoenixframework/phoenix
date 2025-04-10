@@ -250,28 +250,32 @@
   ## Examples
 
       iex> deliver_<%= schema.singular %>_update_email_instructions(<%= schema.singular %>, current_email, &url(~p"<%= schema.route_prefix %>/settings/confirm-email/#{&1}"))
-      {:ok, %{to: ..., body: ...}}
+      {:ok, %{magic_link_url: ..., email: %{to: ..., body: ...}}}
 
   """
   def deliver_<%= schema.singular %>_update_email_instructions(%<%= inspect schema.alias %>{} = <%= schema.singular %>, current_email, update_email_url_fun)
       when is_function(update_email_url_fun, 1) do
+    url = update_email_url_fun.(encoded_token)
     {encoded_token, <%= schema.singular %>_token} = <%= inspect schema.alias %>Token.build_email_token(<%= schema.singular %>, "change:#{current_email}")
-
     Repo.insert!(<%= schema.singular %>_token)
-    <%= inspect schema.alias %>Notifier.deliver_update_email_instructions(<%= schema.singular %>, update_email_url_fun.(encoded_token))
+
+    with {:ok, email} <- <%= inspect schema.alias %>Notifier.deliver_update_email_instructions(<%= schema.singular %>, url) do
+      {:ok, %{magic_link_url: url, email: email}}
+    end
   end
 
   @doc ~S"""
   Delivers the magic link login instructions to the given <%= schema.singular %>.
-
-  Returns the encoded login token.
   """
   def deliver_login_instructions(%<%= inspect schema.alias %>{} = <%= schema.singular %>, magic_link_url_fun)
       when is_function(magic_link_url_fun, 1) do
+    url = magic_link_url_fun.(encoded_token)
     {encoded_token, <%= schema.singular %>_token} = <%= inspect schema.alias %>Token.build_email_token(<%= schema.singular %>, "login")
     Repo.insert!(<%= schema.singular %>_token)
-    <%= inspect schema.alias %>Notifier.deliver_login_instructions(<%= schema.singular %>, magic_link_url_fun.(encoded_token))
-    {:ok, encoded_token}
+
+    with {:ok, email} <- <%= inspect schema.alias %>Notifier.deliver_login_instructions(<%= schema.singular %>, url) do
+      {:ok, %{magic_link_url: url, email: email}}
+    end
   end
 
   @doc """
