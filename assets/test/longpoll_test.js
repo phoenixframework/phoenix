@@ -190,3 +190,67 @@ describe("Socket with LongPoll", () => {
     })
   })
 })
+
+describe("Ajax.request", () => {
+  let originalXMLHttpRequest, originalFetch, originalAbortController
+
+  beforeEach(() => {
+    originalXMLHttpRequest = global.XMLHttpRequest
+    originalFetch = global.fetch
+    originalAbortController = global.AbortController
+
+    // Mock AbortController
+    global.AbortController = jest.fn(() => ({
+      abort: jest.fn(),
+      signal: {}
+    }))
+
+    // Mock XMLHttpRequest
+    global.XMLHttpRequest = jest.fn(() => ({
+      open: jest.fn(),
+      send: jest.fn(),
+      setRequestHeader: jest.fn(),
+      onreadystatechange: null,
+      readyState: 4,
+      status: 200,
+      responseText: JSON.stringify({success: true})
+    }))
+
+    // Mock fetch
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        text: () => Promise.resolve(JSON.stringify({success: true}))
+      })
+    )
+  })
+
+  afterEach(() => {
+    global.XMLHttpRequest = originalXMLHttpRequest
+    global.fetch = originalFetch
+    global.AbortController = originalAbortController
+    jest.restoreAllMocks()
+  })
+
+  it("should use XMLHttpRequest by default", () => {
+    Ajax.request("GET", "/test-endpoint", {}, null, 0, null, (response) => {
+      expect(response).toEqual({success: true})
+    })
+
+    expect(global.XMLHttpRequest).toHaveBeenCalled()
+  })
+
+  it("should use fetch when XMLHttpRequest is not availble", () => {
+    global.XMLHttpRequest = undefined // Simulate it being unavailable
+    Ajax.request("GET", "/test-endpoint", {}, null, 0, null, (response) => {
+      expect(response).toEqual({success: true})
+    })
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/test-endpoint",
+      expect.objectContaining({
+        method: "GET",
+      })
+    )
+  })
+})
+
