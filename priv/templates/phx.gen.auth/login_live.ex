@@ -106,20 +106,29 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def handle_event("submit_magic", %{"<%= schema.singular %>" => %{"email" => email}}, socket) do
-    if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email) do
-      <%= inspect context.alias %>.deliver_login_instructions(
-        <%= schema.singular %>,
-        &url(~p"<%= schema.route_prefix %>/log-in/#{&1}")
+    login_token =
+      if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_email(email) do
+        {:ok, login_token} =
+          <%= inspect context.alias %>.deliver_login_instructions(
+            <%= schema.singular %>,
+            &url(~p"<%= schema.route_prefix %>/log-in/#{&1}")
+          )
+
+        login_token
+      end
+
+    socket =
+      put_flash(
+        socket,
+        :info,
+        "If your email is in our system, you will receive instructions for logging in shortly."
       )
+
+    if login_token && local_mail_adapter?() do
+      {:noreply, push_navigate(to: ~p"<%= schema.route_prefix %>/log-in/#{login_token}")}
+    else
+      {:noreply, push_navigate(to: ~p"<%= schema.route_prefix %>/log-in")}
     end
-
-    info =
-      "If your email is in our system, you will receive instructions for logging in shortly."
-
-    {:noreply,
-     socket
-     |> put_flash(:info, info)
-     |> push_navigate(to: ~p"<%= schema.route_prefix %>/log-in")}
   end
 
   defp local_mail_adapter? do

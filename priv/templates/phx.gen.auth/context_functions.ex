@@ -263,12 +263,15 @@
 
   @doc ~S"""
   Delivers the magic link login instructions to the given <%= schema.singular %>.
+
+  Returns the encoded login token.
   """
   def deliver_login_instructions(%<%= inspect schema.alias %>{} = <%= schema.singular %>, magic_link_url_fun)
       when is_function(magic_link_url_fun, 1) do
     {encoded_token, <%= schema.singular %>_token} = <%= inspect schema.alias %>Token.build_email_token(<%= schema.singular %>, "login")
     Repo.insert!(<%= schema.singular %>_token)
     <%= inspect schema.alias %>Notifier.deliver_login_instructions(<%= schema.singular %>, magic_link_url_fun.(encoded_token))
+    {:ok, encoded_token}
   end
 
   @doc """
