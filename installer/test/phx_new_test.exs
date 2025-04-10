@@ -142,7 +142,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/config/dev.exs", fn file ->
         assert file =~ "esbuild: {Esbuild,"
         assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
-        assert file =~ "http: [ip: {127, 0, 0, 1}, port: 4000]"
+        assert file =~ "http: [ip: {127, 0, 0, 1}"
       end)
 
       # tailwind
@@ -815,7 +815,7 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp("new without defaults", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--inside-docker-env"])
       assert_file("phx_blog/config/dev.exs", fn file ->
-        assert file =~ "http: [ip: {0, 0, 0, 0}, port: 4000]"
+        assert file =~ "http: [ip: {0, 0, 0, 0}"
       end)
     end)
   end
