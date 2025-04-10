@@ -70,6 +70,15 @@ defmodule <%= @web_namespace %>.CoreComponents do
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
         </div>
+        <div>
+          <p :if={@title} class="font-semibold">{@title}</p>
+          <%= case msg do %>
+            <% %{body: body, link: %{href: href, text: text}} -> %>
+              <p>{body} <a href={href} class="block mt-2 underline">{text}</a></p>
+            <% _ -> %>
+              <p>{msg}</p>
+          <% end %>
+        </div>
         <div class="flex-1" />
         <button type="button" class="group self-start cursor-pointer" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
           <.icon name="hero-x-mark-solid" class="size-5 opacity-40 group-hover:opacity-70" />

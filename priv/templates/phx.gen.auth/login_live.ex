@@ -117,18 +117,22 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         login_token
       end
 
-    socket =
-      put_flash(
-        socket,
-        :info,
-        "If your email is in our system, you will receive instructions for logging in shortly."
-      )
+    info = "If your email is in our system, you will receive instructions for logging in shortly."
 
-    if login_token && local_mail_adapter?() do
-      {:noreply, push_navigate(to: ~p"<%= schema.route_prefix %>/log-in/#{login_token}")}
-    else
-      {:noreply, push_navigate(to: ~p"<%= schema.route_prefix %>/log-in")}
-    end
+    socket =
+      if login_token && local_mail_adapter?() do
+        put_flash(socket, :info, %{
+          body: info,
+          link: %{
+            href: ~p"<%= schema.route_prefix %>/log-in/#{login_token}",
+            text: "Login directly here"
+          }
+        })
+      else
+        put_flash(socket, :info, info)
+      end
+
+    {:noreply, push_navigate(socket, to: ~p"<%= schema.route_prefix %>/log-in")}
   end
 
   defp local_mail_adapter? do
