@@ -6,7 +6,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
-      <div class="mx-auto max-w-sm">
+      <div class="mx-auto max-w-sm space-y-4">
         <.header class="text-center">
           <p>Log in</p>
           <:subtitle>
@@ -21,6 +21,16 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             <%% end %>
           </:subtitle>
         </.header>
+
+        <div :if={local_mail_adapter?()} class="alert alert-info">
+          <.icon name="hero-information-circle" class="w-6 h-6 shrink-0"/>
+          <div>
+            <p>You are running the local mail adapter.</p>
+            <p>
+              To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
+            </p>
+          </div>
+        </div>
 
         <.form
           :let={f}
@@ -77,15 +87,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             Log in <span aria-hidden="true">→</span>
           </.button>
         </.form>
-
-        <div :if={local_mail_adapter?()} class="alert alert-outline mt-8">
-          <div>
-            <p>You are running the local mail adapter.</p>
-            <p>
-              To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
-            </p>
-          </div>
-        </div>
       </div>
     </Layouts.app>
     """
