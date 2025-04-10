@@ -50,7 +50,7 @@ Before we dive into this, let's see what the rendered `404 Not Found` message lo
 import Config
 
 config :hello, HelloWeb.Endpoint,
-  http: [port: 4000],
+  ...,
   debug_errors: false,
   code_reloader: true,
   ...
