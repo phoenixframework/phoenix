@@ -2288,7 +2288,7 @@
     }
   }
 }
-[data-phx-root-id] {
+[data-phx-session] {
   display: contents;
 }
 @layer base {
