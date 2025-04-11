@@ -23,7 +23,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         </.header>
 
         <div :if={local_mail_adapter?()} class="alert alert-info">
-          <.icon name="hero-information-circle" class="w-6 h-6 shrink-0"/>
+          <.icon name="hero-information-circle" class="w-6 h-6 shrink-0" />
           <div>
             <p>You are running the local mail adapter.</p>
             <p>
