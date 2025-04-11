@@ -67,7 +67,7 @@
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_<%= schema.singular %>(%<%= inspect scope.alias %>{} = scope, attrs \\ %{}) do
+  def create_<%= schema.singular %>(%<%= inspect scope.alias %>{} = scope, attrs) do
     with {:ok, <%= schema.singular %> = %<%= inspect schema.alias %>{}} <-
            %<%= inspect schema.alias %>{}
            |> <%= inspect schema.alias %>.changeset(attrs, scope)

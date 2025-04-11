@@ -39,7 +39,7 @@
       {:error, ...}
 
   """
-  def create_<%= schema.singular %>(attrs \\ %{}) do
+  def create_<%= schema.singular %>(attrs) do
     raise "TODO"
   end
 
