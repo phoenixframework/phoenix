@@ -47,7 +47,7 @@
       {:error, ...}
 
   """
-  def create_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _scope, attrs \\ %{}) do
+  def create_<%= schema.singular %>(%<%= inspect scope.alias %>{} = _scope, attrs) do
     raise "TODO"
   end
 

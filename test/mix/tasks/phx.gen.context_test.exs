@@ -494,7 +494,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
             assert file =~ "def subscribe_posts(%Scope{} = scope)"
             assert file =~ "def get_post!(%Scope{} = scope, id)"
             assert file =~ "def list_posts(%Scope{} = scope)"
-            assert file =~ "def create_post(%Scope{} = scope, attrs \\\\ %{})"
+            assert file =~ "def create_post(%Scope{} = scope, attrs)"
             assert file =~ "def update_post(%Scope{} = scope, %Post{} = post, attrs)"
             assert file =~ "def delete_post(%Scope{} = scope, %Post{} = post)"
             assert file =~ "def change_post(%Scope{} = scope, %Post{} = post, attrs \\\\ %{})"
