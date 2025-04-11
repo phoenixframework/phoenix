@@ -10,7 +10,9 @@ defmodule <%= inspect schema.repo %>.Migrations.Create<%= Macro.camelize(schema.
 <% end %><%= if scope do %>      add :<%= scope.schema_key %>, <%= if scope.schema_table do %>references(:<%= scope.schema_table %>, type: <%= inspect scope.schema_migration_type %>, on_delete: :delete_all)<% else %><%= inspect scope.schema_migration_type %><% end %>
 <% end %>
       timestamps(<%= if schema.timestamp_type != :naive_datetime, do: "type: #{inspect schema.timestamp_type}" %>)
-    end
+    end<%= if scope do %>
+
+    create index(:<%= schema.table %>, [:<%= scope.schema_key %>])<% end %>
 <%= if Enum.any?(schema.indexes) do %><%= for index <- schema.indexes do %>
     <%= index %><% end %>
 <% end %>  end
