@@ -210,12 +210,12 @@ defmodule Phoenix.Endpoint do
       A `:formats` list can be provided to specify a module per format to handle
       error rendering. Example:
 
-          [formats: [html: MyApp.ErrorHTML], layout: false, log: :debug]
+          [formats: [html: MyAppWeb.ErrorHTML], layout: false, log: :debug]
 
       To specify a layout, provide a tuple specifying the function that provides
       the layout:
 
-          [formats: [html: MyApp.ErrorHTML], layout: {MyAppWeb.Layouts, :root}, log: :debug]
+          [formats: [html: MyAppWeb.ErrorHTML], layout: {MyAppWeb.Layouts, :root}, log: :debug]
 
     * `:log_access_url` - log the access url once the server boots
 
