@@ -589,6 +589,8 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
             assert file =~
                      "add :org_id, references(:organizations, type: :id, on_delete: :delete_all)"
+
+            assert file =~ "create index(:blog_posts, [:org_id])"
           end)
         end
       )

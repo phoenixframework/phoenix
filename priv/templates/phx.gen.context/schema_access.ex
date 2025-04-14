@@ -42,7 +42,7 @@
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_<%= schema.singular %>(attrs \\ %{}) do
+  def create_<%= schema.singular %>(attrs) do
     %<%= inspect schema.alias %>{}
     |> <%= inspect schema.alias %>.changeset(attrs)
     |> Repo.insert()
