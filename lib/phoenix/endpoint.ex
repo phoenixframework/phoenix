@@ -212,6 +212,11 @@ defmodule Phoenix.Endpoint do
 
           [formats: [html: MyApp.ErrorHTML], layout: false, log: :debug]
 
+      To specify a layout, provide a tuple specifying the function that provides
+      the layout:
+
+          [formats: [html: MyApp.ErrorHTML], layout: {MyAppWeb.Layouts, :root}, log: :debug]
+
     * `:log_access_url` - log the access url once the server boots
 
   Note that you can also store your own configurations in the Phoenix.Endpoint.
