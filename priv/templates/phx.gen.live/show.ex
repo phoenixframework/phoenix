@@ -53,5 +53,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
      socket
      |> put_flash(:error, "The current <%= schema.singular %> was deleted.")
      |> push_navigate(to: ~p"<%= scope_socket_route_prefix %><%= schema.route_prefix %>")}
+  end
+
+  def handle_info({type, %<%= inspect schema.module %>{}}, socket)
+      when type in [:created, :updated, :deleted] do
+    {:noreply, socket}
   end<% end %>
 end
