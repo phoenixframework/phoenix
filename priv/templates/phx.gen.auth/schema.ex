@@ -115,7 +115,7 @@ defmodule <%= inspect schema.module %> do
     <%= case schema.timestamp_type do %>
     <% :naive_datetime -> %>now = NaiveDateTime.utc_now(:second)
     <% :utc_datetime -> %>now = DateTime.utc_now(:second)
-    <% :utc_datetime_usec -> %>now = DateTime.utc_now(:second)
+    <% :utc_datetime_usec -> %>now = DateTime.utc_now(:microsecond)
     <% end %>change(<%= schema.singular %>, confirmed_at: now)
   end
 
