@@ -155,6 +155,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :class, :string, default: nil, doc: "the input class to use over defaults"
+  attr :error_class, :string, default: nil, doc: "the input error class to use over defaults"
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
@@ -188,7 +190,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
             name={@name}
             value="true"
             checked={@checked}
-            class="checkbox checkbox-sm"
+            class={@class || "checkbox checkbox-sm"}
             {@rest}
           />{@label}
         </span>
@@ -206,7 +208,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <select
           id={@id}
           name={@name}
-          class={["w-full select", @errors != [] && "select-error"]}
+          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
           multiple={@multiple}
           {@rest}
         >
@@ -227,7 +229,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <textarea
           id={@id}
           name={@name}
-          class={["w-full textarea", @errors != [] && "textarea-error"]}
+          class={[
+            @class || "w-full textarea",
+            @errors != [] && (@error_class || "textarea-error")
+          ]}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
@@ -247,7 +252,10 @@ defmodule <%= @web_namespace %>.CoreComponents do
           name={@name}
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={["w-full input", @errors != [] && "input-error"]}
+          class={[
+            @class || "w-full input",
+            @errors != [] && (@error_class || "input-error")
+          ]}
           {@rest}
         />
       </label>
