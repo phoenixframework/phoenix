@@ -854,10 +854,10 @@ defmodule Phoenix.Router do
   Defines a list of plugs (and pipelines) to send the connection through.
 
   Plugs are specified using the atom name of any imported 2-arity function
-  which takes a `%Plug.Conn{}` and options and returns a `%Plug.Conn{}`; for
+  which takes a `Plug.Conn` and options and returns a `Plug.Conn`. For
   example, `:require_authenticated_user`.
 
-  Pipelines are defined in the router; see `pipeline/2` for more information.
+  Pipelines are defined in the router, see `pipeline/2` for more information.
 
       pipe_through [:my_imported_function, :my_pipeline]
   """
