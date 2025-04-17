@@ -25,6 +25,19 @@ This release introduces deprecation warnings for several features that have been
   * Specifying layouts without modules, such as `put_layout(conn, :print)` or `put_layout(conn, html: :print)` is deprecated
   * The `:trailing_slash` option in `Phoenix.Router` has been deprecated in favor of using `Phoenix.VerifiedRoutes`. The overall usage of helpers will be deprecated in the future
 
+## 1.8.0-rc.1 (2025-04-16)
+
+## Enhancements
+  - [phx.new] Support PORT in dev
+  - [phx.gen.auth] - Replace `utc_now/0 + truncate/1` with `utc_now/1`
+  - [phx.gen.auth] - Make dev mailbox link more obvious
+
+## Big Fixes
+  - [phx.new] Fix Tailwind custom variants for loading classes (#6194)
+  - [phx.new] Fix heroicons path for umbrella apps
+  - Fix crash when an open :show page gets a PubSub broadcast for items (#6197)
+  - Fix missing index for scoped resources (#6186)
+
 ## 1.8.0-rc.0 (2025-04-01) 🚀
 
 - First release candidate!
