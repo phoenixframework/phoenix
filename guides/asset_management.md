@@ -39,15 +39,16 @@ If you want to import JavaScript dependencies, you have at least three options t
    import topbar from "topbar"
    ```
 
-   New applications use this third approach to import Heroicons, avoiding
-   vendoring a copy of all icons when you may only use a few or even none,
-   avoiding Node.js and `npm`, and tracking an explicit version that is easy to
-   update thanks to Mix. It is important to note that git dependencies cannot
-   be used by Hex packages, so if you intend to publish your project to Hex,
-   consider vendoring the files instead.
+   New applications use this third approach to import icons, such as Heroicons,
+   to avoid vendoring a copy of all icons and to avoid additional system
+   dependencies such as `npm`, while you can still track explicit versions
+   thanks to Mix. It is important to note that git dependencies cannot be used
+   by Hex packages, so if you intend to publish your project to Hex, consider
+   alternatives approaches.
 
-Note that if you use third party JS package managers, you might need to adjust your deployment steps
-to properly include the packages. If you're using `mix phx.gen.release --docker`, have a look at the
+Note that if you use third party JS package managers, you might need to adjust your
+deployment steps to properly include the packages. If you're using
+`mix phx.gen.release --docker`, have a look at the
 [documentation](Mix.Tasks.Phx.Gen.Release.html#module-docker) for further details.
 
 ## Images, fonts, and external files
@@ -215,3 +216,105 @@ $ mix deps.unlock tailwind
 ```
 
 You may optionally remove and delete the `heroicons` dependency as well.
+
+## Alternative icon libraries
+
+Phoenix ships with the [Heroicons](https://heroicons.com/) library for icons support.
+This is done by embedding icons as CSS classes, which guarantees only the icons actually
+used by your application are sent to the client, thanks to Tailwind.
+
+If you prefer to use an alternative icon set, it should be possible to adapt the
+code that embeds Heroicons to use another library. Let's see exactly how to do that
+using [Remix Icon](https://remixicon.com/) as an example:
+
+First replace the `heroicon` repository in your `mix.exs` by `remixicons`:
+
+```elixir
+{:remixicons,
+  github: "Remix-Design/RemixIcon",
+  sparse: "icons",
+  tag: "v4.6.0",
+  app: false,
+  compile: false,
+  depth: 1},
+```
+
+Then replace `assets/vendor/heroicons.js`, which traverses the heroicons dependency, by `assets/vendor/remixicons.js`, which traverses remix icons instead:
+
+```js
+const plugin = require("tailwindcss/plugin")
+const fs = require("fs")
+const path = require("path")
+
+module.exports = plugin(function({matchComponents, theme}) {
+  let baseDir = path.join(__dirname, "../../deps/remixicons/icons");
+  let values = {};
+  let icons = fs
+    .readdirSync(baseDir, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
+
+  icons.forEach((dir) => {
+    fs.readdirSync(path.join(baseDir, dir)).map((file) => {
+      let name = path.basename(file, ".svg");
+      values[name] = { name, fullPath: path.join(baseDir, dir, file) };
+    });
+  });
+
+  matchComponents(
+    {
+      ri: ({ name, fullPath }) => {
+        let content = fs
+          .readFileSync(fullPath)
+          .toString()
+          .replace(/\r?\n|\r/g, "");
+
+        return {
+          [`--ri-${name}`]: `url('data:image/svg+xml;utf8,${content}')`,
+          "-webkit-mask": `var(--ri-${name})`,
+          mask: `var(--ri-${name})`,
+          "background-color": "currentColor",
+          "vertical-align": "middle",
+          display: "inline-block",
+          width: theme("spacing.10"),
+          height: theme("spacing.10"),
+        };
+      },
+    },
+    { values },
+  );
+})
+```
+
+And then change `assets/css/app.css` to import your new plugin instead.
+
+Finally, update the `icon` function in `lib/my_app_web/components/core_components.ex`
+to match on `ri-` prefixes instead:
+
+```
+@doc """
+Renders a [Remix Icon](https://remixicon.com).
+
+You can customize the size and colors of the icons by
+setting width, height, and background color classes.
+
+## Examples
+
+    <.icon name="ri-github-fill" />
+    <.icon name="ri-github" class="ml-1 w-3 h-3 animate-spin" />
+"""
+attr :name, :string, required: true
+attr :class, :string, default: "size-5"
+
+def icon(%{name: "ri-" <> _} = assigns) do
+  ~H"""
+  <i class={[@name, @class]} aria-hidden="true"></i>
+  """
+end
+```
+
+Now replace the Heroicons in your application by Remix ones and you are good to go!
+
+The approach above may also work with other libraries, it is a matter of adapting
+the Tailwind plugin to traverse these libraries and generate the proper classes.
+Some iconsets may also be available as regular Hex packages too.
