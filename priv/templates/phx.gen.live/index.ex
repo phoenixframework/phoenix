@@ -43,7 +43,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   @impl true
   def mount(_params, _session, socket) do<%= if scope do %>
-    <%= inspect context.alias %>.subscribe_<%= schema.plural %>(<%= socket_scope %>)
+    if connected?(socket) do
+      <%= inspect context.alias %>.subscribe_<%= schema.plural %>(<%= socket_scope %>)
+    end
 <% end %>
     {:ok,
      socket
