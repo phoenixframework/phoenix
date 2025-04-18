@@ -15,7 +15,7 @@ defmodule HelloWeb.PageController do
   use HelloWeb, :controller
 
   def home(conn, _params) do
-    render(conn, :home, layout: false)
+    render(conn, :home)
   end
 end
 ```
@@ -171,7 +171,7 @@ As an example, let's take `PageController`'s `home` action from a newly generate
 
 ```elixir
 def home(conn, _params) do
-  render(conn, :home, layout: false)
+  render(conn, :home)
 end
 ```
 
@@ -181,20 +181,13 @@ What it doesn't have is a view for rendering JSON. Phoenix Controller hands off 
   def controller do
     quote do
       use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: {HelloWeb.Layouts, :app}]
+        formats: [:html, :json]
       ...
     end
   end
 ```
 
 So out of the box Phoenix will look for a `HTML` and `JSON` view modules based on the request format and the controller name. We can also explicitly tell Phoenix in our controller which view(s) to use for each format. For example, what Phoenix does by default can be explicitly set with the following in your controller:
-
-```elixir
-plug :put_view, html: {HelloWeb.PageHTML, :app}, json: {HelloWeb.PageJSON, :app}
-```
-
-The layout name can be omitted, in which case the default layout name `:app` is used, so the above is equivalent to:
 
 ```elixir
 plug :put_view, html: HelloWeb.PageHTML, json: HelloWeb.PageJSON
@@ -289,7 +282,7 @@ Let's change the status in our `PageController` `home` action.
 def home(conn, _params) do
   conn
   |> put_status(202)
-  |> render(:home, layout: false)
+  |> render(:home)
 end
 ```
 
@@ -335,7 +328,7 @@ Finally, let's define in the same file the action we redirect to, which simply r
 
 ```elixir
 def redirect_test(conn, _params) do
-  render(conn, :home, layout: false)
+  render(conn, :home)
 end
 ```
 
@@ -365,7 +358,7 @@ defmodule HelloWeb.PageController do
   def home(conn, _params) do
     conn
     |> put_flash(:error, "Let's pretend we have an error.")
-    |> render(:home, layout: false)
+    |> render(:home)
   end
 end
 ```

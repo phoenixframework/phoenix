@@ -7,19 +7,20 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      {@page_title}
-      <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
-    </.header>
+    <Layouts.app flash={@flash}<%= if scope do %> <%= scope.assign_key %>={@<%= scope.assign_key %>}<% end %>>
+      <.header>
+        {@page_title}
+        <:subtitle>Use this form to manage <%= schema.singular %> records in your database.</:subtitle>
+      </.header>
 
-    <.simple_form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
-<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 6) %>
-      <:actions>
-        <.button phx-disable-with="Saving...">Save <%= schema.human_singular %></.button>
-      </:actions>
-    </.simple_form>
-
-    <.back navigate={return_path(@return_to, @<%= schema.singular %>)}>Back</.back>
+      <.form for={@form} id="<%= schema.singular %>-form" phx-change="validate" phx-submit="save">
+<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(inputs, 8) %>
+        <footer>
+          <.button phx-disable-with="Saving..." variant="primary">Save <%= schema.human_singular %></.button>
+          <.button navigate={return_path(<%= assign_scope_prefix %>@return_to, @<%= schema.singular %>)}>Cancel</.button>
+        </footer>
+      </.form>
+    </Layouts.app>
     """
   end
 
@@ -35,26 +36,26 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   defp return_to(_), do: "index"
 
   defp apply_action(socket, :edit, %{"<%= primary_key %>" => <%= primary_key %>}) do
-    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= primary_key %>)
+    <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= context_scope_prefix %><%= primary_key %>)
 
     socket
     |> assign(:page_title, "Edit <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, <%= schema.singular %>)
-    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
+    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>)))
   end
 
   defp apply_action(socket, :new, _params) do
-    <%= schema.singular %> = %<%= inspect schema.alias %>{}
+    <%= schema.singular %> = %<%= inspect schema.alias %>{<%= if scope do %><%= scope.schema_key %>: <%= socket_scope %>.<%= Enum.join(scope.access_path, ".") %><% end %>}
 
     socket
     |> assign(:page_title, "New <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, <%= schema.singular %>)
-    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)))
+    |> assign(:form, to_form(<%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>)))
   end
 
   @impl true
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
-    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params)
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= context_scope_prefix %>socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
@@ -63,12 +64,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   defp save_<%= schema.singular %>(socket, :edit, <%= schema.singular %>_params) do
-    case <%= inspect context.alias %>.update_<%= schema.singular %>(socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params) do
+    case <%= inspect context.alias %>.update_<%= schema.singular %>(<%= context_scope_prefix %>socket.assigns.<%= schema.singular %>, <%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> updated successfully")
-         |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
+         <%= if scope do %>|> push_navigate(
+           to: return_path(<%= context_scope_prefix %>socket.assigns.return_to, <%= schema.singular %>)
+         )}<% else %>|> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}<% end %>
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -76,18 +79,20 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   defp save_<%= schema.singular %>(socket, :new, <%= schema.singular %>_params) do
-    case <%= inspect context.alias %>.create_<%= schema.singular %>(<%= schema.singular %>_params) do
+    case <%= inspect context.alias %>.create_<%= schema.singular %>(<%= context_scope_prefix %><%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
         {:noreply,
          socket
          |> put_flash(:info, "<%= schema.human_singular %> created successfully")
-         |> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}
+         <%= if scope do %>|> push_navigate(
+           to: return_path(<%= context_scope_prefix %>socket.assigns.return_to, <%= schema.singular %>)
+         )}<% else %>|> push_navigate(to: return_path(socket.assigns.return_to, <%= schema.singular %>))}<% end %>
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
-  defp return_path("index", _<%= schema.singular %>), do: ~p"<%= schema.route_prefix %>"
-  defp return_path("show", <%= schema.singular %>), do: ~p"<%= schema.route_prefix %>/#{<%= schema.singular %>}"
+  defp return_path(<%= scope_param_prefix %>"index", _<%= schema.singular %>), do: ~p"<%= scope_param_route_prefix %><%= schema.route_prefix %>"
+  defp return_path(<%= scope_param_prefix %>"show", <%= schema.singular %>), do: ~p"<%= scope_param_route_prefix %><%= schema.route_prefix %>/#{<%= schema.singular %>}"
 end

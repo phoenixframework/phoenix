@@ -11,8 +11,7 @@ defmodule <%= @app_module %>.Application do
       <%= @web_namespace %>.Telemetry,<%= if @ecto do %>
       <%= @app_module %>.Repo,<% end %><%= if @adapter_app == :ecto_sqlite3 do %>
       {Ecto.Migrator,
-        repos: Application.fetch_env!(<%= inspect(String.to_atom(@app_name)) %>, :ecto_repos),
-        skip: skip_migrations?()},<% end %>
+       repos: Application.fetch_env!(<%= inspect(String.to_atom(@app_name)) %>, :ecto_repos), skip: skip_migrations?()},<% end %>
       {DNSCluster, query: Application.get_env(<%= inspect(String.to_atom(@app_name)) %>, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: <%= @app_module %>.PubSub},
       # Start a worker by calling: <%= @app_module %>.Worker.start_link(arg)

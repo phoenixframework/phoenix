@@ -322,7 +322,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       :httpc.set_options([{:https_proxy, {{String.to_charlist(host), port}, []}}])
     end
 
-    # https://erlef.github.io/security-wg/secure_coding_and_deployment_hardening/inets
+    # https://security.erlef.org/secure_coding_and_deployment_hardening/inets
     http_options = [
       ssl: [
         verify: :verify_peer,

@@ -5,7 +5,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   # Path scoping
 
   defmodule Api.V1.UserController do
-    use Phoenix.Controller
+    use Phoenix.Controller, formats: []
     def show(conn, _params), do: text(conn, "api v1 users show")
     def delete(conn, _params), do: text(conn, "api v1 users delete")
     def edit(conn, _params), do: text(conn, "api v1 users edit")

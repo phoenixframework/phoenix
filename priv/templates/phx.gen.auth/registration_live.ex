@@ -6,34 +6,39 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
-      <.header class="text-center">
-        Register for an account
-        <:subtitle>
-          Already registered?
-          <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="font-semibold text-brand hover:underline">
-            Log in
-          </.link>
-          to your account now.
-        </:subtitle>
-      </.header>
+    <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
+      <div class="mx-auto max-w-sm">
+        <.header class="text-center">
+          Register for an account
+          <:subtitle>
+            Already registered?
+            <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="font-semibold text-brand hover:underline">
+              Log in
+            </.link>
+            to your account now.
+          </:subtitle>
+        </.header>
 
-      <.simple_form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
-        <.error :if={@check_errors}>
-          Oops, something went wrong! Please check the errors below.
-        </.error>
+        <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
+          <.input
+            field={@form[:email]}
+            type="email"
+            label="Email"
+            autocomplete="username"
+            required
+            phx-mounted={JS.focus()}
+          />
 
-        <.input field={@form[:email]} type="email" label="Email" autocomplete="username" required />
-
-        <:actions>
-          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
-        </:actions>
-      </.simple_form>
-    </div>
+          <.button variant="primary" phx-disable-with="Creating account..." class="w-full">
+            Create an account
+          </.button>
+        </.form>
+      </div>
+    </Layouts.app>
     """
   end
 
-  def mount(_params, _session, %{assigns: %{current_<%= schema.singular %>: <%= schema.singular %>}} = socket)
+  def mount(_params, _session, %{assigns: %{current_scope: %{<%= schema.singular %>: <%= schema.singular %>}}} = socket)
       when not is_nil(<%= schema.singular %>) do
     {:ok, redirect(socket, to: <%= inspect auth_module %>.signed_in_path(socket))}
   end
@@ -41,12 +46,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def mount(_params, _session, socket) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(%<%= inspect schema.alias %>{})
 
-    socket =
-      socket
-      |> assign(check_errors: false)
-      |> assign_form(changeset)
-
-    {:ok, socket, temporary_assigns: [form: nil]}
+    {:ok, assign_form(socket, changeset), temporary_assigns: [form: nil]}
   end
 
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
@@ -67,7 +67,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
          |> push_navigate(to: ~p"<%= schema.route_prefix %>/log-in")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
+        {:noreply, assign_form(socket, changeset)}
     end
   end
 
@@ -78,11 +78,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     form = to_form(changeset, as: "<%= schema.singular %>")
-
-    if changeset.valid? do
-      assign(socket, form: form, check_errors: false)
-    else
-      assign(socket, form: form)
-    end
+    assign(socket, form: form)
   end
 end

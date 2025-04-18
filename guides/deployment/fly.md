@@ -42,7 +42,7 @@ $ fly auth signup
 Or sign in.
 
 ```console
-$ flyctl auth login
+$ fly auth login
 ```
 
 Fly has a [free tier](https://fly.io/docs/about/pricing/) for most applications. A credit card is required when setting up an account to help prevent abuse. See the [pricing](https://fly.io/docs/about/pricing/) page for more details.
@@ -153,86 +153,29 @@ Now we have a running IEx shell into our node! You can safely disconnect using C
 
 ### Clustering your application
 
-Elixir and the BEAM have the incredible ability to be clustered together and pass messages seamlessly between nodes. This portion of the guide walks you through clustering your Elixir application.
+Elixir and the BEAM have the incredible ability to be clustered together and pass messages seamlessly between nodes. Phoenix comes with all of the knobs in place, you only need to set the appropriate environment variables before deploying.
 
-There are 2 parts to getting clustering quickly setup on Fly.io.
+If you used `fly launch` to deploy your app, those environement variables are already in place, if not, open up `rel/env.ssh.eex` and add:
 
-- Installing and using `libcluster`
-- Scaling the application to multiple instances
+```sh
+export ERL_AFLAGS="-proto_dist inet6_tcp"
+export RELEASE_DISTRIBUTION="name"
+export RELEASE_NODE="${FLY_APP_NAME}-${FLY_IMAGE_REF##*-}@${FLY_PRIVATE_IP}"
 
-#### Adding `libcluster`
-
-The widely adopted library [libcluster](https://github.com/bitwalker/libcluster) helps here.
-
-There are multiple strategies that `libcluster` can use to find and connect with other nodes. The strategy we'll use on Fly.io is `DNSPoll`.
-
-After installing `libcluster`, add it to the application like this:
-
-```elixir
-defmodule MyApp.Application do
-  use Application
-
-  def start(_type, _args) do
-    topologies = Application.get_env(:libcluster, :topologies) || []
-
-    children = [
-      # ...
-      # setup for clustering
-      {Cluster.Supervisor, [topologies, [name: MyApp.ClusterSupervisor]]}
-    ]
-
-    # ...
-  end
-
-  # ...
-end
+export ECTO_IPV6="true"
+export DNS_CLUSTER_QUERY="${FLY_APP_NAME}.internal"
 ```
 
-Our next step is to add the `topologies` configuration to `config/runtime.exs`.
+The first three environment variables are managed by Elixir and the Erlang/VM:
 
-```elixir
-  app_name =
-    System.get_env("FLY_APP_NAME") ||
-      raise "FLY_APP_NAME not available"
+  * `ERL_AFLAGS` - configures Erlang to use IPv6 for its distribution
+  * `RELEASE_DISTRIBUTION` - configures Erlang to named nodes
+  * `RELEASE_NODE` - attaches a name to the node, using Fly's app name and deploy reference
 
-  config :libcluster,
-    topologies: [
-      fly6pn: [
-        strategy: Cluster.Strategy.DNSPoll,
-        config: [
-          polling_interval: 5_000,
-          query: "#{app_name}.internal",
-          node_basename: app_name
-        ]
-      ]
-    ]
-```
+The last two are handled by your `config/runtime.exs`:
 
-This configures `libcluster` to use the `DNSPoll` strategy and look for other deployed apps using the `$FLY_APP_NAME` on the `.internal` private network.
-
-#### Controlling the name for our node
-
-We need to control the naming of our Elixir nodes. To help them connect up, we'll name them using this pattern: `your-fly-app-name@the.ipv6.address.on.fly`. To do this, we'll generate the release config.
-
-```console
-$ mix release.init
-```
-
-Then edit the generated `rel/env.sh.eex` file and add the following lines:
-
-```console
-ip=$(grep fly-local-6pn /etc/hosts | cut -f 1)
-export RELEASE_DISTRIBUTION=name
-export RELEASE_NODE=$FLY_APP_NAME@$ip
-```
-
-After making the change, deploy your app!
-
-```console
-$ fly deploy
-```
-
-For our app to be clustered, we have to have multiple instances. Next we'll add an additional node instance.
+  * `ECTO_IPV6` - connect to the database using IPv6
+  * `DNS_CLUSTER_QUERY` - configures your app to find other nodes using the given DNS query
 
 #### Running multiple instances
 
@@ -273,16 +216,7 @@ f9014bf7 27      sea    run     running 1 total, 1 passing 0        1h13m ago
 
 We now have two instances in the same region.
 
-Let's make sure they are clustered together. We can check the logs:
-
-```console
-$ fly logs
-...
-app[eb4119d3] sea [info] 21:50:21.924 [info] [libcluster:fly6pn] connected to :"my-app-1234@fdaa:0:1da8:a7b:ac2:f901:4bf7:2"
-...
-```
-
-But that's not as rewarding as seeing it from inside a node. From an IEx shell, we can ask the node we're connected to, what other nodes it can see.
+Let's make sure they are clustered together. From an IEx shell, we can ask the node we're connected to, what other nodes it can see.
 
 ```console
 $ fly ssh console -C "/app/bin/my_app remote"

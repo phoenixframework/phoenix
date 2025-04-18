@@ -14,7 +14,7 @@ There are a number of places to connect with community members at all experience
 
   * Follow the Phoenix Framework on [Twitter](https://twitter.com/elixirphoenix).
 
-The Security Working Group of the Erlang Ecosystem Foundation also publishes in-depth documents about [security best practices for Erlang, Elixir, and Phoenix](https://erlef.github.io/security-wg/web_app_security_best_practices_beam/).
+The Security Working Group of the Erlang Ecosystem Foundation also publishes in-depth documents about [security best practices for Erlang, Elixir, and Phoenix](https://security.erlef.org/web_app_security_best_practices_beam/).
 
 ## Books
 

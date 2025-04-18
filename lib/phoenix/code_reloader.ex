@@ -330,6 +330,11 @@ defmodule Phoenix.CodeReloader do
   defp format_output(output) do
     output
     |> String.trim()
+    |> remove_ansi_escapes()
     |> Plug.HTML.html_escape()
+  end
+
+  defp remove_ansi_escapes(text) do
+    Regex.replace(~r/\e\[[0-9;]*[a-zA-Z]/, text, "")
   end
 end

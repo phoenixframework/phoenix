@@ -21,11 +21,6 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
-  test "components are in sync with priv" do
-    assert File.read!("../priv/templates/phx.gen.live/core_components.ex") ==
-             File.read!("templates/phx_web/components/core_components.ex")
-  end
-
   test "returns the version" do
     Mix.Tasks.Phx.New.run(["-v"])
     assert_received {:mix_shell, :info, ["Phoenix installer v" <> _]}
@@ -108,14 +103,13 @@ defmodule Mix.Tasks.Phx.NewTest do
         ~r/defmodule PhxBlogWeb.ErrorJSON/
       )
 
-      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
-        assert file =~ "defmodule PhxBlogWeb.CoreComponents"
-        assert file =~ ~S|aria-label={gettext("close")}|
+      assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb.Layouts"
         assert file =~ ~S|gettext("Attempting to reconnect")|
       end)
 
-      assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
-        assert file =~ "defmodule PhxBlogWeb.Layouts"
+      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
+        assert file =~ ~S|gettext("close")|
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/router.ex", fn file ->
@@ -134,7 +128,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ~s|<meta name="csrf-token" content={get_csrf_token()} />|
       end)
 
-      assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex")
       assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex")
 
       # assets
@@ -149,19 +142,16 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/config/dev.exs", fn file ->
         assert file =~ "esbuild: {Esbuild,"
         assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
-        assert file =~ "http: [ip: {127, 0, 0, 1}, port: 4000]"
+        assert file =~ "http: [ip: {127, 0, 0, 1}"
       end)
 
       # tailwind
-      assert_file("phx_blog/assets/css/app.css")
-
-      assert_file("phx_blog/assets/tailwind.config.js", fn file ->
-        assert file =~ "phx_blog_web.ex"
-        assert file =~ "phx_blog_web/**/*.*ex"
+      assert_file("phx_blog/assets/css/app.css", fn file ->
+        assert file =~ "lib/phx_blog_web"
       end)
 
-      refute File.exists?("phx_blog/priv/static/assets/app.css")
-      refute File.exists?("phx_blog/priv/static/assets/app.js")
+      refute File.exists?("phx_blog/priv/static/assets/css/app.css")
+      refute File.exists?("phx_blog/priv/static/assets/js/app.js")
       assert File.exists?("phx_blog/assets/vendor")
 
       assert_file("phx_blog/config/config.exs", fn file ->
@@ -259,7 +249,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       # Mailer
       assert_file("phx_blog/mix.exs", fn file ->
         assert file =~ "{:swoosh, \"~> 1.16\"}"
-        assert file =~ "{:req, \"~> 0.5.4\"}"
+        assert file =~ "{:req, \"~> 0.5\"}"
       end)
 
       assert_file("phx_blog/lib/phx_blog/mailer.ex", fn file ->
@@ -330,8 +320,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\]/)
 
       # No assets & No HTML
-      refute_file("phx_blog/priv/static/assets/app.css")
-      refute_file("phx_blog/priv/static/assets/app.js")
+      refute_file("phx_blog/priv/static/assets/css/app.css")
+      refute_file("phx_blog/priv/static/assets/js/app.js")
 
       # No Ecto
       config = ~r/config :phx_blog, PhxBlog.Repo,/
@@ -455,10 +445,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_dashboard"))
 
-      assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex", fn file ->
-        refute file =~ ~s|LiveDashboard|
-      end)
-
       assert_file("phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
         assert file =~ ~s|defmodule PhxBlogWeb.Endpoint|
         assert file =~ ~s|  socket "/live"|
@@ -535,8 +521,8 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/.gitignore")
       assert_file("phx_blog/.gitignore", ~r/\n$/)
-      assert_file("phx_blog/priv/static/assets/app.css")
-      assert_file("phx_blog/priv/static/assets/app.js")
+      assert_file("phx_blog/priv/static/assets/css/app.css")
+      assert_file("phx_blog/priv/static/assets/js/app.js")
       assert_file("phx_blog/priv/static/favicon.ico")
 
       assert_file("phx_blog/config/config.exs", fn file ->
@@ -566,10 +552,14 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp("new with no_gettext", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--no-gettext"])
 
-      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
-        assert file =~ ~S|aria-label="close"|
+      assert_file("phx_blog/lib/phx_blog_web/components/layouts.ex", fn file ->
         assert file =~ ~S|Attempting to reconnect|
         refute file =~ ~S|gettext("Attempting to reconnect")|
+      end)
+
+      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
+        assert file =~ ~S|aria-label="close"|
+        refute file =~ ~S|gettext("close")|
       end)
     end)
   end
@@ -825,7 +815,7 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp("new without defaults", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--inside-docker-env"])
       assert_file("phx_blog/config/dev.exs", fn file ->
-        assert file =~ "http: [ip: {0, 0, 0, 0}, port: 4000]"
+        assert file =~ "http: [ip: {0, 0, 0, 0}"
       end)
     end)
   end

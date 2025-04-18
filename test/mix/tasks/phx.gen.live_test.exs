@@ -29,6 +29,11 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
     end)
   end
 
+  test "components are in sync with installer" do
+    assert File.read!("priv/templates/phx.gen.live/core_components.ex") ==
+             File.read!("installer/templates/phx_web/components/core_components.ex")
+  end
+
   test "invalid mix arguments", config do
     in_tmp_live_project config.test, fn ->
       assert_raise Mix.Error, ~r/Expected the context, "blog", to be a valid module name/, fn ->
@@ -66,7 +71,8 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
                       alarm_usec:time_usec
                       secret:uuid:redact announcement_date:date alarm:time
                       metadata:map
-                      weight:float user_id:references:users))
+                      weight:float user_id:references:users
+                     ))
 
       assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog.ex"
@@ -102,16 +108,16 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       end
 
       assert_file "lib/phoenix_web/live/post_live/form.ex", fn file ->
-        assert file =~ ~s(<.simple_form)
+        assert file =~ ~s(<.form)
         assert file =~ ~s(<.input field={@form[:title]} type="text")
         assert file =~ ~s(<.input field={@form[:content]} type="textarea")
         assert file =~ ~s(<.input field={@form[:votes]} type="number")
         assert file =~ ~s(<.input field={@form[:cost]} type="number" label="Cost" step="any")
         assert file =~ """
-              <.input
-                field={@form[:tags]}
-                type="select"
-                multiple
+                <.input
+                  field={@form[:tags]}
+                  type="select"
+                  multiple
         """
         assert file =~ ~s(<.input field={@form[:popular]} type="checkbox")
         assert file =~ ~s(<.input field={@form[:drafted_at]} type="datetime-local")
@@ -122,9 +128,9 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
         assert file =~ ~s(<.input field={@form[:secret]} type="text" label="Secret" />)
         refute file =~ ~s(<field={@form[:metadata]})
         assert file =~ """
-              <.input
-                field={@form[:status]}
-                type="select"
+                <.input
+                  field={@form[:status]}
+                  type="select"
         """
         assert file =~ ~s|Ecto.Enum.values(Phoenix.Blog.Post, :status)|
 
@@ -463,4 +469,44 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       Mix.Tasks.Phx.Gen.Live.run(~w(Blog Form forms title:string))
     end
   end
-end
+
+  test "respect route_prefix in scopes", config do
+    in_tmp_live_project config.test, fn ->
+      with_scope_env(
+        :phoenix,
+        [
+          organization: [
+            module: Phoenix.Organizations.Scope,
+            assign_key: :current_organization,
+            access_path: [:organization, :id],
+            route_access_path: [:organization, :slug],
+            route_prefix: "/orgs/:slug"
+          ]
+        ],
+        fn ->
+          Gen.Live.run(~w(Blog Post posts title:string --scope organization))
+
+      assert_file "lib/phoenix_web/live/post_live/index.ex", fn file ->
+        assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts|
+        assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts/new"|
+      end
+
+      assert_file "lib/phoenix_web/live/post_live/show.ex", fn file ->
+        assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts"|
+        assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts/\#{@post}/edit|
+      end
+
+      assert_file "lib/phoenix_web/live/post_live/form.ex", fn file ->
+        assert file =~ ~s|defp return_path(scope, "index", _post), do: ~p"/orgs/\#{scope.organization.slug}/posts"|
+      end
+
+      assert_file "test/phoenix_web/live/post_live_test.exs", fn file ->
+        assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts"|
+        assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/new"|
+        assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}"|
+        assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}/edit"|
+      end
+        end)
+      end
+    end
+  end

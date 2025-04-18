@@ -1,0 +1,61 @@
+name: Assets
+
+on:
+  push:
+    branches:
+      - main
+      - "v*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      elixir: 1.18.3
+      otp: 27.2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.elixir }}
+          otp-version: ${{ env.otp }}
+
+      - name: Restore deps and _build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-${{ hashFiles('**/mix.lock') }}-dev
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-
+      - name: Install Dependencies
+        run: mix deps.get --only dev
+
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: mix assets.build
+
+      - name: Push updated assets
+        id: push_assets
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Update assets
+          file_pattern: priv/static

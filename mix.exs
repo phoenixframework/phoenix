@@ -8,7 +8,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.8.0-dev"
+  @version "1.8.0-rc.1"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -120,8 +120,10 @@ defmodule Phoenix.MixProject do
       maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
       licenses: ["MIT"],
       links: %{"GitHub" => @scm_url},
-      files:
-        ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
+      files: ~w(
+          assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs
+          installer/templates/phx_web/components/core_components.ex
+        )
     ]
   end
 
@@ -157,13 +159,20 @@ defmodule Phoenix.MixProject do
       "guides/controllers.md",
       "guides/components.md",
       "guides/ecto.md",
-      "guides/contexts.md",
       "guides/json_and_apis.md",
-      "guides/mix_tasks.md",
-      "guides/telemetry.md",
+      "guides/live_view.md",
       "guides/asset_management.md",
-      "guides/authentication/mix_phx_gen_auth.md",
-      "guides/authentication/api_authentication.md",
+      "guides/telemetry.md",
+      "guides/authn_authz/authn_authz.md",
+      "guides/authn_authz/mix_phx_gen_auth.md",
+      "guides/authn_authz/scopes.md",
+      "guides/authn_authz/api_authentication.md",
+      "guides/data_modelling/contexts.md",
+      "guides/data_modelling/your_first_context.md",
+      "guides/data_modelling/in_context_relationships.md",
+      "guides/data_modelling/cross_context_boundaries.md",
+      "guides/data_modelling/more_examples.md",
+      "guides/data_modelling/faq.md",
       "guides/real_time/channels.md",
       "guides/real_time/presence.md",
       "guides/testing/testing.md",
@@ -172,11 +181,12 @@ defmodule Phoenix.MixProject do
       "guides/testing/testing_channels.md",
       "guides/deployment/deployment.md",
       "guides/deployment/releases.md",
-      "guides/deployment/gigalixir.md",
       "guides/deployment/fly.md",
+      "guides/deployment/gigalixir.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
       "guides/howto/file_uploads.md",
+      "guides/howto/swapping_databases.md",
       "guides/howto/using_ssl.md",
       "guides/howto/writing_a_channels_client.md",
       "guides/cheatsheets/router.cheatmd",
@@ -187,8 +197,9 @@ defmodule Phoenix.MixProject do
   defp groups_for_extras do
     [
       Introduction: ~r/guides\/introduction\/.?/,
-      Guides: ~r/guides\/[^\/]+\.md/,
-      Authentication: ~r/guides\/authentication\/.?/,
+      "Core Concepts": ~r/guides\/[^\/]+\.md/,
+      "Data Modelling": ~r/guides\/data_modelling\/.?/,
+      "Authn and Authz": ~r/guides\/authn_authz\/.?/,
       "Real-time": ~r/guides\/real_time\/.?/,
       Testing: ~r/guides\/testing\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,
@@ -242,13 +253,16 @@ defmodule Phoenix.MixProject do
       docs: ["docs", &generate_js_docs/1],
       "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min", "esbuild main"],
       "assets.watch": "esbuild module --watch",
-      "archive.build": &raise_on_archive_build/1
+      "archive.build": &raise_on_archive_build/1,
+      # copy core_components before compiling / publishing
+      compile: [&copy_core_components/1, "compile"],
+      "hex.publish": [&copy_core_components/1, "hex.publish"]
     ]
   end
 
   defp generate_js_docs(_) do
     Mix.Task.run("app.start")
-    System.cmd("npm", ["run", "docs"], cd: "assets")
+    System.cmd("npm", ["run", "docs"])
   end
 
   defp raise_on_archive_build(_) do
@@ -256,5 +270,14 @@ defmodule Phoenix.MixProject do
     You are trying to install "phoenix" as an archive, which is not supported. \
     You probably meant to install "phx_new" instead
     """)
+  end
+
+  defp copy_core_components(_) do
+    source =
+      Path.join(__DIR__, "installer/templates/phx_web/components/core_components.ex")
+
+    destination_dir = Path.join([__DIR__, "priv", "templates", "phx.gen.live"])
+    destination = Path.join(destination_dir, "core_components.ex")
+    File.cp!(source, destination)
   end
 end

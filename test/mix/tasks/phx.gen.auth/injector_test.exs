@@ -468,7 +468,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
   describe "router_plug_inject/2" do
     test "injects after :put_secure_browser_headers" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       input = """
@@ -498,14 +498,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash
                    plug :protect_from_forgery
                    plug :put_secure_browser_headers
-                   plug :fetch_current_user
+                   plug :fetch_current_scope_for_user
                  end
                end
                """
     end
 
     test "injects after :put_secure_browser_headers even when it has additional options" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       input = """
@@ -535,14 +535,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash
                    plug :protect_from_forgery
                    plug :put_secure_browser_headers, %{"content-security-policy" => @csp}
-                   plug :fetch_current_user
+                   plug :fetch_current_scope_for_user
                  end
                end
                """
     end
 
     test "respects windows line endings" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       input = """
@@ -572,14 +572,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    plug :fetch_flash\r
                    plug :protect_from_forgery\r
                    plug :put_secure_browser_headers\r
-                   plug :fetch_current_user\r
+                   plug :fetch_current_scope_for_user\r
                  end\r
                end\r
                """
     end
 
     test "errors when :put_secure_browser_headers_is_missing" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       input = """
@@ -601,19 +601,19 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
   describe "router_plug_help_text/2" do
     test "returns a string with the expected help text" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
 
       file_path = Path.expand("foo.ex")
 
       assert Injector.router_plug_help_text(file_path, context) ==
                """
-               Add the :fetch_current_user plug to the :browser pipeline in foo.ex:
+               Add the :fetch_current_scope_for_user plug to the :browser pipeline in foo.ex:
 
                    pipeline :browser do
                      ...
                      plug :put_secure_browser_headers
-                     plug :fetch_current_user
+                     plug :fetch_current_scope_for_user
                    end
                """
     end
@@ -621,7 +621,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
   describe "app_layout_menu_inject/2" do
     test "injects user menu at the bottom of nav section when it exists" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>
@@ -665,44 +665,23 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
                            <% end %>
                          </ul>
-                         <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-                           <%= if @current_user do %>
-                             <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                               {@current_user.email}
+                         <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+                           <%= if @current_scope do %>
+                             <li>
+                               {@current_scope.user.email}
                              </li>
                              <li>
-                               <.link
-                                 href={~p"/users/settings"}
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                               >
-                                 Settings
-                               </.link>
+                               <.link href={~p"/users/settings"}>Settings</.link>
                              </li>
                              <li>
-                               <.link
-                                 href={~p"/users/log-out"}
-                                 method="delete"
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                               >
-                                 Log out
-                               </.link>
+                               <.link href={~p"/users/log-out"} method="delete">Log out</.link>
                              </li>
                            <% else %>
                              <li>
-                               <.link
-                                 href={~p"/users/register"}
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                               >
-                                 Register
-                               </.link>
+                               <.link href={~p"/users/register"}>Register</.link>
                              </li>
                              <li>
-                               <.link
-                                 href={~p"/users/log-in"}
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                               >
-                                 Log in
-                               </.link>
+                               <.link href={~p"/users/log-in"}>Log in</.link>
                              </li>
                            <% end %>
                          </ul>
@@ -715,7 +694,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "injects user menu at the bottom of nav section when it exists with windows line endings" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>\r
@@ -759,44 +738,23 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
                            <% end %>\r
                          </ul>\r
-                         <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
-                           <%= if @current_user do %>\r
-                             <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
-                               {@current_user.email}\r
+                         <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
+                           <%= if @current_scope do %>\r
+                             <li>\r
+                               {@current_scope.user.email}\r
                              </li>\r
                              <li>\r
-                               <.link\r
-                                 href={~p"/users/settings"}\r
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
-                               >\r
-                                 Settings\r
-                               </.link>\r
+                               <.link href={~p"/users/settings"}>Settings</.link>\r
                              </li>\r
                              <li>\r
-                               <.link\r
-                                 href={~p"/users/log-out"}\r
-                                 method="delete"\r
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
-                               >\r
-                                 Log out\r
-                               </.link>\r
+                               <.link href={~p"/users/log-out"} method="delete">Log out</.link>\r
                              </li>\r
                            <% else %>\r
                              <li>\r
-                               <.link\r
-                                 href={~p"/users/register"}\r
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
-                               >\r
-                                 Register\r
-                               </.link>\r
+                               <.link href={~p"/users/register"}>Register</.link>\r
                              </li>\r
                              <li>\r
-                               <.link\r
-                                 href={~p"/users/log-in"}\r
-                                 class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
-                               >\r
-                                 Log in\r
-                               </.link>\r
+                               <.link href={~p"/users/log-in"}>Log in</.link>\r
                              </li>\r
                            <% end %>\r
                          </ul>\r
@@ -809,7 +767,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "injects render user_menu after the opening body tag" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>
@@ -837,44 +795,23 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>
                  </head>
                  <body>
-                   <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-                     <%= if @current_user do %>
-                       <li class="text-[0.8125rem] leading-6 text-zinc-900">
-                         {@current_user.email}
+                   <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+                     <%= if @current_scope do %>
+                       <li>
+                         {@current_scope.user.email}
                        </li>
                        <li>
-                         <.link
-                           href={~p"/users/settings"}
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                         >
-                           Settings
-                         </.link>
+                         <.link href={~p"/users/settings"}>Settings</.link>
                        </li>
                        <li>
-                         <.link
-                           href={~p"/users/log-out"}
-                           method="delete"
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                         >
-                           Log out
-                         </.link>
+                         <.link href={~p"/users/log-out"} method="delete">Log out</.link>
                        </li>
                      <% else %>
                        <li>
-                         <.link
-                           href={~p"/users/register"}
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                         >
-                           Register
-                         </.link>
+                         <.link href={~p"/users/register"}>Register</.link>
                        </li>
                        <li>
-                         <.link
-                           href={~p"/users/log-in"}
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-                         >
-                           Log in
-                         </.link>
+                         <.link href={~p"/users/log-in"}>Log in</.link>
                        </li>
                      <% end %>
                    </ul>
@@ -889,7 +826,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "works with windows line endings" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>\r
@@ -917,44 +854,23 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    <title>Demo · Phoenix Framework</title>\r
                  </head>\r
                  <body>\r
-                   <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
-                     <%= if @current_user do %>\r
-                       <li class="text-[0.8125rem] leading-6 text-zinc-900">\r
-                         {@current_user.email}\r
+                   <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">\r
+                     <%= if @current_scope do %>\r
+                       <li>\r
+                         {@current_scope.user.email}\r
                        </li>\r
                        <li>\r
-                         <.link\r
-                           href={~p"/users/settings"}\r
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
-                         >\r
-                           Settings\r
-                         </.link>\r
+                         <.link href={~p"/users/settings"}>Settings</.link>\r
                        </li>\r
                        <li>\r
-                         <.link\r
-                           href={~p"/users/log-out"}\r
-                           method="delete"\r
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
-                         >\r
-                           Log out\r
-                         </.link>\r
+                         <.link href={~p"/users/log-out"} method="delete">Log out</.link>\r
                        </li>\r
                      <% else %>\r
                        <li>\r
-                         <.link\r
-                           href={~p"/users/register"}\r
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
-                         >\r
-                           Register\r
-                         </.link>\r
+                         <.link href={~p"/users/register"}>Register</.link>\r
                        </li>\r
                        <li>\r
-                         <.link\r
-                           href={~p"/users/log-in"}\r
-                           class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"\r
-                         >\r
-                           Log in\r
-                         </.link>\r
+                         <.link href={~p"/users/log-in"}>Log in</.link>\r
                        </li>\r
                      <% end %>\r
                    </ul>\r
@@ -969,7 +885,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "returns :already_injected when render is already found in file" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
 
       template = """
       <!DOCTYPE html>
@@ -1003,14 +919,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     end
 
     test "returns {:error, :unable_to_inject} when the body tag isn't found" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       assert {:error, :unable_to_inject} = Injector.app_layout_menu_inject(schema, "")
     end
   end
 
   describe "app_layout_menu_help_text/2" do
     test "returns a string with the expected help text" do
-      schema = Schema.new("Accounts.User", "users", [], [])
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       file_path = Path.expand("foo.ex")
 
       assert Injector.app_layout_menu_help_text(file_path, schema) =~

@@ -28,7 +28,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, conn} =
         conn
         |> log_in_<%= schema.singular %>(<%= schema.singular %>_fixture(),
-          token_inserted_at: <%= inspect datetime_module %>.add(<%= inspect datetime_module %>.utc_now(), -11, :minute)
+          token_authenticated_at: <%= inspect datetime_module %>.add(<%= datetime_now %>, -11, :minute)
         )
         |> live(~p"<%= schema.route_prefix %>/settings")
         |> follow_redirect(conn, ~p"<%= schema.route_prefix %>/log-in")

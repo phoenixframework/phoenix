@@ -40,16 +40,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   end
 
   @doc """
-  Injects configuration for test environment into `file`.
+  Injects configuration into `file`.
   """
-  @spec test_config_inject(String.t(), HashingLibrary.t()) ::
-          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
-  def test_config_inject(file, %HashingLibrary{} = hashing_library) when is_binary(file) do
-    code_to_inject =
-      hashing_library
-      |> test_config_code()
-      |> normalize_line_endings_to_file(file)
-
+  def config_inject(file, code_to_inject) when is_binary(file) and is_binary(code_to_inject) do
     inject_unless_contains(
       file,
       code_to_inject,
@@ -63,6 +56,20 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
         global: false
       )
     )
+  end
+
+  @doc """
+  Injects configuration for test environment into `file`.
+  """
+  @spec test_config_inject(String.t(), HashingLibrary.t()) ::
+          {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
+  def test_config_inject(file, %HashingLibrary{} = hashing_library) when is_binary(file) do
+    code_to_inject =
+      hashing_library
+      |> test_config_code()
+      |> normalize_line_endings_to_file(file)
+
+    config_inject(file, code_to_inject)
   end
 
   @doc """
@@ -87,7 +94,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @router_plug_anchor_line "plug :put_secure_browser_headers"
 
   @doc """
-  Injects the fetch_current_<schema> plug into router's browser pipeline
+  Injects the fetch_current_scope_for_<schema> plug into router's browser pipeline
   """
   @spec router_plug_inject(String.t(), context) ::
           {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
@@ -128,8 +135,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     "plug " <> router_plug_name(schema)
   end
 
-  defp router_plug_name(%Schema{} = schema) do
-    ":fetch_current_#{schema.singular}"
+  defp router_plug_name(schema) do
+    ":fetch_current_scope_for_#{schema.singular}"
   end
 
   @doc """
@@ -163,48 +170,24 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   def app_layout_menu_code_to_inject(%Schema{} = schema, padding \\ 4, newline \\ "\n") do
     already_injected_str = "#{schema.route_prefix}/log-in"
 
-    base_tailwind_classes = "text-[0.8125rem] leading-6 text-zinc-900"
-    link_tailwind_classes = "#{base_tailwind_classes} font-semibold hover:text-zinc-700"
-
     template = """
-    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_#{schema.singular} do %>
-        <li class="#{base_tailwind_classes}">
-          {@current_#{schema.singular}.email}
+    <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+      <%= if @current_scope do %>
+        <li>
+          {@current_scope.#{schema.singular}.email}
         </li>
         <li>
-          <.link
-            href={~p"#{schema.route_prefix}/settings"}
-            class="#{link_tailwind_classes}"
-          >
-            Settings
-          </.link>
+          <.link href={~p"#{schema.route_prefix}/settings"}>Settings</.link>
         </li>
         <li>
-          <.link
-            href={~p"#{schema.route_prefix}/log-out"}
-            method="delete"
-            class="#{link_tailwind_classes}"
-          >
-            Log out
-          </.link>
+          <.link href={~p"#{schema.route_prefix}/log-out"} method="delete">Log out</.link>
         </li>
       <% else %>
         <li>
-          <.link
-            href={~p"#{schema.route_prefix}/register"}
-            class="#{link_tailwind_classes}"
-          >
-            Register
-          </.link>
+          <.link href={~p"#{schema.route_prefix}/register"}>Register</.link>
         </li>
         <li>
-          <.link
-            href={~p"#{schema.route_prefix}/log-in"}
-            class="#{link_tailwind_classes}"
-          >
-            Log in
-          </.link>
+          <.link href={~p"#{schema.route_prefix}/log-in"}>Log in</.link>
         </li>
       <% end %>
     </ul>\

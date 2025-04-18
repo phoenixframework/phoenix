@@ -43,7 +43,7 @@ defmodule <%= @app_module %>.MixProject do
       {<%= inspect @adapter_app %>, ">= 0.0.0"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 1.0.0"},
+      {:phoenix_live_view, "~> 1.0.9"},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.8.3"},<% end %><%= if @javascript do %>
       {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
@@ -56,7 +56,7 @@ defmodule <%= @app_module %>.MixProject do
        compile: false,
        depth: 1},<% end %><%= if @mailer do %>
       {:swoosh, "~> 1.16"},
-      {:req, "~> 0.5.4"},<% end %>
+      {:req, "~> 0.5"},<% end %>
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 0.26"},<% end %>

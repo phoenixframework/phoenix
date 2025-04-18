@@ -12,7 +12,9 @@ The guides that you are currently looking at provide an overview of all parts th
 
   * Guides - in-depth guides covering the main components in Phoenix and Phoenix applications
 
-  * Authentication - in-depth guide covering how to use `mix phx.gen.auth`
+  * Data modelling - building the initial features of an e-commerce application to learn about more data modelling with Phoenix
+
+  * Authn and Authz - learn how to use the tools Phoenix provides for authentication and authorization
 
   * Real-time components - in-depth guides covering Phoenix's built-in real-time components
 

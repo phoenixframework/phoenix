@@ -41,7 +41,8 @@ defmodule Mix.Phoenix.Schema do
             fixture_unique_functions: [],
             fixture_params: [],
             prefix: nil,
-            timestamp_type: :naive_datetime
+            timestamp_type: :naive_datetime,
+            scope: nil
 
   @valid_types [
     :integer,
@@ -82,6 +83,7 @@ defmodule Mix.Phoenix.Schema do
     repo_alias = if String.ends_with?(Atom.to_string(repo), ".Repo"), do: "", else: ", as: Repo"
     file = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
     table = opts[:table] || schema_plural
+    scope = Mix.Phoenix.Scope.scope_from_opts(otp_app, opts[:scope], opts[:no_scope])
     {cli_attrs, uniques, redacts} = extract_attr_flags(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
     types = types(attrs)
@@ -147,14 +149,15 @@ defmodule Mix.Phoenix.Schema do
       web_path: web_path,
       route_helper: route_helper(web_path, singular),
       route_prefix: route_prefix(web_path, schema_plural),
-      api_route_prefix: api_route_prefix(web_path, schema_plural, api_prefix),
+      api_route_prefix: api_prefix,
       sample_id: sample_id(opts),
       context_app: ctx_app,
       generate?: generate?,
       migration_module: migration_module(),
       fixture_unique_functions: Enum.sort(fixture_unique_functions),
       fixture_params: fixture_params(attrs, fixture_unique_functions),
-      prefix: opts[:prefix]
+      prefix: opts[:prefix],
+      scope: scope
     }
   end
 
@@ -551,11 +554,6 @@ defmodule Mix.Phoenix.Schema do
 
   defp route_prefix(web_path, plural) do
     path = Path.join(for str <- [web_path, plural], do: to_string(str))
-    "/" <> String.trim_leading(path, "/")
-  end
-
-  defp api_route_prefix(web_path, plural, api_prefix) do
-    path = Path.join(for str <- [api_prefix, web_path, plural], do: to_string(str))
     "/" <> String.trim_leading(path, "/")
   end
 

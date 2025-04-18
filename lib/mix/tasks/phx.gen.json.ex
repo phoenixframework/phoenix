@@ -42,29 +42,35 @@ defmodule Mix.Tasks.Phx.Gen.Json do
       config :your_app, :generators,
         api_prefix: "/api/v1"
 
-  ## The context app
+  ## Scopes
 
-  The location of the web files (controllers, json views, etc) in an
-  umbrella application will vary based on the `:context_app` config located
-  in your applications `:generators` configuration. When set, the Phoenix
-  generators will generate web files directly in your lib and test folders
-  since the application is assumed to be isolated to web specific functionality.
-  If `:context_app` is not set, the generators will place web related lib
-  and test files in a `web/` directory since the application is assumed
-  to be handling both web and domain specific functionality.
-  Example configuration:
+  If your application configures its own default [scope](scopes.md), then this generator
+  will automatically make sure all of your context operations are correctly scoped.
+  You can pass the `--no-scope` flag to disable the scoping.
 
-      config :my_app_web, :generators, context_app: :my_app
+  ## Umbrella app configuration
+
+  By default, Phoenix injects both web and domain specific functionality into the same
+  application. When using umbrella applications, those concerns are typically broken
+  into two separate apps, your context application - let's call it `my_app` - and its web
+  layer, which Phoenix assumes to be `my_app_web`.
+
+  You can teach Phoenix to use this style via the `:context_app` configuration option
+  in your `my_app_umbrella/config/config.exs`:
+
+      config :my_app_web,
+        ecto_repos: [Stuff.Repo],
+        generators: [context_app: :my_app]
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
   ```console
-  $ mix phx.gen.json Sales User users --context-app warehouse
+  $ mix phx.gen.html Sales User users --context-app my_app
   ```
 
   ## Web namespace
 
-  By default, the controller and json view will be namespaced by the schema name.
+  By default, the controller and JSON view will be namespaced by the schema name.
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
@@ -80,7 +86,13 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   In some cases, you may wish to bootstrap JSON views, controllers,
   and controller tests, but leave internal implementation of the context
   or schema to yourself. You can use the `--no-context` and `--no-schema`
-  flags for file generation control.
+  flags for file generation control. Note `--no-context` implies `--no-schema`:
+
+  ```console
+  $ mix phx.gen.live Accounts User users --no-context name:string
+  ```
+
+  In the cases above, tests are still generated, but they will all fail.
 
   You can also change the table name or configure the migrations to
   use binary ids for primary keys, see `mix phx.gen.schema` for more
@@ -89,7 +101,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   use Mix.Task
 
-  alias Mix.Phoenix.Context
+  alias Mix.Phoenix.{Context, Scope}
   alias Mix.Tasks.Phx.Gen
 
   @doc false
@@ -103,12 +115,27 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     {context, schema} = Gen.Context.build(args)
     Gen.Context.prompt_for_code_injection(context)
 
+    {conn_scope, context_scope_prefix} =
+      if schema.scope do
+        base = "conn.assigns.#{schema.scope.assign_key}"
+        {base, "#{base}, "}
+      else
+        {"", ""}
+      end
+
     binding = [
       context: context,
       schema: schema,
+      scope: schema.scope,
       core_components?: Code.ensure_loaded?(Module.concat(context.web_module, "CoreComponents")),
       gettext?: Code.ensure_loaded?(Module.concat(context.web_module, "Gettext")),
-      primary_key: schema.opts[:primary_key] || :id
+      primary_key: schema.opts[:primary_key] || :id,
+      conn_scope: conn_scope,
+      context_scope_prefix: context_scope_prefix,
+      scope_conn_route_prefix: Scope.route_prefix(conn_scope, schema),
+      scope_param_route_prefix: Scope.route_prefix("scope", schema),
+      test_context_scope:
+        if(schema.scope && schema.scope.route_prefix, do: ", scope: scope", else: "")
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -164,6 +191,13 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
+    resource_path =
+      if schema.scope && schema.scope.route_prefix do
+        "#{schema.scope.route_prefix}/#{schema.plural}"
+      else
+        "/#{schema.plural}"
+      end
+
     if schema.web_namespace do
       Mix.shell().info("""
 
@@ -172,7 +206,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
           scope "/#{schema.web_path}", #{inspect(Module.concat(context.web_module, schema.web_namespace))}, as: :#{schema.web_path} do
             pipe_through :api
             ...
-            resources "/#{schema.plural}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
+            resources "#{resource_path}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
           end
       """)
     else
@@ -180,8 +214,14 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
       Add the resource to the "#{Application.get_env(ctx_app, :generators)[:api_prefix] || "/api"}" scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          resources "/#{schema.plural}", #{inspect(schema.alias)}Controller, except: [:new, :edit]#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
+          resources "#{resource_path}", #{inspect(schema.alias)}Controller, except: [:new, :edit]#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
       """)
+    end
+
+    if schema.scope do
+      Mix.shell().info(
+        "Ensure the routes are defined in a block that sets the `#{inspect(context.scope.assign_key)}` assign."
+      )
     end
 
     if context.generate?, do: Gen.Context.print_shell_instructions(context)

@@ -34,7 +34,7 @@ export default class Ajax {
   static xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback){
     req.open(method, endPoint, true)
     req.timeout = timeout
-    for (let [key, value] of Object.entries(headers)) {
+    for(let [key, value] of Object.entries(headers)){
       req.setRequestHeader(key, value)
     }
     req.onerror = () => callback && callback(null)

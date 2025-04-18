@@ -1,15 +1,18 @@
-<.header>
-  <%= schema.human_singular %> {@<%= schema.singular %>.<%= primary_key %>}
-  <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
-  <:actions>
-    <.link class={button_classes()} href={~p"<%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit"}>
-      Edit <%= schema.singular %>
-    </.link>
-  </:actions>
-</.header>
+<Layouts.app flash={@flash}<%= if scope do %> <%= scope.assign_key %>={@<%= scope.assign_key %>}<% end %>>
+  <.header>
+    <%= schema.human_singular %> {@<%= schema.singular %>.<%= primary_key %>}
+    <:subtitle>This is a <%= schema.singular %> record from your database.</:subtitle>
+    <:actions>
+      <.button navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>"}>
+        <.icon name="hero-arrow-left" />
+      </.button>
+      <.button variant="primary" navigate={~p"<%= scope_assign_route_prefix %><%= schema.route_prefix %>/#{@<%= schema.singular %>}/edit?return_to=show"}>
+        <.icon name="hero-pencil-square" /> Edit <%= schema.singular %>
+      </.button>
+    </:actions>
+  </.header>
 
-<.list><%= for {k, _} <- schema.attrs do %>
-  <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{@<%= schema.singular %>.<%= k %>}</:item><% end %>
-</.list>
-
-<.back navigate={~p"<%= schema.route_prefix %>"}>Back to <%= schema.plural %></.back>
+  <.list><%= for {k, _} <- schema.attrs do %>
+    <:item title="<%= Phoenix.Naming.humanize(Atom.to_string(k)) %>">{@<%= schema.singular %>.<%= k %>}</:item><% end %>
+  </.list>
+</Layouts.app>

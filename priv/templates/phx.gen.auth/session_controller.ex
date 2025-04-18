@@ -47,7 +47,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def update_password(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params) do
-    <%= schema.singular %> = conn.assigns.current_<%= schema.singular %>
+    <%= schema.singular %> = conn.assigns.current_scope.<%= schema.singular %>
     true = <%= inspect context.alias %>.sudo_mode?(<%= schema.singular %>)
     {:ok, _<%= schema.singular %>, expired_tokens} = <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params)
 
@@ -60,10 +60,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end<% else %>
 
   def new(conn, _params) do
-    email = get_in(conn.assigns, [:current_<%= schema.singular %>, Access.key(:email)])
+    email = get_in(conn.assigns, [:current_scope, Access.key(:<%= schema.singular %>), Access.key(:email)])
     form = Phoenix.Component.to_form(%{"email" => email}, as: "<%= schema.singular %>")
 
-    render(conn, :new, form: form, error_message: nil)
+    render(conn, :new, form: form)
   end
 
   # magic link login
@@ -83,10 +83,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:error, :not_found} ->
         conn
         |> put_flash(:error, "The link is invalid or it has expired.")
-        |> render(:new,
-          form: Phoenix.Component.to_form(%{}, as: "<%= schema.singular %>"),
-          error_message: nil
-        )
+        |> render(:new, form: Phoenix.Component.to_form(%{}, as: "<%= schema.singular %>"))
     end
   end
 
@@ -100,7 +97,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       form = Phoenix.Component.to_form(<%= schema.singular %>_params, as: "<%= schema.singular %>")
 
       # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
-      render(conn, :new, form: form, error_message: "Invalid email or password")
+      conn
+      |> put_flash(:error, "Invalid email or password")
+      |> render(:new, form: form)
     end
   end
 

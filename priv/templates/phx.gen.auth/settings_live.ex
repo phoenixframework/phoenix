@@ -1,81 +1,71 @@
 defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Settings do
   use <%= inspect context.web_module %>, :live_view
 
-  on_mount {<%= inspect auth_module %>, :ensure_sudo_mode}
+  on_mount {<%= inspect auth_module %>, :require_sudo_mode}
 
   alias <%= inspect context.module %>
 
   def render(assigns) do
     ~H"""
-    <.header class="text-center">
-      Account Settings
-      <:subtitle>Manage your account email address and password settings</:subtitle>
-    </.header>
+    <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
+      <.header class="text-center">
+        Account Settings
+        <:subtitle>Manage your account email address and password settings</:subtitle>
+      </.header>
 
-    <div class="space-y-12 divide-y">
-      <div>
-        <.simple_form
-          for={@email_form}
-          id="email_form"
-          phx-submit="update_email"
-          phx-change="validate_email"
-        >
-          <.input
-            field={@email_form[:email]}
-            type="email"
-            label="Email"
-            autocomplete="username"
-            required
-          />
-          <:actions>
-            <.button phx-disable-with="Changing...">Change Email</.button>
-          </:actions>
-        </.simple_form>
-      </div>
-      <div>
-        <.simple_form
-          for={@password_form}
-          id="password_form"
-          action={~p"<%= schema.route_prefix %>/update-password"}
-          method="post"
-          phx-change="validate_password"
-          phx-submit="update_password"
-          phx-trigger-action={@trigger_submit}
-        >
-          <input
-            name={@password_form[:email].name}
-            type="hidden"
-            id="hidden_<%= schema.singular %>_email"
-            autocomplete="username"
-            value={@current_email}
-          />
-          <.input
-            field={@password_form[:password]}
-            type="password"
-            label="New password"
-            autocomplete="new-password"
-            required
-          />
-          <.input
-            field={@password_form[:password_confirmation]}
-            type="password"
-            label="Confirm new password"
-            autocomplete="new-password"
-          />
-          <:actions>
-            <.button phx-disable-with="Saving...">
-              Save Password
-            </.button>
-          </:actions>
-        </.simple_form>
-      </div>
-    </div>
+      <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
+        <.input
+          field={@email_form[:email]}
+          type="email"
+          label="Email"
+          autocomplete="username"
+          required
+        />
+        <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
+      </.form>
+
+      <div class="divider" />
+
+      <.form
+        for={@password_form}
+        id="password_form"
+        action={~p"<%= schema.route_prefix %>/update-password"}
+        method="post"
+        phx-change="validate_password"
+        phx-submit="update_password"
+        phx-trigger-action={@trigger_submit}
+      >
+        <input
+          name={@password_form[:email].name}
+          type="hidden"
+          id="hidden_<%= schema.singular %>_email"
+          autocomplete="username"
+          value={@current_email}
+        />
+        <.input
+          field={@password_form[:password]}
+          type="password"
+          label="New password"
+          autocomplete="new-password"
+          required
+        />
+        <.input
+          field={@password_form[:password_confirmation]}
+          type="password"
+          label="Confirm new password"
+          autocomplete="new-password"
+        />
+        <.button variant="primary" phx-disable-with="Saving...">
+          Save Password
+        </.button>
+      </.form>
+    </Layouts.app>
     """
   end
 
   def mount(%{"token" => token}, _session, socket) do
     socket =
-      case <%= inspect context.alias %>.update_<%= schema.singular %>_email(socket.assigns.current_<%= schema.singular %>, token) do
+      case <%= inspect context.alias %>.update_<%= schema.singular %>_email(socket.assigns.current_scope.<%= schema.singular %>, token) do
         :ok ->
           put_flash(socket, :info, "Email changed successfully.")
 
@@ -87,7 +77,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def mount(_params, _session, socket) do
-    <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
+    <%= schema.singular %> = socket.assigns.current_scope.<%= schema.singular %>
     email_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>, %{}, validate_email: false)
     password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, %{}, hash_password: false)
 
@@ -105,7 +95,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
 
     email_form =
-      socket.assigns.current_<%= schema.singular %>
+      socket.assigns.current_scope.<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>_params, validate_email: false)
       |> Map.put(:action, :validate)
       |> to_form()
@@ -115,7 +105,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def handle_event("update_email", params, socket) do
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
-    <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
+    <%= schema.singular %> = socket.assigns.current_scope.<%= schema.singular %>
     true = <%= inspect context.alias %>.sudo_mode?(<%= schema.singular %>)
 
     case <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>, <%= schema.singular %>_params) do
@@ -138,7 +128,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
 
     password_form =
-      socket.assigns.current_<%= schema.singular %>
+      socket.assigns.current_scope.<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>_params, hash_password: false)
       |> Map.put(:action, :validate)
       |> to_form()
@@ -148,7 +138,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def handle_event("update_password", params, socket) do
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
-    <%= schema.singular %> = socket.assigns.current_<%= schema.singular %>
+    <%= schema.singular %> = socket.assigns.current_scope.<%= schema.singular %>
     true = <%= inspect context.alias %>.sudo_mode?(<%= schema.singular %>)
 
     case <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params) do

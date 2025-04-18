@@ -9,13 +9,14 @@
   """
   def register_and_log_in_<%= schema.singular %>(%{conn: conn} = context) do
     <%= schema.singular %> = <%= inspect context.module %>Fixtures.<%= schema.singular %>_fixture()
+    scope = <%= inspect scope_config.scope.module %>.for_<%= schema.singular %>(<%= schema.singular %>)
 
     opts =
       context
-      |> Map.take([:token_inserted_at])
+      |> Map.take([:token_authenticated_at])
       |> Enum.into([])
 
-    %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>, opts), <%= schema.singular %>: <%= schema.singular %>}
+    %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>, opts), <%= schema.singular %>: <%= schema.singular %>, scope: scope}
   end
 
   @doc """
@@ -26,15 +27,15 @@
   def log_in_<%= schema.singular %>(conn, <%= schema.singular %>, opts \\ []) do
     token = <%= inspect context.module %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
 
-    maybe_set_token_inserted_at(token, opts[:token_inserted_at])
+    maybe_set_token_authenticated_at(token, opts[:token_authenticated_at])
 
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
     |> Plug.Conn.put_session(:<%= schema.singular %>_token, token)
   end
 
-  defp maybe_set_token_inserted_at(_token, nil), do: nil
+  defp maybe_set_token_authenticated_at(_token, nil), do: nil
 
-  defp maybe_set_token_inserted_at(token, inserted_at) do
-    <%= inspect context.module %>Fixtures.override_token_inserted_at(token, inserted_at)
+  defp maybe_set_token_authenticated_at(token, authenticated_at) do
+    <%= inspect context.module %>Fixtures.override_token_authenticated_at(token, authenticated_at)
   end

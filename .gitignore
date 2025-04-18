@@ -21,3 +21,5 @@ erl_crash.dump
 phoenix-*.ez
 
 .DS_Store
+
+/priv/templates/phx.gen.live/core_components.ex

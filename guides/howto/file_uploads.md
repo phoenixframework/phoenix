@@ -24,12 +24,12 @@ In the [`Contexts guide`](contexts.md), we generated an HTML resource for produc
 
 ### Configure a multipart form
 
-The first thing you need to do is change your form into a multipart form. The `HelloWeb.CoreComponents` `simple_form/1` component accepts a `multipart` attribute where you can specify this.
+The first thing you need to do is change your form into a multipart form. The `HelloWeb.CoreComponents` `form/1` component accepts a `multipart` attribute where you can specify this.
 
 Here is the form from `lib/hello_web/controllers/product_html/product_form.html.heex` with that change in place:
 
 ```heex
-<.simple_form :let={f} for={@changeset} action={@action} multipart>
+<.form :let={f} for={@changeset} action={@action} multipart>
 ...
 ```
 
@@ -41,10 +41,8 @@ Once you have a multipart form, you need a `file` input. Here's how you would do
 ...
   <.input field={f[:photo]} type="file" label="Photo" />
 
-  <:actions>
-    <.button>Save Product</.button>
-  </:actions>
-</.simple_form>
+  <.button>Save Product</.button>
+</.form>
 ```
 
 When rendered, here is the HTML for the default `HelloWeb.CoreComponents` `input/1` component:

@@ -10,6 +10,28 @@ for module <- modules do
   end
 end
 
+defmodule PlugRouterWithVerifiedRoutes do
+  use Plug.Router
+
+  @behaviour Phoenix.VerifiedRoutes
+
+  get "/foo" do
+    send_resp(conn, 200, "ok")
+  end
+
+  @impl Phoenix.VerifiedRoutes
+  def formatted_routes(_plug_opts) do
+    [
+      %{verb: "GET", path: "/foo", label: "Hello"}
+    ]
+  end
+
+  @impl Phoenix.VerifiedRoutes
+  def verified_route?(_plug_opts, path) do
+    path == ["foo"]
+  end
+end
+
 defmodule Phoenix.VerifiedRoutesTest do
   use ExUnit.Case, async: true
   import Plug.Test
@@ -60,6 +82,12 @@ defmodule Phoenix.VerifiedRoutesTest do
 
     get "/", PostController, :root
     get "/*path", PostController, :root, warn_on_verify: true
+  end
+
+  defmodule ForwardedRouter do
+    use Phoenix.Router
+
+    forward "/", PlugRouterWithVerifiedRoutes
   end
 
   # Emulate regular endpoint functions
@@ -607,6 +635,29 @@ defmodule Phoenix.VerifiedRoutesTest do
       after
         :code.purge(__MODULE__.VerifyFalseTrueMatchesFirst)
         :code.delete(__MODULE__.VerifyFalseTrueMatchesFirst)
+      end
+
+      test "routers implementing verified routes behavior warn as expected" do
+        warnings =
+          ExUnit.CaptureIO.capture_io(:stderr, fn ->
+            defmodule VerifyForwardedRouter do
+              use Phoenix.VerifiedRoutes,
+                endpoint: unquote(@endpoint),
+                router: PlugRouterWithVerifiedRoutes
+
+              def test, do: ~p"/bar"
+              def test2, do: ~p"/foo"
+            end
+          end)
+
+        assert warnings =~
+                 "no route path for PlugRouterWithVerifiedRoutes matches \"/bar\""
+
+        refute warnings =~
+                 "no route path for PlugRouterWithVerifiedRoutes matches \"/foo\""
+      after
+        :code.purge(__MODULE__.VerifyForwardedRouter)
+        :code.delete(__MODULE__.VerifyForwardedRouter)
       end
     end
   end
