@@ -6,7 +6,7 @@ This release requires Erlang/OTP 25+.
 
   * Extend tailwindcss support in new apps with [daisyUI](https://daisyui.com/) for light/dark/system mode support for entire app, including core components
   * Simplify layout handling for new apps. Now there is only a single `root.html.heex` which wraps the render pipeline. Other dynamic layouts, like `app.html.heex` are called as needed within templates as regular function components
-  * Simplify core components and live generators to more closely match basic `phx.gen.html` crud. This serves as a better base for seasoned devs to start with, and lessons the amount of code newcomers need to get up to speed with on the basics
+  * Simplify core components and live generators to more closely match basic `phx.gen.html` crud. This serves as a better base for seasoned devs to start with, and lessens the amount of code newcomers need to get up to speed with on the basics
   * Introduce magic links (passwordless auth) and "sudo mode" to `mix phx.gen.auth` while simplifying the generated structure
   * Introduce scopes to Phoenix generators, designed to make secure data access the *default*, not something you remember (or forget) to do later
 
