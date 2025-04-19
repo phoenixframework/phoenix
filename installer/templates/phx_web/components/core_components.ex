@@ -64,15 +64,15 @@ defmodule <%= @web_namespace %>.CoreComponents do
         @kind == :info && "alert-info",
         @kind == :error && "alert-error"
       ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="size-5 shrink-0" />
+        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
         </div>
         <div class="flex-1" />
         <button type="button" class="group self-start cursor-pointer" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
-          <.icon name="hero-x-mark-solid" class="size-5 opacity-40 group-hover:opacity-70" />
+          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
         </button>
       </div>
     </div>
@@ -268,7 +268,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   defp error(assigns) do
     ~H"""
     <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle-mini" class="size-5" />
+      <.icon name="hero-exclamation-circle" class="size-5" />
       {render_slot(@inner_block)}
     </p>
     """
@@ -404,7 +404,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   ## Examples
 
-      <.icon name="hero-x-mark-solid" />
+      <.icon name="hero-x-mark" />
       <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
   """
   attr :name, :string, required: true
