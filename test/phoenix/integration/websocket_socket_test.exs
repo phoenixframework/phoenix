@@ -86,22 +86,40 @@ defmodule Phoenix.Integration.WebSocketTest do
     def terminate(_reason, _state), do: :ok
   end
 
-  defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
+  defmodule Router do
+    use Phoenix.Router
+    import Phoenix.Socket.Router
 
-    socket "/ws", UserSocket,
-      websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200],
-      custom: :value
+    # socket "/ws", UserSocket,
+    #       websocket: [check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200]
+    scope "/ws" do
+      websocket "/websocket", UserSocket,
+        check_origin: ["//example.com"], subprotocols: ["sip"], timeout: 200
+
+      longpoll "/longpoll", UserSocket
+    end
 
     socket "/custom/some_path", UserSocket,
-      websocket: [path: "nested/path", check_origin: ["//example.com"], timeout: 200],
-      custom: :value
+      websocket: [path: "nested/path", check_origin: ["//example.com"], timeout: 200]
 
     socket "/custom/:socket_var", UserSocket,
-      websocket: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200],
-      custom: :value
+      websocket: [path: ":path_var/path", check_origin: ["//example.com"], timeout: 200]
 
     socket "/ws/ping", PingSocket, websocket: true
+  end
+
+  defmodule Endpoint do
+    use Phoenix.Endpoint,
+      otp_app: :phoenix
+
+    def sockets do
+      [
+        {UserSocket, custom: :value},
+        PingSocket
+      ]
+    end
+
+    plug Router
   end
 
   setup %{adapter: adapter} do
