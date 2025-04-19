@@ -131,7 +131,7 @@ Now tests should pass and we are ready to move forward!
 
 The last part is to add authentication to our API.
 
-When we ran `mix phx.gen.auth`, it generated a `MyAppWeb.UserAuth` module with several plugs, which are small functions that receive the `conn` and customize our request/response life-cycle. Open up `lib/my_app_web/user_auth.ex` and add this new function:
+When we ran `mix phx.gen.auth`, it generated a `MyAppWeb.UserAuth` module with several plugs, which are small functions that receive the `conn` and customize our request/response life-cycle. Open up `lib/my_app_web/live/user_live/auth.ex` and add this new function:
 
 ```elixir
 def fetch_current_scope_for_api_user(conn, _opts) do
