@@ -9,10 +9,41 @@ export default class Ajax {
     if(global.XDomainRequest){
       let req = new global.XDomainRequest() // IE8, IE9
       return this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
-    } else {
+    } else if(global.XMLHttpRequest){
       let req = new global.XMLHttpRequest() // IE7+, Firefox, Chrome, Opera, Safari
       return this.xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback)
+    } else if(global.fetch && global.AbortController){
+      // Fetch with AbortController for modern browsers
+      return this.fetchRequest(method, endPoint, headers, body, timeout, ontimeout, callback);
+    } else {
+      throw new Error("No suitable XMLHttpRequest implementation found");
     }
+  }
+
+  static fetchRequest(method, endPoint, headers, body, timeout, ontimeout, callback){
+    let options = {
+      method,
+      headers,
+      body,
+    };
+    let controller = null;
+    if(timeout){
+      controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      options.signal = controller.signal;
+    }
+    global.fetch(endPoint, options)
+      .then(response => response.text())
+      .then(data => this.parseJSON(data))
+      .then(data => callback && callback(data))
+      .catch(err => {
+        if(err.name === "AbortError" && ontimeout){
+          ontimeout();
+        } else {
+          callback && callback(null);
+        }
+      });
+    return controller;
   }
 
   static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback){
