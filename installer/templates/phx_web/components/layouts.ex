@@ -75,7 +75,7 @@ defmodule <%= @web_namespace %>.Layouts do
         hidden
       >
         <%= maybe_eex_gettext.("Attempting to reconnect", @gettext) %>
-        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
+        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
 
       <.flash
@@ -86,8 +86,8 @@ defmodule <%= @web_namespace %>.Layouts do
         phx-connected={hide("#server-error") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
-        <%= maybe_eex_gettext.("Hang in there while we get back on track", @gettext) %>
-        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
+        <%= maybe_eex_gettext.("Attempting to reconnect", @gettext) %>
+        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
     </div>
     """
