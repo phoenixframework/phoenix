@@ -124,6 +124,7 @@ defmodule MyApp.Release do
   end
 
   defp load_app do
+    Application.ensure_all_started(:ssl)
     Application.ensure_loaded(@app)
   end
 end
