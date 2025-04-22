@@ -92,7 +92,7 @@ You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, 
 
 Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and architecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
 
-## Ecto migrations and custom commands
+## Ecto migrations
 
 A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are production artifacts, we need to bring said commands directly into the release.
 
