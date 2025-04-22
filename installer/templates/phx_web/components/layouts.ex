@@ -86,7 +86,7 @@ defmodule <%= @web_namespace %>.Layouts do
         phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
-        <%= maybe_eex_gettext.("Hang in there while we get back", @gettext) %>
+        <%= maybe_eex_gettext.("Attempting to reconnect", @gettext) %>
         <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
     </div>
