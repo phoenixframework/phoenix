@@ -1,12 +1,10 @@
 # Deploying on Gigalixir
 
+Our main goal for this guide is to get a Phoenix application running on Gigalixir.
+
 ## What we'll need
 
 The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://hexdocs.pm/phoenix/up_and_running.html).
-
-## Goals
-
-Our main goal for this guide is to get a Phoenix application running on Gigalixir.
 
 ## Steps
 
@@ -130,29 +128,15 @@ $ gigalixir config
 
 There's nothing we need to do to get our app running on Gigalixir, but for a production app, you probably want to enforce SSL.
 
-### Force HTTPS/SSL Connections
-
-To do that, see [Force SSL](https://hexdocs.pm/phoenix/using_ssl.html#force-ssl)
-
 ### Database Connection Security
-You may also want to use SSL for your database connection.
 
-For a free tier database, update your `Repo` config with:
+You may also want to use SSL for your database connection. In your `config/runtime.exs`:
 
 ```elixir
-ssl: true,
-ssl_opts: [
-  verify: :verify_none,
+ssl: [
+  verify: :verify_peer,
   cacerts: :public_key.cacerts_get()
 ]
-```
-
-For a production database, use this instead:
-
-```elixir
-ssl: true,
-allowed_tls_versions: [:"tlsv1.2"],
-ssl_opts: [verify: :verify_none]
 ```
 
 ## Deploy Time!

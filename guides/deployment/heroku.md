@@ -1,12 +1,10 @@
 # Deploying on Heroku
 
+Our main goal for this guide is to get a Phoenix application running on Heroku.
+
 ## What we'll need
 
 The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://hexdocs.pm/phoenix/up_and_running.html).
-
-## Goals
-
-Our main goal for this guide is to get a Phoenix application running on Heroku.
 
 ## Limitations
 
@@ -26,7 +24,7 @@ Heroku is a great platform and Elixir performs well on it. However, you may run 
 
 If you are just getting started, or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
 
-If you want a platform-as-a-service without these limitations, try [Gigalixir](gigalixir.html). If you would rather deploy to a cloud platform, such as EC2, Google Cloud, etc, consider using `mix release`.
+If you want a platform-as-a-service without these limitations, there are alternatives listed in the sidebar and also generally available elsewhere. If you would rather deploy to a cloud platform, such as EC2, Google Cloud, etc, consider using `mix release`.
 
 ## Steps
 

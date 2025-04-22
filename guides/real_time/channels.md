@@ -42,7 +42,7 @@ All the client needs is a suitable library; see the [Client Libraries](#client-l
 Each client library communicates using one of the "transports" that Channels understand.
 Currently, that's either Websockets or long polling, but other transports may be added in the future.
 
-Unlike stateless HTTP connections, Channels support long-lived connections, each backed by a lightweight BEAM process, working in parallel and maintaining its own state.
+Unlike stateless HTTP connections, Channels support long-lived connections, each backed by a lightweight Erlang VM process, working in parallel and maintaining its own state.
 
 This architecture scales well; Phoenix Channels [can support millions of subscribers with reasonable latency on a single box](https://phoenixframework.org/blog/the-road-to-2-million-websocket-connections), passing hundreds of thousands of messages per second.
 And that capacity can be multiplied by adding more nodes to the cluster.
@@ -158,7 +158,7 @@ PubSub is provided by the `Phoenix.PubSub` module. Interested parties can receiv
 This is useful to broadcast messages on channel and also for application development in general. For instance, letting all connected [live views](https://github.com/phoenixframework/phoenix_live_view) to know that a new comment has been added to a post.
 
 The PubSub system takes care of getting messages from one node to another so that they can be sent to all subscribers across the cluster.
-By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
+By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native Erlang VM messaging.
 
 If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
 

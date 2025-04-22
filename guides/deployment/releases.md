@@ -1,12 +1,10 @@
 # Deploying with Releases
 
+Our main goal for this guide is to package your Phoenix application into a self-contained directory that includes the Erlang VM, Elixir, all of your code and dependencies. This package can then be dropped into a production machine.
+
 ## What we'll need
 
 The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](up_and_running.html).
-
-## Goals
-
-Our main goal for this guide is to package your Phoenix application into a self-contained directory that includes the Erlang VM, Elixir, all of your code and dependencies. This package can then be dropped into a production machine.
 
 ## Releases, assemble!
 
@@ -94,11 +92,9 @@ You can start the release by calling `_build/prod/rel/my_app/bin/my_app start`, 
 
 Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and architecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
 
-But before we finish this guide, there is one more feature from releases that most Phoenix application will use, so let's talk about that.
-
 ## Ecto migrations and custom commands
 
-A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are a production artifact, we need to bring said commands directly into the release.
+A common need in production systems is to execute custom commands required to set up the production environment. One of such commands is precisely migrating the database. Since we don't have `Mix`, a *build* tool, inside releases, which are production artifacts, we need to bring said commands directly into the release.
 
 The `phx.gen.release` command created the following `release.ex` file in your project `lib/my_app/release.ex`, with the following content:
 
@@ -138,9 +134,13 @@ Now you can assemble a new release with `MIX_ENV=prod mix release` and you can i
 $ _build/prod/rel/my_app/bin/my_app eval "MyApp.Release.migrate"
 ```
 
-And that's it! If you peek inside the `migrate` script, you'll see it wraps exactly this invocation.
+And that's it! If you peek inside the `migrate` script, you'll see it wraps exactly this invocation. Depending on where you are deploying your application, you can invoke the `migrate` command separately, or you may want to change the `server` script to migrate your database before starting your app.
 
-You can use this approach to create any custom command to run in production. In this case, we used `load_app`, which calls `Application.ensure_loaded/1` to load the current application without starting it. However, you may want to write a custom command that starts the whole application. In such cases, `Application.ensure_all_started/1` must be used. Keep in mind, starting the application will start all processes for the current application, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
+## Custom commands
+
+You can use the same approach used for migrations to create any custom command to run in production. The idea is that each command invokes `load_app`, which calls `Application.ensure_loaded/1` to load the current application without starting it.
+
+However, some commands may need to start the whole application. In such cases, `Application.ensure_all_started/1` must be used instead of `Application.load/1`. Keep in mind starting the application will all processes in its supervision tree, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
 
 ```elixir
 defp start_app do
@@ -262,6 +262,55 @@ Where `my_app` is the name of your app. At the end, you will have an application
 
 A few points about configuring a containerized application:
 
-- If you run your app in a container, the `Endpoint` needs to be configured to listen on a "public" `:ip` address (like `0.0.0.0`) so that the app can be reached from outside the container. Whether the host should publish the container's ports to its own public IP or to localhost depends on your needs.
 - The more configuration you can provide at runtime (using `config/runtime.exs`), the more reusable your images will be across environments. In particular, secrets like database credentials and API keys should not be compiled into the image, but rather should be provided when creating containers based on that image. This is why the `Endpoint`'s `:secret_key_base` is configured in `config/runtime.exs` by default.
+
 - If possible, any environment variables that are needed at runtime should be read in `config/runtime.exs`, not scattered throughout your code. Having them all visible in one place will make it easier to ensure the containers get what they need, especially if the person doing the infrastructure work does not work on the Elixir code. Libraries in particular should never directly read environment variables; all their configuration should be handed to them by the top-level application, preferably [without using the application environment](https://hexdocs.pm/elixir/library-guidelines.html#avoid-application-configuration).
+
+## Clustering
+
+Elixir and the Erlang VM have the incredible ability to be clustered together and pass messages seamlessly between nodes. To enable clustering, we need two distinct features:
+
+* Node connection: different instances of the same service should communicate with each other. This is a feature of the Erlang VM.
+
+* Service discovery: for a given service, you must be able to find the IP address of all instances. Phoenix ships with `dns_cluster` to provide out-of-the-box DNS-based service discovery
+
+Many platforms, such as [Digital Ocean App Platform](https://www.digitalocean.com/products/app-platform) and [Northflank](https://northflank.com/features/platform), allow nodes to directly connect to each other, but they do not provide DNS-based service discovery. In this section, we will talk about how to configure clustering using different discovery mechanisms.
+
+### DNS Discovery
+
+Your clustering configuration is typically added to `rel/env.sh.eex`. This is a file that is executed before you release starts, and it is a perfect place to configure your application runtime based on your deployment environment. Here is a general skeleton:
+
+```sh
+# Uncomment if IPv6 is required
+# export ECTO_IPV6="true"
+# export ERL_AFLAGS="-proto_dist inet6_tcp"
+
+# Erlang uses a port mapper daemon on each node,
+# it by default runs on port 4369
+export ERL_EPMD_PORT=4369
+
+# Use the ports 4370-4372 for nodes to communicate.
+export ERL_AFLAGS="-kernel inet_dist_listen_min 4370 inet_dist_listen_max 4372"
+
+export RELEASE_DISTRIBUTION="name"
+export RELEASE_NODE="app-${PLATFORM_DEPLOYMENT_SHA}@${PLATFORM_DEPLOYMENT_IP}"
+export DNS_CLUSTER_QUERY="your-app.internal"
+```
+
+The script above is doing a couple things:
+
+* It configures your app to use ports 4369, 4370, 4371, and 4372 for communication. You must explicitly expose those as internal TCP ports in your deployment platform
+
+* It then configures your app to use fully qualified names. The name of each app will include the current deployment sha as `PLATFORM_DEPLOYMENT_SHA` (the name of the exact environment variable is platform dependent), so each deployment establishes its own cluster, and the current IP as `PLATFORM_DEPLOYMENT_IP` (also platform specific). If the IP is not available, you may be able to compute it as `NODE_IP=hostname | tr -d ' '`
+
+* Then finally you define a DNS query which will be used to find the IPs of the other instances
+
+### Alternative discovery mechanisms
+
+While not all platforms support DNS queries for service discovery, there are many alternative strategies for connecting your nodes together. Please checkout the following libraries:
+
+  * [libcluster](https://github.com/bitwalker/libcluster) - provides strategies for connecting your nodes using gossip protocols, kubernetes, ec2, and others
+
+  * [libcluster_postgres](https://github.com/supabase/libcluster_postgres/) - a plugin for `libcluster` which uses PostgreSQL for node discovery. Given most applications already use a database, and likely PostgreSQL, this is a suitable option which does not require additional setup
+
+When using the libraries above, you can likely remove `dns_query` from your application dependencies.

@@ -1,7 +1,8 @@
 # Deploying on Fly.io
 
+The main goal for this guide is to get a Phoenix application running on [Fly.io](https://fly.io).
 
-Fly.io maintains their own guide for Elixir/Phoenix here: [Fly.io/docs/elixir/getting-started/](https://fly.io/docs/elixir/getting-started/) we will keep this guide up but for the latest and greatest check with them!
+Fly.io maintains their own guide for Elixir/Phoenix here: [Fly.io/docs/elixir/getting-started/](https://fly.io/docs/elixir/getting-started/). We will keep this guide up but for the latest and greatest check with them!
 
 ## What we'll need
 
@@ -13,10 +14,6 @@ You can just:
 $ mix phx.new my_app
 ```
 
-## Goals
-
-The main goal for this guide is to get a Phoenix application running on [Fly.io](https://fly.io).
-
 ## Sections
 
 Let's separate this process into a few steps, so we can keep track of where we are.
@@ -24,6 +21,7 @@ Let's separate this process into a few steps, so we can keep track of where we a
 - Install the Fly.io CLI
 - Sign up for Fly.io
 - Deploy the app to Fly.io
+- Clustering your application
 - Extra Fly.io tips
 - Helpful Fly.io resources
 
@@ -117,6 +115,32 @@ If everything looks good, open your app on Fly
 $ fly open
 ```
 
+## Clustering your application
+
+Elixir and the Erlang VM have the incredible ability to be clustered together and pass messages seamlessly between nodes. Phoenix comes with all of the knobs in place, you only need to set the appropriate environment variables before deploying.
+
+If you used `fly launch` to deploy your app, those environement variables are already in place, if not, open up `rel/env.ssh.eex` and add:
+
+```sh
+export ERL_AFLAGS="-proto_dist inet6_tcp"
+export RELEASE_DISTRIBUTION="name"
+export RELEASE_NODE="${FLY_APP_NAME}-${FLY_IMAGE_REF##*-}@${FLY_PRIVATE_IP}"
+
+export ECTO_IPV6="true"
+export DNS_CLUSTER_QUERY="${FLY_APP_NAME}.internal"
+```
+
+The first three environment variables are managed by Elixir and the Erlang/VM:
+
+  * `ERL_AFLAGS` - configures Erlang to use IPv6 for its distribution
+  * `RELEASE_DISTRIBUTION` - configures Erlang to named nodes
+  * `RELEASE_NODE` - attaches a name to the node, using Fly's app name and deploy reference
+
+The last two are handled by your `config/runtime.exs`:
+
+  * `ECTO_IPV6` - connect to the database using IPv6
+  * `DNS_CLUSTER_QUERY` - configures your app to find other nodes using the given DNS query
+
 ## Extra Fly.io tips
 
 ### Getting an IEx shell into a running node
@@ -150,32 +174,6 @@ iex(my_app@fdaa:0:1da8:a7b:ac4:b204:7e29:2)1>
 ```
 
 Now we have a running IEx shell into our node! You can safely disconnect using CTRL+C, CTRL+C.
-
-### Clustering your application
-
-Elixir and the BEAM have the incredible ability to be clustered together and pass messages seamlessly between nodes. Phoenix comes with all of the knobs in place, you only need to set the appropriate environment variables before deploying.
-
-If you used `fly launch` to deploy your app, those environement variables are already in place, if not, open up `rel/env.ssh.eex` and add:
-
-```sh
-export ERL_AFLAGS="-proto_dist inet6_tcp"
-export RELEASE_DISTRIBUTION="name"
-export RELEASE_NODE="${FLY_APP_NAME}-${FLY_IMAGE_REF##*-}@${FLY_PRIVATE_IP}"
-
-export ECTO_IPV6="true"
-export DNS_CLUSTER_QUERY="${FLY_APP_NAME}.internal"
-```
-
-The first three environment variables are managed by Elixir and the Erlang/VM:
-
-  * `ERL_AFLAGS` - configures Erlang to use IPv6 for its distribution
-  * `RELEASE_DISTRIBUTION` - configures Erlang to named nodes
-  * `RELEASE_NODE` - attaches a name to the node, using Fly's app name and deploy reference
-
-The last two are handled by your `config/runtime.exs`:
-
-  * `ECTO_IPV6` - connect to the database using IPv6
-  * `DNS_CLUSTER_QUERY` - configures your app to find other nodes using the given DNS query
 
 #### Running multiple instances
 
