@@ -299,7 +299,7 @@ export DNS_CLUSTER_QUERY="your-app.internal"
 
 The script above is doing a couple things:
 
-* It configures your app to use ports 4369, 4370, 4371, and 4372 for communication. You must explicitly expose those as internal TCP ports in your deployment platform
+* It configures your app to use ports 4369, 4370, 4371, and 4372 for communication. You must explicitly expose those as internal TCP ports in your deployment platform (in addition to the HTTP port of your choice)
 
 * It then configures your app to use fully qualified names. The name of each app will include the current deployment sha as `PLATFORM_DEPLOYMENT_SHA` (the name of the exact environment variable is platform dependent), so each deployment establishes its own cluster, and the current IP as `PLATFORM_DEPLOYMENT_IP` (also platform specific). If the IP is not available, you may be able to compute it as `NODE_IP=hostname | tr -d ' '`
 
@@ -314,3 +314,28 @@ While not all platforms support DNS queries for service discovery, there are man
   * [libcluster_postgres](https://github.com/supabase/libcluster_postgres/) - a plugin for `libcluster` which uses PostgreSQL for node discovery. Given most applications already use a database, and likely PostgreSQL, this is a suitable option which does not require additional setup
 
 When using the libraries above, you can likely remove `dns_query` from your application dependencies.
+
+### `epmd`-less deployment
+
+In the snippet above, we used ports 4369, 4370, 4371, and 4372. However, the Erlang VM allows running the distribution over a fixed port, also known as `epmd`-less deployments. To enable such, do this.
+
+Remove the lines:
+
+```sh
+export ERL_EPMD_PORT=4369
+export ERL_AFLAGS="-kernel inet_dist_listen_min 4370 inet_dist_listen_max 4372"
+```
+
+Add a file rel/vm.args.eex with the following:
+
+```
+-start_epmd false -erl_epmd_port 6789
+```
+
+Add a file rel/remote.vm.args.eex with the following:
+
+```
+-start_epmd false -erl_epmd_port 6789 -dist_listen false
+```
+
+And now only port 6789 (in addition to the HTTP one) needs to be exposed internally between instances.
