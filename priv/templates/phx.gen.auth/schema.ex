@@ -7,7 +7,6 @@ defmodule <%= inspect schema.module %> do
     field :email, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
-    field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, <%= inspect schema.timestamp_type %>
     field :authenticated_at, <%= inspect schema.timestamp_type %>, virtual: true
 
