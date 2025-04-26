@@ -367,7 +367,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp scope_config_string(context, key, default_scope) do
     context_app =
-      (Mix.Phoenix.in_umbrella?(File.cwd!()) && String.to_atom("#{context.context_app}_web")) ||
+      (Mix.Phoenix.in_umbrella?(File.cwd!()) && Application.get_application(context.web_module)) ||
         context.context_app
 
     """
