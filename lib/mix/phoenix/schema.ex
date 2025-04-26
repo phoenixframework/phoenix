@@ -83,7 +83,7 @@ defmodule Mix.Phoenix.Schema do
     repo_alias = if String.ends_with?(Atom.to_string(repo), ".Repo"), do: "", else: ", as: Repo"
     file = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
     table = opts[:table] || schema_plural
-    scope = Mix.Phoenix.Scope.scope_from_opts(otp_app, opts[:scope], opts[:no_scope])
+    scope = Mix.Phoenix.Scope.scope_from_opts(ctx_app, opts[:scope], opts[:no_scope])
     {cli_attrs, uniques, redacts} = extract_attr_flags(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
     types = types(attrs)
