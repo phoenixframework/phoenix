@@ -213,9 +213,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "allows a custom migration dir", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(
-        ~w(Blog.Post blog_posts title:string --migration-dir priv/custom_dir)
-      )
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string --migration-dir priv/custom_dir))
 
       assert [migration] = Path.wildcard("priv/custom_dir/*_create_blog_posts.exs")
 
@@ -240,9 +238,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "does not add maps to the required list", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(
-        ~w(Blog.Post blog_posts title:string tags:map published_at:naive_datetime)
-      )
+      Gen.Schema.run(~w(Blog.Post blog_posts title:string tags:map published_at:naive_datetime))
 
       assert_file("lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "cast(attrs, [:title, :tags, :published_at]"
@@ -283,9 +279,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "generates unique indices", config do
     in_tmp_project(config.test, fn ->
-      Gen.Schema.run(
-        ~w(Blog.Post posts title:unique secret:redact unique_int:integer:unique)
-      )
+      Gen.Schema.run(~w(Blog.Post posts title:unique secret:redact unique_int:integer:unique))
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
@@ -554,6 +548,48 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
         assert_file("another_app/lib/another_app/blog/post.ex")
         assert [_] = Path.wildcard("another_app/priv/repo/migrations/*_create_blog_posts.exs")
+      end)
+    end
+
+    test "generates scoped schema", config do
+      in_tmp_umbrella_project(config.test, fn ->
+        Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
+
+        with_scope_env(
+          :another_app,
+          [
+            org: [
+              default: true,
+              module: MyApp.Accounts.Scope,
+              assign_key: :current_scope,
+              access_path: [:user, :org_id],
+              schema_key: :org_id,
+              schema_type: :id,
+              schema_table: :organizations
+            ]
+          ],
+          fn ->
+            Gen.Schema.run(~w(Blog.Post blog_posts title:string --scope org --binary-id))
+
+            assert_file("another_app/lib/another_app/blog/post.ex", fn file ->
+              assert file =~ "@primary_key {:id, :binary_id, autogenerate: true}"
+              assert file =~ "field :org_id, :id"
+            end)
+
+            assert [migration] =
+                     Path.wildcard("another_app/priv/repo/migrations/*_create_blog_posts.exs")
+
+            assert_file(migration, fn file ->
+              assert file =~ "create table(:blog_posts, primary_key: false) do"
+              assert file =~ "add :id, :binary_id, primary_key: true"
+
+              assert file =~
+                       "add :org_id, references(:organizations, type: :id, on_delete: :delete_all)"
+
+              assert file =~ "create index(:blog_posts, [:org_id])"
+            end)
+          end
+        )
       end)
     end
   end
