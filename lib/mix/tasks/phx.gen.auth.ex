@@ -325,17 +325,20 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         "#{context.basename}_#{context.schema.singular}"
 
       # my_app_accounts_user
-      is_new_scope?(existing_scopes, "#{context.context_app}_#{context.basename}_#{context.schema.singular}") ->
+      is_new_scope?(
+        existing_scopes,
+        "#{context.context_app}_#{context.basename}_#{context.schema.singular}"
+      ) ->
         "#{context.context_app}_#{context.basename}_#{context.schema.singular}"
 
       true ->
-        Mix.raise """
+        Mix.raise("""
         Could not generate a scope name for #{context.schema.singular}! These scopes already exist:
 
             * #{Enum.map(existing_scopes, fn {name, _scope} -> name end) |> Enum.join("\n    * ")}
 
         You can customize the scope name by passing the --scope option.
-        """
+        """)
     end
   end
 
@@ -363,8 +366,12 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   defp scope_config_string(context, key, default_scope) do
+    context_app =
+      (Mix.Phoenix.in_umbrella?(File.cwd!()) && String.to_atom("#{context.context_app}_web")) ||
+        context.context_app
+
     """
-    config :#{context.context_app}, :scopes,
+    config :#{context_app}, :scopes,
       #{key}: [
         default: #{if default_scope, do: false, else: true},
         module: #{inspect(context.module)}.Scope,
