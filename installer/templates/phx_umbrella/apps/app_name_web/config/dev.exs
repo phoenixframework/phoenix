@@ -53,7 +53,7 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
       ~r"priv/gettext/.*(po)$",<% end %>
-      ~r"lib/<%= @web_app_name %>/(controllers|live|components)/.*(ex|heex)$"
+      ~r"lib/<%= @web_app_name %>/(?:controllers|live|components|router)/?.*\.(ex|heex)$"
     ]
   ]<% end %>
 

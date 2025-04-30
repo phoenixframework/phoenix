@@ -141,7 +141,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/dev.exs", fn file ->
         assert file =~ "esbuild: {Esbuild,"
-        assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
+        assert file =~ "lib/phx_blog_web/(?:controllers|live|components|router)/?.*\\.(ex|heex)$"
         assert file =~ "http: [ip: {127, 0, 0, 1}"
       end)
 
