@@ -64,7 +64,7 @@ The following are notes about the generated authentication system.
 The generated code ships with an authentication module with a handful of plugs that fetch the current user, require authentication and so on. For instance, in an app named MyApp which had `mix phx.gen.auth Accounts User users` run on it, you will find a module named `MyAppWeb.UserAuth` with plugs such as:
 
   * `fetch_current_scope_for_user` - fetches the current user information if available and stores it as `:current_scope` assign
-  * `require_authenticated_user` - must be invoked after `fetch_current_user` and requires that a current user exists and is authenticated
+  * `require_authenticated_user` - must be invoked after `fetch_current_scope_for_user` and requires that a current user exists and is authenticated
   * `redirect_if_user_is_authenticated` - used for the few pages that must not be available to authenticated users (only generated for controller based authentication)
   * `require_sudo_mode` - used for pages that contain sensitive operations and enforces recent authentication
 
@@ -172,4 +172,4 @@ The following links describe the original implementation of the authentication s
   * José Valim's blog post - [An upcoming authentication solution for Phoenix](https://dashbit.co/blog/a-new-authentication-solution-for-phoenix)
   * Berenice Medel's blog post on generating LiveViews for authentication (rather than conventional Controllers & Views) - [Bringing Phoenix Authentication to Life](https://fly.io/phoenix-files/phx-gen-auth/)
   * [Original design spec](https://github.com/dashbitco/mix_phx_gen_auth_demo/blob/auth/README.md)
-  * [Pull request on bare Phoenix app][https://github.com/dashbitco/mix_phx_gen_auth_demo/pull/1]
+  * [Pull request on bare Phoenix app](https://github.com/dashbitco/mix_phx_gen_auth_demo/pull/1)
