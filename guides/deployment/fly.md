@@ -119,7 +119,7 @@ $ fly open
 
 Elixir and the Erlang VM have the incredible ability to be clustered together and pass messages seamlessly between nodes. Phoenix comes with all of the knobs in place, you only need to set the appropriate environment variables before deploying.
 
-If you used `fly launch` to deploy your app, those environement variables are already in place, if not, open up `rel/env.ssh.eex` and add:
+If you used `fly launch` to deploy your app, those environment variables are already in place, if not, open up `rel/env.ssh.eex` and add:
 
 ```sh
 export ERL_AFLAGS="-proto_dist inet6_tcp"
