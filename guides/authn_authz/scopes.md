@@ -4,7 +4,7 @@ A scope is a data structure used to keep information about the current request o
 
 Scopes play an important role in security. [OWASP](https://owasp.org/) lists "Broken access control" as a [top-10 security risk](https://owasp.org/Top10/). Most application data is private for a user, a team, or an organization. Your database CRUD operations must be properly scoped to the current user/team/organization. Phoenix generators such as `mix phx.gen.html`, `mix phx.gen.json`, and `mix phx.gen.live` automatically use your custom scopes.
 
-Scopes are flexible.  You can have more than one scope in your application and choose the specific scope when invoking a generator. When you run `mix phx.gen.auth`, it will automatically generate a scope for you, but you may also add your own.
+Scopes are flexible. You can have more than one scope in your application and choose the specific scope when invoking a generator. When you run `mix phx.gen.auth`, it will automatically generate a scope for you, but you may also add your own.
 
 This guide will:
 
