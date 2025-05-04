@@ -34,8 +34,8 @@ defmodule Phoenix.Channel do
 
   The first argument is the topic, the second argument is a map payload given by
   the client, and the third argument is an instance of `Phoenix.Socket`. The
-  `socket` to all channel callbacks, so check its module and documentation to
-  learn its fields and the different ways to interact with it.
+  `socket` is provided to all channel callbacks, so check its module and
+  documentation to learn its fields and the different ways to interact with it.
 
   ## Authorization
 
