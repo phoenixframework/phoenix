@@ -1,12 +1,10 @@
 # Scopes
 
-A scope is a data structure used to keep information about the current request or session, such as the current user logged in, the organization/company it belongs to, permissions, and so on. Think about it as a container that holds information that is required in the huge majority of pages in your application. It can also hold important request metadata, such as IP addresses.
+A scope is a data structure used to keep information about the current request or session, such as the current user, the user's organization/company, permissions, and so on. Think of a scope as a container with information required by the majority of pages in your application. A scope can also hold request metadata, such as IP addresses.
 
-Scopes also play a very important role in security. OWASP (Open Worldwide Application Security Project) lists "Broken access control" as the biggest security risk in web applications. That's because most data in an application is not publicly available. Instead, it most often belongs to a user, a team, or an organization. Therefore, it is extremely important that, when you query the database, your queries, inserts, updates, and deletes are properly scoped to the current user/team/organization.
+Scopes play an important role in security. [OWASP](https://owasp.org/) lists "Broken access control" as a [top-10 security risk](https://owasp.org/Top10/). Most application data is private for a user, a team, or an organization. Your database CRUD operations must be properly scoped to the current user/team/organization. Phoenix generators such as `mix phx.gen.html`, `mix phx.gen.json`, and `mix phx.gen.live` automatically use your custom scopes.
 
-By using scopes, you have a single data structure that contains all relevant information, which is then passed around so all of your operations are properly scoped. By defining your own scopes, Phoenix generators such as `mix phx.gen.html`, `mix phx.gen.json`, and `mix phx.gen.live` will automatically make sure all operations pertain to that scope, ensuring that all generated code is safe by default.
-
-Scopes are also flexible: you can have more than one scope in your application and choose the relevant scope when invoking the relevant generator. When you run `mix phx.gen.auth`, it will automatically generate a scope for you, but you may also add your own.
+Scopes are flexible. You can have more than one scope in your application and choose the specific scope when invoking a generator. When you run `mix phx.gen.auth`, it will automatically generate a scope for you, but you may also add your own.
 
 This guide will:
 
@@ -17,7 +15,7 @@ This guide will:
 
 ## phx.gen.auth
 
-When you invoke `mix phx.gen.auth`, it will generate a default scope for you. This scope ties the generated resources to the currently authenticated user. Let's see it in action:
+The task `mix phx.gen.auth` will generate a default scope. This scope ties the generated resources to the currently authenticated user. Let's see it in action:
 
 ```console
 $ mix phx.gen.auth Accounts User users
@@ -84,7 +82,7 @@ end
 
 ## Integration of scopes in the Phoenix generators
 
-If a default scope is defined in your application's config, the generators will generate scoped resources by default. The generated LiveViews / Controllers will automatically pass the scope to the context functions. `mix phx.gen.auth` automatically sets its scope as default, if there is not already a default scope defined:
+If a default scope is defined in your application's config, the generators will build scoped resources by default. The generated LiveViews / Controllers will automatically pass the scope to the context functions. `mix phx.gen.auth` automatically sets its scope as default, if there is not already a default scope defined:
 
 ```elixir
 # config/config.exs
