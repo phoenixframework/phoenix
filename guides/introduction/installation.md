@@ -8,6 +8,8 @@ In order to build a Phoenix application, we will need a few dependencies install
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
 
+If you just want to get started quickly, the [Up and Running](up_and_running.md) page includes a link to Phoenix Express, which will get Erlang, Elixir and Phoenix installed and running in seconds.
+
 ## Elixir 1.15 or later
 
 Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](https://elixir-lang.org/install.html) to help.
