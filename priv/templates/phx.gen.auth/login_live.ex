@@ -10,7 +10,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         <.header class="text-center">
           <p>Log in</p>
           <:subtitle>
-            <%%= if @current_scope do %>
+            <%%= if @<%= scope_config.scope.assign_key %> do %>
               You need to reauthenticate to perform sensitive actions on your account.
             <%% else %>
               Don't have an account? <.link
@@ -40,7 +40,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           phx-submit="submit_magic"
         >
           <.input
-            readonly={!!@current_scope}
+            readonly={!!@<%= scope_config.scope.assign_key %>}
             field={f[:email]}
             type="email"
             label="Email"
@@ -64,7 +64,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           phx-trigger-action={@trigger_submit}
         >
           <.input
-            readonly={!!@current_scope}
+            readonly={!!@<%= scope_config.scope.assign_key %>}
             field={f[:email]}
             type="email"
             label="Email"
@@ -78,7 +78,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             autocomplete="current-password"
           />
           <.input
-            :if={!@current_scope}
+            :if={!@<%= scope_config.scope.assign_key %>}
             field={f[:remember_me]}
             type="checkbox"
             label="Keep me logged in"
@@ -95,7 +95,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def mount(_params, _session, socket) do
     email =
       Phoenix.Flash.get(socket.assigns.flash, :email) ||
-        get_in(socket.assigns, [:current_scope, Access.key(:<%= schema.singular %>), Access.key(:email)])
+        get_in(socket.assigns, [:<%= scope_config.scope.assign_key %>, Access.key(:<%= schema.singular %>), Access.key(:email)])
 
     form = to_form(%{"email" => email}, as: "<%= schema.singular %>")
 

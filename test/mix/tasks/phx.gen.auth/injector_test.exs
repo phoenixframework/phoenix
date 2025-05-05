@@ -470,6 +470,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     test "injects after :put_secure_browser_headers" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
+      binding = [schema: schema, context: context, scope_config: %{scope: %{assign_key: :current_scope}}]
 
       input = """
       defmodule DemoWeb.Router do
@@ -485,7 +486,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       end
       """
 
-      {:ok, injected} = Injector.router_plug_inject(input, context)
+      {:ok, injected} = Injector.router_plug_inject(input, binding)
 
       assert injected ==
                """
@@ -507,6 +508,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     test "injects after :put_secure_browser_headers even when it has additional options" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
+      binding = [schema: schema, context: context, scope_config: %{scope: %{assign_key: :current_scope}}]
 
       input = """
       defmodule DemoWeb.Router do
@@ -522,7 +524,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       end
       """
 
-      {:ok, injected} = Injector.router_plug_inject(input, context)
+      {:ok, injected} = Injector.router_plug_inject(input, binding)
 
       assert injected ==
                """
@@ -544,6 +546,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     test "respects windows line endings" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
+      binding = [schema: schema, context: context, scope_config: %{scope: %{assign_key: :current_scope}}]
 
       input = """
       defmodule DemoWeb.Router do\r
@@ -559,7 +562,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       end\r
       """
 
-      {:ok, injected} = Injector.router_plug_inject(input, context)
+      {:ok, injected} = Injector.router_plug_inject(input, binding)
 
       assert injected ==
                """
@@ -581,6 +584,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     test "errors when :put_secure_browser_headers_is_missing" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
+      binding = [schema: schema, context: context, scope_config: %{scope: %{assign_key: :current_scope}}]
 
       input = """
       defmodule DemoWeb.Router do
@@ -595,7 +599,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       end
       """
 
-      assert {:error, :unable_to_inject} = Injector.router_plug_inject(input, context)
+      assert {:error, :unable_to_inject} = Injector.router_plug_inject(input, binding)
     end
   end
 
@@ -603,10 +607,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
     test "returns a string with the expected help text" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
       context = Context.new("Accounts", schema, [])
+      binding = [schema: schema, context: context, scope_config: %{scope: %{assign_key: :current_scope}}]
 
       file_path = Path.expand("foo.ex")
 
-      assert Injector.router_plug_help_text(file_path, context) ==
+      assert Injector.router_plug_help_text(file_path, binding) ==
                """
                Add the :fetch_current_scope_for_user plug to the :browser pipeline in foo.ex:
 
@@ -617,11 +622,31 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                    end
                """
     end
+
+    test "adheres to the --assign-key" do
+      schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
+      context = Context.new("Accounts", schema, [])
+      binding = [schema: schema, context: context, scope_config: %{scope: %{assign_key: :current_user_scope}}]
+
+      file_path = Path.expand("foo.ex")
+
+      assert Injector.router_plug_help_text(file_path, binding) ==
+               """
+               Add the :fetch_current_user_scope_for_user plug to the :browser pipeline in foo.ex:
+
+                   pipeline :browser do
+                     ...
+                     plug :put_secure_browser_headers
+                     plug :fetch_current_user_scope_for_user
+                   end
+               """
+    end
   end
 
   describe "app_layout_menu_inject/2" do
     test "injects user menu at the bottom of nav section when it exists" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
+      binding = [schema: schema, scope_config: %{scope: %{assign_key: :current_scope}}]
 
       template = """
       <!DOCTYPE html>
@@ -646,7 +671,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>
       """
 
-      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template)
+      {:ok, template_str} = Injector.app_layout_menu_inject(binding, template)
 
       assert template_str ==
                """
@@ -695,6 +720,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
     test "injects user menu at the bottom of nav section when it exists with windows line endings" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
+      binding = [schema: schema, scope_config: %{scope: %{assign_key: :current_scope}}]
 
       template = """
       <!DOCTYPE html>\r
@@ -719,7 +745,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>\r
       """
 
-      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template)
+      {:ok, template_str} = Injector.app_layout_menu_inject(binding, template)
 
       assert template_str ==
                """
@@ -768,6 +794,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
     test "injects render user_menu after the opening body tag" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
+      binding = [schema: schema, scope_config: %{scope: %{assign_key: :current_scope}}]
 
       template = """
       <!DOCTYPE html>
@@ -785,7 +812,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>
       """
 
-      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template)
+      {:ok, template_str} = Injector.app_layout_menu_inject(binding, template)
 
       assert template_str ==
                """
@@ -827,6 +854,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
     test "works with windows line endings" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
+      binding = [schema: schema, scope_config: %{scope: %{assign_key: :current_scope}}]
 
       template = """
       <!DOCTYPE html>\r
@@ -844,7 +872,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>\r
       """
 
-      {:ok, template_str} = Injector.app_layout_menu_inject(schema, template)
+      {:ok, template_str} = Injector.app_layout_menu_inject(binding, template)
 
       assert template_str ==
                """
@@ -886,7 +914,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
 
     test "returns :already_injected when render is already found in file" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
-
+      binding = [schema: schema, scope_config: %{scope: %{assign_key: :current_scope}}]
       template = """
       <!DOCTYPE html>
       <html lang="en">
@@ -915,21 +943,23 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
       </html>
       """
 
-      assert :already_injected = Injector.app_layout_menu_inject(schema, template)
+      assert :already_injected = Injector.app_layout_menu_inject(binding, template)
     end
 
     test "returns {:error, :unable_to_inject} when the body tag isn't found" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
-      assert {:error, :unable_to_inject} = Injector.app_layout_menu_inject(schema, "")
+      binding = [schema: schema, scope_config: %{scope: %{assign_key: :current_scope}}]
+      assert {:error, :unable_to_inject} = Injector.app_layout_menu_inject(binding, "")
     end
   end
 
   describe "app_layout_menu_help_text/2" do
     test "returns a string with the expected help text" do
       schema = Schema.new("Accounts.User", "users", [], [no_scope: true])
+      binding = [schema: schema, scope_config: %{scope: %{assign_key: :current_scope}}]
       file_path = Path.expand("foo.ex")
 
-      assert Injector.app_layout_menu_help_text(file_path, schema) =~
+      assert Injector.app_layout_menu_help_text(file_path, binding) =~
                "Add the following user menu"
     end
   end

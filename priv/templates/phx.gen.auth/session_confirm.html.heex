@@ -10,7 +10,7 @@
     >
       <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
       <.input
-        :if={!@current_scope}
+        :if={!@<%= scope_config.scope.assign_key %>}
         field={@form[:remember_me]}
         type="checkbox"
         label="Keep me logged in"
@@ -24,7 +24,7 @@
     <.form :if={@<%= schema.singular %>.confirmed_at} for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log-in"}>
       <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
       <.input
-        :if={!@current_scope}
+        :if={!@<%= scope_config.scope.assign_key %>}
         field={@form[:remember_me]}
         type="checkbox"
         label="Keep me logged in"

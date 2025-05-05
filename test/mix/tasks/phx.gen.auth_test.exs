@@ -1311,6 +1311,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
             phx.gen.auth will create a new accounts_user scope.
 
+            Note that if you run `phx.gen.live` multiple times, the generated assign key for
+            the generated scopes can conflict with each other. You can pass `--assign-key` to customize
+            the assign key for the generated scope.
+
             Do you want to proceed with the generation?\
             """
 
