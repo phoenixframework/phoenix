@@ -25,7 +25,7 @@ This release introduces deprecation warnings for several features that have been
   * Specifying layouts without modules, such as `put_layout(conn, :print)` or `put_layout(conn, html: :print)` is deprecated
   * The `:trailing_slash` option in `Phoenix.Router` has been deprecated in favor of using `Phoenix.VerifiedRoutes`. The overall usage of helpers will be deprecated in the future
 
-## 1.8.0-rc.2 (2025-05-29)
+## 1.8.0-rc.2 (2025-04-29)
 
 ## Big Fixes
   - [phx.gen.live] only subscribe to pubsub if connected
