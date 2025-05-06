@@ -15,7 +15,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def update(conn, %{"action" => "update_email"} = params) do
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
-    <%= schema.singular %> = conn.assigns.current_scope.<%= schema.singular %>
+    <%= schema.singular %> = conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>
 
     case <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>, <%= schema.singular %>_params) do
       %{valid?: true} = changeset ->
@@ -39,7 +39,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def update(conn, %{"action" => "update_password"} = params) do
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
-    <%= schema.singular %> = conn.assigns.current_scope.<%= schema.singular %>
+    <%= schema.singular %> = conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>
 
     case <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>, _} ->
@@ -54,7 +54,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   def confirm_email(conn, %{"token" => token}) do
-    case <%= inspect context.alias %>.update_<%= schema.singular %>_email(conn.assigns.current_scope.<%= schema.singular %>, token) do
+    case <%= inspect context.alias %>.update_<%= schema.singular %>_email(conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>, token) do
       :ok ->
         conn
         |> put_flash(:info, "Email changed successfully.")
@@ -68,7 +68,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   defp assign_email_and_password_changesets(conn, _opts) do
-    <%= schema.singular %> = conn.assigns.current_scope.<%= schema.singular %>
+    <%= schema.singular %> = conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>
 
     conn
     |> assign(:email_changeset, <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>))

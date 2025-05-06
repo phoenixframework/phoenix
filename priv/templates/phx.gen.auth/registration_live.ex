@@ -38,7 +38,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     """
   end
 
-  def mount(_params, _session, %{assigns: %{current_scope: %{<%= schema.singular %>: <%= schema.singular %>}}} = socket)
+  def mount(_params, _session, %{assigns: %{<%= scope_config.scope.assign_key %>: %{<%= schema.singular %>: <%= schema.singular %>}}} = socket)
       when not is_nil(<%= schema.singular %>) do
     {:ok, redirect(socket, to: <%= inspect auth_module %>.signed_in_path(socket))}
   end

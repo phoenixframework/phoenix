@@ -64,14 +64,14 @@ defmodule <%= inspect auth_module %> do
 
   Will reissue the session token if it is older than the configured age.
   """
-  def fetch_current_scope_for_<%= schema.singular %>(conn, _opts) do
+  def fetch_<%= scope_config.scope.assign_key %>_for_<%= schema.singular %>(conn, _opts) do
     with {token, conn} <- ensure_<%= schema.singular %>_token(conn),
          {<%= schema.singular %>, token_inserted_at} <- <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token) do
       conn
-      |> assign(:current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
+      |> assign(:<%= scope_config.scope.assign_key %>, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
       |> maybe_reissue_<%= schema.singular %>_session_token(<%= schema.singular %>, token_inserted_at)
     else
-      nil -> assign(conn, :current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(nil))
+      nil -> assign(conn, :<%= scope_config.scope.assign_key %>, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(nil))
     end
   end
 
@@ -120,7 +120,7 @@ defmodule <%= inspect auth_module %> do
 
   # Do not renew session if the <%= schema.singular %> is already logged in
   # to prevent CSRF errors or data being last in tabs that are still open
-  defp renew_session(conn, <%= schema.singular %>) when conn.assigns.current_scope.<%= schema.singular %>.id == <%= schema.singular %>.id do
+  defp renew_session(conn, <%= schema.singular %>) when conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>.id == <%= schema.singular %>.id do
     conn
   end
 
@@ -180,28 +180,28 @@ defmodule <%= inspect auth_module %> do
   defp <%= schema.singular %>_session_topic(token), do: "<%= schema.plural %>_sessions:#{Base.url_encode64(token)}"
 
   @doc """
-  Handles mounting and authenticating the current_scope in LiveViews.
+  Handles mounting and authenticating the <%= scope_config.scope.assign_key %> in LiveViews.
 
   ## `on_mount` arguments
 
-    * `:mount_current_scope` - Assigns current_scope
+    * `:mount_<%= scope_config.scope.assign_key %>` - Assigns <%= scope_config.scope.assign_key %>
       to socket assigns based on <%= schema.singular %>_token, or nil if
       there's no <%= schema.singular %>_token or no matching <%= schema.singular %>.
 
     * `:require_authenticated` - Authenticates the <%= schema.singular %> from the session,
-      and assigns the current_scope to socket assigns based
+      and assigns the <%= scope_config.scope.assign_key %> to socket assigns based
       on <%= schema.singular %>_token.
       Redirects to login page if there's no logged <%= schema.singular %>.
 
   ## Examples
 
   Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
-  the `current_scope`:
+  the `<%= scope_config.scope.assign_key %>`:
 
       defmodule <%= inspect context.web_module %>.PageLive do
         use <%= inspect context.web_module %>, :live_view
 
-        on_mount {<%= inspect auth_module %>, :mount_current_scope}
+        on_mount {<%= inspect auth_module %>, :mount_<%= scope_config.scope.assign_key %>}
         ...
       end
 
@@ -211,14 +211,14 @@ defmodule <%= inspect auth_module %> do
         live "/profile", ProfileLive, :index
       end
   """
-  def on_mount(:mount_current_scope, _params, session, socket) do
-    {:cont, mount_current_scope(socket, session)}
+  def on_mount(:mount_<%= scope_config.scope.assign_key %>, _params, session, socket) do
+    {:cont, mount_<%= scope_config.scope.assign_key %>(socket, session)}
   end
 
   def on_mount(:require_authenticated, _params, session, socket) do
-    socket = mount_current_scope(socket, session)
+    socket = mount_<%= scope_config.scope.assign_key %>(socket, session)
 
-    if socket.assigns.current_scope && socket.assigns.current_scope.<%= schema.singular %> do
+    if socket.assigns.<%= scope_config.scope.assign_key %> && socket.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %> do
       {:cont, socket}
     else
       socket =
@@ -231,9 +231,9 @@ defmodule <%= inspect auth_module %> do
   end
 
   def on_mount(:require_sudo_mode, _params, session, socket) do
-    socket = mount_current_scope(socket, session)
+    socket = mount_<%= scope_config.scope.assign_key %>(socket, session)
 
-    if <%= inspect context.alias %>.sudo_mode?(socket.assigns.current_scope.<%= schema.singular %>, -10) do
+    if <%= inspect context.alias %>.sudo_mode?(socket.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>, -10) do
       {:cont, socket}
     else
       socket =
@@ -245,8 +245,8 @@ defmodule <%= inspect auth_module %> do
     end
   end
 
-  defp mount_current_scope(socket, session) do
-    Phoenix.Component.assign_new(socket, :current_scope, fn ->
+  defp mount_<%= scope_config.scope.assign_key %>(socket, session) do
+    Phoenix.Component.assign_new(socket, :<%= scope_config.scope.assign_key %>, fn ->
       {<%= schema.singular %>, _} =
         if <%= schema.singular %>_token = session["<%= schema.singular %>_token"] do
           <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
@@ -258,7 +258,7 @@ defmodule <%= inspect auth_module %> do
 
   @doc "Returns the path to redirect to after log in."
   # the <%= schema.singular %> was already logged in, redirect to settings
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %<%= inspect scope_config.scope.alias %>{<%= schema.singular %>: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}}) do
+  def signed_in_path(%Plug.Conn{assigns: %{<%= scope_config.scope.assign_key %>: %<%= inspect scope_config.scope.alias %>{<%= schema.singular %>: %<%= inspect context.alias %>.<%= inspect schema.alias %>{}}}}) do
     ~p"<%= schema.route_prefix %>/settings"
   end
 
@@ -272,7 +272,7 @@ defmodule <%= inspect auth_module %> do
   Plug for routes that require sudo mode.
   """
   def require_sudo_mode(conn, _opts) do
-    if <%= inspect context.alias %>.sudo_mode?(conn.assigns.current_scope.<%= schema.singular %>, -10) do
+    if <%= inspect context.alias %>.sudo_mode?(conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>, -10) do
       conn
     else
       conn
@@ -287,7 +287,7 @@ defmodule <%= inspect auth_module %> do
   Plug for routes that require the <%= schema.singular %> to not be authenticated.
   """
   def redirect_if_<%= schema.singular %>_is_authenticated(conn, _opts) do
-    if conn.assigns.current_scope do
+    if conn.assigns.<%= scope_config.scope.assign_key %> do
       conn
       |> redirect(to: signed_in_path(conn))
       |> halt()
@@ -302,7 +302,7 @@ defmodule <%= inspect auth_module %> do
   Plug for routes that require the <%= schema.singular %> to be authenticated.
   """
   def require_authenticated_<%= schema.singular %>(conn, _opts) do
-    if conn.assigns.current_scope && conn.assigns.current_scope.<%= schema.singular %> do
+    if conn.assigns.<%= scope_config.scope.assign_key %> && conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %> do
       conn
     else
       conn

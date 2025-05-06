@@ -3,7 +3,7 @@
     <.header class="text-center">
       <p>Log in</p>
       <:subtitle>
-        <%%= if @current_scope do %>
+        <%%= if @<%= scope_config.scope.assign_key %> do %>
           You need to reauthenticate to perform sensitive actions on your account.
         <%% else %>
           Don't have an account? <.link
@@ -27,7 +27,7 @@
 
     <.form :let={f} for={@form} as={:<%= schema.singular %>} id="login_form_magic" action={~p"<%= schema.route_prefix %>/log-in"}>
       <.input
-        readonly={!!@current_scope}
+        readonly={!!@<%= scope_config.scope.assign_key %>}
         field={f[:email]}
         type="email"
         label="Email"
@@ -44,7 +44,7 @@
 
     <.form :let={f} for={@form} as={:<%= schema.singular %>} id="login_form_password" action={~p"<%= schema.route_prefix %>/log-in"}>
       <.input
-        readonly={!!@current_scope}
+        readonly={!!@<%= scope_config.scope.assign_key %>}
         field={f[:email]}
         type="email"
         label="Email"
@@ -58,7 +58,7 @@
         autocomplete="current-password"
       />
       <.input
-        :if={!@current_scope}
+        :if={!@<%= scope_config.scope.assign_key %>}
         field={f[:remember_me]}
         type="checkbox"
         label="Keep me logged in"

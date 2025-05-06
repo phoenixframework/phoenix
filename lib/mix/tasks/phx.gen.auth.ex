@@ -103,6 +103,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       $ mix phx.gen.auth Store User users
       $ mix phx.gen.auth Backoffice Admin admins
 
+  Note that when invoking `phx.gen.auth` multiple times, it will also generate
+  multiple [scopes](guides/authn_authz/scopes.md). Typically, only one scope is needed,
+  thus you will probably want to customize the generated code afterwards. Also, it
+  is expected that the generated code is not fully free of conflicts. One example is the
+  browser pipeline, which will try to assign both scopes as `:current_scope` by default.
+  You can customize the generated assign key with the `--assign-key` option.
+
   ## Binary ids
 
   The `--binary-id` option causes the generated migration to use
@@ -140,6 +147,15 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   ```
 
   This will generate a scope named `app_user` instead of `user`. You can read more about scopes in the [Scopes guide](scopes.html).
+
+  Additionally, the scope's assign key can be customized by passing the `--assign-key` option. For example:
+
+  ```console
+  $ mix phx.gen.auth Accounts User users --assign-key current_user_scope
+  ```
+
+  This is useful when you want to run `mix phx.gen.auth` multiple times in the same project, but note that
+  often it might make more sense to reuse the same scope with additional fields instead of separate scopes.
   """
 
   use Mix.Task
@@ -157,7 +173,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     prefix: :string,
     live: :boolean,
     compile: :boolean,
-    scope: :string
+    scope: :string,
+    assign_key: :string
   ]
 
   @doc false
@@ -173,7 +190,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     hashing_library = build_hashing_library!(opts)
 
     context_args =
-      OptionParser.to_argv(Keyword.drop(opts, [:scope]), switches: @switches) ++ parsed
+      OptionParser.to_argv(Keyword.drop(opts, [:scope, :assign_key]), switches: @switches) ++
+        parsed
 
     {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], __MODULE__)
 
@@ -212,7 +230,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       live?: Keyword.fetch!(context.opts, :live),
       datetime_module: datetime_module(schema),
       datetime_now: datetime_now(schema),
-      scope_config: scope_config(context, opts[:scope])
+      scope_config:
+        scope_config(context, opts[:scope], Keyword.get(opts, :assign_key, "current_scope"))
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -227,8 +246,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> maybe_inject_mix_dependency(hashing_library)
     |> inject_routes(paths, binding)
     |> maybe_inject_router_import(binding)
-    |> maybe_inject_router_plug()
-    |> maybe_inject_app_layout_menu()
+    |> maybe_inject_router_plug(binding)
+    |> maybe_inject_app_layout_menu(binding)
     |> Gen.Notifier.maybe_print_mailer_installation_instructions()
     |> print_shell_instructions()
   end
@@ -289,7 +308,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     end
   end
 
-  defp scope_config(context, requested_scope) do
+  defp scope_config(context, requested_scope, assign_key) do
     existing_scopes = Mix.Phoenix.Scope.scopes_from_config(context.context_app)
 
     {_, default_scope} =
@@ -301,8 +320,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       if Map.has_key?(existing_scopes, key) do
         {false, existing_scopes[key], nil}
       else
-        {true, new_scope(context, key, default_scope),
-         scope_config_string(context, key, default_scope)}
+        {true, new_scope(context, key, default_scope, assign_key),
+         scope_config_string(context, key, default_scope, assign_key)}
       end
 
     %{
@@ -325,17 +344,20 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         "#{context.basename}_#{context.schema.singular}"
 
       # my_app_accounts_user
-      is_new_scope?(existing_scopes, "#{context.context_app}_#{context.basename}_#{context.schema.singular}") ->
+      is_new_scope?(
+        existing_scopes,
+        "#{context.context_app}_#{context.basename}_#{context.schema.singular}"
+      ) ->
         "#{context.context_app}_#{context.basename}_#{context.schema.singular}"
 
       true ->
-        Mix.raise """
+        Mix.raise("""
         Could not generate a scope name for #{context.schema.singular}! These scopes already exist:
 
             * #{Enum.map(existing_scopes, fn {name, _scope} -> name end) |> Enum.join("\n    * ")}
 
         You can customize the scope name by passing the --scope option.
-        """
+        """)
     end
   end
 
@@ -344,11 +366,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     not Map.has_key?(existing_scopes, key)
   end
 
-  defp new_scope(context, key, default_scope) do
+  defp new_scope(context, key, default_scope, assign_key) do
     Mix.Phoenix.Scope.new!(key, %{
       default: !default_scope,
       module: Module.concat([context.module, "Scope"]),
-      assign_key: :current_scope,
+      assign_key: String.to_atom(assign_key),
       access_path: [
         String.to_atom(context.schema.singular),
         context.schema.opts[:primary_key] || :id
@@ -362,13 +384,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     })
   end
 
-  defp scope_config_string(context, key, default_scope) do
+  defp scope_config_string(context, key, default_scope, assign_key) do
     """
     config :#{context.context_app}, :scopes,
       #{key}: [
         default: #{if default_scope, do: false, else: true},
         module: #{inspect(context.module)}.Scope,
-        assign_key: :current_scope,
+        assign_key: :#{assign_key},
         access_path: [:#{context.schema.singular}, :#{context.schema.opts[:primary_key] || :id}],
         schema_key: :#{context.schema.singular}_#{context.schema.opts[:primary_key] || :id},
         schema_type: :#{if(context.schema.binary_id, do: :binary_id, else: :id)},
@@ -416,6 +438,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         Your application configuration already contains a default scope: #{inspect(default_scope.name)}.
 
         phx.gen.auth will create a new #{scope.name} scope.
+
+        Note that if you run `phx.gen.live` multiple times, the generated assign key for
+        the generated scopes can conflict with each other. You can pass `--assign-key` to customize
+        the assign key for the generated scope.
 
         Do you want to proceed with the generation?\
         """) || System.halt()
@@ -697,13 +723,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     context
   end
 
-  defp maybe_inject_router_plug(%Context{context_app: ctx_app} = context) do
+  defp maybe_inject_router_plug(%Context{context_app: ctx_app} = context, binding) do
     web_prefix = Mix.Phoenix.web_path(ctx_app)
     file_path = Path.join(web_prefix, "router.ex")
-    help_text = Injector.router_plug_help_text(file_path, context)
+    help_text = Injector.router_plug_help_text(file_path, binding)
 
     with {:ok, file} <- read_file(file_path),
-         {:ok, new_file} <- Injector.router_plug_inject(file, context) do
+         {:ok, new_file} <- Injector.router_plug_inject(file, binding) do
       print_injecting(file_path, " - plug")
       File.write!(file_path, new_file)
     else
@@ -724,11 +750,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     context
   end
 
-  defp maybe_inject_app_layout_menu(%Context{} = context) do
-    schema = context.schema
-
+  defp maybe_inject_app_layout_menu(%Context{} = context, binding) do
     if file_path = get_layout_html_path(context) do
-      case Injector.app_layout_menu_inject(schema, File.read!(file_path)) do
+      case Injector.app_layout_menu_inject(binding, File.read!(file_path)) do
         {:ok, new_content} ->
           print_injecting(file_path)
           File.write!(file_path, new_content)
@@ -739,11 +763,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         {:error, :unable_to_inject} ->
           Mix.shell().info("""
 
-          #{Injector.app_layout_menu_help_text(file_path, schema)}
+          #{Injector.app_layout_menu_help_text(file_path, binding)}
           """)
       end
     else
-      {_dup, inject} = Injector.app_layout_menu_code_to_inject(schema)
+      {_dup, inject} = Injector.app_layout_menu_code_to_inject(binding)
 
       missing =
         context
@@ -761,7 +785,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       Please ensure this phoenix app was not generated with
       --no-html. If you have changed the name of your root
       layout file, please add the following code to it where you'd
-      like the #{schema.singular} menu items to be rendered.
+      like the #{binding[:schema].singular} menu items to be rendered.
 
       #{inject}
       """)

@@ -98,10 +98,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   """
   @spec router_plug_inject(String.t(), context) ::
           {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
-  def router_plug_inject(file, %Context{schema: schema}) when is_binary(file) do
+  def router_plug_inject(file, binding) when is_binary(file) do
     inject_unless_contains(
       file,
-      router_plug_code(schema),
+      router_plug_code(binding),
       # Matches the entire line containing `anchor_line` and captures
       # the whitespace before the anchor. In the replace string
       #
@@ -119,34 +119,34 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   Instructions to provide the user when `inject_router_plug/2` fails.
   """
   @spec router_plug_help_text(String.t(), context) :: String.t()
-  def router_plug_help_text(file_path, %Context{schema: schema}) do
+  def router_plug_help_text(file_path, binding) do
     """
-    Add the #{router_plug_name(schema)} plug to the :browser pipeline in #{Path.relative_to_cwd(file_path)}:
+    Add the #{router_plug_name(binding)} plug to the :browser pipeline in #{Path.relative_to_cwd(file_path)}:
 
         pipeline :browser do
           ...
           #{@router_plug_anchor_line}
-          #{router_plug_code(schema)}
+          #{router_plug_code(binding)}
         end
     """
   end
 
-  defp router_plug_code(%Schema{} = schema) do
-    "plug " <> router_plug_name(schema)
+  defp router_plug_code(binding) do
+    "plug " <> router_plug_name(binding)
   end
 
-  defp router_plug_name(schema) do
-    ":fetch_current_scope_for_#{schema.singular}"
+  defp router_plug_name(binding) do
+    ":fetch_#{binding[:scope_config].scope.assign_key}_for_#{binding[:schema].singular}"
   end
 
   @doc """
   Injects a menu in the application layout
   """
-  def app_layout_menu_inject(%Schema{} = schema, template_str) do
+  def app_layout_menu_inject(binding, template_str) do
     with {:error, :unable_to_inject} <-
-           app_layout_menu_inject_at_end_of_nav_tag(template_str, schema),
+           app_layout_menu_inject_at_end_of_nav_tag(binding, template_str),
          {:error, :unable_to_inject} <-
-           app_layout_menu_inject_after_opening_body_tag(template_str, schema) do
+           app_layout_menu_inject_after_opening_body_tag(binding, template_str) do
       {:error, :unable_to_inject}
     end
   end
@@ -154,11 +154,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Instructions to provide the user when `app_layout_menu_inject/2` fails.
   """
-  def app_layout_menu_help_text(file_path, %Schema{} = schema) do
-    {_dup_check, code} = app_layout_menu_code_to_inject(schema)
+  def app_layout_menu_help_text(file_path, binding) do
+    {_dup_check, code} = app_layout_menu_code_to_inject(binding)
 
     """
-    Add the following #{schema.singular} menu items to your #{Path.relative_to_cwd(file_path)} layout file:
+    Add the following #{binding[:schema].singular} menu items to your #{Path.relative_to_cwd(file_path)} layout file:
 
     #{code}
     """
@@ -167,14 +167,16 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Menu code to inject into the application layout template.
   """
-  def app_layout_menu_code_to_inject(%Schema{} = schema, padding \\ 4, newline \\ "\n") do
+  def app_layout_menu_code_to_inject(binding, padding \\ 4, newline \\ "\n") do
+    schema = binding[:schema]
+    scope_config = binding[:scope_config]
     already_injected_str = "#{schema.route_prefix}/log-in"
 
     template = """
     <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_scope do %>
+      <%= if @#{scope_config.scope.assign_key} do %>
         <li>
-          {@current_scope.#{schema.singular}.email}
+          {@#{scope_config.scope.assign_key}.#{schema.singular}.email}
         </li>
         <li>
           <.link href={~p"#{schema.route_prefix}/settings"}>Settings</.link>
@@ -207,9 +209,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     {String.length(padding), newline}
   end
 
-  defp app_layout_menu_inject_at_end_of_nav_tag(file, schema) do
+  defp app_layout_menu_inject_at_end_of_nav_tag(binding, file) do
     {padding, newline} = formatting_info(file, "<\/nav>")
-    {dup_check, code} = app_layout_menu_code_to_inject(schema, padding, newline)
+    {dup_check, code} = app_layout_menu_code_to_inject(binding, padding, newline)
 
     inject_unless_contains(
       file,
@@ -219,10 +221,10 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     )
   end
 
-  defp app_layout_menu_inject_after_opening_body_tag(file, schema) do
+  defp app_layout_menu_inject_after_opening_body_tag(binding, file) do
     anchor_line = "<body"
     {padding, newline} = formatting_info(file, anchor_line)
-    {dup_check, code} = app_layout_menu_code_to_inject(schema, padding, newline)
+    {dup_check, code} = app_layout_menu_code_to_inject(binding, padding, newline)
 
     inject_unless_contains(
       file,
