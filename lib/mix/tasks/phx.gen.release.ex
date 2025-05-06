@@ -29,6 +29,13 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     * `.dockerignore` - A docker ignore file with standard elixir defaults
 
+  By default, the build uses whatever base image matches your development system’s
+  active versions at generation time. To override those defaults, specify:
+
+  * `otp` — the OTP version to use
+
+  * `elixir` — the Elixir version to use
+
   For extended release configuration, the `mix release.init` task can be used
   in addition to this task. See the `Mix.Release` docs for more details.
 
@@ -105,7 +112,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     end
 
     if opts.docker do
-      gen_docker(binding)
+      gen_docker(binding, opts)
     end
 
     File.chmod!("rel/overlays/bin/server", 0o755)
@@ -178,11 +185,13 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
   defp parse_args(args) do
     args
-    |> OptionParser.parse!(strict: [ecto: :boolean, docker: :boolean])
+    |> OptionParser.parse(strict: [ecto: :boolean, docker: :boolean, elixir: :string, otp: :string])
     |> elem(0)
     |> Keyword.put_new_lazy(:ecto, &ecto_sql_installed?/0)
     |> Keyword.put_new_lazy(:socket_db_adaptor_installed, &socket_db_adaptor_installed?/0)
     |> Keyword.put_new(:docker, false)
+    |> Keyword.put_new(:elixir, false)
+    |> Keyword.put_new(:otp, false)
     |> Map.new()
   end
 
@@ -244,14 +253,14 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     end)
   end
 
-  defp gen_docker(binding) do
-    wanted_elixir_vsn =
+  defp gen_docker(binding, opts) do
+    wanted_elixir_vsn = opts[:elixir] ||
       case Version.parse!(System.version()) do
         %{major: major, minor: minor, pre: ["dev"]} -> "#{major}.#{minor - 1}.0"
         _ -> System.version()
       end
 
-    otp_vsn = otp_vsn()
+    otp_vsn =  opts[:otp] || otp_vsn()
 
     vsns =
       case elixir_and_debian_vsn(wanted_elixir_vsn, otp_vsn) do
@@ -290,7 +299,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       :error ->
         raise """
         unable to fetch supported Docker image for Elixir #{wanted_elixir_vsn} and Erlang #{otp_vsn}.
-        Please check https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=#{otp_vsn}\
+        Please check https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=#{otp_vsn} \
         for a suitable Elixir version
         """
     end
