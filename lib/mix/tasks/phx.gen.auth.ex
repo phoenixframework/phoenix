@@ -103,6 +103,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       $ mix phx.gen.auth Store User users
       $ mix phx.gen.auth Backoffice Admin admins
 
+  Note that when invoking `phx.gen.auth` multiple times, it will also generate
+  multiple [scopes](guides/authn_authz/scopes.md). Typically, only one scope is needed,
+  thus you will probably want to customize the generated code afterwards. Also, it
+  is expected that the generated code is not fully free of conflicts. One example is the
+  browser pipeline, which will try to assign both scopes as `:current_scope` by default.
+  You can customize the generated assign key with the `--assign-key` option.
+
   ## Binary ids
 
   The `--binary-id` option causes the generated migration to use
