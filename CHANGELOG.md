@@ -25,6 +25,12 @@ This release introduces deprecation warnings for several features that have been
   * Specifying layouts without modules, such as `put_layout(conn, :print)` or `put_layout(conn, html: :print)` is deprecated
   * The `:trailing_slash` option in `Phoenix.Router` has been deprecated in favor of using `Phoenix.VerifiedRoutes`. The overall usage of helpers will be deprecated in the future
 
+## 1.8.0-rc.3 (2025-05-07)
+  - [phx.gen.auth] allow configuring the scope's assign key in phx.gen.auth
+  - [phx.new] Do not override theme in root layout if explicitly set
+
+## Enhancements
+
 ## 1.8.0-rc.2 (2025-04-29)
 
 ## Big Fixes
