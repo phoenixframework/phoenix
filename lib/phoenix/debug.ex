@@ -44,11 +44,7 @@ defmodule Phoenix.Debug do
     with info when is_list(info) <- Process.info(pid, [:dictionary]),
          {:dictionary, dictionary} <- List.keyfind(info, :dictionary, 0),
          {:"$process_label", label} <- List.keyfind(dictionary, :"$process_label", 0),
-         true <-
-           match?(
-             {Phoenix.Socket, mod, id} when is_atom(mod) and (is_binary(id) or is_nil(id)),
-             label
-           ) do
+         {Phoenix.Socket, mod, id} when is_atom(mod) and (is_binary(id) or is_nil(id)) <- label do
       true
     else
       _ -> false
