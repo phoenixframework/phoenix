@@ -520,7 +520,13 @@ defmodule Phoenix.Socket do
   defp result(:error), do: :error
   defp result({:error, _}), do: :error
 
+  defp set_label(socket) do
+    # TODO: replace with Process.put_label/2 when we require Elixir 1.17
+    Process.put(:"$process_label", {Phoenix.Socket, socket.handler, socket.id})
+  end
+
   def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
+    set_label(socket)
     _ = id && endpoint.subscribe(id)
     {:ok, {state, %{socket | transport_pid: self()}}}
   end
@@ -561,6 +567,16 @@ defmodule Phoenix.Socket do
   def __info__(:garbage_collect, state) do
     :erlang.garbage_collect(self())
     {:ok, state}
+  end
+
+  def __info__({:debug_channels, ref, reply_to}, {state, socket}) do
+    channels =
+      Enum.map(state.channels, fn {topic, {pid, _monitor_ref, status}} ->
+        %{topic: topic, pid: pid, status: status}
+      end)
+
+    send(reply_to, {:debug_channels, ref, channels})
+    {:ok, {state, socket}}
   end
 
   def __info__(_, state) do
@@ -625,6 +641,8 @@ defmodule Phoenix.Socket do
             {:ok, {state, socket}}
 
           id when is_binary(id) ->
+            # update the process label
+            set_label(socket)
             {:ok, {state, %{socket | id: id}}}
 
           invalid ->
