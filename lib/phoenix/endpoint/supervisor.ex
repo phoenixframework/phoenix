@@ -102,9 +102,9 @@ defmodule Phoenix.Endpoint.Supervisor do
       config_children(mod, secret_conf, default_conf) ++
         warmup_children(mod) ++
         pubsub_children(mod, conf) ++
-        socket_children(mod, conf, :child_spec) ++
+        socket_children(mod, :child_spec) ++
         server_children(mod, conf, server?) ++
-        socket_children(mod, conf, :drainer_spec) ++
+        socket_children(mod, :drainer_spec) ++
         watcher_children(mod, conf, server?)
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -136,14 +136,26 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(endpoint, conf, fun) do
-    for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__(), &elem(&1, 1)),
-        _ = check_origin_or_csrf_checked!(conf, opts),
+  defp socket_children(endpoint, fun) do
+    sockets =
+      if function_exported?(endpoint, :sockets, 0) do
+        endpoint.sockets()
+      else
+        []
+      end
+
+    for {socket, opts} <- Enum.map(sockets, &normalize_module_spec/1),
+        # TODO is this the correct place for this?
+        # Needs to know transport specific config
+        # _ = check_origin_or_csrf_checked!(conf, opts),
         spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
         spec != :ignore do
       spec
     end
   end
+
+  defp normalize_module_spec(module) when is_atom(module), do: {module, []}
+  defp normalize_module_spec({module, kw}) when is_atom(module) and is_list(kw), do: {module, kw}
 
   defp apply_or_ignore(socket, fun, args) do
     # If the module is not loaded, we want to invoke and crash
