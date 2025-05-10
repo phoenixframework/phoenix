@@ -709,7 +709,8 @@ defmodule Phoenix.Endpoint do
       :check_csrf,
       :code_reloader,
       :connect_info,
-      :auth_token
+      :auth_token,
+      :log
     ]
 
     websocket =
