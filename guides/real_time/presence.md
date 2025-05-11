@@ -93,7 +93,7 @@ We can see presence working by adding the following to `assets/js/app.js`:
 ```javascript
 import {Socket, Presence} from "phoenix"
 
-let socket = new Socket("/socket", {params: {token: window.userToken}})
+let socket = new Socket("/socket", {authToken: window.userToken})
 let channel = socket.channel("room:lobby", {name: window.location.search.split("=")[1]})
 let presence = new Presence(channel)
 
