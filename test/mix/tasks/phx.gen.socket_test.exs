@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
         assert file =~ ~S|// you uncomment its entry in "assets/js/app.js".|
 
         assert file =~ ~S|// And connect to the path in "lib/phoenix_web/endpoint.ex".|
-        assert file =~ ~S|let socket = new Socket("/socket", {params: {token: window.userToken}})|
+        assert file =~ ~S|let socket = new Socket("/socket", {authToken: window.userToken})|
 
         assert file =~ ~S|let channel = socket.channel("room:42", {})|
         assert file =~ ~S|channel.join()|
@@ -74,7 +74,9 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
         assert file =~ ~S|import {Socket} from "phoenix"|
 
         assert file =~ ~S|// And connect to the path in "lib/phoenix/endpoint.ex".|
-        assert file =~ ~S|In your "lib/phoenix/router.ex":|
+
+        assert file =~
+                 ~S|Read the [`Using Token Authentication`](https://hexdocs.pm/phoenix/channels.html#using-token-authentication)|
 
         assert file =~ ~S|let channel = socket.channel("room:42", {})|
         assert file =~ ~S|channel.join()|
@@ -101,9 +103,10 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
         assert file =~ ~S|import {Socket} from "phoenix"|
 
         assert file =~ ~S|// And connect to the path in "lib/phoenix_web/endpoint.ex".|
-        assert file =~ ~S|let socket = new Socket("/socket", {params: {token: window.userToken}})|
+        assert file =~ ~S|let socket = new Socket("/socket", {authToken: window.userToken})|
 
-        assert file =~ ~S|In your "lib/phoenix_web/router.ex":|
+        assert file =~
+                 ~S|Read the [`Using Token Authentication`](https://hexdocs.pm/phoenix/channels.html#using-token-authentication)|
 
         assert file =~ ~S|let channel = socket.channel("room:42", {})|
         assert file =~ ~S|channel.join()|
