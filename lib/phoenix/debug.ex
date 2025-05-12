@@ -60,19 +60,17 @@ defmodule Phoenix.Debug do
     end
   end
 
-  @doc """
-  Returns true if the given pid is a `Phoenix.Socket` transport process.
-
-  ## Examples
-
-      iex> Phoenix.Debug.list_channel_sockets() |> Enum.at(0) |> Map.fetch!(:pid) |> channel_socket?()
-      true
-
-      iex> channel_socket?(pid(0,456,0))
-      false
-
-  """
-  def channel_socket?(pid) do
+  # Returns true if the given pid is a `Phoenix.Socket` transport process.
+  #
+  # ## Examples
+  #
+  #     iex> Phoenix.Debug.list_channel_sockets() |> Enum.at(0) |> Map.fetch!(:pid) |> channel_socket?()
+  #     true
+  #
+  #     iex> channel_socket?(pid(0,456,0))
+  #     false
+  #
+  defp channel_socket?(pid) do
     not is_nil(socket_process_dict(pid))
   end
 
