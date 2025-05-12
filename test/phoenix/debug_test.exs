@@ -44,24 +44,34 @@ defmodule Phoenix.DebugTest do
     %{socket_pid: socket_pid, channel_pid: channel_pid}
   end
 
-  describe "list_channel_sockets/0" do
+  describe "list_sockets/0" do
     test "returns a list of all currently connected channel socket processes", %{
       socket_pid: socket_pid
     } do
-      sockets = Debug.list_channel_sockets()
+      sockets = Debug.list_sockets()
       assert is_list(sockets)
       assert Enum.any?(sockets, fn s -> s.pid == socket_pid end)
       assert Enum.find(sockets, fn s -> s.module == __MODULE__.FakeSocket end)
     end
   end
 
-  describe "channel?/1" do
+  describe "socket_process?/1" do
+    test "returns true if the given pid is a channel socket process", %{socket_pid: socket_pid} do
+      assert Debug.socket_process?(socket_pid)
+    end
+
+    test "returns false for a non-socket process" do
+      refute Debug.socket_process?(self())
+    end
+  end
+
+  describe "channel_process?/1" do
     test "returns true if the given pid is a channel process", %{channel_pid: channel_pid} do
-      assert Debug.channel?(channel_pid)
+      assert Debug.channel_process?(channel_pid)
     end
 
     test "returns false for a non-channel process" do
-      refute Debug.channel?(self())
+      refute Debug.channel_process?(self())
     end
   end
 

@@ -30,11 +30,11 @@ defmodule Phoenix.Debug do
 
   ## Examples
 
-      iex> Phoenix.Debug.list_channel_sockets()
+      iex> Phoenix.Debug.list_sockets()
       [%{pid: #PID<0.123.0>, module: Phoenix.LiveView.Socket, id: nil}]
 
   """
-  def list_channel_sockets do
+  def list_sockets do
     for pid <- Process.list(), dict = socket_process_dict(pid), not is_nil(dict) do
       {Phoenix.Socket, mod, id} = keyfind(dict, :"$process_label")
       %{pid: pid, module: mod, id: id}
@@ -60,17 +60,21 @@ defmodule Phoenix.Debug do
     end
   end
 
-  # Returns true if the given pid is a `Phoenix.Socket` transport process.
-  #
-  # ## Examples
-  #
-  #     iex> Phoenix.Debug.list_channel_sockets() |> Enum.at(0) |> Map.fetch!(:pid) |> channel_socket?()
-  #     true
-  #
-  #     iex> channel_socket?(pid(0,456,0))
-  #     false
-  #
-  defp channel_socket?(pid) do
+  @doc """
+  Returns true if the given pid is a `Phoenix.Socket` transport process.
+
+  It returns `false` for custom sockets implementing the `Phoenix.Socket.Transport` behaviour.
+
+  ## Examples
+
+      iex> Phoenix.Debug.list_sockets() |> Enum.at(0) |> Map.fetch!(:pid) |> socket_process?()
+      true
+
+      iex> socket_process?(pid(0,456,0))
+      false
+
+  """
+  def socket_process?(pid) do
     not is_nil(socket_process_dict(pid))
   end
 
@@ -79,7 +83,7 @@ defmodule Phoenix.Debug do
 
   Note: this function returns false for [custom channels](https://hexdocs.pm/phoenix/Phoenix.Socket.html#module-custom-channels).
   """
-  def channel?(pid) do
+  def channel_process?(pid) do
     # Phoenix.Channel sets the "$process_label" to {Phoenix.Socket, handler_module, id}
     with info when is_list(info) <- Process.info(pid, [:dictionary]),
          dictionary when not is_nil(dictionary) <- keyfind(info, :dictionary),
@@ -106,7 +110,7 @@ defmodule Phoenix.Debug do
 
   ## Examples
 
-      iex> pid = Phoenix.Debug.list_channel_sockets() |> Enum.at(0) |> Map.fetch!(:pid)
+      iex> pid = Phoenix.Debug.list_sockets() |> Enum.at(0) |> Map.fetch!(:pid)
       iex> Phoenix.Debug.list_channels(pid)
       {:ok,
        [
@@ -121,7 +125,7 @@ defmodule Phoenix.Debug do
   def list_channels(socket_pid) do
     ref = make_ref()
 
-    if Process.alive?(socket_pid) and channel_socket?(socket_pid) do
+    if Process.alive?(socket_pid) and socket_process?(socket_pid) do
       send(socket_pid, {:debug_channels, ref, self()})
 
       receive do
@@ -143,7 +147,7 @@ defmodule Phoenix.Debug do
 
   ## Examples
 
-      iex> pid = Phoenix.Debug.list_channel_sockets() |> Enum.at(0) |> Map.fetch!(:pid)
+      iex> pid = Phoenix.Debug.list_sockets() |> Enum.at(0) |> Map.fetch!(:pid)
       iex> {:ok, channels} = Phoenix.Debug.list_channels(pid)
       iex> channels |> Enum.at(0) |> Map.fetch!(:pid) |> socket()
       {:ok, %Phoenix.Socket{...}}
@@ -153,7 +157,7 @@ defmodule Phoenix.Debug do
 
   """
   def socket(channel_pid) do
-    if channel?(channel_pid) do
+    if channel_process?(channel_pid) do
       {:ok, Phoenix.Channel.Server.socket(channel_pid)}
     else
       {:error, :not_alive_or_not_a_channel}
