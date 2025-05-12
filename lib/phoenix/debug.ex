@@ -6,7 +6,10 @@ defmodule Phoenix.Debug do
   """
 
   @doc """
-  Returns a list of all currently connected socket processes.
+  Returns a list of all currently connected `Phoenix.Socket` transport processes.
+
+  Note that custom sockets implementing the `Phoenix.Socket.Transport` behaviour
+  are not listed.
 
   Each process corresponds to one connection that can have multiple channels.
 
@@ -17,30 +20,30 @@ defmodule Phoenix.Debug do
 
   ## Examples
 
-      iex> Phoenix.Debug.list_sockets()
+      iex> Phoenix.Debug.list_channel_sockets()
       [#PID<0.123.0>]
 
   """
-  def list_sockets do
-    for pid <- Process.list(), socket?(pid) do
+  def list_channel_sockets do
+    for pid <- Process.list(), channel_socket?(pid) do
       pid
     end
   end
 
   @doc """
-  Returns true if the given pid is a LiveView process.
+  Returns true if the given pid is a `Phoenix.Socket` transport process.
 
   ## Examples
 
-      iex> Phoenix.Debug.list_sockets() |> Enum.at(0) |> socket?()
+      iex> Phoenix.Debug.list_channel_sockets() |> Enum.at(0) |> channel_socket?()
       true
 
-      iex> socket?(pid(0,456,0))
+      iex> channel_socket?(pid(0,456,0))
       false
 
   """
-  def socket?(pid) do
-    # Sockets set the "$process_label" to {Phoenix.Socket, handler_module, id}
+  def channel_socket?(pid) do
+    # `Phoenix.Socket`s set the "$process_label" to {Phoenix.Socket, handler_module, id}
     with info when is_list(info) <- Process.info(pid, [:dictionary]),
          {:dictionary, dictionary} <- List.keyfind(info, :dictionary, 0),
          {:"$process_label", label} <- List.keyfind(dictionary, :"$process_label", 0),
@@ -52,11 +55,11 @@ defmodule Phoenix.Debug do
   end
 
   @doc """
-  Returns a list of all currently connected channels for the given socket pid.
+  Returns a list of all currently connected channels for the given `Phoenix.Socket` pid.
 
   ## Examples
 
-      iex> Phoenix.Debug.list_sockets |> Enum.at(0) |> Phoenix.Debug.channels()
+      iex> Phoenix.Debug.list_channel_sockets() |> Enum.at(0) |> Phoenix.Debug.channels()
       {:ok,
        [
          %{pid: #PID<0.1702.0>, status: :joined, topic: "lv:phx-GDp9a9UZPiTxcgnE"},
