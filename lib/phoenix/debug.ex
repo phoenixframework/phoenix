@@ -101,8 +101,10 @@ defmodule Phoenix.Debug do
     - `:pid` - the pid of the channel process
     - `:status` - the status of the channel
     - `:topic` - the topic of the channel
-    - `:type` - the type of the channel.
-      It is `:channel` for channels defined with `use Phoenix.Channel` and `:custom` for custom channels (like LiveViews)
+
+  Note that this list also contains [custom channels](https://hexdocs.pm/phoenix/Phoenix.Socket.html#module-custom-channels)
+  like LiveViews. You can check if a channel is a custom channel by using the `channel?/1`
+  function, which returns `false` for custom channels.
 
   ## Examples
 
@@ -110,8 +112,8 @@ defmodule Phoenix.Debug do
       iex> Phoenix.Debug.list_channels(pid)
       {:ok,
        [
-         %{pid: #PID<0.1702.0>, status: :joined, topic: "lv:phx-GDp9a9UZPiTxcgnE", type: :custom},
-         %{pid: #PID<0.1727.0>, status: :joined, topic: "lv:sidebar", type: :custom}
+         %{pid: #PID<0.1702.0>, status: :joined, topic: "lv:phx-GDp9a9UZPiTxcgnE"},
+         %{pid: #PID<0.1727.0>, status: :joined, topic: "lv:sidebar"}
        ]}
 
       iex> Phoenix.Debug.list_channels(pid(0,456,0))
@@ -126,11 +128,6 @@ defmodule Phoenix.Debug do
 
       receive do
         {:debug_channels, ^ref, channels} ->
-          channels =
-            Enum.map(channels, fn %{pid: pid} = info ->
-              Map.put(info, :type, (channel?(pid) && :channel) || :custom)
-            end)
-
           {:ok, channels}
       after
         5_000 -> {:error, :timeout}
