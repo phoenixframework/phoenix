@@ -232,7 +232,7 @@ Because we used `mix phx.gen.auth`, we already have a real authentication system
 +   if cart = ShoppingCart.get_cart(scope) do
 +     assign(conn, :cart, cart)
 +   else
-+     {:ok, new_cart} = ShoppingCart.create_cart(scope)
++     {:ok, new_cart} = ShoppingCart.create_cart(scope, %{})
 +     assign(conn, :cart, new_cart)
 +   end
 + end
