@@ -347,7 +347,7 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
             |> Repo.insert() do
        broadcast(scope, {:created, cart})
 -      {:ok, cart}
-+      {:ok, get_cart(scope, cart.id)}
++      {:ok, get_cart(scope)}
      end
    end
 +
