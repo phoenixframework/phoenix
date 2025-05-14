@@ -107,7 +107,8 @@ In your Phoenix app's `Endpoint` module, a `socket` declaration specifies which 
 ```elixir
 socket "/socket", HelloWeb.UserSocket,
   websocket: true,
-  longpoll: false
+  longpoll: false,
+  auth_token: true
 ```
 
 Phoenix comes with two default transports: websocket and longpoll. You can configure them directly via the `socket` declaration.
@@ -117,7 +118,7 @@ Phoenix comes with two default transports: websocket and longpoll. You can confi
 On the client side, you will establish a socket connection to the route above:
 
 ```javascript
-let socket = new Socket("/socket", {params: {token: window.userToken}})
+let socket = new Socket("/socket", {authToken: window.userToken})
 ```
 
 On the server, Phoenix will invoke `HelloWeb.UserSocket.connect/2`, passing your parameters and the initial socket state. Within the socket, you can authenticate and identify a socket connection and set default socket assigns. The socket is also where you define your channel routes.
