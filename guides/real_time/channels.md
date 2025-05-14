@@ -107,7 +107,8 @@ In your Phoenix app's `Endpoint` module, a `socket` declaration specifies which 
 ```elixir
 socket "/socket", HelloWeb.UserSocket,
   websocket: true,
-  longpoll: false
+  longpoll: false,
+  auth_token: true
 ```
 
 Phoenix comes with two default transports: websocket and longpoll. You can configure them directly via the `socket` declaration.
