@@ -133,7 +133,7 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We defined a function that receives `assigns` as arguments and uses [the `~H` sigil](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2) to specify the content we want to render. Inside the `~H` sigil, we used a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site Scripting with no extra work on your part.
+We defined a function that receives `assigns` as arguments and used [the `~H` sigil](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2) to specify the content we want to render. Inside the `~H` sigil, we used a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site Scripting with no extra work on your part.
 
 A template file works in the same way. Function components are great for smaller templates and separate files are a good choice when you have a lot of markup or your functions start to feel unmanageable.
 
