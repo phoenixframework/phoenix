@@ -8,7 +8,7 @@ Let's get on with our first new Phoenix page!
 
 ## Adding a new page
 
-When your browser accesses [http://localhost:4000/](http://localhost:4000/), it sends a HTTP request to whatever service is running on that address, in this case our Phoenix application. The HTTP request is made of a verb and a path. For example, the following browser requests translate into:
+When your browser accesses [http://localhost:4000/](http://localhost:4000/), it sends an HTTP request to whatever service is running on that address, in this case our Phoenix application. The HTTP request is made of a verb and a path. For example, the following browser requests translate into:
 
 | Browser address bar                 | Verb | Path          |
 |:------------------------------------|:-----|:--------------|
@@ -26,7 +26,7 @@ The router maps unique HTTP verb/path pairs to controller/action pairs which wil
 
 Phoenix generates a router file for us in new applications at `lib/hello_web/router.ex`. This is where we will be working for this section.
 
-The route for our "Welcome to Phoenix!" page from the previous [Up And Running Guide](up_and_running.html) looks like this.
+The route for our "Welcome to Phoenix!" page from the previous [Up And Running Guide](up_and_running.html) looks like this:
 
 ```elixir
 get "/", PageController, :home
@@ -133,11 +133,11 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We defined a function that receives `assigns` as arguments and used [the `~H` sigil](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2) to specify the content we want to render. Inside the `~H` sigil, we used a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part.
+We defined a function that receives `assigns` as arguments and used [the `~H` sigil](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2) to specify the content we want to render. Inside the `~H` sigil, we used a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site Scripting with no extra work on your part.
 
 A template file works in the same way. Function components are great for smaller templates and separate files are a good choice when you have a lot of markup or your functions start to feel unmanageable.
 
-Let's give it a try by defining a template in its own file. First delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
+Let's give it a try by defining a template in its own file. First, delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
