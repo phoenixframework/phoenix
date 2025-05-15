@@ -26,7 +26,7 @@ The router maps unique HTTP verb/path pairs to controller/action pairs which wil
 
 Phoenix generates a router file for us in new applications at `lib/hello_web/router.ex`. This is where we will be working for this section.
 
-The route for our "Welcome to Phoenix!" page from the previous [Up And Running Guide](up_and_running.html) looks like this.
+The route for our "Welcome to Phoenix!" page from the previous [Up And Running Guide](up_and_running.html) looks like this:
 
 ```elixir
 get "/", PageController, :home
