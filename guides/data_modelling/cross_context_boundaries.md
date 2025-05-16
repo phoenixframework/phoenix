@@ -232,7 +232,7 @@ Because we used `mix phx.gen.auth`, we already have a real authentication system
 +   if cart = ShoppingCart.get_cart(scope) do
 +     assign(conn, :cart, cart)
 +   else
-+     {:ok, new_cart} = ShoppingCart.create_cart(scope)
++     {:ok, new_cart} = ShoppingCart.create_cart(scope, %{})
 +     assign(conn, :cart, new_cart)
 +   end
 + end
@@ -347,7 +347,7 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
             |> Repo.insert() do
        broadcast(scope, {:created, cart})
 -      {:ok, cart}
-+      {:ok, get_cart(scope, cart.id)}
++      {:ok, get_cart(scope)}
      end
    end
 +
@@ -390,8 +390,8 @@ With our new cart functions in place, we can now expose the "Add to cart" button
 
 ```diff
 ...
-     <.button href={~p"/products/#{@product}/edit"}>
-       Edit product
+     <.button variant="primary" navigate={~p"/products/#{@product}/edit?return_to=show"}>
+       <.icon name="hero-pencil-square" /> Edit product
      </.button>
 +    <.button href={~p"/cart_items?product_id=#{@product.id}"} method="post">
 +      Add to cart
