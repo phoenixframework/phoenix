@@ -471,7 +471,7 @@ defmodule MyAppWeb.ConnCase do
 end
 ```
 
-Now that our scope configuration includes the `route_prefix` and `route_access_path`, we can generate resources scoped to the organization, and all paths will be automatically generated with the correct organization slug:
+Now that our scope configuration includes the `route_prefix`, we can generate resources scoped to the organization, and all paths will be automatically generated with the correct organization slug:
 
 ```console
 $ mix phx.gen.live Blog Post posts title:string body:text --scope organization
