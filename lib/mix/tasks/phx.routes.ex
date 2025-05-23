@@ -169,7 +169,7 @@ defmodule Mix.Tasks.Phx.Routes do
   defp get_file_path(module_name) do
     [compile_infos] = Keyword.get_values(module_name.module_info(), :compile)
     [source] = Keyword.get_values(compile_infos, :source)
-    source
+    Path.relative_to_cwd(source)
   end
 
   defp get_line_number(_, nil), do: nil
