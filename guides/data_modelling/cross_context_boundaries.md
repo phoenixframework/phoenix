@@ -46,7 +46,7 @@ see the account confirmation email.
 
 After following the instructions to re-fetch dependencies and migrating the database, we can start the server with `mix phx.server` and re-visit the home page [`http://localhost:4000/`](http://localhost:4000/). There, we should see new registration and login links at the top of the page. On the registration page, create a new user. In development, a confirmation email is sent to the dev mailbox, which is accessible at [`http://localhost:4000/dev/mailbox`](http://localhost:4000/dev/mailbox). After clicking the confirmation link, you should be successfully logged in.
 
-One of the benefits of `mix phx.gen.auth` is that it also generates a scope file at `lib/hello/accounts/scope.ex`. In a nutshell, authentication tells us who a user based on their email address, but it doesn't tell us the resources the user owns or has access to. In order to do so, we need authorization. Scopes help us tie generated resources, such as the Cart we will create, to users. Let's open up the file:
+One of the benefits of `mix phx.gen.auth` is that it also generates a scope file at `lib/hello/accounts/scope.ex`. In a nutshell, authentication tells us who a user is based on their email address, but it doesn't tell us the resources the user owns or has access to. In order to do so, we need authorization. Scopes help us tie generated resources, such as the Cart we will create, to users. Let's open up the file:
 
 ```elixir
 defmodule Hello.Accounts.Scope do
