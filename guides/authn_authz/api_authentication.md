@@ -166,6 +166,6 @@ Now you are ready to receive and validate API requests. Feel free to open up `te
 
 The overall API authentication flow will depend on your application.
 
-If you want to use this token in a JavaScript client, you will need to slightly alter the `UserSessionController` to invoke `Accounts.create_user_api_token/1` and return a JSON response and include the token returned it.
+If you want to use this token in a JavaScript client, you will need to slightly alter the `UserSessionController` to invoke `Accounts.create_user_api_token/1` and return a JSON response including the token.
 
 If you want to provide APIs for 3rd-party users, you will need to allow them to create tokens, and show the result of `Accounts.create_user_api_token/1` to them. They must save these tokens somewhere safe and include them as part of their requests using the "authorization" header.
