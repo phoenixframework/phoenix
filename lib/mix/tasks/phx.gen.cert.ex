@@ -10,9 +10,6 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
   environment, such as running a development server on `localhost`.
   For production, staging, or testing servers on the public internet, obtain a
   proper certificate, for example from [Let's Encrypt](https://letsencrypt.org).
-
-  NOTE: when using Google Chrome, open chrome://flags/#allow-insecure-localhost
-  to enable the use of self-signed certificates on `localhost`.
   """
 
   @moduledoc """
