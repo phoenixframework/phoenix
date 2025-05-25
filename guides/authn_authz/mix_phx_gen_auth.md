@@ -3,7 +3,7 @@
 The `mix phx.gen.auth` command generates a flexible, pre-built authentication system into your Phoenix app. This generator allows you to quickly move past the task of adding authentication to your codebase and stay focused on the real-world problem your application is trying to solve. It supports the following features:
 
 - User registration with account confirmation by email
-- Login with magic links
+- Log in with magic links
 - Opt-in password authentication
 - "Sudo mode", also known as privileged authentication, where the user must confirm their identity before performing sensitive actions
 
