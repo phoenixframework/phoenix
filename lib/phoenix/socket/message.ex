@@ -35,6 +35,29 @@ defmodule Phoenix.Socket.Message do
         raise Phoenix.Socket.InvalidMessageError, "missing key #{inspect(err.key)}"
     end
   end
+
+  defimpl Inspect do
+    def inspect(%Phoenix.Socket.Message{} = msg, opts) do
+      processed_msg = process_message(msg)
+      Inspect.Any.inspect(processed_msg, opts)
+    end
+
+    defp process_message(
+           %{event: "event", payload: %{"event" => "submit", "type" => "form", "value" => value}} =
+             msg
+         )
+         when is_binary(value) do
+      processed_value =
+        value
+        |> Plug.Conn.Query.decode()
+        |> Phoenix.Logger.filter_values()
+        |> Plug.Conn.Query.encode()
+
+      put_in(msg.payload["value"], processed_value)
+    end
+
+    defp process_message(msg), do: msg
+  end
 end
 
 defmodule Phoenix.Socket.Reply do
