@@ -119,7 +119,7 @@ defmodule <%= inspect auth_module %> do
   end
 
   # Do not renew session if the <%= schema.singular %> is already logged in
-  # to prevent CSRF errors or data being last in tabs that are still open
+  # to prevent CSRF errors or data being lost in tabs that are still open
   defp renew_session(conn, <%= schema.singular %>) when conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>.id == <%= schema.singular %>.id do
     conn
   end
