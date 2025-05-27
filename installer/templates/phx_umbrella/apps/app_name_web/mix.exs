@@ -14,6 +14,7 @@ defmodule <%= @web_namespace %>.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      compilers: [:phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader]
     ]
   end
@@ -41,10 +42,10 @@ defmodule <%= @web_namespace %>.MixProject do
       {:phoenix_ecto, "~> 4.5"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 1.0.13"},
+      {:phoenix_live_view, "~> 1.1.0"},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.8.3"},<% end %><%= if @javascript do %>
-      {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
+      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
