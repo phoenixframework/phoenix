@@ -71,9 +71,10 @@ config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime<%= if @html do %>
 
 config :phoenix_live_view,
-  # Include HEEx debug annotations as HTML comments in rendered markup.
+  # Include debug annotations and locations in rendered markup.
   # Changing this configuration will require mix clean and a full recompile.
   debug_heex_annotations: true,
+  debug_tags_location: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true<% end %><%= if @mailer do %>
 
