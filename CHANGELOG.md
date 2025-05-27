@@ -29,23 +29,23 @@ This release introduces deprecation warnings for several features that have been
   - [phx.gen.auth] allow configuring the scope's assign key in phx.gen.auth
   - [phx.new] Do not override theme in root layout if explicitly set
 
-## Enhancements
+### Enhancements
 
 ## 1.8.0-rc.2 (2025-04-29)
 
-## Bug Fixes
+### Bug Fixes
   - [phx.gen.live] only subscribe to pubsub if connected
   - [phx.gen.auth] remove unused current_password field
   - [phx.gen.auth] use context_app for scopes to fix generated scopes in umbrella apps
 
 ## 1.8.0-rc.1 (2025-04-16)
 
-## Enhancements
+### Enhancements
   - [phx.new] Support PORT in dev
   - [phx.gen.auth] - Replace `utc_now/0 + truncate/1` with `utc_now/1`
   - [phx.gen.auth] - Make dev mailbox link more obvious
 
-## Bug Fixes
+### Bug Fixes
   - [phx.new] Fix Tailwind custom variants for loading classes (#6194)
   - [phx.new] Fix heroicons path for umbrella apps
   - Fix crash when an open :show page gets a PubSub broadcast for items (#6197)
