@@ -95,7 +95,7 @@ defmodule Phoenix.MixProject do
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)
-      {:ex_doc, "~> 0.24", only: :docs},
+      {:ex_doc, "~> 0.38", only: :docs},
       {:ecto, "~> 3.0", only: :docs},
       {:ecto_sql, "~> 3.10", only: :docs},
       {:gettext, "~> 0.26", only: :docs},
@@ -190,7 +190,8 @@ defmodule Phoenix.MixProject do
       "guides/howto/using_ssl.md",
       "guides/howto/writing_a_channels_client.md",
       "guides/cheatsheets/router.cheatmd",
-      "CHANGELOG.md"
+      "CHANGELOG.md",
+      "JS Documentation": [url: "/js/"]
     ]
   end
 
