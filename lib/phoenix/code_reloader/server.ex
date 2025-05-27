@@ -333,16 +333,20 @@ defmodule Phoenix.CodeReloader.Server do
     # TODO: The purge option may no longer be required from Elixir v1.18
     args = ["--purge-consolidation-path-if-stale", consolidation_path | compile_args]
 
-    result =
+    {status, diagnostics} =
       with_logger_app(config, fn ->
-        run_compilers(compilers, args, [])
+        run_compilers(compilers, args, :noop, [])
       end)
 
-    cond do
-      result == :error ->
-        exit({:shutdown, 1})
+    Proxy.diagnostics(Process.group_leader(), diagnostics)
 
-      result == :ok && config[:consolidate_protocols] ->
+    cond do
+      status == :error ->
+        if "--return-errors" not in args do
+          exit({:shutdown, 1})
+        end
+
+      status == :ok && config[:consolidate_protocols] ->
         # TODO: Calling compile.protocols is no longer be required from Elixir v1.19
         Mix.Task.reenable("compile.protocols")
         Mix.Task.run("compile.protocols", [])
@@ -386,25 +390,45 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp run_compilers([compiler | compilers], args, acc) do
-    with {status, diagnostics} <- Mix.Task.run("compile.#{compiler}", args) do
-      # Diagnostics are written to stderr and therefore not captured,
-      # so we send them to the group leader here
-      Proxy.diagnostics(Process.group_leader(), diagnostics)
-      {status, diagnostics}
-    end
-    |> case do
-      :error -> :error
-      {:error, _} -> :error
-      result -> run_compilers(compilers, args, [result | acc])
+  ## TODO: Replace this by Mix.Task.Compiler.run/2 on Elixir v1.19+
+
+  defp run_compilers([], _, status, diagnostics) do
+    {status, diagnostics}
+  end
+
+  defp run_compilers([compiler | rest], args, status, diagnostics) do
+    {new_status, new_diagnostics} = run_compiler(compiler, args)
+    diagnostics = diagnostics ++ new_diagnostics
+
+    case new_status do
+      :error -> {:error, diagnostics}
+      :ok -> run_compilers(rest, args, :ok, diagnostics)
+      :noop -> run_compilers(rest, args, status, diagnostics)
     end
   end
 
-  defp run_compilers([], _args, results) do
-    if :proplists.get_value(:ok, results, false) do
-      :ok
-    else
-      :noop
+  defp run_compiler(compiler, args) do
+    result = normalize(Mix.Task.run("compile.#{compiler}", args), compiler)
+    Enum.reduce(Mix.ProjectStack.pop_after_compiler(compiler), result, & &1.(&2))
+  end
+
+  defp normalize(result, name) do
+    case result do
+      {status, diagnostics} when status in [:ok, :noop, :error] and is_list(diagnostics) ->
+        {status, diagnostics}
+
+      # ok/noop can come from tasks that have already run
+      _ when result in [:ok, :noop] ->
+        {result, []}
+
+      _ ->
+        # TODO: Convert this to an error on v2.0
+        Mix.shell().error(
+          "warning: Mix compiler #{inspect(name)} was supposed to return " <>
+            "{:ok | :noop | :error, [diagnostic]} but it returned #{inspect(result)}"
+        )
+
+        {:noop, []}
     end
   end
 
