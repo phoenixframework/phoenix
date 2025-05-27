@@ -14,7 +14,7 @@ defmodule Phoenix.Socket.Message do
   """
 
   @type t :: %Phoenix.Socket.Message{}
-  defstruct topic: nil, event: nil, payload: nil, ref: nil, join_ref: nil
+  defstruct topic: nil, event: nil, payload: nil, ref: nil, join_ref: nil, socket: nil
 
   @doc """
   Converts a map with string keys into a message struct.
@@ -33,6 +33,17 @@ defmodule Phoenix.Socket.Message do
     rescue
       err in [KeyError] ->
         raise Phoenix.Socket.InvalidMessageError, "missing key #{inspect(err.key)}"
+    end
+  end
+
+  defimpl Inspect do
+    def inspect(%Phoenix.Socket.Message{socket: socket} = msg, opts) do
+      if is_atom(socket) and Code.ensure_loaded?(socket) and
+           function_exported?(socket, :message_inspect, 2) do
+        socket.message_inspect(msg, opts)
+      else
+        Inspect.Any.inspect(msg, opts)
+      end
     end
   end
 end

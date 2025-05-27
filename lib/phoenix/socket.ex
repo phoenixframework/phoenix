@@ -246,7 +246,15 @@ defmodule Phoenix.Socket do
   """
   @callback id(Socket.t()) :: String.t() | nil
 
-  @optional_callbacks connect: 2, connect: 3
+  @doc """
+  Allows to customize the inspect protocol for `Phoenix.Socket.Message` structs
+  received by the socket.
+
+  This can be useful to redact sensitive information from message payloads.
+  """
+  @callback message_inspect(Phoenix.Socket.Message.t(), Inspect.Opts.t()) :: Inspect.Algebra.t()
+
+  @optional_callbacks connect: 2, connect: 3, message_inspect: 2
 
   defmodule InvalidMessageError do
     @moduledoc """
@@ -533,6 +541,7 @@ defmodule Phoenix.Socket do
 
   def __in__({payload, opts}, {state, socket}) do
     %{topic: topic} = message = socket.serializer.decode!(payload, opts)
+    message = Map.put(message, :socket, socket.handler)
     handle_in(Map.get(state.channels, topic), message, state, socket)
   end
 
