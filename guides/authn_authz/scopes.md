@@ -186,7 +186,7 @@ config :my_app, :scopes,
     schema_type: :id,
     schema_table: :users,
     test_data_fixture: MyApp.AccountsFixtures,
-    test_login_helper: :register_and_log_in_user
+    test_setup_helper: :register_and_log_in_user
   ]
 ```
 
@@ -214,7 +214,7 @@ In this example, the scope is called `user` and it is the `default` scope that i
 
 * `test_data_fixture` - a module that is automatically imported into the context test file. It must have a `NAME_scope_fixture/0` function that returns a unique scope struct for context tests, in this case `user_scope_fixture/0`.
 
-* `test_login_helper` - the name of a function that is registered as [`setup` callback](https://hexdocs.pm/ex_unit/ExUnit.Callbacks.html#setup/1) in LiveView / Controller tests. The function is expected to be imported in the test file. Usually, this is ensured by putting it into the `MyAppWeb.ConnCase` module.
+* `test_setup_helper` - the name of a function that is registered as [`setup` callback](https://hexdocs.pm/ex_unit/ExUnit.Callbacks.html#setup/1) in LiveView / Controller tests. The function is expected to be imported in the test file. Usually, this is ensured by putting it into the `MyAppWeb.ConnCase` module.
 
 While the `mix phx.gen.auth` automatically generates a scope, scopes can also be defined manually. This can be useful, for example, to retrofit an existing application with scopes or to define scopes that are not tied to a user.
 
@@ -304,7 +304,7 @@ config :my_app, :scopes,
     schema_migration_type: :bigint,
     schema_table: nil,
     test_data_fixture: MyApp.ScopeFixtures,
-    test_login_helper: :put_scope_in_session
+    test_setup_helper: :put_scope_in_session
   ]
 ```
 
@@ -443,7 +443,7 @@ config :my_app, :scopes,
     schema_type: :id,
     schema_table: :organizations,
     test_data_fixture: MyApp.AccountsFixtures,
-    test_login_helper: :register_and_log_in_user_with_org
+    test_setup_helper: :register_and_log_in_user_with_org
   ]
 ```
 

@@ -107,7 +107,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    schema_type: :id,
                    schema_table: :users,
                    test_data_fixture: MyApp.AccountsFixtures,
-                   test_login_helper: :register_and_log_in_user
+                   test_setup_helper: :register_and_log_in_user
                  ]
                """
       end)
@@ -249,7 +249,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    schema_type: :id,
                    schema_table: :users,
                    test_data_fixture: MyApp.AccountsFixtures,
-                   test_login_helper: :register_and_log_in_user
+                   test_setup_helper: :register_and_log_in_user
                  ]
                """
       end)

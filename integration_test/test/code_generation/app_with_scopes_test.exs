@@ -329,7 +329,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
                 schema_type: :id,
                 schema_table: :users,
                 test_data_fixture: Scopes.AccountsFixtures,
-                test_login_helper: :register_and_log_in_user
+                test_setup_helper: :register_and_log_in_user
               ]
             """,
             """
@@ -343,7 +343,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
               schema_type: :id,
               schema_table: :users,
               test_data_fixture: Scopes.AccountsFixtures,
-              test_login_helper: :register_and_log_in_user
+              test_setup_helper: :register_and_log_in_user
             ],
             organization: [
               module: Scopes.Accounts.Scope,
@@ -354,7 +354,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
               schema_type: :id,
               schema_table: :organizations,
               test_data_fixture: Scopes.AccountsFixtures,
-              test_login_helper: :register_and_log_in_user_with_org
+              test_setup_helper: :register_and_log_in_user_with_org
             ]
             """
           )
@@ -582,7 +582,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
               schema_migration_type: :bigint,
               schema_table: nil,
               test_data_fixture: Scopes.UserScopeFixtures,
-              test_login_helper: :assign_scope
+              test_setup_helper: :assign_scope
             ]\
           """)
         end)

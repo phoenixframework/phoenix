@@ -380,7 +380,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       schema_type: if(context.schema.binary_id, do: :binary_id, else: :id),
       schema_table: context.schema.table,
       test_data_fixture: Module.concat([context.module, "Fixtures"]),
-      test_login_helper: :"register_and_log_in_#{context.schema.singular}"
+      test_setup_helper: :"register_and_log_in_#{context.schema.singular}"
     })
   end
 
@@ -396,7 +396,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         schema_type: :#{if(context.schema.binary_id, do: :binary_id, else: :id)},
         schema_table: :#{context.schema.table},
         test_data_fixture: #{inspect(context.module)}Fixtures,
-        test_login_helper: :register_and_log_in_#{context.schema.singular}
+        test_setup_helper: :register_and_log_in_#{context.schema.singular}
       ]\
     """
   end
