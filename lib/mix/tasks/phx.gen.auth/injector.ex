@@ -1,11 +1,10 @@
 defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @moduledoc false
 
-  alias Mix.Phoenix.{Context, Schema}
+  alias Mix.Phoenix.Schema
   alias Mix.Tasks.Phx.Gen.Auth.HashingLibrary
 
   @type schema :: %Schema{}
-  @type context :: %Context{schema: schema}
 
   @doc """
   Injects a dependency into the contents of mix.exs
@@ -96,7 +95,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Injects the fetch_current_scope_for_<schema> plug into router's browser pipeline
   """
-  @spec router_plug_inject(String.t(), context) ::
+  @spec router_plug_inject(String.t(), binding :: keyword()) ::
           {:ok, String.t()} | :already_injected | {:error, :unable_to_inject}
   def router_plug_inject(file, binding) when is_binary(file) do
     inject_unless_contains(
@@ -118,7 +117,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
   @doc """
   Instructions to provide the user when `inject_router_plug/2` fails.
   """
-  @spec router_plug_help_text(String.t(), context) :: String.t()
+  @spec router_plug_help_text(String.t(), binding :: keyword()) :: String.t()
   def router_plug_help_text(file_path, binding) do
     """
     Add the #{router_plug_name(binding)} plug to the :browser pipeline in #{Path.relative_to_cwd(file_path)}:

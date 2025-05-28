@@ -94,7 +94,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def button(%{rest: rest} = assigns) do
     variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
-    assigns = assign(assigns, :class, Map.fetch!(variants, assigns[:variant]))
+
+    default_class =
+      Map.get_lazy(assigns.rest, :class, fn ->
+        Map.fetch!(variants, assigns[:variant])
+      end)
+
+    assigns = assign(assigns, :class, default_class)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
@@ -277,15 +283,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
   @doc """
   Renders a header with title.
   """
-  attr :class, :string, default: nil
-
   slot :inner_block, required: true
   slot :subtitle
   slot :actions
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4", @class]}>
+    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
       <div>
         <h1 class="text-lg font-semibold leading-8">
           {render_slot(@inner_block)}

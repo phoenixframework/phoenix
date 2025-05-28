@@ -7,7 +7,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
       <div class="mx-auto max-w-sm">
-        <.header class="text-center">Welcome {@<%= schema.singular %>.email}</.header>
+        <div class="text-center">
+          <.header>Welcome {@<%= schema.singular %>.email}</.header>
+        </div>
 
         <.form
           :if={!@<%= schema.singular %>.confirmed_at}
@@ -20,15 +22,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         >
           <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
           <.button
-            variant="primary"
             name={@form[:remember_me].name}
             value="true"
             phx-disable-with="Confirming..."
-            class="w-full"
+            class="btn btn-primary w-full"
           >
             Confirm and stay logged in
           </.button>
-          <.button phx-disable-with="Confirming..." class="w-full mt-2">
+          <.button phx-disable-with="Confirming..." class="btn btn-primary btn-soft w-full mt-2">
             Confirm and log in only this time
           </.button>
         </.form>
@@ -49,15 +50,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             </.button>
           <%% else %>
             <.button
-              variant="primary"
               name={@form[:remember_me].name}
               value="true"
               phx-disable-with="Logging in..."
-              class="w-full"
+              class="btn btn-primary w-full"
             >
               Keep me logged in on this device
             </.button>
-            <.button phx-disable-with="Logging in..." class="w-full mt-2">
+            <.button phx-disable-with="Logging in..." class="btn btn-primary btn-soft w-full mt-2">
               Log me in only this time
             </.button>
           <%% end %>
