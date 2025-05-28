@@ -77,14 +77,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             label="Password"
             autocomplete="current-password"
           />
-          <.input
-            :if={!@<%= scope_config.scope.assign_key %>}
-            field={f[:remember_me]}
-            type="checkbox"
-            label="Keep me logged in"
-          />
-          <.button class="w-full" variant="primary">
-            Log in <span aria-hidden="true">→</span>
+          <.button class="w-full" variant="primary" name={@form[:remember_me].name} value="true">
+            Log in and stay logged in <span aria-hidden="true">→</span>
+          </.button>
+          <.button class="w-full mt-2">
+            Log in only this time
           </.button>
         </.form>
       </div>

@@ -88,7 +88,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.button phx-click="go" variant="primary">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch method download)
+  attr :rest, :global, include: ~w(href navigate patch method download name value)
   attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
 
@@ -98,13 +98,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
-      <.link class={["btn", @class]} {@rest}>
+      <.link class={["btn", @class, @rest[:class]]} {@rest}>
         {render_slot(@inner_block)}
       </.link>
       """
     else
       ~H"""
-      <button class={["btn", @class]} {@rest}>
+      <button class={["btn", @class, @rest[:class]]} {@rest}>
         {render_slot(@inner_block)}
       </button>
       """

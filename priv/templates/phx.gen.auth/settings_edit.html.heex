@@ -9,7 +9,7 @@
 
     <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
 
-    <.button phx-disable-with="Changing...">Change Email</.button>
+    <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
   </.form>
 
   <div class="divider" />
@@ -31,7 +31,7 @@
       autocomplete="new-password"
       required
     />
-    <.button phx-disable-with="Changing...">
+    <.button variant="primary" phx-disable-with="Changing...">
       Save Password
     </.button>
   </.form>
