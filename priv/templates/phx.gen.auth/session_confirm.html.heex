@@ -7,6 +7,7 @@
       for={@form}
       id="confirmation_form"
       action={~p"<%= schema.route_prefix %>/log-in?_action=confirmed"}
+      phx-mounted={JS.focus_first()}
     >
       <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
       <.button
@@ -23,7 +24,13 @@
       </.button>
     </.form>
 
-    <.form :if={@<%= schema.singular %>.confirmed_at} for={@form} id="login_form" action={~p"<%= schema.route_prefix %>/log-in"}>
+    <.form
+      :if={@<%= schema.singular %>.confirmed_at}
+      for={@form}
+      id="login_form"
+      action={~p"<%= schema.route_prefix %>/log-in"}
+      phx-mounted={JS.focus_first()}
+    >
       <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
       <%%= if @<%= scope_config.scope.assign_key %> do %>
         <.button variant="primary" phx-disable-with="Logging in..." class="w-full">
