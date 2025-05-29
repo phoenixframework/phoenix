@@ -12,7 +12,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   }
   @invalid_attrs <%= Mix.Phoenix.to_text for {key, _} <- schema.params.create, into: %{}, do: {key, nil} %><%= if scope do %>
 
-  setup :<%= scope.test_login_helper %><% end %>
+  setup :<%= scope.test_setup_helper %><% end %>
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}

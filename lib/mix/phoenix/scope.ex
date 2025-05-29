@@ -14,7 +14,7 @@ defmodule Mix.Phoenix.Scope do
             schema_type: nil,
             schema_migration_type: nil,
             test_data_fixture: nil,
-            test_login_helper: nil
+            test_setup_helper: nil
 
   @doc """
   Creates a new scope struct.
