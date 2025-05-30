@@ -384,7 +384,7 @@ That's all there is to our basic chat app. Fire up multiple browser tabs and you
 
 ## Using Token Authentication
 
-When we connect, we'll often need to authenticate the client. Fortunately, this is a 4-step process with [Phoenix.Token](https://hexdocs.pm/phoenix/Phoenix.Token.html).
+When we connect, we'll often need to authenticate the client. Fortunately, this is a 5-step process with [Phoenix.Token](https://hexdocs.pm/phoenix/Phoenix.Token.html).
 
 ### Step 1 - Enable the `auth_token` functionality in the socket
 
