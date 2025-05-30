@@ -43,17 +43,11 @@ defmodule Phoenix.Socket.Message do
     end
 
     defp process_message(
-           %{event: "event", payload: %{"event" => "submit", "type" => "form", "value" => value}} =
+           %{payload: payload} =
              msg
          )
-         when is_binary(value) do
-      processed_value =
-        value
-        |> Plug.Conn.Query.decode()
-        |> Phoenix.Logger.filter_values()
-        |> Plug.Conn.Query.encode()
-
-      put_in(msg.payload["value"], processed_value)
+         when is_map(payload) do
+      %{msg | payload: Phoenix.Logger.filter_values(payload)}
     end
 
     defp process_message(msg), do: msg

@@ -172,10 +172,20 @@ defmodule Phoenix.Logger do
 
   defp discard_values(%{} = map, params) do
     Enum.into(map, %{}, fn {k, v} ->
-      if is_binary(k) and String.contains?(k, params) do
-        {k, "[FILTERED]"}
-      else
-        {k, discard_values(v, params)}
+      cond do
+        is_binary(k) and String.contains?(k, params) ->
+          {k, "[FILTERED]"}
+
+        is_binary(v) and String.contains?(v, params) ->
+          new_value =
+            Enum.reduce(params, v, fn param, v ->
+              String.replace(v, ~r/#{Regex.escape(param)}=([^&]*)&/, "#{param}=[FILTERED]&")
+            end)
+
+          {k, new_value}
+
+        true ->
+          {k, discard_values(v, params)}
       end
     end)
   end
@@ -348,7 +358,12 @@ defmodule Phoenix.Logger do
   @doc false
   def phoenix_socket_drain(_, _, %{log: false}, _), do: :ok
 
-  def phoenix_socket_drain(_, %{count: count, total: total, index: index, rounds: rounds}, %{log: level} = meta, _) do
+  def phoenix_socket_drain(
+        _,
+        %{count: count, total: total, index: index, rounds: rounds},
+        %{log: level} = meta,
+        _
+      ) do
     Logger.log(level, fn ->
       %{socket: socket, interval: interval} = meta
 

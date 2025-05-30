@@ -20,9 +20,9 @@ defmodule Phoenix.Socket.MessageTest do
 
       inspected = inspect(message)
 
-      assert inspected =~ "password=%5BFILTERED%5D"
+      assert inspected =~ "password=[FILTERED]"
       assert inspected =~ "username=john"
-      assert inspected =~ "email=john%40example.com"
+      assert inspected =~ "email=john@example.com"
     end
 
     test "handles malformed query strings gracefully" do
