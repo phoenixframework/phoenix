@@ -198,13 +198,16 @@ Using `~p` for route paths ensures our application paths and URLs stay up to dat
 
 ### More on verified routes
 
-What about paths with query strings? You can either add query string key values directly, or provide a dictionary of key-value pairs, for example:
+What about paths with query strings? You can add query string key values directly, as a keyword list or map of values, for example:
 
 ```elixir
 ~p"/users/17?admin=true&active=false"
 "/users/17?admin=true&active=false"
 
 ~p"/users/17?#{[admin: true]}"
+"/users/17?admin=true"
+
+~p"/users/17?#{%{admin: true}}"
 "/users/17?admin=true"
 ```
 
