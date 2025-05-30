@@ -126,7 +126,7 @@ use Hello.DataCase, async: true
 
 There are some considerations you need to have in mind when running asynchronous tests with the sandbox, so please refer to the [`Ecto.Adapters.SQL.Sandbox`](https://hexdocs.pm/ecto_sql/Ecto.Adapters.SQL.Sandbox.html) for more information.
 
-Finally at the end of the of the `DataCase` module we can find a function named `errors_on` with some examples of how to use it. This function is used for testing any validation we may want to add to our schemas. Let's give it a try by adding our own validations and then testing them.
+Finally, at the end of the `DataCase` module we can find a function named `errors_on` with some examples of how to use it. This function is used for testing any validation we may want to add to our schemas. Let's give it a try by adding our own validations and then testing them.
 
 ## Testing schemas
 

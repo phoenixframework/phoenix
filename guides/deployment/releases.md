@@ -140,7 +140,7 @@ And that's it! If you peek inside the `migrate` script, you'll see it wraps exac
 
 You can use the same approach used for migrations to create any custom command to run in production. The idea is that each command invokes `load_app`, which calls `Application.ensure_loaded/1` to load the current application without starting it.
 
-However, some commands may need to start the whole application. In such cases, `Application.ensure_all_started/1` must be used instead of `Application.load/1`. Keep in mind starting the application will all processes in its supervision tree, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
+However, some commands may need to start the whole application. In such cases, `Application.ensure_all_started/1` must be used instead of `Application.load/1`. Keep in mind starting the application will start all processes in its supervision tree, including the Phoenix endpoint. This can be circumvented by changing your supervision tree to not start certain children under certain conditions. For example, in the release commands file you could do:
 
 ```elixir
 defp start_app do

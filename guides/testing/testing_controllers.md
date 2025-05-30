@@ -105,7 +105,7 @@ end
 
 The first test starts with a `post/2` request. That's because once the form in the `/posts/new` page is submitted, it becomes a POST request to the create action. Because we have supplied valid attributes, the post should have been successfully created and we should have redirected to the show action of the new post. This new page will have an address like `/posts/ID`, where ID is the identifier of the post in the database.
 
-We then use `redirected_params(conn)` to get the ID of the post and then match that we indeed redirected to the show action. Finally, we do request a `get` request to the page we redirected to, allowing us to verify that the post was indeed created.
+We then use `redirected_params(conn)` to get the ID of the post and then match that we indeed redirected to the show action. Finally, we do a `get` request to the page we redirected to, allowing us to verify that the post was indeed created.
 
 For the second test, we simply test the failure scenario. If any invalid attribute is given, it should re-render the "New Post" page.
 
