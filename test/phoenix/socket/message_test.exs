@@ -25,6 +25,25 @@ defmodule Phoenix.Socket.MessageTest do
       assert inspected =~ "email=john@example.com"
     end
 
+    test "filters sensitive values at the end of form submit events" do
+      message = %Message{
+        topic: "lv:1",
+        event: "event",
+        payload: %{
+          "event" => "submit",
+          "type" => "form",
+          "value" => "username=john&password=secret123"
+        },
+        ref: "1",
+        join_ref: "1"
+      }
+
+      inspected = inspect(message)
+
+      assert inspected =~ "username=john"
+      assert inspected =~ "password=[FILTERED]\""
+    end
+
     test "handles malformed query strings gracefully" do
       message = %Message{
         topic: "lv:1",

@@ -179,7 +179,7 @@ defmodule Phoenix.Logger do
         is_binary(v) and String.contains?(v, params) ->
           new_value =
             Enum.reduce(params, v, fn param, v ->
-              String.replace(v, ~r/#{Regex.escape(param)}=([^&]*)&/, "#{param}=[FILTERED]&")
+              Regex.replace(~r/#{Regex.escape(param)}=([^&]*)(&?)/, v, "#{param}=[FILTERED]\\2")
             end)
 
           {k, new_value}
@@ -358,12 +358,7 @@ defmodule Phoenix.Logger do
   @doc false
   def phoenix_socket_drain(_, _, %{log: false}, _), do: :ok
 
-  def phoenix_socket_drain(
-        _,
-        %{count: count, total: total, index: index, rounds: rounds},
-        %{log: level} = meta,
-        _
-      ) do
+  def phoenix_socket_drain(_, %{count: count, total: total, index: index, rounds: rounds}, %{log: level} = meta, _) do
     Logger.log(level, fn ->
       %{socket: socket, interval: interval} = meta
 
