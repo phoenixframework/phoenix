@@ -380,7 +380,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <ul class="list">
       <li :for={item <- @item} class="list-row">
-        <div>
+        <div class="list-col-grow">
           <div class="font-bold">{item.title}</div>
           <div>{render_slot(item)}</div>
         </div>
