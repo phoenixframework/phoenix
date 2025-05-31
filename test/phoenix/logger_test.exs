@@ -8,6 +8,9 @@ defmodule Phoenix.LoggerTest do
 
       assert Phoenix.Logger.filter_values(values, ["password"]) ==
                %{"foo" => "bar", "password" => "[FILTERED]"}
+
+      assert Phoenix.Logger.filter_values(values, Phoenix.Logger.compile_filter(["password"])) ==
+               %{"foo" => "bar", "password" => "[FILTERED]"}
     end
 
     test "when a map has secret key" do
@@ -49,6 +52,9 @@ defmodule Phoenix.LoggerTest do
       values = %{"foo" => "bar", "password" => "abc123", "file" => %Plug.Upload{}}
 
       assert Phoenix.Logger.filter_values(values, {:keep, []}) ==
+               %{"foo" => "[FILTERED]", "password" => "[FILTERED]", "file" => "[FILTERED]"}
+
+      assert Phoenix.Logger.filter_values(values, Phoenix.Logger.compile_filter({:keep, []})) ==
                %{"foo" => "[FILTERED]", "password" => "[FILTERED]", "file" => "[FILTERED]"}
     end
 

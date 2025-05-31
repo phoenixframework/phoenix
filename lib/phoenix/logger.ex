@@ -161,58 +161,71 @@ defmodule Phoenix.Logger do
   end
 
   @doc false
-  def filter_values(values, params \\ Application.get_env(:phoenix, :filter_parameters, []))
-  def filter_values(values, {:discard, params}), do: discard_values(values, params)
-  def filter_values(values, {:keep, params}), do: keep_values(values, params)
-  def filter_values(values, params), do: discard_values(values, params)
+  def compile_filter({:compiled, _key, _value} = filter), do: filter
+  def compile_filter({:discard, params}), do: compile_discard(params)
+  def compile_filter({:keep, params}), do: {:keep, params}
+  def compile_filter(params), do: compile_discard(params)
 
-  defp discard_values(%{__struct__: mod} = struct, _params) when is_atom(mod) do
+  defp compile_discard([]) do
+    {:compiled, [], []}
+  end
+
+  defp compile_discard(params) when is_list(params) or is_binary(params) do
+    key_match = :binary.compile_pattern(params)
+    value_match = params |> List.wrap() |> Enum.map(&(&1 <> "=")) |> :binary.compile_pattern()
+    {:compiled, key_match, value_match}
+  end
+
+  @doc false
+  def filter_values(values, filter \\ Application.get_env(:phoenix, :filter_parameters, [])) do
+    case compile_filter(filter) do
+      {:compiled, key_match, value_match} -> discard_values(values, key_match, value_match)
+      {:keep, match} -> keep_values(values, match)
+    end
+  end
+
+  defp discard_values(%{__struct__: mod} = struct, _key_match, _value_match) when is_atom(mod) do
     struct
   end
 
-  defp discard_values(%{} = map, params) do
+  defp discard_values(%{} = map, key_match, value_match) do
     Enum.into(map, %{}, fn {k, v} ->
       cond do
-        is_binary(k) and String.contains?(k, params) ->
+        is_binary(k) and String.contains?(k, key_match) ->
           {k, "[FILTERED]"}
 
-        is_binary(v) and String.contains?(v, params) ->
-          new_value =
-            Enum.reduce(params, v, fn param, v ->
-              Regex.replace(~r/#{Regex.escape(param)}=([^&]*)(&?)/, v, "#{param}=[FILTERED]\\2")
-            end)
-
-          {k, new_value}
+        is_binary(v) and String.contains?(v, value_match) ->
+          {k, "[FILTERED]"}
 
         true ->
-          {k, discard_values(v, params)}
+          {k, discard_values(v, key_match, value_match)}
       end
     end)
   end
 
-  defp discard_values([_ | _] = list, params) do
-    Enum.map(list, &discard_values(&1, params))
+  defp discard_values([_ | _] = list, key_match, value_match) do
+    Enum.map(list, &discard_values(&1, key_match, value_match))
   end
 
-  defp discard_values(other, _params), do: other
+  defp discard_values(other, _key_match, _value_match), do: other
 
-  defp keep_values(%{__struct__: mod}, _params) when is_atom(mod), do: "[FILTERED]"
+  defp keep_values(%{__struct__: mod}, _match) when is_atom(mod), do: "[FILTERED]"
 
-  defp keep_values(%{} = map, params) do
+  defp keep_values(%{} = map, match) do
     Enum.into(map, %{}, fn {k, v} ->
-      if is_binary(k) and k in params do
-        {k, discard_values(v, [])}
+      if is_binary(k) and k in match do
+        {k, v}
       else
-        {k, keep_values(v, params)}
+        {k, keep_values(v, match)}
       end
     end)
   end
 
-  defp keep_values([_ | _] = list, params) do
-    Enum.map(list, &keep_values(&1, params))
+  defp keep_values([_ | _] = list, match) do
+    Enum.map(list, &keep_values(&1, match))
   end
 
-  defp keep_values(_other, _params), do: "[FILTERED]"
+  defp keep_values(_other, _match), do: "[FILTERED]"
 
   defp log_level(nil, _conn), do: :info
   defp log_level(level, _conn) when is_atom(level), do: level
@@ -358,7 +371,12 @@ defmodule Phoenix.Logger do
   @doc false
   def phoenix_socket_drain(_, _, %{log: false}, _), do: :ok
 
-  def phoenix_socket_drain(_, %{count: count, total: total, index: index, rounds: rounds}, %{log: level} = meta, _) do
+  def phoenix_socket_drain(
+        _,
+        %{count: count, total: total, index: index, rounds: rounds},
+        %{log: level} = meta,
+        _
+      ) do
     Logger.log(level, fn ->
       %{socket: socket, interval: interval} = meta
 

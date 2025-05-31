@@ -18,6 +18,10 @@ defmodule Phoenix do
       :erlang.system_flag(:backtrace_depth, stacktrace_depth)
     end
 
+    if filter = Application.get_env(:phoenix, :filter_parameters) do
+      Application.put_env(:phoenix, :filter_parameters, Phoenix.Logger.compile_filter(filter))
+    end
+
     if Application.fetch_env!(:phoenix, :logger) do
       Phoenix.Logger.install()
     end
@@ -62,11 +66,11 @@ defmodule Phoenix do
     configured_lib = Application.get_env(:phoenix, :json_library)
 
     if configured_lib && not Code.ensure_loaded?(configured_lib) do
-      IO.warn """
+      IO.warn("""
       found #{inspect(configured_lib)} in your application configuration
       for Phoenix JSON encoding, but module #{inspect(configured_lib)} is not available.
       Ensure #{inspect(configured_lib)} is listed as a dependency in mix.exs.
-      """
+      """)
     end
   end
 end

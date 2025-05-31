@@ -18,11 +18,7 @@ defmodule Phoenix.Socket.MessageTest do
         join_ref: "1"
       }
 
-      inspected = inspect(message)
-
-      assert inspected =~ "password=[FILTERED]"
-      assert inspected =~ "username=john"
-      assert inspected =~ "email=john@example.com"
+      assert inspect(message) =~ "\"value\" => \"[FILTERED]\""
     end
 
     test "filters sensitive values at the end of form submit events" do
@@ -38,10 +34,7 @@ defmodule Phoenix.Socket.MessageTest do
         join_ref: "1"
       }
 
-      inspected = inspect(message)
-
-      assert inspected =~ "username=john"
-      assert inspected =~ "password=[FILTERED]\""
+      assert inspect(message) =~ "\"value\" => \"[FILTERED]\""
     end
 
     test "handles malformed query strings gracefully" do
@@ -57,8 +50,7 @@ defmodule Phoenix.Socket.MessageTest do
         join_ref: "1"
       }
 
-      inspected = inspect(message)
-      assert is_binary(inspected)
+      assert inspect(message) =~ "\"value\" => \"[FILTERED]\""
     end
   end
 end
