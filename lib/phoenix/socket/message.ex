@@ -35,6 +35,19 @@ defmodule Phoenix.Socket.Message do
         raise Phoenix.Socket.InvalidMessageError, "missing key #{inspect(err.key)}"
     end
   end
+
+  defimpl Inspect do
+    def inspect(%Phoenix.Socket.Message{} = msg, opts) do
+      processed_msg = process_message(msg)
+      Inspect.Any.inspect(processed_msg, opts)
+    end
+
+    defp process_message(%{payload: payload} = msg) when is_map(payload) do
+      %{msg | payload: Phoenix.Logger.filter_values(payload)}
+    end
+
+    defp process_message(msg), do: msg
+  end
 end
 
 defmodule Phoenix.Socket.Reply do

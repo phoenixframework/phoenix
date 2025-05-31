@@ -172,10 +172,20 @@ defmodule Phoenix.Logger do
 
   defp discard_values(%{} = map, params) do
     Enum.into(map, %{}, fn {k, v} ->
-      if is_binary(k) and String.contains?(k, params) do
-        {k, "[FILTERED]"}
-      else
-        {k, discard_values(v, params)}
+      cond do
+        is_binary(k) and String.contains?(k, params) ->
+          {k, "[FILTERED]"}
+
+        is_binary(v) and String.contains?(v, params) ->
+          new_value =
+            Enum.reduce(params, v, fn param, v ->
+              Regex.replace(~r/#{Regex.escape(param)}=([^&]*)(&?)/, v, "#{param}=[FILTERED]\\2")
+            end)
+
+          {k, new_value}
+
+        true ->
+          {k, discard_values(v, params)}
       end
     end)
   end
