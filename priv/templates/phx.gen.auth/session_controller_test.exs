@@ -49,7 +49,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         end)
 
       conn = get(conn, ~p"<%= schema.route_prefix %>/log-in/#{token}")
-      assert html_response(conn, 200) =~ "Confirm my account"
+      assert html_response(conn, 200) =~ "Confirm and stay logged in"
     end
 
     test "renders login page for confirmed <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do

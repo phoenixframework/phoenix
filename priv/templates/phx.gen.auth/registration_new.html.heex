@@ -1,15 +1,17 @@
 <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
   <div class="mx-auto max-w-sm">
-    <.header class="text-center">
-      Register for an account
-      <:subtitle>
-        Already registered?
-        <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="font-semibold text-brand hover:underline">
-          Log in
-        </.link>
-        to your account now.
-      </:subtitle>
-    </.header>
+    <div class="text-center">
+      <.header>
+        Register for an account
+        <:subtitle>
+          Already registered?
+          <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="font-semibold text-brand hover:underline">
+            Log in
+          </.link>
+          to your account now.
+        </:subtitle>
+      </.header>
+    </div>
 
     <.form :let={f} for={@changeset} action={~p"<%= schema.route_prefix %>/register"}>
       <.input
@@ -21,7 +23,7 @@
         phx-mounted={JS.focus()}
       />
 
-      <.button variant="primary" phx-disable-with="Creating account..." class="w-full">
+      <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">
         Create an account
       </.button>
     </.form>
