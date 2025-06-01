@@ -18,8 +18,8 @@ defmodule <%= @web_namespace %>.Layouts do
 
       <Layouts.app flash={@flash}>
         <h1>Content</h1>
-      </Layout.app>
-      
+      </Layouts.app>
+
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
 
