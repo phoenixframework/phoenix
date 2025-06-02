@@ -22,8 +22,8 @@ $ curl https://new.phoenixframework.org/hello | sh
 
 For Windows PowerShell:
 
-```cmd
-> curl.exe -fsSO https://new.phoenixframework.org/hello.bat; .\hello.bat
+```bash
+curl.exe -fsSO https://new.phoenixframework.org/hello.bat; .\hello.bat
 ```
 
 If those commands do not work, see the [Installation Guide](installation.html) and then run `mix phx.new`:
