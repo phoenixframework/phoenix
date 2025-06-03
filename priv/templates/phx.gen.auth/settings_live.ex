@@ -8,10 +8,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
-      <.header class="text-center">
-        Account Settings
-        <:subtitle>Manage your account email address and password settings</:subtitle>
-      </.header>
+      <div class="text-center">
+        <.header>
+          Account Settings
+          <:subtitle>Manage your account email address and password settings</:subtitle>
+        </.header>
+      </div>
 
       <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
         <.input

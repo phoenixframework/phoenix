@@ -88,23 +88,29 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.button phx-click="go" variant="primary">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch method download)
+  attr :rest, :global, include: ~w(href navigate patch method download name value)
   attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
     variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
-    assigns = assign(assigns, :class, Map.fetch!(variants, assigns[:variant]))
+
+    default_class =
+      Map.get_lazy(assigns.rest, :class, fn ->
+        Map.fetch!(variants, assigns[:variant])
+      end)
+
+    assigns = assign(assigns, :class, default_class)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
-      <.link class={["btn", @class]} {@rest}>
+      <.link class={["btn", @class, @rest[:class]]} {@rest}>
         {render_slot(@inner_block)}
       </.link>
       """
     else
       ~H"""
-      <button class={["btn", @class]} {@rest}>
+      <button class={["btn", @class, @rest[:class]]} {@rest}>
         {render_slot(@inner_block)}
       </button>
       """
@@ -277,15 +283,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
   @doc """
   Renders a header with title.
   """
-  attr :class, :string, default: nil
-
   slot :inner_block, required: true
   slot :subtitle
   slot :actions
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4", @class]}>
+    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
       <div>
         <h1 class="text-lg font-semibold leading-8">
           {render_slot(@inner_block)}

@@ -7,25 +7,30 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     ~H"""
     <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
       <div class="mx-auto max-w-sm">
-        <.header class="text-center">Welcome {@<%= schema.singular %>.email}</.header>
+        <div class="text-center">
+          <.header>Welcome {@<%= schema.singular %>.email}</.header>
+        </div>
 
         <.form
           :if={!@<%= schema.singular %>.confirmed_at}
           for={@form}
           id="confirmation_form"
+          phx-mounted={JS.focus_first()}
           phx-submit="submit"
           action={~p"<%= schema.route_prefix %>/log-in?_action=confirmed"}
           phx-trigger-action={@trigger_submit}
         >
           <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
-          <.input
-            :if={!@<%= scope_config.scope.assign_key %>}
-            field={@form[:remember_me]}
-            type="checkbox"
-            label="Keep me logged in"
-          />
-          <.button variant="primary" phx-disable-with="Confirming..." class="w-full">
-            Confirm my account
+          <.button
+            name={@form[:remember_me].name}
+            value="true"
+            phx-disable-with="Confirming..."
+            class="btn btn-primary w-full"
+          >
+            Confirm and stay logged in
+          </.button>
+          <.button phx-disable-with="Confirming..." class="btn btn-primary btn-soft w-full mt-2">
+            Confirm and log in only this time
           </.button>
         </.form>
 
@@ -34,17 +39,28 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           for={@form}
           id="login_form"
           phx-submit="submit"
+          phx-mounted={JS.focus_first()}
           action={~p"<%= schema.route_prefix %>/log-in"}
           phx-trigger-action={@trigger_submit}
         >
           <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
-          <.input
-            :if={!@<%= scope_config.scope.assign_key %>}
-            field={@form[:remember_me]}
-            type="checkbox"
-            label="Keep me logged in"
-          />
-          <.button variant="primary" phx-disable-with="Logging in..." class="w-full">Log in</.button>
+          <%%= if @<%= scope_config.scope.assign_key %> do %>
+            <.button phx-disable-with="Logging in..." class="w-full">
+              Log in
+            </.button>
+          <%% else %>
+            <.button
+              name={@form[:remember_me].name}
+              value="true"
+              phx-disable-with="Logging in..."
+              class="btn btn-primary w-full"
+            >
+              Keep me logged in on this device
+            </.button>
+            <.button phx-disable-with="Logging in..." class="btn btn-primary btn-soft w-full mt-2">
+              Log me in only this time
+            </.button>
+          <%% end %>
         </.form>
 
         <p :if={!@<%= schema.singular %>.confirmed_at} class="alert alert-outline mt-8">
