@@ -552,7 +552,7 @@ var Ajax = class {
     let controller = null;
     if (timeout) {
       controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      const _timeoutId = setTimeout(() => controller.abort(), timeout);
       options.signal = controller.signal;
     }
     global.fetch(endPoint, options).then((response) => response.text()).then((data) => this.parseJSON(data)).then((data) => callback && callback(data)).catch((err) => {
