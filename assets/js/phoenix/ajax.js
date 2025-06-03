@@ -14,9 +14,9 @@ export default class Ajax {
       return this.xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback)
     } else if(global.fetch && global.AbortController){
       // Fetch with AbortController for modern browsers
-      return this.fetchRequest(method, endPoint, headers, body, timeout, ontimeout, callback);
+      return this.fetchRequest(method, endPoint, headers, body, timeout, ontimeout, callback)
     } else {
-      throw new Error("No suitable XMLHttpRequest implementation found");
+      throw new Error("No suitable XMLHttpRequest implementation found")
     }
   }
 
@@ -25,12 +25,12 @@ export default class Ajax {
       method,
       headers,
       body,
-    };
-    let controller = null;
+    }
+    let controller = null
     if(timeout){
-      controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-      options.signal = controller.signal;
+      controller = new AbortController()
+      const _timeoutId = setTimeout(() => controller.abort(), timeout)
+      options.signal = controller.signal
     }
     global.fetch(endPoint, options)
       .then(response => response.text())
@@ -38,12 +38,12 @@ export default class Ajax {
       .then(data => callback && callback(data))
       .catch(err => {
         if(err.name === "AbortError" && ontimeout){
-          ontimeout();
+          ontimeout()
         } else {
-          callback && callback(null);
+          callback && callback(null)
         }
-      });
-    return controller;
+      })
+    return controller
   }
 
   static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback){
