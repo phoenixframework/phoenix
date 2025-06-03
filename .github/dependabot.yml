@@ -5,4 +5,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-
+  # Maintain dependencies for NPM
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
