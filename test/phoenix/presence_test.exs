@@ -98,7 +98,7 @@ defmodule Phoenix.PresenceTest do
   test "get_by_key/2 returns metadata for key", config do
     pid2 = spawn(fn -> :timer.sleep(:infinity) end)
     pid3 = spawn(fn -> :timer.sleep(:infinity) end)
-    assert MyPresence.get_by_key(config.topic, 1) == []
+    assert is_nil(MyPresence.get_by_key(config.topic, 1))
     assert {:ok, _} = MyPresence.track(self(), config.topic, 1, %{name: "u1"})
     assert {:ok, _} = MyPresence.track(pid2, config.topic, 1, %{name: "u1.2"})
     assert {:ok, _} = MyPresence.track(pid3, config.topic, 2, %{name: "u1.2"})
@@ -106,8 +106,8 @@ defmodule Phoenix.PresenceTest do
     assert %{extra: "extra", metas: [%{name: "u1", phx_ref: _}, %{name: "u1.2", phx_ref: _}]} =
              MyPresence.get_by_key(config.topic, 1)
 
-    assert MyPresence.get_by_key(config.topic, "another_key") == []
-    assert MyPresence.get_by_key("another_topic", 2) == []
+    assert is_nil(MyPresence.get_by_key(config.topic, "another_key"))
+    assert is_nil(MyPresence.get_by_key("another_topic", 2))
   end
 
   test "handle_diff broadcasts events with default fetched data",
