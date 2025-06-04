@@ -94,17 +94,17 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   def button(%{rest: rest} = assigns) do
     variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
-    assigns = assign(assigns, :class, Map.fetch!(variants, assigns[:variant]))
+    assigns = assign_variants(variants, assigns, "btn-primary")
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
-      <.link class={["btn", @class]} {@rest}>
+      <.link class={["btn", @rest[:class]]} {@rest}>
         {render_slot(@inner_block)}
       </.link>
       """
     else
       ~H"""
-      <button class={["btn", @class]} {@rest}>
+      <button class={["btn", @rest[:class]]} {@rest}>
         {render_slot(@inner_block)}
       </button>
       """
@@ -479,5 +479,12 @@ defmodule <%= @web_namespace %>.CoreComponents do
   """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
+  end
+
+  defp assign_variants(variants, %{rest: rest} = assigns, default) do
+    variant_class = Map.get(variants, assigns[:variant], default)
+    rest = Map.update(rest, :class, variant_class, &(&1 <> " " <> variant_class))
+
+    assign(assigns, :rest, rest)
   end
 end
