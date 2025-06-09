@@ -272,6 +272,23 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     if generated_with_no_html?() do
       raise_with_help("mix phx.gen.auth requires phoenix_html", :phx_generator_args)
     end
+
+    if generated_with_no_assets_or_esbuild?() do
+      Mix.shell().yes?("""
+      Warning: did not find phoenix_html in your app.js.
+
+      phx.gen.auth expects the phoenix_html JavaScript to be available in your application for
+      the generated logout link to work.
+      This is not the case for applications generated with `--no-assets` or `--no-esbuild`.
+
+      To make the logout link work, you'll need to manually add the phoenix_html JavaScript to your application.
+      It is available at the "priv/static/phoenix_html" path of the phoenix_html application.
+
+      Alternatively, you can refactor the logout link to submit a `<form>` with method "delete" instead.
+
+      Continue?\
+      """) || System.halt()
+    end
   end
 
   defp generated_with_no_html? do
@@ -283,6 +300,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       _ -> false
     end)
     |> Kernel.not()
+  end
+
+  defp generated_with_no_assets_or_esbuild? do
+    not Code.ensure_loaded?(Phoenix.HTML) or
+      case File.read("assets/js/app.js") do
+        {:ok, content} -> content =~ "priv/static/phoenix_html.js"
+        {:error, _} -> true
+      end
   end
 
   defp build_hashing_library!(opts) do
