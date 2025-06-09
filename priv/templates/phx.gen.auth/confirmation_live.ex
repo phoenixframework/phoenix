@@ -45,7 +45,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
         >
           <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
           <%%= if @<%= scope_config.scope.assign_key %> do %>
-            <.button phx-disable-with="Logging in..." class="w-full">
+            <.button phx-disable-with="Logging in..." class="btn btn-primary w-full">
               Log in
             </.button>
           <%% else %>

@@ -89,28 +89,26 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.button navigate={~p"/"}>Home</.button>
   """
   attr :rest, :global, include: ~w(href navigate patch method download name value)
+  attr :class, :string
   attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
     variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
 
-    default_class =
-      Map.get_lazy(assigns.rest, :class, fn ->
-        Map.fetch!(variants, assigns[:variant])
-      end)
-
-    assigns = assign(assigns, :class, default_class)
+    assigns = assign_new(assigns, :class, fn ->
+      ["btn", Map.fetch!(variants, assigns[:variant])]
+    end)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
-      <.link class={["btn", @class, @rest[:class]]} {@rest}>
+      <.link class={@class} {@rest}>
         {render_slot(@inner_block)}
       </.link>
       """
     else
       ~H"""
-      <button class={["btn", @class, @rest[:class]]} {@rest}>
+      <button class={@class} {@rest}>
         {render_slot(@inner_block)}
       </button>
       """
