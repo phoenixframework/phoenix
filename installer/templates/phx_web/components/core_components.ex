@@ -31,8 +31,6 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   alias Phoenix.LiveView.JS
 
-  @flash_timeout 5000
-
   @doc """
   Renders flash notices.
 
@@ -44,6 +42,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
+  attr :clear_timeout, :integer, default: 5000
   attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
@@ -57,7 +56,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      phx-mounted={JS.dispatch("flash:auto-clear", detail: %{timeout: @flash_timeout, attr: "phx-click"})}
+      phx-mounted={JS.dispatch("flash:auto-clear", detail: %{timeout: @clear_timeout, attr: "phx-click"})}
       role="alert"
       class="toast toast-top toast-end z-50"
       {@rest}
@@ -77,17 +76,6 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <button type="button" class="group self-start cursor-pointer" aria-label=<%= maybe_heex_attr_gettext.("close", @gettext) %>>
           <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
         </button>
-        <div
-          class={[
-            "absolute w-0 bottom-0 left-0 h-1.5 rounded-(--radius-box) bg-neutral animate-flash-progress"
-          ]}
-          phx-mounted={
-            JS.set_attribute({
-              "style",
-              "width: 100%; transition: width #{@flash_timeout}ms ease-in-out;"
-            })
-          }
-        />
       </div>
     </div>
     """

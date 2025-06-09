@@ -84,5 +84,4 @@ import "phoenix_html"
 <%= @live_comment %> let el = e.target;
 <%= @live_comment %> setTimeout(() => liveSocket.execJS(el, el.getAttribute(e.detail.attr)), e.detail.timeout);
 <%= @live_comment %>});
-
 <% end %>
