@@ -303,9 +303,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   defp generated_with_no_assets_or_esbuild? do
-    not File.exists?("assets/js/app.js") or
-      File.read!("assets/js/app.js") =~
-        "For Phoenix.HTML support, including form and button helpers"
+    not Code.ensure_loaded?(Phoenix.HTML) or
+      case File.read("assets/js/app.js") do
+        {:ok, content} -> content =~ "priv/static/phoenix_html.js"
+        {:error, _} -> true
+      end
   end
 
   defp build_hashing_library!(opts) do
