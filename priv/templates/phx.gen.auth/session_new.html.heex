@@ -1,19 +1,21 @@
 <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
   <div class="mx-auto max-w-sm space-y-4">
-    <.header class="text-center">
-      <p>Log in</p>
-      <:subtitle>
-        <%%= if @<%= scope_config.scope.assign_key %> do %>
-          You need to reauthenticate to perform sensitive actions on your account.
-        <%% else %>
-          Don't have an account? <.link
-            navigate={~p"<%= schema.route_prefix %>/register"}
-            class="font-semibold text-brand hover:underline"
-            phx-no-format
-          >Sign up</.link> for an account now.
-        <%% end %>
-      </:subtitle>
-    </.header>
+    <div class="text-center">
+      <.header>
+        <p>Log in</p>
+        <:subtitle>
+          <%%= if @<%= scope_config.scope.assign_key %> do %>
+            You need to reauthenticate to perform sensitive actions on your account.
+          <%% else %>
+            Don't have an account? <.link
+              navigate={~p"<%= schema.route_prefix %>/register"}
+              class="font-semibold text-brand hover:underline"
+              phx-no-format
+            >Sign up</.link> for an account now.
+          <%% end %>
+        </:subtitle>
+      </.header>
+    </div>
 
     <div :if={local_mail_adapter?()} class="alert alert-info">
       <.icon name="hero-information-circle" class="size-6 shrink-0" />
@@ -35,7 +37,7 @@
         required
         phx-mounted={JS.focus()}
       />
-      <.button class="w-full" variant="primary">
+      <.button class="btn btn-primary w-full">
         Log in with email <span aria-hidden="true">→</span>
       </.button>
     </.form>
@@ -57,14 +59,11 @@
         label="Password"
         autocomplete="current-password"
       />
-      <.input
-        :if={!@<%= scope_config.scope.assign_key %>}
-        field={f[:remember_me]}
-        type="checkbox"
-        label="Keep me logged in"
-      />
-      <.button class="w-full" variant="primary">
-        Log in <span aria-hidden="true">→</span>
+      <.button class="btn btn-primary w-full" name={@form[:remember_me].name} value="true">
+        Log in and stay logged in <span aria-hidden="true">→</span>
+      </.button>
+      <.button class="btn btn-primary btn-soft w-full mt-2">
+        Log in only this time
       </.button>
     </.form>
   </div>

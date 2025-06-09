@@ -1,15 +1,17 @@
 <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
-  <.header class="text-center">
-    Account Settings
-    <:subtitle>Manage your account email address and password settings</:subtitle>
-  </.header>
+  <div class="text-center">
+    <.header>
+      Account Settings
+      <:subtitle>Manage your account email address and password settings</:subtitle>
+    </.header>
+  </div>
 
   <.form :let={f} for={@email_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_email">
     <input type="hidden" name="action" value="update_email" />
 
     <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
 
-    <.button phx-disable-with="Changing...">Change Email</.button>
+    <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
   </.form>
 
   <div class="divider" />
@@ -31,7 +33,7 @@
       autocomplete="new-password"
       required
     />
-    <.button phx-disable-with="Changing...">
+    <.button variant="primary" phx-disable-with="Changing...">
       Save Password
     </.button>
   </.form>

@@ -65,11 +65,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/log-in")
 
       form =
-        form(lv, "#login_form_password",
-          <%= schema.singular %>: %{email: "test@email.com", password: "123456", remember_me: true}
-        )
+        form(lv, "#login_form_password", <%= schema.singular %>: %{email: "test@email.com", password: "123456"})
 
-      render_submit(form)
+      render_submit(form, %{user: %{remember_me: true}})
 
       conn = follow_trigger_action(form, conn)
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
