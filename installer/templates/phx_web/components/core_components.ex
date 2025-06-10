@@ -185,7 +185,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       end)
 
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <div class="fieldset mb-2">
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <span class="label">
@@ -201,13 +201,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         </span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </fieldset>
+    </div>
     """
   end
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <div class="fieldset mb-2">
       <label>
         <span :if={@label} class="label mb-1">{@label}</span>
         <select
@@ -222,13 +222,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         </select>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </fieldset>
+    </div>
     """
   end
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <div class="fieldset mb-2">
       <label>
         <span :if={@label} class="label mb-1">{@label}</span>
         <textarea
@@ -242,14 +242,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </fieldset>
+    </div>
     """
   end
 
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <div class="fieldset mb-2">
       <label>
         <span :if={@label} class="label mb-1">{@label}</span>
         <input
@@ -265,7 +265,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         />
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </fieldset>
+    </div>
     """
   end
 
