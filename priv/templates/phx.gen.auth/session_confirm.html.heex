@@ -34,7 +34,7 @@
     >
       <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
       <%%= if @<%= scope_config.scope.assign_key %> do %>
-        <.button variant="primary" phx-disable-with="Logging in..." class="w-full">
+        <.button variant="primary" phx-disable-with="Logging in..." class="btn btn-primary w-full">
           Log in
         </.button>
       <%% else %>
