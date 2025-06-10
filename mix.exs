@@ -163,6 +163,7 @@ defmodule Phoenix.MixProject do
       "guides/live_view.md",
       "guides/asset_management.md",
       "guides/telemetry.md",
+      "guides/security.md",
       "guides/authn_authz/authn_authz.md",
       "guides/authn_authz/mix_phx_gen_auth.md",
       "guides/authn_authz/scopes.md",
