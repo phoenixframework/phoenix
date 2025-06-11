@@ -87,7 +87,7 @@ Next, let's fully understand the expressive power behind the HEEx template langu
 
 ## HEEx
 
-Function components and templates files are powered by [the HEEx template language](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2), which stands for "HTML + Embedded Elixir". We can write Elixir code inside `{...}` for HTML-aware interpolation inside tag attributes and the body, as done above. For example, ee use `@name` to access the key `name` defined inside `assigns`.
+Function components and templates files are powered by [the HEEx template language](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2), which stands for "HTML + Embedded Elixir". We can write Elixir code inside `{...}` for HTML-aware interpolation inside tag attributes and the body, as done above. For example, we use `@name` to access the key `name` defined inside `assigns`.
 
 We can also interpolate arbitrary HEEx blocks using `<%= ... %>`. This is often used for block constructs. For example, in order to have conditionals:
 
