@@ -138,9 +138,9 @@ If you find yourself writing raw SQL, take care not to interpolate directly into
 
 ## Server Side Request Forgery (SSRF)
 
-Server Side Request Forgery (SSRF) is a critical vulnerability that has been the root cause of major data breaches. The root cause is untrusted user input being used to make outbound HTTP requests, which leads to the exploitation of services reachable from your Phoenix application. 
+Server Side Request Forgery (SSRF) is a critical vulnerability that has been the root cause of major data breaches. The problem is untrusted user input being used to make outbound HTTP requests, which leads to the exploitation of services reachable from your Phoenix application. 
 
-When you create a server in most cloud providers today, for example AWS EC2, there will be a [metadata service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html) exposed on a private IP address. In the case of AWS it's on 169.254.169.254. If you send an HTTP request to:
+When you create a server in most cloud providers today, for example AWS EC2, there will be a [metadata service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html) exposed on a private IP address. In the case of AWS it's on `169.254.169.254`. If you send an HTTP request to:
 
 `http://169.254.169.254/iam/security-credentials`
 
@@ -194,7 +194,7 @@ Consider a Phoenix API with a single page application (SPA) on a different domai
 
 `api.example.com`  - Backend in Elixir/Phoenix 
 
-The frontend (app.example.com) needs to fetch information about the current user, however the origins of these projects are different. The user's web browser will block the request unless CORS is enabled between the sites.
+The frontend `(app.example.com)` needs to fetch information about the current user, however the origins of these projects are different. The user's web browser will block the request unless CORS is enabled between the sites.
 
 Setting the following in the Phoenix application:
 
@@ -235,7 +235,7 @@ def index(conn, %{"user" => user_email})
   user = Accounts.get_user_by_email(user_email)
 ```
 
-In the above example an attacker can simply change the submitted `user_email` string to an arbitrary value to perform an action as a different user. Using `conn.assigns.current_user` instead avoids this problem. 
+In the above example an attacker can simply change the submitted `user_email` string to an arbitrary value to perform an action as a different user. Using `conn.assigns.current_user` avoids this problem. 
 
 Related to the above concept, the design of Ecto in Phoenix takes the risk of mass assignment into consideration, because you have to explicitly define what parameters are allowed to be set from user supplied data.  Consider a simple users schema:
 
@@ -259,7 +259,7 @@ Related to the above concept, the design of Ecto in Phoenix takes the risk of ma
   end
 ```
 
-Assume that the corresponding signup form is exposed to the public internet. Can you spot the vulnerability? The problem is that :is_admin should never be set via external user input. Anyone on the public internet can now create a user where “is_admin” is set to true in the database, which is likely not the intent of the developer.
+Assume that the corresponding signup form is exposed to the public internet. Can you spot the vulnerability? The problem is that `:is_admin` should never be set via external user input. Anyone on the public internet can now create a user where `:is_admin` is set to true in the database, which is likely not the intent of the developer.
 
 ## Cross Site Scripting (XSS) 
 
@@ -275,7 +275,7 @@ is shown in your browser as:
 &lt;hello&gt;
 ```
 
-Note that this looks like a normal string of `<hello>` from an end user perspective, the ampersand with lt and gt are only visible if you inspect the page with your browser tools. 
+Note that this looks like a normal string of `<hello>` from an end user perspective, the `&lt;` and `&gt;` are only visible if you inspect the page with your browser tools. 
 
 It is possible to bypass this protection via the `raw/1` function. For example, consider the string `<b>hello</b>`. 
 
@@ -405,13 +405,14 @@ An attacker can embed the following form on attacker.com:
 </form>
 ```
 
-Note that this form does not even have to be visible to the victim user. When the user visits attacker.com the form will automatically submit a POST request on behalf of the victim, with the victim's current session cookie, to the vulnerable site. 
+Note that this form does not even have to be visible to the victim user. When the user visits `attacker.com` the form will automatically submit a POST request on behalf of the victim, with the victim's current session cookie, to the vulnerable site. 
 
 The way most web frameworks, including Phoenix, mitigate this vulnerability is by requiring a CSRF token when submitting a form.
 
 ```text
 # A typical CSRF token seen in a Phoenix form
-<input name="_csrf_token" type="hidden" hidden="" value="WUZXJh07BhAIJ24jP1d-KQEpLwYmMDwQ0-2eYNLH_x8oHoO_qv_HJDqZ">
+<input name="_csrf_token" type="hidden" hidden="" 
+  value="WUZXJh07BhAIJ24jP1d-KQEpLwYmMDwQ0-2eYNLH_x8oHoO_qv_HJDqZ">
 ```
 
 This changes the previous HTTP request to:
@@ -445,7 +446,7 @@ CSRF protections are included in Phoenix by default, so your application is most
 
 ### Action Re-Use CSRF 
 
-Most descriptions of CSRF focus on state changing POST requests and the need for random tokens, as was just covered. Is CSRF possible with a GET request? Yes, in fact it’s worse than a POST request, because GET requests should never be used to perform state changing actions in a web application (place an order, transfer money, etc).
+Most descriptions of CSRF focus on state changing POST requests and the need for random tokens, as was just covered. Is CSRF possible with a GET request? Yes, GET requests should never be used to perform state changing actions in a web application (place an order, transfer money, etc) because they cannot be protected against CSRF in the same way POST requests can. 
 
 Consider the following form:
 
