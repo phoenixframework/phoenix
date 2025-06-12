@@ -39,20 +39,11 @@ defmodule Mix.Tasks.Phx.Gen.PresenceTest do
     in_tmp_umbrella_project("generates presences", fn ->
       Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
       Mix.Tasks.Phx.Gen.Presence.run([])
-      assert_file("lib/phoenix/channels/presence.ex")
-    end)
-  end
-
-  test "in an umbrella app, uses correct PubSub server name" do
-    in_tmp_umbrella_project("generates presence with correct pubsub", fn ->
-      Application.put_env(:phoenix, :generators, context_app: {:hello, "hello"})
-      Mix.Tasks.Phx.Gen.Presence.run([])
-
       assert_file("lib/phoenix/channels/presence.ex", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.Presence do|
         assert file =~ ~S|use Phoenix.Presence|
         assert file =~ ~S|otp_app: :phoenix|
-        assert file =~ ~S|pubsub_server: Hello.PubSub|
+        assert file =~ ~S|pubsub_server: AnotherApp.PubSub|
       end)
     end)
   end
