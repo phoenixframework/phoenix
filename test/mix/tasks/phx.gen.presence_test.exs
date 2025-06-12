@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Phx.Gen.PresenceTest do
     in_tmp_project("generates presence", fn ->
       Mix.Tasks.Phx.Gen.Presence.run([])
 
-      assert_file("lib/hello_web/channels/presence.ex", fn file ->
+      assert_file("lib/hello/channels/presence.ex", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.Presence do|
         assert file =~ ~S|use Phoenix.Presence|
         assert file =~ ~S|otp_app: :phoenix|
@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Phx.Gen.PresenceTest do
       Application.put_env(:phoenix, :generators, context_app: {:hello, "hello"})
       Mix.Tasks.Phx.Gen.Presence.run([])
 
-      assert_file("lib/hello_web/channels/presence.ex", fn file ->
+      assert_file("lib/hello/channels/presence.ex", fn file ->
         assert file =~ ~S|defmodule PhoenixWeb.Presence do|
         assert file =~ ~S|use Phoenix.Presence|
         assert file =~ ~S|otp_app: :hello_web|
