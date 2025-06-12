@@ -19,28 +19,36 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
   def run([]) do
     run(["Presence"])
   end
+
   def run([alias_name]) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.presence must be invoked from within your *_web application's root directory"
+      Mix.raise(
+        "mix phx.gen.presence must be invoked from within your *_web application's root directory"
+      )
     end
+
     context_app = Mix.Phoenix.context_app()
     otp_app = Mix.Phoenix.otp_app()
     web_prefix = Mix.Phoenix.web_path(context_app)
     inflections = Mix.Phoenix.inflect(alias_name)
-    inflections = Keyword.put(inflections, :module, "#{inflections[:web_module]}.#{inflections[:scoped]}")
 
-    binding = inflections ++ [
-      otp_app: otp_app,
-      pubsub_server: Module.concat(inflections[:base], "PubSub")
-    ]
+    inflections =
+      Keyword.put(inflections, :module, "#{inflections[:web_module]}.#{inflections[:scoped]}")
+
+    binding =
+      inflections ++
+        [
+          otp_app: otp_app,
+          pubsub_server: Module.concat(Mix.Phoenix.context_base(context_app), "PubSub")
+        ]
 
     files = [
-      {:eex, "presence.ex", Path.join(web_prefix, "channels/#{binding[:path]}.ex")},
+      {:eex, "presence.ex", Path.join(web_prefix, "channels/#{binding[:path]}.ex")}
     ]
 
-    Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.presence", binding, files
+    Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.presence", binding, files)
 
-    Mix.shell().info """
+    Mix.shell().info("""
 
     Add your new module to your supervision tree,
     in lib/#{otp_app}/application.ex:
@@ -52,7 +60,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
 
     You're all set! See the Phoenix.Presence docs for more details:
     https://hexdocs.pm/phoenix/Phoenix.Presence.html
-    """
+    """)
   end
 
   defp paths do
