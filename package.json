@@ -33,8 +33,7 @@
     "eslint": "9.28.0",
     "eslint-plugin-jest": "28.13.5",
     "jest": "^30.0.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "jest-environment-jsdom-global": "^4.0.0",
+    "jest-environment-jsdom": "^30.0.0",
     "jsdom": "^26.1.0",
     "mock-socket": "^9.3.1"
   },

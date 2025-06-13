@@ -16,7 +16,7 @@ module.exports = {
   ],
 
   // The test environment that will be used for testing
-  testEnvironment: "jest-environment-jsdom-global",
+  testEnvironment: "jest-environment-jsdom",
   
   testEnvironmentOptions: {
     url: "https://example.com"

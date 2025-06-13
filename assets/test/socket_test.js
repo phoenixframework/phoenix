@@ -109,39 +109,24 @@ describe("with transports", function (){
     })
 
     it("returns wss when location.protocol is https", function (){
-      jsdom.reconfigure({url: "https://example.com/"})
       expect(socket.protocol()).toBe("wss")
-    })
-
-    it("returns ws when location.protocol is http", function (){
-      jsdom.reconfigure({url: "http://example.com/"})
-      expect(socket.protocol()).toBe("ws")
     })
   })
 
   describe("endpointURL", function (){
     it("returns endpoint for given full url", function (){
-      jsdom.reconfigure({url: "https://example.com/"})
       socket = new Socket("wss://example.org/chat")
       expect(socket.endPointURL()).toBe("wss://example.org/chat/websocket?vsn=2.0.0")
     })
 
     it("returns endpoint for given protocol-relative url", function (){
-      jsdom.reconfigure({url: "https://example.com/"})
       socket = new Socket("//example.org/chat")
       expect(socket.endPointURL()).toBe("wss://example.org/chat/websocket?vsn=2.0.0")
     })
 
     it("returns endpoint for given path on https host", function (){
-      jsdom.reconfigure({url: "https://example.com/"})
       socket = new Socket("/socket")
       expect(socket.endPointURL()).toBe("wss://example.com/socket/websocket?vsn=2.0.0")
-    })
-
-    it("returns endpoint for given path on http host", function (){
-      jsdom.reconfigure({url: "http://example.com/"})
-      socket = new Socket("/socket")
-      expect(socket.endPointURL()).toBe("ws://example.com/socket/websocket?vsn=2.0.0")
     })
   })
 
@@ -210,7 +195,7 @@ describe("with transports", function (){
       socket.connect()
       const conn = socket.conn
       expect(conn instanceof LongPoll).toBeTruthy()
-      expect(conn.pollEndpoint).toBe("http://example.com/socket/longpoll?vsn=2.0.0")
+      expect(conn.pollEndpoint).toBe("https://example.com/socket/longpoll?vsn=2.0.0")
       expect(conn.timeout).toBe(20000)
     })
 
