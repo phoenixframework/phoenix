@@ -31,7 +31,7 @@
     "@stylistic/eslint-plugin": "^4.4.0",
     "documentation": "^14.0.3",
     "eslint": "9.28.0",
-    "eslint-plugin-jest": "28.12.0",
+    "eslint-plugin-jest": "28.13.5",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^29.7.0",
     "jest-environment-jsdom-global": "^4.0.0",
