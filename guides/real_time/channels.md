@@ -495,7 +495,37 @@ Channel clients queue outgoing messages into a `PushBuffer`, and send them to th
 
 ### Resending Server Messages
 
-Phoenix uses an at-most-once strategy when sending messages to clients. If the client is offline and misses the message, Phoenix won't resend it. Phoenix doesn't persist messages on the server. If the server restarts, unsent messages will be gone. If our application needs stronger guarantees around message delivery, we'll need to write that code ourselves. Common approaches involve persisting messages on the server and having clients request missing messages. For an example, see Chris McCord's Phoenix training: [client code](https://github.com/chrismccord/elixirconf_training/blob/master/web/static/js/app.js#L38-L39) and [server code](https://github.com/chrismccord/elixirconf_training/blob/master/web/channels/document_channel.ex#L13-L19).
+Phoenix uses an at-most-once strategy when sending messages to clients. If the client is offline and misses the message, Phoenix won't resend it. Phoenix doesn't persist messages on the server. If the server restarts, unsent messages will be gone. If our application needs stronger guarantees around message delivery, we'll need to write that code ourselves. Common approaches involve persisting messages on the server and having clients request missing messages. 
+
+For example, you can track a `last_seen_id` (or `last_updated_at`) on the client. On join, the client will pass the `last_seen_id` via the channel params for the last thing it saw, which lets the server know how to catch the client up with side effects that have happened since that id. On the client, anytime an event is received for a "new_message", the client bumps its `last_seen_id` so that it can recover gracefully across disconnect/reconnect. The code might look something like this:
+
+```javascript
+// on the client
+let socket = new Socket(...)
+
+let lastSeenMsg = {}
+let roomParams = () => lastSeenMsg.id ? {last_seen_id: lastSeenMsg.id} : {}
+let roomChannel = socket.channel("rooms:123", roomParams)
+
+roomChannel.on("new_message", msg => {
+  lastSeenMsg = msg
+  renderNewMessage(msg)
+})
+
+roomChannel.join().receive("ok", ({messages}) => {
+  lastSeenMsg = messages[messages.length - 1]
+  renderMessages(messages)
+})
+```
+
+```elixir
+# room_channel.ex on the server
+def join("rooms:" <> id, params, socket) do
+  ...
+  messages = fetch_messages_since(params["last_seen_id"])
+  {:ok, %{messages: messages}, socket}
+end
+```
 
 ## Example Application
 
