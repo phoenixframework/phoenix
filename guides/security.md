@@ -271,7 +271,7 @@ By default, user input in Phoenix is escaped so that:
 
 is shown in your browser as:
 
-```
+```text
 &lt;hello&gt;
 ```
 
@@ -289,7 +289,7 @@ It is possible to bypass this protection via the `raw/1` function. For example, 
 
 With the ability to inject script tags, an attacker now has the ability to execute JavaScript in a victim's browser, for example by submitting a string such as: 
 
-```
+```html
 <script>alert(1)</script>
 ```
 
@@ -343,9 +343,8 @@ end
 
 User input determines the `content-type` of the file. There is no validation on the type of file being uploaded, meaning `content-type` can be set so an HTML page is rendered. This is the source of the vulnerability. Consider the file `xss.html`, with the contents:
 
-```text
+```html
 <html><script>alert(1)</script></html>
-```
 
 This will result in JavaScript being executed in the browser of the victim who views the image. Restricting the `put_resp_content_type` argument to only image files would fix this vulnerability. 
 
@@ -379,7 +378,7 @@ Consider the following form:
 
 This maps to the following HTTP request:
 
-```text
+```http_request_and_response
 POST /posts HTTP/1.1
 Host: example.com
 Content-Type: application/x-www-form-urlencoded
@@ -409,15 +408,14 @@ Note that this form does not even have to be visible to the victim user. When th
 
 The way most web frameworks, including Phoenix, mitigate this vulnerability is by requiring a CSRF token when submitting a form.
 
-```text
-# A typical CSRF token seen in a Phoenix form
+```html
+<!-- A typical CSRF token seen in a Phoenix form -->
 <input name="_csrf_token" type="hidden" hidden="" 
   value="WUZXJh07BhAIJ24jP1d-KQEpLwYmMDwQ0-2eYNLH_x8oHoO_qv_HJDqZ">
-```
 
 This changes the previous HTTP request to:
 
-```text
+```http_request_and_response
 POST /posts HTTP/1.1
 Host: example.com
 Content-Type: application/x-www-form-urlencoded
@@ -450,8 +448,8 @@ Most descriptions of CSRF focus on state changing POST requests and the need for
 
 Consider the following form:
 
-```text
-<.form let={f} for={@bio_changeset} action={Routes.user_settings_path(@conn, :edit_bio)} method={"post"} id="edit_bio">
+```heex
+<.form :let={f} for={@bio_changeset} action={~p"/users/settings/edit_bio"} method="post" id="edit_bio">
   <div class="pt-4">
     <%= label f, :bio %>
     <%= textarea f, :bio, required: true, class: "" %>
