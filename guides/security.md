@@ -30,7 +30,7 @@ System.shell/2
 
 All of these functions execute arbitrary code on your server if passed external input. The risk here is obvious to most programmers, so it is rare to find a Phoenix application vulnerable in this way. 
 
-The more common and often unexpected way a Phoenix application is vulnerable to RCE is via the Erlang function `binary_to_term`. From [the Erlang docs:](https://www.erlang.org/doc/apps/erts/erlang.html#binary_to_term-2)
+The more common and often unexpected way a Phoenix application is vulnerable to RCE is via the Erlang function `binary_to_term`. From [the Erlang docs:](https://www.erlang.org/doc/apps/erts/erlang.html#binary_to_term/2)
 
 > When decoding binaries from untrusted sources, the untrusted source may submit data in a way to create resources, such as atoms and remote references, that cannot be garbage collected and lead to a Denial of Service (DoS) attack. In such cases, use `binary_to_term/2` with the `safe` option.
 
