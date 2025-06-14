@@ -520,3 +520,11 @@ It will trigger the following:
 ```
 
 These parameters will match the `edit_bio/2` controller action, updating the user biography. The key lesson here is that state changing actions (transferring money, creating a post, updating account information) should occur via a POST request with proper CSRF protections, never via a GET request. 
+
+## Further Reading
+
+The Erlang Ecosystem Foundation also publishes in-depth documents which are relevant for Erlang, Elixir, and Phoenix developers. These include:
+
+  * [Web Application Security Best Practices for BEAM languages](https://security.erlef.org/web_app_security_best_practices_beam/)
+
+  * [Secure Coding and Deployment Hardening Guidelines](https://security.erlef.org/secure_coding_and_deployment_hardening/)
