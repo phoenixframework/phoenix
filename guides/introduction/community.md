@@ -14,7 +14,17 @@ There are a number of places to connect with community members at all experience
 
   * Follow the Phoenix Framework on [Twitter](https://twitter.com/elixirphoenix).
 
-The Security Working Group of the Erlang Ecosystem Foundation also publishes in-depth documents about [security best practices for Erlang, Elixir, and Phoenix](https://security.erlef.org/web_app_security_best_practices_beam/).
+## Security
+
+For information about security patches and how to report a vulnerability in Phoenix, see the [security policy.](https://github.com/phoenixframework/phoenix/security)
+
+To learn about how to secure a web application written with Phoenix, see the [security documentation page.](/guides/security.md)
+
+The Erlang Ecosystem Foundation also publishes in-depth documents which are relevant for Erlang, Elixir, and Phoenix developers. These include:
+
+  * [Web Application Security Best Practices for BEAM languages](https://security.erlef.org/web_app_security_best_practices_beam/)
+
+  * [Secure Coding and Deployment Hardening Guidelines](https://security.erlef.org/secure_coding_and_deployment_hardening/)
 
 ## Books
 
