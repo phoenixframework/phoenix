@@ -13,8 +13,8 @@ defmodule <%= @web_namespace %>.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps(),
-      compilers: [:phoenix_live_view] ++ Mix.compilers(),
+      deps: deps(),<%= if @html do %>
+      compilers: [:phoenix_live_view] ++ Mix.compilers(),<% end %>
       listeners: [Phoenix.CodeReloader]
     ]
   end
