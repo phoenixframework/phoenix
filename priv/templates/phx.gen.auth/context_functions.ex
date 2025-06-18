@@ -111,21 +111,17 @@
   def update_<%= schema.singular %>_email(<%= schema.singular %>, token) do
     context = "change:#{<%= schema.singular %>.email}"
 
-    with {:ok, query} <- <%= inspect schema.alias %>Token.verify_change_email_token_query(token, context),
-         %<%= inspect schema.alias %>Token{sent_to: email} <- Repo.one(query),
-         {:ok, _} <- Repo.transaction(<%= schema.singular %>_email_multi(<%= schema.singular %>, email, context)) do
-      :ok
-    else
-      _ -> :error
-    end
-  end
-
-  defp <%= schema.singular %>_email_multi(<%= schema.singular %>, email, context) do
-    changeset = <%= inspect schema.alias %>.email_changeset(<%= schema.singular %>, %{email: email})
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:<%= schema.singular %>, changeset)
-    |> Ecto.Multi.delete_all(:tokens, <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context]))
+    Repo.transact(fn ->
+      with {:ok, query} <- <%= inspect schema.alias %>Token.verify_change_email_token_query(token, context),
+           %<%= inspect schema.alias %>Token{sent_to: email} <- Repo.one(query),
+           {:ok, <%= schema.singular %>} <- Repo.update(<%= inspect schema.alias %>.email_changeset(<%= schema.singular %>, %{email: email})),
+           {_count, _result} <-
+             Repo.delete_all(<%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context])) do
+        {:ok, <%= schema.singular %>}
+      else
+        _ -> {:error, :transaction_aborted}
+      end
+    end)
   end
 
   @doc """
@@ -146,12 +142,12 @@
   @doc """
   Updates the <%= schema.singular %> password.
 
-  Returns the updated <%= schema.singular %>, as well as a list of expired tokens.
+  Returns a tuple with the updated <%= schema.singular %>, as well as a list of expired tokens.
 
   ## Examples
 
       iex> update_<%= schema.singular %>_password(<%= schema.singular %>, %{password: ...})
-      {:ok, %<%= inspect schema.alias %>{}, [...]}
+      {:ok, {%<%= inspect schema.alias %>{}, [...]}}
 
       iex> update_<%= schema.singular %>_password(<%= schema.singular %>, %{password: "too short"})
       {:error, %Ecto.Changeset{}}
@@ -161,10 +157,6 @@
     <%= schema.singular %>
     |> <%= inspect schema.alias %>.password_changeset(attrs)
     |> update_<%= schema.singular %>_and_delete_all_tokens()
-    |> case do
-      {:ok, <%= schema.singular %>, expired_tokens} -> {:ok, <%= schema.singular %>, expired_tokens}
-      {:error, :<%= schema.singular %>, changeset, _} -> {:error, changeset}
-    end
   end
 
   ## Session
@@ -239,7 +231,7 @@
 
       {<%= schema.singular %>, token} ->
         Repo.delete!(token)
-        {:ok, <%= schema.singular %>, []}
+        {:ok, {<%= schema.singular %>, []}}
 
       nil ->
         {:error, :not_found}
@@ -284,16 +276,16 @@
   ## Token helper
 
   defp update_<%= schema.singular %>_and_delete_all_tokens(changeset) do
-    %{data: %<%= inspect schema.alias %>{} = <%= schema.singular %>} = changeset
+    Repo.transact(fn ->
+      with {:ok, <%= schema.singular %>} <- Repo.update(changeset) do
+        query = <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all)
+        tokens_to_expire = Repo.all(query)
 
-    with {:ok, %{<%= schema.singular %>: <%= schema.singular %>, tokens_to_expire: expired_tokens}} <-
-           Ecto.Multi.new()
-           |> Ecto.Multi.update(:<%= schema.singular %>, changeset)
-           |> Ecto.Multi.all(:tokens_to_expire, <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all))
-           |> Ecto.Multi.delete_all(:tokens, fn %{tokens_to_expire: tokens_to_expire} ->
-             <%= inspect schema.alias %>Token.delete_all_query(tokens_to_expire)
-           end)
-           |> Repo.transaction() do
-      {:ok, <%= schema.singular %>, expired_tokens}
-    end
+        tokens_to_expire
+        |> <%= inspect schema.alias %>Token.delete_all_query()
+        |> Repo.delete_all()
+
+        {:ok, {<%= schema.singular %>, tokens_to_expire}}
+      end
+    end)
   end

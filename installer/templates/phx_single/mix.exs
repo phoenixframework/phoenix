@@ -40,7 +40,7 @@ defmodule <%= @app_module %>.MixProject do
     [
       <%= @phoenix_dep %>,<%= if @ecto do %>
       {:phoenix_ecto, "~> 4.5"},
-      {:ecto_sql, "~> 3.10"},
+      {:ecto_sql, "~> 3.13"},
       {<%= inspect @adapter_app %>, ">= 0.0.0"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

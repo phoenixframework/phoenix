@@ -34,7 +34,7 @@
 
   """
   def list_<%= schema.plural %>(%<%= inspect scope.alias %>{} = scope) do
-    Repo.all(from <%= schema.singular %> in <%= inspect schema.alias %>, where: <%= schema.singular %>.<%= scope.schema_key %> == ^scope.<%= Enum.join(scope.access_path, ".") %>)
+    Repo.all_by(<%= inspect schema.alias %>, <%= scope.schema_key %>: scope.<%= Enum.join(scope.access_path, ".") %>)
   end
 
   @doc """
