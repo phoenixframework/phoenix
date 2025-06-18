@@ -119,13 +119,9 @@
              Repo.delete_all(<%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context])) do
         {:ok, <%= schema.singular %>}
       else
-        _ -> {:error, :failed}
+        _ -> {:error, :transaction_aborted}
       end
     end)
-    |> case do
-      {:ok, _<%= schema.singular %>} -> :ok
-      {:error, _reason} -> :error
-    end
   end
 
   @doc """

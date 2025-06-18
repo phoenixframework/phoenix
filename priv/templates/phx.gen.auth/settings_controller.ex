@@ -55,12 +55,12 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def confirm_email(conn, %{"token" => token}) do
     case <%= inspect context.alias %>.update_<%= schema.singular %>_email(conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>, token) do
-      :ok ->
+      {:ok, _<%= schema.singular %>} ->
         conn
         |> put_flash(:info, "Email changed successfully.")
         |> redirect(to: ~p"<%= schema.route_prefix %>/settings")
 
-      :error ->
+      {:error, _} ->
         conn
         |> put_flash(:error, "Email change link is invalid or it has expired.")
         |> redirect(to: ~p"<%= schema.route_prefix %>/settings")
