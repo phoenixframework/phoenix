@@ -217,7 +217,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/mix.exs", fn file ->
         assert file =~ ~r":phoenix_live_view"
-        assert file =~ ~r":floki"
+        assert file =~ ~r":lazy_html"
       end)
 
       assert_file(
@@ -814,6 +814,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   test "new from inside docker machine (simulated)" do
     in_tmp("new without defaults", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--inside-docker-env"])
+
       assert_file("phx_blog/config/dev.exs", fn file ->
         assert file =~ "http: [ip: {0, 0, 0, 0}"
       end)
@@ -825,10 +826,12 @@ defmodule Mix.Tasks.Phx.NewTest do
     test "new with PHX_NEW_CACHE_DIR" do
       System.put_env("PHX_NEW_CACHE_DIR", __DIR__)
       cache_files = File.ls!(__DIR__)
+
       in_tmp("new with cache dir", fn ->
         Mix.Tasks.Phx.New.run([@app_name])
         project_files = File.ls!(Path.join(File.cwd!(), @app_name))
         assert "mix.exs" in project_files
+
         for file <- cache_files do
           assert file in project_files, "#{file} not copied to new project"
         end
@@ -845,6 +848,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       cache_dir = Path.join(__DIR__, "does-not-exist")
       System.put_env("PHX_NEW_CACHE_DIR", cache_dir)
       refute File.exists?(cache_dir)
+
       in_tmp("new with cache dir", fn ->
         Mix.Tasks.Phx.New.run([@app_name])
         project_files = File.ls!(Path.join(File.cwd!(), @app_name))
