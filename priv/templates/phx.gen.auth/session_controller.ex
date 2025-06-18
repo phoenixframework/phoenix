@@ -15,7 +15,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   # magic link login
   defp create(conn, %{"<%= schema.singular %>" => %{"token" => token} = <%= schema.singular %>_params}, info) do
     case <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(token) do
-      {:ok, <%= schema.singular %>, tokens_to_disconnect} ->
+      {:ok, {<%= schema.singular %>, tokens_to_disconnect}} ->
         <%= inspect schema.alias %>Auth.disconnect_sessions(tokens_to_disconnect)
 
         conn
@@ -49,7 +49,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def update_password(conn, %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params) do
     <%= schema.singular %> = conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>
     true = <%= inspect context.alias %>.sudo_mode?(<%= schema.singular %>)
-    {:ok, _<%= schema.singular %>, expired_tokens} = <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params)
+    {:ok, {_<%= schema.singular %>, expired_tokens}} = <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params)
 
     # disconnect all existing LiveViews with old sessions
     <%= inspect schema.alias %>Auth.disconnect_sessions(expired_tokens)
@@ -75,7 +75,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       end
 
     case <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(token) do
-      {:ok, <%= schema.singular %>, _expired_tokens} ->
+      {:ok, {<%= schema.singular %>, _expired_tokens}} ->
         conn
         |> put_flash(:info, info)
         |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params)

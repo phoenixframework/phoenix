@@ -218,7 +218,7 @@
     end
 
     test "updates the password", %{<%= schema.singular %>: <%= schema.singular %>} do
-      {:ok, <%= schema.singular %>, expired_tokens} =
+      {:ok, {<%= schema.singular %>, expired_tokens}} =
         <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, %{
           password: "new valid password"
         })
@@ -231,7 +231,7 @@
     test "deletes all tokens for the given <%= schema.singular %>", %{<%= schema.singular %>: <%= schema.singular %>} do
       _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
 
-      {:ok, _, _} =
+      {:ok, {_, _}} =
         <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, %{
           password: "new valid password"
         })
@@ -323,7 +323,7 @@
       refute <%= schema.singular %>.confirmed_at
       {encoded_token, hashed_token} = generate_<%= schema.singular %>_magic_link_token(<%= schema.singular %>)
 
-      assert {:ok, <%= schema.singular %>, [%{token: ^hashed_token}]} =
+      assert {:ok, {<%= schema.singular %>, [%{token: ^hashed_token}]}} =
                <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(encoded_token)
 
       assert <%= schema.singular %>.confirmed_at
@@ -333,7 +333,7 @@
       <%= schema.singular %> = <%= schema.singular %>_fixture()
       assert <%= schema.singular %>.confirmed_at
       {encoded_token, _hashed_token} = generate_<%= schema.singular %>_magic_link_token(<%= schema.singular %>)
-      assert {:ok, ^<%= schema.singular %>, []} = <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(encoded_token)
+      assert {:ok, {^<%= schema.singular %>, []}} = <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(encoded_token)
       # one time use only
       assert {:error, :not_found} = <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(encoded_token)
     end

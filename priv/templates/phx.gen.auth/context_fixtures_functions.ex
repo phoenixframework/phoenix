@@ -29,7 +29,8 @@
         <%= inspect context.alias %>.deliver_login_instructions(<%= schema.singular %>, url)
       end)
 
-    {:ok, <%= schema.singular %>, _expired_tokens} = <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(token)
+    {:ok, {<%= schema.singular %>, _expired_tokens}} =
+      <%= inspect context.alias %>.login_<%= schema.singular %>_by_magic_link(token)
 
     <%= schema.singular %>
   end
@@ -44,7 +45,7 @@
   end
 
   def set_password(<%= schema.singular %>) do
-    {:ok, <%= schema.singular %>, _expired_tokens} =
+    {:ok, {<%= schema.singular %>, _expired_tokens}} =
       <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, %{password: valid_<%= schema.singular %>_password()})
 
     <%= schema.singular %>

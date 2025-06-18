@@ -38,7 +38,7 @@ defmodule <%= @app_module %>.MixProject do
     [
       {:dns_cluster, "~> 0.2.0"},
       {:phoenix_pubsub, "~> 2.1"}<%= if @ecto do %>,
-      {:ecto_sql, "~> 3.10"},
+      {:ecto_sql, "~> 3.13"},
       {:<%= @adapter_app %>, ">= 0.0.0"},
       {:jason, "~> 1.2"}<% end %><%= if @mailer do %>,
       {:swoosh, "~> 1.16"},

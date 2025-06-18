@@ -42,7 +42,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <%= schema.singular %> = conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>
 
     case <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params) do
-      {:ok, <%= schema.singular %>, _} ->
+      {:ok, {<%= schema.singular %>, _}} ->
         conn
         |> put_flash(:info, "Password updated successfully.")
         |> put_session(:<%= schema.singular %>_return_to, ~p"<%= schema.route_prefix %>/settings")
