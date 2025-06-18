@@ -75,7 +75,9 @@ defmodule Phx.New.Single do
 
   template(:js, [
     {:eex, :web,
-     "phx_assets/app.js": "assets/js/app.js", "phx_assets/topbar.js": "assets/vendor/topbar.js"}
+     "phx_assets/app.js": "assets/js/app.js",
+     "phx_assets/topbar.js": "assets/vendor/topbar.js",
+     "phx_assets/tsconfig.json": "assets/tsconfig.json"}
   ])
 
   template(:no_js, [
