@@ -13,7 +13,8 @@ defmodule <%= @app_module %>.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps(),
+      deps: deps(),<%= if @html do %>
+      compilers: [:phoenix_live_view] ++ Mix.compilers(),<% end %>
       listeners: [Phoenix.CodeReloader]
     ]
   end
@@ -43,10 +44,10 @@ defmodule <%= @app_module %>.MixProject do
       {<%= inspect @adapter_app %>, ">= 0.0.0"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 1.0.13"},
-      {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
+      {:phoenix_live_view, "~> 1.1.0-rc.0"},
+      {:lazy_html, ">= 0.1.0", only: :test},<% end %><%= if @dashboard do %>
       {:phoenix_live_dashboard, "~> 0.8.3"},<% end %><%= if @javascript do %>
-      {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
+      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",

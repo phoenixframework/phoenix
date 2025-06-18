@@ -179,6 +179,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, ".gitignore"), "/priv/static/assets/")
       assert_file(web_path(@app, ".gitignore"), "#{@app}_web-*.tar")
       assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
+
       assert_file(web_path(@app, "assets/css/app.css"), fn file ->
         assert file =~ "lib/phx_umb_web"
       end)
@@ -369,7 +370,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # No LiveView (in web_path)
       assert_file(web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_view"))
-      assert_file(web_path(@app, "mix.exs"), &refute(&1 =~ ~r":floki"))
+      assert_file(web_path(@app, "mix.exs"), &refute(&1 =~ ~r":lazy_html"))
       refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/page/hero.html.heex"))
 
       refute_file(web_path(@app, "assets/js/live.js"))
@@ -520,7 +521,14 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     in_tmp("new with path, app and module", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")
 
-      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--app", @app, "--module", "PhoteuxBlog"])
+      Mix.Tasks.Phx.New.run([
+        project_path,
+        "--umbrella",
+        "--app",
+        @app,
+        "--module",
+        "PhoteuxBlog"
+      ])
 
       assert_file("custom_path_umbrella/apps/phx_umb/mix.exs", ~r/app: :phx_umb/)
 

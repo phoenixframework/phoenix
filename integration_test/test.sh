@@ -4,7 +4,7 @@ mix local.rebar --force
 mix local.hex --force
 
 # Install Dependencies
-apk add --no-progress --update git socat make gcc libc-dev
+apk add --no-progress --update git socat make gcc libc-dev cmake g++
 
 # Set up local proxies
 socat TCP-LISTEN:5432,fork TCP-CONNECT:postgres:5432&
