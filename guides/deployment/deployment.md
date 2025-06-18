@@ -146,5 +146,5 @@ The reason for this is simple. While a WebSocket is a long-lived open connection
 
 ## Community Deployment Guides
 
-  * [Render](https://render.com) has first class support for Phoenix applications. There are guides for hosting Phoenix with [Mix releases](https://render.com/docs/deploy-phoenix), [Distillery](https://render.com/docs/deploy-phoenix-distillery), and as a [Distributed Elixir Cluster](https://render.com/docs/deploy-elixir-cluster).
-  * [Railway](https://railway.com) also provides support for Phoenix applications. Here is the [standard guide](https://docs.railway.com/guides/phoenix), and with [Distillery](https://docs.railway.com/guides/phoenix-distillery).
+  * [Render](https://render.com) has first class support for Phoenix applications. There are guides for hosting Phoenix with [Mix releases](https://render.com/docs/deploy-phoenix) and as a [Distributed Elixir Cluster](https://render.com/docs/deploy-elixir-cluster).
+  * [Railway](https://railway.com) also provides support for Phoenix applications using [Mix releases](https://docs.railway.com/guides/phoenix).
