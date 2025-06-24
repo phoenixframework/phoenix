@@ -29,7 +29,7 @@ import "phoenix_html"
 <%= @live_comment %>const liveSocket = new LiveSocket("/live", Socket, {
 <%= @live_comment %>  longPollFallbackMs: 2500,
 <%= @live_comment %>  params: {_csrf_token: csrfToken},
-<%= @live_comment %>  hooks: { ...colocatedHooks },
+<%= @live_comment %>  hooks: {...colocatedHooks},
 <%= @live_comment %>})
 
 // Show progress bar on live navigation and form submits
