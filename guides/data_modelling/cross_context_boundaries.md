@@ -210,8 +210,6 @@ With our schemas in place, we can start integrating the new data structures and 
 
 As we mentioned before, the context generators are only a starting point for our application. We can and should write well-named, purpose built functions to accomplish the goals of our context. We have a few new features to implement. First, we need to ensure every user of our application is granted a cart if one does not yet exist. From there, we can then allow users to add items to their cart, update item quantities, and calculate cart totals. Let's get started!
 
-We won't focus on a real user authentication system at this point, but by the time we're done, you'll be able to naturally integrate one with what we've written here. To simulate a current user session, open up your `lib/hello_web/router.ex` and key this in:
-
 Because we used `mix phx.gen.auth`, we already have a real authentication system in place. We can use the `current_scope` assign to access the currently authenticated user. Let's add a new plug that assigns a cart if there is an authenticated user:
 
 ```diff
