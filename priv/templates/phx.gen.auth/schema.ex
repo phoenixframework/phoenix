@@ -20,7 +20,7 @@ defmodule <%= inspect schema.module %> do
 
   ## Options
 
-    * `:validate_email_uniqueness` - Set to false if you don't want to validate the
+    * `:validate_unique` - Set to false if you don't want to validate the
       uniqueness of the email, useful when displaying live validations.
       Defaults to `true`.
   """
@@ -39,7 +39,7 @@ defmodule <%= inspect schema.module %> do
       )
       |> validate_length(:email, max: 160)
 
-    if Keyword.get(opts, :validate_email_uniqueness, true) do
+    if Keyword.get(opts, :validate_unique, true) do
       changeset
       |> unsafe_validate_unique(:email, <%= inspect schema.repo %>)
       |> unique_constraint(:email)
