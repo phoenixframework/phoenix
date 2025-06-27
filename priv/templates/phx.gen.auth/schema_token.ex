@@ -152,28 +152,7 @@ defmodule <%= inspect schema.module %>Token do
     end
   end
 
-  @doc """
-  Returns the token struct for the given token value and context.
-  """
-  def by_token_and_context_query(token, context) do
+  defp by_token_and_context_query(token, context) do
     from <%= inspect schema.alias %>Token, where: [token: ^token, context: ^context]
-  end
-
-  @doc """
-  Gets all tokens for the given <%= schema.singular %> for the given contexts.
-  """
-  def by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all) do
-    from t in <%= inspect schema.alias %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id
-  end
-
-  def by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [_ | _] = contexts) do
-    from t in <%= inspect schema.alias %>Token, where: t.<%= schema.singular %>_id == ^<%= schema.singular %>.id and t.context in ^contexts
-  end
-
-  @doc """
-  Deletes a list of tokens.
-  """
-  def delete_all_query(tokens) do
-    from t in <%= inspect schema.alias %>Token, where: t.id in ^Enum.map(tokens, & &1.id)
   end
 end
