@@ -26,7 +26,7 @@
  * events are listened for, messages are pushed to the server, and
  * the channel is joined with ok/error/timeout matches:
  *
- * ```javascript
+ * ```
  * let channel = socket.channel("room:123", {token: roomToken})
  * channel.on("new_msg", msg => console.log("Got message", msg) )
  * $input.onEnter( e => {
@@ -82,7 +82,7 @@
  * Lifecycle events of the multiplexed connection can be hooked into via
  * `socket.onError()` and `socket.onClose()` events, ie:
  *
- * ```javascript
+ * ```
  * socket.onError( () => console.log("there was an error with the connection!") )
  * socket.onClose( () => console.log("the connection dropped") )
  * ```
@@ -93,7 +93,7 @@
  * For each joined channel, you can bind to `onError` and `onClose` events
  * to monitor the channel lifecycle, ie:
  *
- * ```javascript
+ * ```
  * channel.onError( () => console.log("there was an error!") )
  * channel.onClose( () => console.log("the channel has gone away gracefully") )
  * ```
@@ -121,7 +121,7 @@
  * To sync presence state from the server, first instantiate an object and
  * pass your channel in to track lifecycle events:
  *
- * ```javascript
+ * ```
  * let channel = socket.channel("some:topic")
  * let presence = new Presence(channel)
  * ```
@@ -130,7 +130,7 @@
  * from the server. For example, to render the list of users every time
  * the list changes, you could write:
  *
- * ```javascript
+ * ```
  * presence.onSync(() => {
  *   myRenderUsersFunction(presence.list())
  * })
@@ -150,7 +150,7 @@
  * each user. This could be the first tab they opened, or the first device
  * they came online from:
  *
- * ```javascript
+ * ```
  * let listBy = (id, {metas: [first, ...rest]}) => {
  *   first.count = rest.length + 1 // count of this user's presences
  *   first.id = id
@@ -164,7 +164,7 @@
  * The `presence.onJoin` and `presence.onLeave` callbacks can be used to
  * react to individual presences joining and leaving the app. For example:
  *
- * ```javascript
+ * ```
  * let presence = new Presence(channel)
  *
  * // detect if user has joined for the 1st time or from another tab/device
