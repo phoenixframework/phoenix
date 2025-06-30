@@ -116,7 +116,7 @@
            %<%= inspect schema.alias %>Token{sent_to: email} <- Repo.one(query),
            {:ok, <%= schema.singular %>} <- Repo.update(<%= inspect schema.alias %>.email_changeset(<%= schema.singular %>, %{email: email})),
            {_count, _result} <-
-             Repo.delete_all(<%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, [context])) do
+             Repo.delete_all(from(<%= inspect schema.alias %>Token, where: [<%= schema.singular %>_id: ^<%= schema.singular %>.id, context: ^context])) do
         {:ok, <%= schema.singular %>}
       else
         _ -> {:error, :transaction_aborted}
@@ -269,7 +269,7 @@
   Deletes the signed token with the given context.
   """
   def delete_<%= schema.singular %>_session_token(token) do
-    Repo.delete_all(<%= inspect schema.alias %>Token.by_token_and_context_query(token, "session"))
+    Repo.delete_all(from(<%= inspect schema.alias %>Token, where: [token: ^token, context: "session"]))
     :ok
   end
 
@@ -278,12 +278,9 @@
   defp update_<%= schema.singular %>_and_delete_all_tokens(changeset) do
     Repo.transact(fn ->
       with {:ok, <%= schema.singular %>} <- Repo.update(changeset) do
-        query = <%= inspect schema.alias %>Token.by_<%= schema.singular %>_and_contexts_query(<%= schema.singular %>, :all)
-        tokens_to_expire = Repo.all(query)
+        tokens_to_expire = Repo.all_by(<%= inspect schema.alias %>Token, <%= schema.singular %>_id: <%= schema.singular %>.id)
 
-        tokens_to_expire
-        |> <%= inspect schema.alias %>Token.delete_all_query()
-        |> Repo.delete_all()
+        Repo.delete_all(from(t in <%= inspect schema.alias %>Token, where: t.id in ^Enum.map(tokens_to_expire, & &1.id)))
 
         {:ok, {<%= schema.singular %>, tokens_to_expire}}
       end
