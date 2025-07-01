@@ -293,6 +293,8 @@ defmodule Mix.Tasks.Phx.New do
 
         cmd(project, "mix deps.compile")
 
+        cmd(project, "mix usage_rules.sync AGENTS.md phoenix --yes")
+
         Task.await_many(tasks, :infinity)
       end
 

@@ -63,6 +63,8 @@ defmodule <%= @app_module %>.MixProject do
       {:gettext, "~> 0.26"},<% end %>
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
+      {:usage_rules, "~> 0.1", only: :dev},
+      {:igniter, "~> 0.6", only: [:dev, :test]},
       {<%= inspect @web_adapter_app %>, "<%= @web_adapter_vsn %>"}
     ]
   end
