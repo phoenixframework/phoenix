@@ -51,15 +51,15 @@ RUN mix assets.setup
 COPY priv priv
 
 COPY lib lib
+
+# Compile the release
+RUN mix compile
 <%= if assets_dir_exists? do %>
 COPY assets assets
 
 # compile assets
 RUN mix assets.deploy
 <% end %>
-# Compile the release
-RUN mix compile
-
 # Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/
 
