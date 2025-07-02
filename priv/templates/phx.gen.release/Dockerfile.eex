@@ -45,7 +45,6 @@ RUN mkdir config
 # to be re-compiled.
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
-
 <%= if assets_dir_exists? do %>
 RUN mix assets.setup
 <% end %>
@@ -55,7 +54,6 @@ COPY lib lib
 
 # Compile the release
 RUN mix compile
-
 <%= if assets_dir_exists? do %>
 COPY assets assets
 
