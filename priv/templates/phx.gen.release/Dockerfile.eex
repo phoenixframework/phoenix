@@ -45,6 +45,10 @@ RUN mkdir config
 # to be re-compiled.
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
+
+# Compile the release
+RUN mix compile
+
 <%= if assets_dir_exists? do %>
 RUN mix assets.setup
 <% end %>
@@ -57,8 +61,6 @@ COPY assets assets
 # compile assets
 RUN mix assets.deploy
 <% end %>
-# Compile the release
-RUN mix compile
 
 # Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/
