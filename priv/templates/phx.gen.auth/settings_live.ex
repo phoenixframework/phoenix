@@ -80,7 +80,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def mount(_params, _session, socket) do
     <%= schema.singular %> = socket.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>
-    email_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>, %{}, validate_email: false)
+    email_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>, %{}, validate_unique: false)
     password_changeset = <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, %{}, hash_password: false)
 
     socket =
@@ -98,7 +98,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     email_form =
       socket.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>
-      |> <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>_params, validate_email: false)
+      |> <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>_params, validate_unique: false)
       |> Map.put(:action, :validate)
       |> to_form()
 
