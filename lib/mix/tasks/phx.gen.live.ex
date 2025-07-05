@@ -287,7 +287,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
       Add the live routes to your #{schema.web_namespace} :browser scope in #{web_path}/router.ex:
 
-          scope "/#{schema.web_path}", #{inspect(prefix)}, as: :#{schema.web_path} do
+          scope "/#{schema.web_path}", #{inspect(prefix)} do
             pipe_through :browser
             ...
 

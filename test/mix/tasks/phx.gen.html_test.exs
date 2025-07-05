@@ -296,7 +296,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
                         Add the resource to your Blog :browser scope in lib/phoenix_web/router.ex:
 
-                            scope "/blog", PhoenixWeb.Blog, as: :blog do
+                            scope "/blog", PhoenixWeb.Blog do
                               pipe_through :browser
                               ...
                               resources "/posts", PostController

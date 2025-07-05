@@ -611,14 +611,14 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ """
                  ## Authentication routes
 
-                 scope "/warehouse", MyAppWeb.Warehouse, as: :warehouse do
+                 scope "/warehouse", MyAppWeb.Warehouse do
                    pipe_through [:browser, :redirect_if_user_is_authenticated]
 
                    get "/users/register", UserRegistrationController, :new
                    post "/users/register", UserRegistrationController, :create
                  end
 
-                 scope "/warehouse", MyAppWeb.Warehouse, as: :warehouse do
+                 scope "/warehouse", MyAppWeb.Warehouse do
                    pipe_through [:browser, :require_authenticated_user]
 
                    get "/users/settings", UserSettingsController, :edit
@@ -626,7 +626,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
                    get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email
                  end
 
-                 scope "/warehouse", MyAppWeb.Warehouse, as: :warehouse do
+                 scope "/warehouse", MyAppWeb.Warehouse do
                    pipe_through [:browser]
 
                    get "/users/log-in", UserSessionController, :new
