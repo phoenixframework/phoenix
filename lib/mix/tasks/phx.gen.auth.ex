@@ -935,7 +935,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     prefix = Module.concat(context.web_module, schema.web_namespace)
 
     if schema.web_namespace do
-      ~s|"/#{schema.web_path}", #{inspect(prefix)}, as: :#{schema.web_path}|
+      ~s|"/#{schema.web_path}", #{inspect(prefix)}|
     else
       ~s|"/", #{inspect(context.web_module)}|
     end

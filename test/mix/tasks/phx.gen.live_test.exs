@@ -266,7 +266,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
 
       Add the live routes to your Blog :browser scope in lib/phoenix_web/router.ex:
 
-          scope "/blog", PhoenixWeb.Blog, as: :blog do
+          scope "/blog", PhoenixWeb.Blog do
             pipe_through :browser
             ...
 

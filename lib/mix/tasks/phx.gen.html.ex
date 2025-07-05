@@ -213,7 +213,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
       Add the resource to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          scope "/#{schema.web_path}", #{inspect(Module.concat(context.web_module, schema.web_namespace))}, as: :#{schema.web_path} do
+          scope "/#{schema.web_path}", #{inspect(Module.concat(context.web_module, schema.web_namespace))} do
             pipe_through :browser
             ...
             resources "#{resource_path}", #{inspect(schema.alias)}Controller#{if schema.opts[:primary_key], do: ~s[, param: "#{schema.opts[:primary_key]}"]}
