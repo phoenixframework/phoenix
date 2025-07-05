@@ -401,10 +401,10 @@ This is great, exactly what we want. Note how every route and controller is prop
 Scopes can also be arbitrarily nested, but you should do it carefully as nesting can sometimes make our code confusing and less clear. With that said, suppose that we had a versioned API with resources defined for images, reviews, and users. Then technically, we could set up routes for the versioned API like this:
 
 ```elixir
-scope "/api", HelloWeb.Api, as: :api do
+scope "/api", HelloWeb.Api do
   pipe_through :api
 
-  scope "/v1", V1, as: :v1 do
+  scope "/v1", V1 do
     resources "/images",  ImageController
     resources "/reviews", ReviewController
     resources "/users",   UserController
