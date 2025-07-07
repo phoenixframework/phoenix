@@ -80,7 +80,7 @@ defmodule <%= inspect auth_module %>Test do
         |> assign(:<%= scope_config.scope.assign_key %>, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
         |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
 
-      assert redirected_to(conn) == "<%= schema.route_prefix %>/settings"
+      assert redirected_to(conn) == ~p"<%= schema.route_prefix %>/settings"
     end<% end %>
 
     test "writes a cookie if remember_me was set in previous session", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
