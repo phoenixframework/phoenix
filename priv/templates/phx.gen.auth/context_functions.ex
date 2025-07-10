@@ -164,7 +164,7 @@
   @doc """
   Generates a session token.
   """
-  def generate_<%= schema.singular %>_session_token(<%= schema.singular %>) do
+  def generate_<%= schema.singular %>_session_token!(<%= schema.singular %>) do
     {token, <%= schema.singular %>_token} = <%= inspect schema.alias %>Token.build_session_token(<%= schema.singular %>)
     Repo.insert!(<%= schema.singular %>_token)
     token
