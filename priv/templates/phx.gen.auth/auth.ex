@@ -47,7 +47,7 @@ defmodule <%= inspect auth_module %> do
   """
   def log_out_<%= schema.singular %>(conn) do
     <%= schema.singular %>_token = get_session(conn, :<%= schema.singular %>_token)
-    <%= schema.singular %>_token && <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token!(<%= schema.singular %>_token)
+    <%= schema.singular %>_token && <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token(<%= schema.singular %>_token)
 
     if live_socket_id = get_session(conn, :live_socket_id) do
       <%= inspect(endpoint_module) %>.broadcast(live_socket_id, "disconnect", %{})
@@ -69,7 +69,7 @@ defmodule <%= inspect auth_module %> do
          {<%= schema.singular %>, token_inserted_at} <- <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token) do
       conn
       |> assign(:<%= scope_config.scope.assign_key %>, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
-      |> maybe_reissue_<%= schema.singular %>_session_token!(<%= schema.singular %>, token_inserted_at)
+      |> maybe_reissue_<%= schema.singular %>_session_token(<%= schema.singular %>, token_inserted_at)
     else
       nil -> assign(conn, :<%= scope_config.scope.assign_key %>, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(nil))
     end
@@ -90,7 +90,7 @@ defmodule <%= inspect auth_module %> do
   end
 
   # Reissue the session token if it is older than the configured reissue age.
-  defp maybe_reissue_<%= schema.singular %>_session_token!(conn, <%= schema.singular %>, token_inserted_at) do
+  defp maybe_reissue_<%= schema.singular %>_session_token(conn, <%= schema.singular %>, token_inserted_at) do
     token_age = <%= inspect datetime_module %>.diff(<%= datetime_now %>, token_inserted_at, :day)
 
     if token_age >= @session_reissue_age_in_days do

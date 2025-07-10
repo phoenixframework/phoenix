@@ -360,7 +360,7 @@
     test "deletes the token" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
       token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
-      assert <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token!(token) == :ok
+      assert <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token(token) == :ok
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
     end
   end
