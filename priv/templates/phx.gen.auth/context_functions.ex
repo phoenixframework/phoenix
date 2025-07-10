@@ -255,7 +255,7 @@
     <%= inspect schema.alias %>Notifier.deliver_update_email_instructions(<%= schema.singular %>, update_email_url_fun.(encoded_token))
   end
 
-  @doc ~S"""
+  @doc """
   Delivers the magic link login instructions to the given <%= schema.singular %>.
   """
   def deliver_login_instructions(%<%= inspect schema.alias %>{} = <%= schema.singular %>, magic_link_url_fun)
