@@ -302,7 +302,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     """
   end
 
-  @doc ~S"""
+  @doc """
   Renders a table with generic styling.
 
   ## Examples
