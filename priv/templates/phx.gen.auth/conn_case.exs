@@ -25,7 +25,7 @@
   It returns an updated `conn`.
   """
   def log_in_<%= schema.singular %>(conn, <%= schema.singular %>, opts \\ []) do
-    token = <%= inspect context.module %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+    token = <%= inspect context.module %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
 
     maybe_set_token_authenticated_at(token, opts[:token_authenticated_at])
 

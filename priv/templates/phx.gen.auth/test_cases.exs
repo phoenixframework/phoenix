@@ -236,7 +236,7 @@
     end
 
     test "deletes all tokens for the given <%= schema.singular %>", %{<%= schema.singular %>: <%= schema.singular %>} do
-      _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
 
       {:ok, {_, _}} =
         <%= inspect context.alias %>.update_<%= schema.singular %>_password(<%= schema.singular %>, %{
@@ -247,13 +247,13 @@
     end
   end
 
-  describe "generate_<%= schema.singular %>_session_token/1" do
+  describe "generate_<%= schema.singular %>_session_token!/1" do
     setup do
       %{<%= schema.singular %>: <%= schema.singular %>_fixture()}
     end
 
     test "generates a token", %{<%= schema.singular %>: <%= schema.singular %>} do
-      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
       assert <%= schema.singular %>_token = Repo.get_by(<%= inspect schema.alias %>Token, token: token)
       assert <%= schema.singular %>_token.context == "session"
       assert <%= schema.singular %>_token.authenticated_at != nil
@@ -270,7 +270,7 @@
 
     test "duplicates the authenticated_at of given <%= schema.singular %> in new token", %{<%= schema.singular %>: <%= schema.singular %>} do
       <%= schema.singular %> = %{<%= schema.singular %> | authenticated_at: <%= inspect datetime_module %>.add(<%= datetime_now %>, -3600)}
-      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
       assert <%= schema.singular %>_token = Repo.get_by(<%= inspect schema.alias %>Token, token: token)
       assert <%= schema.singular %>_token.authenticated_at == <%= schema.singular %>.authenticated_at
       assert <%= inspect datetime_module %>.compare(<%= schema.singular %>_token.inserted_at, <%= schema.singular %>.authenticated_at) == :gt
@@ -280,7 +280,7 @@
   describe "get_<%= schema.singular %>_by_session_token/1" do
     setup do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
-      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
       %{<%= schema.singular %>: <%= schema.singular %>, token: token}
     end
 
@@ -359,8 +359,8 @@
   describe "delete_<%= schema.singular %>_session_token/1" do
     test "deletes the token" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
-      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
-      assert <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token(token) == :ok
+      token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
+      assert <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token!(token) == :ok
       refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
     end
   end

@@ -108,7 +108,7 @@ defmodule <%= inspect auth_module %>Test do
 
   describe "logout_<%= schema.singular %>/1" do
     test "erases session and cookies", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
 
       conn =
         conn
@@ -145,7 +145,7 @@ defmodule <%= inspect auth_module %>Test do
 
   describe "fetch_<%= scope_config.scope.assign_key %>_for_<%= schema.singular %>/2" do
     test "authenticates <%= schema.singular %> from session", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
 
       conn =
         conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> <%= inspect schema.alias %>Auth.fetch_<%= scope_config.scope.assign_key %>_for_<%= schema.singular %>([])
@@ -177,7 +177,7 @@ defmodule <%= inspect auth_module %>Test do
     end
 
     test "does not authenticate if data is missing", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      _ = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
       conn = <%= inspect schema.alias %>Auth.fetch_<%= scope_config.scope.assign_key %>_for_<%= schema.singular %>(conn, [])
       refute get_session(conn, :<%= schema.singular %>_token)
       refute conn.assigns.<%= scope_config.scope.assign_key %>
@@ -216,7 +216,7 @@ defmodule <%= inspect auth_module %>Test do
     end
 
     test "assigns <%= scope_config.scope.assign_key %> based on a valid <%= schema.singular %>_token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
       {:cont, updated_socket} =
@@ -247,7 +247,7 @@ defmodule <%= inspect auth_module %>Test do
 
   describe "on_mount :require_authenticated" do
     test "authenticates <%= scope_config.scope.assign_key %> based on a valid <%= schema.singular %>_token", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
       {:cont, updated_socket} =
@@ -284,7 +284,7 @@ defmodule <%= inspect auth_module %>Test do
 
   describe "on_mount :require_sudo_mode" do
     test "allows <%= schema.plural %> that have authenticated in the last 10 minutes", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
-      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
 
       socket = %LiveView.Socket{
@@ -299,7 +299,7 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects when authentication is too old", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       eleven_minutes_ago = <%= datetime_now %> |> <%= inspect datetime_module %>.add(-11, :minute)
       <%= schema.singular %> = %{<%= schema.singular %> | authenticated_at: eleven_minutes_ago}
-      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>!(<%= schema.singular %>)
       {<%= schema.singular %>, token_inserted_at} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
       assert <%= inspect datetime_module %>.compare(token_inserted_at, <%= schema.singular %>.authenticated_at) == :gt
       session = conn |> put_session(:<%= schema.singular %>_token, <%= schema.singular %>_token) |> get_session()
@@ -327,7 +327,7 @@ defmodule <%= inspect auth_module %>Test do
     test "redirects when authentication is too old", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       eleven_minutes_ago = <%= datetime_now %> |> <%= inspect datetime_module %>.add(-11, :minute)
       <%= schema.singular %> = %{<%= schema.singular %> | authenticated_at: eleven_minutes_ago}
-      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token(<%= schema.singular %>)
+      <%= schema.singular %>_token = <%= inspect context.alias %>.generate_<%= schema.singular %>_session_token!(<%= schema.singular %>)
       {<%= schema.singular %>, token_inserted_at} = <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(<%= schema.singular %>_token)
       assert <%= inspect datetime_module %>.compare(token_inserted_at, <%= schema.singular %>.authenticated_at) == :gt
 

@@ -268,7 +268,7 @@
   @doc """
   Deletes the signed token with the given context.
   """
-  def delete_<%= schema.singular %>_session_token(token) do
+  def delete_<%= schema.singular %>_session_token!(token) do
     Repo.delete_all(from(<%= inspect schema.alias %>Token, where: [token: ^token, context: "session"]))
     :ok
   end
