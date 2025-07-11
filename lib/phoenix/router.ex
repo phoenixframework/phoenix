@@ -717,6 +717,18 @@ defmodule Phoenix.Router do
         #{verb}("/events/:id", EventController, :action)
 
     See `match/5` for options.
+
+    #{if verb == :head do
+      """
+      ## Compatibility with `Plug.Head`
+
+      By default, Phoenix applications include `Plug.Head` in their endpoint,
+      which converts HEAD requests into regular GET requests. Therefore, if
+      you intend to use `head/4` in your router, you need to move `Plug.Head`
+      to inside your router in a way it does not conflict with the paths given
+      to `head/4`.
+      """
+    end}
     """
     defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
       add_route(:match, unquote(verb), path, expand_alias(plug, __CALLER__), plug_opts, options)
