@@ -25,31 +25,35 @@ This release introduces deprecation warnings for several features that have been
   * Specifying layouts without modules, such as `put_layout(conn, :print)` or `put_layout(conn, html: :print)` is deprecated
   * The `:trailing_slash` option in `Phoenix.Router` has been deprecated in favor of using `Phoenix.VerifiedRoutes`. The overall usage of helpers will be deprecated in the future
 
+## Potential breaking changes
+
+  * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience
+
 ## 1.8.0-rc.3 (2025-05-07)
-  - [phx.gen.auth] allow configuring the scope's assign key in phx.gen.auth
-  - [phx.new] Do not override theme in root layout if explicitly set
 
 ### Enhancements
+  - [phx.gen.auth] Allow configuring the scope's assign key in phx.gen.auth
+  - [phx.new] Do not override theme in root layout if explicitly set
 
 ## 1.8.0-rc.2 (2025-04-29)
 
 ### Bug Fixes
-  - [phx.gen.live] only subscribe to pubsub if connected
-  - [phx.gen.auth] remove unused current_password field
-  - [phx.gen.auth] use context_app for scopes to fix generated scopes in umbrella apps
+  - [phx.gen.live] Only subscribe to pubsub if connected
+  - [phx.gen.auth] Remove unused current_password field
+  - [phx.gen.auth] Use context_app for scopes to fix generated scopes in umbrella apps
 
 ## 1.8.0-rc.1 (2025-04-16)
 
 ### Enhancements
   - [phx.new] Support PORT in dev
-  - [phx.gen.auth] - Replace `utc_now/0 + truncate/1` with `utc_now/1`
-  - [phx.gen.auth] - Make dev mailbox link more obvious
+  - [phx.gen.auth] Replace `utc_now/0 + truncate/1` with `utc_now/1`
+  - [phx.gen.auth] Make dev mailbox link more obvious
 
 ### Bug Fixes
   - [phx.new] Fix Tailwind custom variants for loading classes (#6194)
   - [phx.new] Fix heroicons path for umbrella apps
-  - Fix crash when an open :show page gets a PubSub broadcast for items (#6197)
-  - Fix missing index for scoped resources (#6186)
+  - [phx.gen.auth] Fix missing index for scoped resources (#6186)
+  - [phx.gen.live] Fix crash when an open :show page gets a PubSub broadcast for items (#6197)
 
 ## 1.8.0-rc.0 (2025-04-01) 🚀
 
