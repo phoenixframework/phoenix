@@ -122,7 +122,7 @@ defmodule Phoenix.MixProject do
       links: %{"GitHub" => @scm_url},
       files: ~w(
           assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs
-          installer/templates/phx_web/components/core_components.ex
+          installer/templates/phx_web/components/core_components.ex usage-rules.md
         )
     ]
   end
