@@ -4,7 +4,7 @@ Phoenix guides are broken into several major sections. The main building blocks 
 
 When building a Phoenix project, we are first and foremost building an Elixir application. Phoenix's job is to provide a web interface into our Elixir application. Naturally, we compose our applications with modules and functions, but we often assign specific responsibilities to certain modules and give them names: such as controllers, routers, and live views.
 
-However, the most important part of your web application is often where we encapsulate data access and data validation. We call these modules **contexts**. They often talk to a database, using `Ecto`, or APIs, using an HTTP client such as `Req`. By giving tnese modules a name, we help developers identify these patterns and talk about them. At the end of the day, contexts are just modules, as are your controllers, views, etc.
+However, the most important part of your web application is often where we encapsulate data access and data validation. We call these modules **contexts**. They often talk to a database, using `Ecto`, or APIs, using an HTTP client such as `Req`. By giving these modules a name, we help developers identify these patterns and talk about them. At the end of the day, contexts are just modules, as are your controllers, views, etc.
 
 If you have used `mix phx.gen.html`, `mix phx.gen.json`, or `mix phx.gen.live`, you have already used contexts. For example, run the following generator in a Phoenix application:
 
