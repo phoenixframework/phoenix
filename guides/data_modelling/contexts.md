@@ -6,13 +6,13 @@ When building a Phoenix project, we are first and foremost building an Elixir ap
 
 However, the most important part of your web application is often where we encapsulate data access and data validation. We call these modules **contexts**. They often talk to a database, using `Ecto`, or APIs, using an HTTP client such as `Req`. By giving tnese modules a name, we help developers identify these patterns and talk about them. At the end of the day, contexts are just modules, as are your controllers, views, etc.
 
-If you have used `mix phx.gen.html`, `mix phx.gen.json`, or `mix phx.gen.live`, you have already used contexts. For example, the following generator:
+If you have used `mix phx.gen.html`, `mix phx.gen.json`, or `mix phx.gen.live`, you have already used contexts. For example, run the following generator in a Phoenix application:
 
 ```console
 $ mix phx.gen.live Post posts title body:text
 ```
 
-will output a few files, among them, a `MyApp.Posts.Post` schema in `lib/my_app/posts/post.ex`, which outlines how the resource is represented in the database, and a **context** module named  `MyApp.Posts` that encapsulates all the database access to said schema. The `MyApp.Posts` module centralizes all functionality related to posts, instead of scattering logic around controllers, LiveViews, etc.
+The command above will output a few files, among them, a `MyApp.Posts.Post` schema in `lib/my_app/posts/post.ex`, which outlines how the resource is represented in the database, and a **context** module named `MyApp.Posts` that encapsulates all the database access to said schema. The `MyApp.Posts` module centralizes all functionality related to posts, instead of scattering logic around controllers, LiveViews, etc.
 
 Contexts are also useful to nest resources. For example, if you are adding comments to your posts, you can colocate their schemas, since comments belongs to posts, like this:
 
