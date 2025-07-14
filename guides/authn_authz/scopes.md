@@ -313,7 +313,7 @@ Setting `schema_table` to `nil` means that the generated resources don't have a 
 We can now generate a new resource, for example with `phx.gen.html`:
 
 ```console
-$ mix phx.gen.html Blog Post posts title:string
+$ mix phx.gen.html Post posts title:string
 ```
 
 When you now visit [http://localhost:4000/posts](http://localhost:4000/posts), and create a new post, you will see that it is only visible to the current session. If you open a private browser window and visit the same URL, the previously created post is not visible. Similarly, if you create a new post in the private window, it is not visible in the other window. If you try to copy the URL of a post created in one session and access it in another, you will get an `Ecto.NoResultsError` error, which is automatically converted to 404 when the `debug_errors` setting is disabled.
@@ -422,10 +422,7 @@ end
 def on_mount(:assign_org_to_scope, _params, _session, socket), do: {:cont, socket}
 ```
 
-This way, if a route is defined like `live /organizations/:org/posts`, the `assign_org_to_scope` plug would fetch the organization from the path and assign it to the scope. This code assumes that `get_organization_by_slug!/2` raises an
-`Ecto.NoResultsError` which would be automatically converted to `404`, but you could also handle the error explicitly and,
-for example, set an error flash and redirect to another page, like a dashboard. The `get_organization_by_slug!/2` function
-should also rely on the current scope to filter the organizations to those the user has access to.
+This way, if a route is defined like `live /organizations/:org/posts`, the `assign_org_to_scope` plug would fetch the organization from the path and assign it to the scope. This code assumes that `get_organization_by_slug!/2` raises an `Ecto.NoResultsError` which would be automatically converted to `404`, but you could also handle the error explicitly and, for example, set an error flash and redirect to another page, like a dashboard. The `get_organization_by_slug!/2` function should also rely on the current scope to filter the organizations to those the user has access to.
 
 Then, we are ready to define a new scope in our application's `config/config.exs` to generate resources scoped to the organization:
 
