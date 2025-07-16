@@ -192,7 +192,7 @@ Now we know how data is fetched, but how are products persisted? Let's take a lo
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_product(attrs \\ %{}) do
+  def create_product(attrs) do
     %Product{}
     |> Product.changeset(attrs)
     |> Repo.insert()

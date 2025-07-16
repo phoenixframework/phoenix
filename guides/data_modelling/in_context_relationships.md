@@ -131,7 +131,7 @@ With our schema associations set up, we can implement the selection of categorie
 +   Product |> Repo.get!(id) |> Repo.preload(:categories)
 + end
 
-  def create_product(attrs \\ %{}) do
+  def create_product(attrs) do
     %Product{}
 -   |> Product.changeset(attrs)
 +   |> change_product(attrs)
