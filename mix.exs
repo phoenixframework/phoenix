@@ -119,7 +119,10 @@ defmodule Phoenix.MixProject do
     [
       maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
       licenses: ["MIT"],
-      links: %{"GitHub" => @scm_url},
+      links: %{
+        "GitHub" => @scm_url,
+        "Changelog" => "https://hexdocs.pm/phoenix/changelog.html"
+      },
       files: ~w(
           assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs
           installer/templates/phx_web/components/core_components.ex
