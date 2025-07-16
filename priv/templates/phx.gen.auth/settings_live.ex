@@ -5,6 +5,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   alias <%= inspect context.module %>
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
@@ -65,6 +66,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     """
   end
 
+  @impl true
   def mount(%{"token" => token}, _session, socket) do
     socket =
       case <%= inspect context.alias %>.update_<%= schema.singular %>_email(socket.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>, token) do
@@ -93,6 +95,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok, socket}
   end
 
+  @impl true
   def handle_event("validate_email", params, socket) do
     %{"<%= schema.singular %>" => <%= schema.singular %>_params} = params
 

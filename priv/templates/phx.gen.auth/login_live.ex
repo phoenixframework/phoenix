@@ -3,6 +3,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   alias <%= inspect context.module %>
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
@@ -91,6 +92,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     """
   end
 
+  @impl true
   def mount(_params, _session, socket) do
     email =
       Phoenix.Flash.get(socket.assigns.flash, :email) ||
@@ -101,6 +103,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok, assign(socket, form: form, trigger_submit: false)}
   end
 
+  @impl true
   def handle_event("submit_password", _params, socket) do
     {:noreply, assign(socket, :trigger_submit, true)}
   end
