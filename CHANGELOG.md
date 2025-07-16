@@ -29,6 +29,22 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience
 
+## 1.8.0-rc.4 (2025-07-14)
+
+### Bug Fixes
+  - Fix phx.gen.presence PubSub server name for umbrella apps
+  - Fix `phx.gen.live` subscribing to pubsub in disconnected mounts
+
+### Enhancements
+  - [phx.new] Initialize initial git repo when git is installed
+  - [phx.new] Opt-in to HEEx `:debug_tags_location` in development
+  - [phx.gen.live|html|json|context] Make context name optional and inflect based on schema when missing
+  - [phx.gen.*] Use new Ecto 3.13 `Repo.transact/2` in generators
+  - [phx.gen.auth] Warn when using `phx.gen.auth` without esbuild as features assume `phoenix_html.js` in bundle
+  - Add `security.md` guide for security best practices
+  - [phoenix.js] - Add fetch() support to LongPoll when XMLHTTPRequest is not available
+  - Optimize parameter scrubbing by precompiling patterns
+
 ## 1.8.0-rc.3 (2025-05-07)
 
 ### Enhancements

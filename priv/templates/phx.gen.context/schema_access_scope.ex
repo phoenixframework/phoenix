@@ -44,10 +44,10 @@
 
   ## Examples
 
-      iex> get_<%= schema.singular %>!(123)
+      iex> get_<%= schema.singular %>!(scope, 123)
       %<%= inspect schema.alias %>{}
 
-      iex> get_<%= schema.singular %>!(456)
+      iex> get_<%= schema.singular %>!(scope, 456)
       ** (Ecto.NoResultsError)
 
   """
@@ -60,10 +60,10 @@
 
   ## Examples
 
-      iex> create_<%= schema.singular %>(%{field: value})
+      iex> create_<%= schema.singular %>(scope, %{field: value})
       {:ok, %<%= inspect schema.alias %>{}}
 
-      iex> create_<%= schema.singular %>(%{field: bad_value})
+      iex> create_<%= schema.singular %>(scope, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
@@ -82,10 +82,10 @@
 
   ## Examples
 
-      iex> update_<%= schema.singular %>(<%= schema.singular %>, %{field: new_value})
+      iex> update_<%= schema.singular %>(scope, <%= schema.singular %>, %{field: new_value})
       {:ok, %<%= inspect schema.alias %>{}}
 
-      iex> update_<%= schema.singular %>(<%= schema.singular %>, %{field: bad_value})
+      iex> update_<%= schema.singular %>(scope, <%= schema.singular %>, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
@@ -106,10 +106,10 @@
 
   ## Examples
 
-      iex> delete_<%= schema.singular %>(<%= schema.singular %>)
+      iex> delete_<%= schema.singular %>(scope, <%= schema.singular %>)
       {:ok, %<%= inspect schema.alias %>{}}
 
-      iex> delete_<%= schema.singular %>(<%= schema.singular %>)
+      iex> delete_<%= schema.singular %>(scope, <%= schema.singular %>)
       {:error, %Ecto.Changeset{}}
 
   """
@@ -128,7 +128,7 @@
 
   ## Examples
 
-      iex> change_<%= schema.singular %>(<%= schema.singular %>)
+      iex> change_<%= schema.singular %>(scope, <%= schema.singular %>)
       %Ecto.Changeset{data: %<%= inspect schema.alias %>{}}
 
   """

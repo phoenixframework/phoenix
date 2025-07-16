@@ -240,6 +240,7 @@ defmodule Mix.Tasks.Phx.New do
     |> validate_project(path)
     |> generator.generate()
     |> maybe_copy_cached_build(path)
+    |> maybe_init_git(path)
     |> maybe_prompt_to_install_deps(generator, path)
   end
 
@@ -467,6 +468,40 @@ defmodule Mix.Tasks.Phx.New do
           "You have #{System.version()}. Please update accordingly"
       )
     end
+  end
+
+  defp git_available? do
+    case System.find_executable("git") do
+      nil -> false
+      _path -> true
+    end
+  end
+
+  defp inside_git_repo?(path) do
+    case System.cmd("git", ["status"], cd: path, stderr_to_stdout: true) do
+      {_output, 0} -> true
+      _ -> false
+    end
+  rescue
+    _ -> false
+  end
+
+  defp maybe_init_git(%Project{} = project, path_key) do
+    project_path = Map.fetch!(project, path_key)
+
+    if git_available?() and not inside_git_repo?(project_path) do
+      Mix.shell().info([:green, "* initializing git repository", :reset])
+
+      case System.cmd("git", ["init"], cd: project_path) do
+        {_output, 0} ->
+          :ok
+
+        {output, _} ->
+          Mix.shell().error("Failed to initialize git repository: #{output}")
+      end
+    end
+
+    project
   end
 
   defp maybe_copy_cached_build(%Project{} = project, path_key) do
