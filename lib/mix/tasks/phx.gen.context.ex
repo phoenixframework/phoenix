@@ -144,7 +144,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @doc false
   def build(args, help \\ __MODULE__) do
     {opts, parsed, _} = parse_opts(args)
-    [context_name, schema_name, plural | schema_args] = validate_args!(parsed, help)
+
+    {context_name, schema_name, plural, schema_args} =
+      validate_args!(parsed, help)
+
     schema_module = inspect(Module.concat(context_name, schema_name))
     schema = Gen.Schema.build([schema_module, plural | schema_args], opts, help)
     context = Context.new(context_name, schema, opts)
@@ -352,7 +355,24 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
   end
 
-  defp validate_args!([context, schema, _plural | _] = args, help) do
+  defp validate_args!(
+         [maybe_context_name, schema_name_or_plural, plural_or_first_attr | schema_args],
+         help
+       ) do
+    has_context? =
+      case schema_name_or_plural do
+        <<char::integer-size(8), _rest::binary>> when char in ?A..?Z -> true
+        _ -> false
+      end
+
+    {context, schema, plural, schema_args} =
+      if has_context? do
+        {maybe_context_name, schema_name_or_plural, plural_or_first_attr, schema_args}
+      else
+        {Phoenix.Naming.camelize(schema_name_or_plural), maybe_context_name,
+         schema_name_or_plural, [plural_or_first_attr | schema_args]}
+      end
+
     cond do
       not Context.valid?(context) ->
         help.raise_with_help(
@@ -376,7 +396,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
         )
 
       true ->
-        args
+        {context, schema, plural, schema_args}
     end
   end
 

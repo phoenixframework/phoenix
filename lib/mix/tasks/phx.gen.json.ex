@@ -127,6 +127,16 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     end
 
     {context, schema} = Gen.Context.build(args)
+
+    if schema.attrs == [] do
+      Mix.raise("""
+      No attributes provided. The phx.gen.json generator requires at least one attribute. For example:
+
+        mix phx.gen.json Accounts User users name:string
+
+      """)
+    end
+
     Gen.Context.prompt_for_code_injection(context)
 
     {conn_scope, context_scope_prefix} =
