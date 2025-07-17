@@ -253,7 +253,13 @@ defmodule Phoenix.MixProject do
   defp aliases do
     [
       docs: ["docs", &generate_js_docs/1],
-      "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min", "esbuild main"],
+      "assets.build": [
+        "cmd npm run build",
+        "esbuild module",
+        "esbuild cdn",
+        "esbuild cdn_min",
+        "esbuild main"
+      ],
       "assets.watch": "esbuild module --watch",
       "archive.build": &raise_on_archive_build/1,
       # copy core_components before compiling / publishing

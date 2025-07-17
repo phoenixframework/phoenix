@@ -12,7 +12,7 @@ config :phoenix,
 if Mix.env() == :dev do
   esbuild = fn args ->
     [
-      args: ~w(./js/phoenix --bundle) ++ args,
+      args: ~w(./dist/phoenix --bundle) ++ args,
       cd: Path.expand("../assets", __DIR__),
       env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
     ]

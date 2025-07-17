@@ -13,22 +13,22 @@
  * reconnectTimer.scheduleTimeout() // fires after 1000
  */
 export default class Timer {
-  private callback: () => void
-  private timerCalc: (tries: number) => number
-  private timer: number | null
-  private tries: number
+  private callback: () => void;
+  private timerCalc: (tries: number) => number;
+  private timer: number | null;
+  private tries: number;
 
   constructor(callback: () => void, timerCalc: (tries: number) => number) {
-    this.callback = callback
-    this.timerCalc = timerCalc
-    this.timer = null
-    this.tries = 0
+    this.callback = callback;
+    this.timerCalc = timerCalc;
+    this.timer = null;
+    this.tries = 0;
   }
 
   reset(): void {
-    this.tries = 0
+    this.tries = 0;
     if (this.timer !== null) {
-      clearTimeout(this.timer)
+      clearTimeout(this.timer);
     }
   }
 
@@ -37,12 +37,15 @@ export default class Timer {
    */
   scheduleTimeout(): void {
     if (this.timer !== null) {
-      clearTimeout(this.timer)
+      clearTimeout(this.timer);
     }
 
-    this.timer = setTimeout(() => {
-      this.tries = this.tries + 1
-      this.callback()
-    }, this.timerCalc(this.tries + 1)) as any
+    this.timer = setTimeout(
+      () => {
+        this.tries = this.tries + 1;
+        this.callback();
+      },
+      this.timerCalc(this.tries + 1),
+    ) as any;
   }
 }

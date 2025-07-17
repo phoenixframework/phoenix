@@ -1,0 +1,15 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./assets/js/phoenix/index.ts"],
+  "out": "doc/js",
+  "highlightLanguages": [
+    "bash",
+    "console",
+    "css",
+    "html",
+    "javascript",
+    "json",
+    "typescript",
+    "elixir"
+  ]
+}
