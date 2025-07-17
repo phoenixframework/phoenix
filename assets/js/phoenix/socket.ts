@@ -281,6 +281,7 @@ export default class Socket {
   private reconnectTimer: Timer;
   private authToken?: string;
   private conn: TransportInstance | null;
+  private fallbackRef: string;
 
   /**
    * @internal
@@ -634,7 +635,10 @@ export default class Socket {
         fallback(reason);
       }
     });
-    this.onOpen(() => {
+    if (this.fallbackRef) {
+      this.off([this.fallbackRef]);
+    }
+    this.fallbackRef = this.onOpen(() => {
       established = true;
       if (!primaryTransport) {
         // only memorize LP if we never connected to primary

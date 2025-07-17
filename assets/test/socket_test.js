@@ -109,6 +109,44 @@ describe("with transports", function () {
           socket.connect();
         });
       });
+
+      it("cleans up previous fallback onOpen handler on reconnect", function (done) {
+        jest.useFakeTimers();
+        const mockLogger = jest.fn();
+        socket = new Socket("/socket", { 
+          longPollFallbackMs: 20,
+          logger: mockLogger,
+          debug: true
+        });
+        
+        jest.spyOn(socket, "ping").mockImplementation((callback) => {
+          callback(100);
+        });
+        
+        // First connection with fallback
+        socket.connect();
+        socket.onConnOpen();
+        jest.advanceTimersByTime(50);
+        
+        // Verify first "connected to primary after" log
+        expect(mockLogger).toHaveBeenCalledWith("transport", "connected to primary after", 100);
+        mockLogger.mockClear();
+        
+        // Disconnect and reconnect to trigger another connectWithFallback
+        socket.disconnect();
+        socket.connect();
+        socket.onConnOpen();
+        jest.advanceTimersByTime(50);
+        
+        // Verify that "connected to primary after" is logged only once for the second connection
+        const primaryConnectLogs = mockLogger.mock.calls.filter(
+          call => call[0] === "transport" && call[1] === "connected to primary after"
+        );
+        expect(primaryConnectLogs.length).toBe(1);
+        
+        jest.useRealTimers();
+        done();
+      });
     });
   });
 
