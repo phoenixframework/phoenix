@@ -3,6 +3,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   alias <%= inspect context.module %>
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
@@ -71,6 +72,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     """
   end
 
+  @impl true
   def mount(%{"token" => token}, _session, socket) do
     if <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>_by_magic_link_token(token) do
       form = to_form(%{"token" => token}, as: "<%= schema.singular %>")
@@ -85,6 +87,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     end
   end
 
+  @impl true
   def handle_event("submit", %{"<%= schema.singular %>" => params}, socket) do
     {:noreply, assign(socket, form: to_form(params, as: "<%= schema.singular %>"), trigger_submit: true)}
   end

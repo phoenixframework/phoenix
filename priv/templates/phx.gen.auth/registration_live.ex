@@ -4,6 +4,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect context.module %>
   alias <%= inspect schema.module %>
 
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
@@ -40,6 +41,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     """
   end
 
+  @impl true
   def mount(_params, _session, %{assigns: %{<%= scope_config.scope.assign_key %>: %{<%= schema.singular %>: <%= schema.singular %>}}} = socket)
       when not is_nil(<%= schema.singular %>) do
     {:ok, redirect(socket, to: <%= inspect auth_module %>.signed_in_path(socket))}
@@ -51,6 +53,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok, assign_form(socket, changeset), temporary_assigns: [form: nil]}
   end
 
+  @impl true
   def handle_event("save", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
     case <%= inspect context.alias %>.register_<%= schema.singular %>(<%= schema.singular %>_params) do
       {:ok, <%= schema.singular %>} ->
