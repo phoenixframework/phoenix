@@ -14,7 +14,7 @@ $ mix phx.gen.live Post posts title body:text
 
 The command above will output a few files, among them, a `MyApp.Posts.Post` schema in `lib/my_app/posts/post.ex`, which outlines how the resource is represented in the database, and a **context** module named `MyApp.Posts` that encapsulates all the database access to said schema. The `MyApp.Posts` module centralizes all functionality related to posts, instead of scattering logic around controllers, LiveViews, etc.
 
-Contexts are also useful to nest resources. For example, if you are adding comments to your posts, you can colocate their schemas, since comments belongs to posts, like this:
+Contexts are also useful to nest resources. For example, if you are adding comments to your posts, you can colocate their schemas, since comments belong to posts, like this:
 
 ```console
 $ mix phx.gen.live Posts Comment comments post_id:references:posts body:text
