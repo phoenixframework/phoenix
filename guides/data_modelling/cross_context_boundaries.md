@@ -338,7 +338,7 @@ Let's implement the new interface for the `ShoppingCart` context API in `lib/hel
 +    )
 +  end
 
-   def create_cart(%Scope{} = scope, attrs \\ %{}) do
+   def create_cart(%Scope{} = scope, attrs) do
      with {:ok, cart = %Cart{}} <-
             %Cart{}
             |> Cart.changeset(attrs, scope)
