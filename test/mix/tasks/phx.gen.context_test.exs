@@ -159,6 +159,10 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         Gen.Context.run(~w(blog Post posts title:string))
       end
 
+      assert_raise Mix.Error, ~r/Expected the schema, "posts", to be a valid module name/, fn ->
+        Gen.Context.run(~w(Post posts title:string))
+      end
+
       assert_raise Mix.Error, ~r/The context and schema should have different names/, fn ->
         Gen.Context.run(~w(Blog Blog blogs))
       end
@@ -265,47 +269,6 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def update_comment"
         assert file =~ "def delete_comment"
         assert file =~ "def change_comment"
-      end)
-    end)
-  end
-
-  test "generates context without explicit name", config do
-    in_tmp_project(config.test, fn ->
-      Gen.Context.run(~w(Post posts slug:unique secret:redact title:string))
-
-      assert_file("lib/phoenix/posts/post.ex", fn file ->
-        assert file =~ "field :title, :string"
-        assert file =~ "field :secret, :string, redact: true"
-      end)
-
-      assert_file("lib/phoenix/posts.ex", fn file ->
-        assert file =~ "def get_post!"
-        assert file =~ "def list_posts"
-        assert file =~ "def create_post"
-        assert file =~ "def update_post"
-        assert file =~ "def delete_post"
-        assert file =~ "def change_post"
-      end)
-
-      assert_file("test/phoenix/posts_test.exs", fn file ->
-        assert file =~ "use Phoenix.DataCase"
-        assert file =~ "describe \"posts\" do"
-        assert file =~ "import Phoenix.PostsFixtures"
-      end)
-
-      assert_file("test/support/fixtures/posts_fixtures.ex", fn file ->
-        assert file =~ "defmodule Phoenix.PostsFixtures do"
-        assert file =~ "def post_fixture(attrs \\\\ %{})"
-        assert file =~ "title: \"some title\""
-      end)
-
-      assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
-
-      assert_file(path, fn file ->
-        assert file =~ "create table(:posts)"
-        assert file =~ "add :title, :string"
-        assert file =~ "add :secret, :string"
-        assert file =~ "create unique_index(:posts, [:slug])"
       end)
     end)
   end
