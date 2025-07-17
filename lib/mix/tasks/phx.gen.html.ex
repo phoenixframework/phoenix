@@ -127,7 +127,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
     Mix.Phoenix.ensure_live_view_compat!(__MODULE__)
 
-    {context, schema} = Gen.Context.build(args)
+    {context, schema} = Gen.Context.build(args, name_optional: true)
 
     if schema.attrs == [] do
       Mix.raise("""

@@ -185,7 +185,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       OptionParser.to_argv(Keyword.drop(opts, [:scope, :assign_key]), switches: @switches) ++
         parsed
 
-    {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], __MODULE__)
+    {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], help_module: __MODULE__)
 
     context = put_live_option(context)
     Gen.Context.prompt_for_code_injection(context)

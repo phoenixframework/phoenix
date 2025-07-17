@@ -126,7 +126,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
       )
     end
 
-    {context, schema} = Gen.Context.build(args)
+    {context, schema} = Gen.Context.build(args, name_optional: true)
 
     if schema.attrs == [] do
       Mix.raise("""

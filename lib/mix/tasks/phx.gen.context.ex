@@ -142,11 +142,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
-  def build(args, help \\ __MODULE__) do
+  def build(args, opts \\ []) do
+    help = Keyword.get(opts, :help_module, __MODULE__)
+    optional = Keyword.get(opts, :name_optional, false)
+
     {opts, parsed, _} = parse_opts(args)
 
     {context_name, schema_name, plural, schema_args} =
-      validate_args!(parsed, help)
+      validate_args!(parsed, optional, help)
 
     schema_module = inspect(Module.concat(context_name, schema_name))
     schema = Gen.Schema.build([schema_module, plural | schema_args], opts, help)
@@ -357,12 +360,13 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   defp validate_args!(
          [maybe_context_name, schema_name_or_plural, plural_or_first_attr | schema_args],
+         optional,
          help
        ) do
     has_context? =
       case schema_name_or_plural do
         <<char::integer-size(8), _rest::binary>> when char in ?A..?Z -> true
-        _ -> false
+        _ -> not optional
       end
 
     {context, schema, plural, schema_args} =
@@ -400,7 +404,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
   end
 
-  defp validate_args!(_, help) do
+  defp validate_args!(_, _, help) do
     help.raise_with_help("Invalid arguments")
   end
 
