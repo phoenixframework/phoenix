@@ -192,16 +192,39 @@
  * @module phoenix
  */
 
-import Channel from "./channel"
-import LongPoll from "./longpoll"
-import Presence from "./presence"
-import Serializer from "./serializer"
-import Socket from "./socket"
+import Channel from "./channel";
+import LongPoll from "./longpoll";
+import {
+  default as Presence,
+  PresenceState,
+  PresenceMeta,
+  PresenceMap,
+  PresenceDiff,
+  PresenceOptions,
+  PresenceCallback,
+  PresenceSyncCallback,
+  PresenceChooser,
+} from "./presence";
+import Serializer from "./serializer";
+import { default as Socket, Message } from "./socket";
+import Push from "./push";
+import { SocketOptions } from "./socket";
 
 export {
   Channel,
   LongPoll,
   Presence,
   Serializer,
-  Socket
-}
+  Push,
+  Socket,
+  SocketOptions,
+  PresenceState,
+  PresenceMeta,
+  PresenceMap,
+  PresenceDiff,
+  PresenceOptions,
+  PresenceCallback,
+  PresenceSyncCallback,
+  PresenceChooser,
+  Message,
+};

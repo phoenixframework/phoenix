@@ -17,7 +17,7 @@ var Phoenix = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // js/phoenix/index.js
+  // dist/phoenix/index.js
   var phoenix_exports = {};
   __export(phoenix_exports, {
     Channel: () => Channel,
@@ -27,24 +27,26 @@ var Phoenix = (() => {
     Socket: () => Socket
   });
 
-  // js/phoenix/utils.js
-  var closure = (value) => {
+  // dist/phoenix/utils.js
+  function closure(value) {
     if (typeof value === "function") {
       return value;
     } else {
-      let closure2 = function() {
-        return value;
-      };
-      return closure2;
+      return () => value;
     }
-  };
+  }
 
-  // js/phoenix/constants.js
+  // dist/phoenix/constants.js
   var globalSelf = typeof self !== "undefined" ? self : null;
   var phxWindow = typeof window !== "undefined" ? window : null;
   var global = globalSelf || phxWindow || globalThis;
   var DEFAULT_VSN = "2.0.0";
-  var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
+  var SOCKET_STATES = {
+    connecting: 0,
+    open: 1,
+    closing: 2,
+    closed: 3
+  };
   var DEFAULT_TIMEOUT = 1e4;
   var WS_CLOSE_NORMAL = 1e3;
   var CHANNEL_STATES = {
@@ -70,23 +72,22 @@ var Phoenix = (() => {
   };
   var AUTH_TOKEN_PREFIX = "base64url.bearer.phx.";
 
-  // js/phoenix/push.js
+  // dist/phoenix/push.js
   var Push = class {
     constructor(channel, event, payload, timeout) {
       this.channel = channel;
       this.event = event;
-      this.payload = payload || function() {
-        return {};
-      };
+      this.payload = typeof payload === "function" ? payload : () => payload || {};
       this.receivedResp = null;
       this.timeout = timeout;
       this.timeoutTimer = null;
       this.recHooks = [];
       this.sent = false;
+      this.ref = null;
+      this.refEvent = null;
     }
     /**
-     *
-     * @param {number} timeout
+     * Resend the push with a new timeout
      */
     resend(timeout) {
       this.timeout = timeout;
@@ -94,7 +95,7 @@ var Phoenix = (() => {
       this.send();
     }
     /**
-     *
+     * Send the push
      */
     send() {
       if (this.hasReceived("timeout")) {
@@ -111,9 +112,7 @@ var Phoenix = (() => {
       });
     }
     /**
-     *
-     * @param {*} status
-     * @param {*} callback
+     * Register a callback for a specific response status
      */
     receive(status, callback) {
       if (this.hasReceived(status)) {
@@ -151,8 +150,10 @@ var Phoenix = (() => {
      * @private
      */
     cancelTimeout() {
-      clearTimeout(this.timeoutTimer);
-      this.timeoutTimer = null;
+      if (this.timeoutTimer !== null) {
+        clearTimeout(this.timeoutTimer);
+        this.timeoutTimer = null;
+      }
     }
     /**
      * @private
@@ -187,7 +188,7 @@ var Phoenix = (() => {
     }
   };
 
-  // js/phoenix/timer.js
+  // dist/phoenix/timer.js
   var Timer = class {
     constructor(callback, timerCalc) {
       this.callback = callback;
@@ -197,13 +198,17 @@ var Phoenix = (() => {
     }
     reset() {
       this.tries = 0;
-      clearTimeout(this.timer);
+      if (this.timer !== null) {
+        clearTimeout(this.timer);
+      }
     }
     /**
      * Cancels any previous scheduleTimeout and schedules callback
      */
     scheduleTimeout() {
-      clearTimeout(this.timer);
+      if (this.timer !== null) {
+        clearTimeout(this.timer);
+      }
       this.timer = setTimeout(() => {
         this.tries = this.tries + 1;
         this.callback();
@@ -211,7 +216,7 @@ var Phoenix = (() => {
     }
   };
 
-  // js/phoenix/channel.js
+  // dist/phoenix/channel.js
   var Channel = class {
     constructor(topic, params, socket) {
       this.state = CHANNEL_STATES.closed;
@@ -231,14 +236,12 @@ var Phoenix = (() => {
         }
       }, this.socket.rejoinAfterMs);
       this.stateChangeRefs.push(this.socket.onError(() => this.rejoinTimer.reset()));
-      this.stateChangeRefs.push(
-        this.socket.onOpen(() => {
-          this.rejoinTimer.reset();
-          if (this.isErrored()) {
-            this.rejoin();
-          }
-        })
-      );
+      this.stateChangeRefs.push(this.socket.onOpen(() => {
+        this.rejoinTimer.reset();
+        if (this.isErrored()) {
+          this.rejoin();
+        }
+      }));
       this.joinPush.receive("ok", () => {
         this.state = CHANNEL_STATES.joined;
         this.rejoinTimer.reset();
@@ -272,7 +275,7 @@ var Phoenix = (() => {
       this.joinPush.receive("timeout", () => {
         if (this.socket.hasLogger())
           this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout);
-        let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout);
+        const leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout);
         leavePush.send();
         this.state = CHANNEL_STATES.errored;
         this.joinPush.reset();
@@ -286,8 +289,6 @@ var Phoenix = (() => {
     }
     /**
      * Join the channel
-     * @param {integer} timeout
-     * @returns {Push}
      */
     join(timeout = this.timeout) {
       if (this.joinedOnce) {
@@ -301,14 +302,12 @@ var Phoenix = (() => {
     }
     /**
      * Hook into channel close
-     * @param {Function} callback
      */
     onClose(callback) {
-      this.on(CHANNEL_EVENTS.close, callback);
+      return this.on(CHANNEL_EVENTS.close, callback);
     }
     /**
      * Hook into channel errors
-     * @param {Function} callback
      */
     onError(callback) {
       return this.on(CHANNEL_EVENTS.error, (reason) => callback(reason));
@@ -325,13 +324,9 @@ var Phoenix = (() => {
      * channel.off("event", ref1)
      * // Since unsubscription, do_stuff won't fire,
      * // while do_other_stuff will keep firing on the "event"
-     *
-     * @param {string} event
-     * @param {Function} callback
-     * @returns {integer} ref
      */
     on(event, callback) {
-      let ref = this.bindingRef++;
+      const ref = this.bindingRef++;
       this.bindings.push({ event, ref, callback });
       return ref;
     }
@@ -349,9 +344,6 @@ var Phoenix = (() => {
      *
      * // Unsubscribe all handlers from event
      * channel.off("event")
-     *
-     * @param {string} event
-     * @param {integer} ref
      */
     off(event, ref) {
       this.bindings = this.bindings.filter((bind) => {
@@ -359,6 +351,7 @@ var Phoenix = (() => {
       });
     }
     /**
+     * @internal
      * @private
      */
     canPush() {
@@ -375,19 +368,12 @@ var Phoenix = (() => {
      *   .receive("ok", payload => console.log("phoenix replied:", payload))
      *   .receive("error", err => console.log("phoenix errored", err))
      *   .receive("timeout", () => console.log("timed out pushing"))
-     * @param {string} event
-     * @param {Object} payload
-     * @param {number} [timeout]
-     * @returns {Push}
      */
-    push(event, payload, timeout = this.timeout) {
-      payload = payload || {};
+    push(event, payload = {}, timeout = this.timeout) {
       if (!this.joinedOnce) {
         throw new Error(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`);
       }
-      let pushEvent = new Push(this, event, function() {
-        return payload;
-      }, timeout);
+      const pushEvent = new Push(this, event, () => payload, timeout);
       if (this.canPush()) {
         pushEvent.send();
       } else {
@@ -396,7 +382,8 @@ var Phoenix = (() => {
       }
       return pushEvent;
     }
-    /** Leaves the channel
+    /**
+     * Leaves the channel
      *
      * Unsubscribes from server events, and
      * instructs channel to terminate on server
@@ -408,20 +395,17 @@ var Phoenix = (() => {
      *
      * @example
      * channel.leave().receive("ok", () => alert("left!") )
-     *
-     * @param {integer} timeout
-     * @returns {Push}
      */
     leave(timeout = this.timeout) {
       this.rejoinTimer.reset();
       this.joinPush.cancelTimeout();
       this.state = CHANNEL_STATES.leaving;
-      let onClose = () => {
+      const onClose = () => {
         if (this.socket.hasLogger())
           this.socket.log("channel", `leave ${this.topic}`);
         this.trigger(CHANNEL_EVENTS.close, "leave");
       };
-      let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout);
+      const leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout);
       leavePush.receive("ok", () => onClose()).receive("timeout", () => onClose());
       leavePush.send();
       if (!this.canPush()) {
@@ -436,15 +420,12 @@ var Phoenix = (() => {
      * before dispatching to the channel callbacks.
      *
      * Must return the payload, modified or unmodified
-     * @param {string} event
-     * @param {Object} payload
-     * @param {integer} ref
-     * @returns {Object}
      */
-    onMessage(_event, payload, _ref) {
+    onMessage(_event, payload, _ref, _joinRef) {
       return payload;
     }
     /**
+     * @internal
      * @private
      */
     isMember(topic, event, payload, joinRef) {
@@ -453,19 +434,26 @@ var Phoenix = (() => {
       }
       if (joinRef && joinRef !== this.joinRef()) {
         if (this.socket.hasLogger())
-          this.socket.log("channel", "dropping outdated message", { topic, event, payload, joinRef });
+          this.socket.log("channel", "dropping outdated message", {
+            topic,
+            event,
+            payload,
+            joinRef
+          });
         return false;
       } else {
         return true;
       }
     }
     /**
+     * @internal
      * @private
      */
     joinRef() {
       return this.joinPush.ref;
     }
     /**
+     * @internal
      * @private
      */
     rejoin(timeout = this.timeout) {
@@ -477,50 +465,57 @@ var Phoenix = (() => {
       this.joinPush.resend(timeout);
     }
     /**
+     * @internal
      * @private
      */
     trigger(event, payload, ref, joinRef) {
-      let handledPayload = this.onMessage(event, payload, ref, joinRef);
+      const handledPayload = this.onMessage(event, payload, ref, joinRef);
       if (payload && !handledPayload) {
         throw new Error("channel onMessage callbacks must return the payload, modified or unmodified");
       }
-      let eventBindings = this.bindings.filter((bind) => bind.event === event);
+      const eventBindings = this.bindings.filter((bind) => bind.event === event);
       for (let i = 0; i < eventBindings.length; i++) {
-        let bind = eventBindings[i];
+        const bind = eventBindings[i];
         bind.callback(handledPayload, ref, joinRef || this.joinRef());
       }
     }
     /**
+     * @internal
      * @private
      */
     replyEventName(ref) {
       return `chan_reply_${ref}`;
     }
     /**
+     * @internal
      * @private
      */
     isClosed() {
       return this.state === CHANNEL_STATES.closed;
     }
     /**
+     * @internal
      * @private
      */
     isErrored() {
       return this.state === CHANNEL_STATES.errored;
     }
     /**
+     * @internal
      * @private
      */
     isJoined() {
       return this.state === CHANNEL_STATES.joined;
     }
     /**
+     * @internal
      * @private
      */
     isJoining() {
       return this.state === CHANNEL_STATES.joining;
     }
     /**
+     * @internal
      * @private
      */
     isLeaving() {
@@ -528,31 +523,30 @@ var Phoenix = (() => {
     }
   };
 
-  // js/phoenix/ajax.js
+  // dist/phoenix/ajax.js
   var Ajax = class {
     static request(method, endPoint, headers, body, timeout, ontimeout, callback) {
       if (global.XDomainRequest) {
-        let req = new global.XDomainRequest();
+        const req = new global.XDomainRequest();
         return this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
       } else if (global.XMLHttpRequest) {
-        let req = new global.XMLHttpRequest();
+        const req = new global.XMLHttpRequest();
         return this.xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback);
-      } else if (global.fetch && global.AbortController) {
+      } else if (typeof global.fetch === "function" && typeof global.AbortController === "function") {
         return this.fetchRequest(method, endPoint, headers, body, timeout, ontimeout, callback);
       } else {
         throw new Error("No suitable XMLHttpRequest implementation found");
       }
     }
     static fetchRequest(method, endPoint, headers, body, timeout, ontimeout, callback) {
-      let options = {
+      const options = {
         method,
         headers,
         body
       };
-      let controller = null;
+      const controller = new AbortController();
       if (timeout) {
-        controller = new AbortController();
-        const _timeoutId = setTimeout(() => controller.abort(), timeout);
+        setTimeout(() => controller.abort(), timeout);
         options.signal = controller.signal;
       }
       global.fetch(endPoint, options).then((response) => response.text()).then((data) => this.parseJSON(data)).then((data) => callback && callback(data)).catch((err) => {
@@ -568,7 +562,7 @@ var Phoenix = (() => {
       req.timeout = timeout;
       req.open(method, endPoint);
       req.onload = () => {
-        let response = this.parseJSON(req.responseText);
+        const response = this.parseJSON(req.responseText);
         callback && callback(response);
       };
       if (ontimeout) {
@@ -582,13 +576,13 @@ var Phoenix = (() => {
     static xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback) {
       req.open(method, endPoint, true);
       req.timeout = timeout;
-      for (let [key, value] of Object.entries(headers)) {
+      for (const [key, value] of Object.entries(headers)) {
         req.setRequestHeader(key, value);
       }
       req.onerror = () => callback && callback(null);
       req.onreadystatechange = () => {
         if (req.readyState === XHR_STATES.complete && callback) {
-          let response = this.parseJSON(req.responseText);
+          const response = this.parseJSON(req.responseText);
           callback(response);
         }
       };
@@ -604,19 +598,19 @@ var Phoenix = (() => {
       }
       try {
         return JSON.parse(resp);
-      } catch (e) {
+      } catch (_a) {
         console && console.log("failed to parse JSON response", resp);
         return null;
       }
     }
     static serialize(obj, parentKey) {
-      let queryStr = [];
-      for (var key in obj) {
+      const queryStr = [];
+      for (const key in obj) {
         if (!Object.prototype.hasOwnProperty.call(obj, key)) {
           continue;
         }
-        let paramKey = parentKey ? `${parentKey}[${key}]` : key;
-        let paramVal = obj[key];
+        const paramKey = parentKey ? `${parentKey}[${key}]` : key;
+        const paramVal = obj[key];
         if (typeof paramVal === "object") {
           queryStr.push(this.serialize(paramVal, paramKey));
         } else {
@@ -629,21 +623,21 @@ var Phoenix = (() => {
       if (Object.keys(params).length === 0) {
         return url;
       }
-      let prefix = url.match(/\?/) ? "&" : "?";
+      const prefix = url.match(/\?/) ? "&" : "?";
       return `${url}${prefix}${this.serialize(params)}`;
     }
   };
 
-  // js/phoenix/longpoll.js
-  var arrayBufferToBase64 = (buffer) => {
+  // dist/phoenix/longpoll.js
+  function arrayBufferToBase64(buffer) {
     let binary = "";
-    let bytes = new Uint8Array(buffer);
-    let len = bytes.byteLength;
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
     for (let i = 0; i < len; i++) {
       binary += String.fromCharCode(bytes[i]);
     }
     return btoa(binary);
-  };
+  }
   var LongPoll = class {
     constructor(endPoint, protocols) {
       if (protocols && protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)) {
@@ -667,6 +661,7 @@ var Phoenix = (() => {
       };
       this.pollEndpoint = this.normalizeEndpoint(endPoint);
       this.readyState = SOCKET_STATES.connecting;
+      this.timeout = 2e4;
       setTimeout(() => this.poll(), 0);
     }
     normalizeEndpoint(endPoint) {
@@ -687,20 +682,22 @@ var Phoenix = (() => {
       return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting;
     }
     poll() {
-      const headers = { "Accept": "application/json" };
+      const headers = { Accept: "application/json" };
       if (this.authToken) {
         headers["X-Phoenix-AuthToken"] = this.authToken;
       }
       this.ajax("GET", headers, null, () => this.ontimeout(), (resp) => {
+        let status;
         if (resp) {
-          var { status, token, messages } = resp;
-          this.token = token;
+          const { status: respStatus, token } = resp;
+          status = respStatus;
+          this.token = token || null;
         } else {
           status = 0;
         }
         switch (status) {
           case 200:
-            messages.forEach((msg) => {
+            resp.messages.forEach((msg) => {
               setTimeout(() => this.onmessage({ data: msg }), 0);
             });
             this.poll();
@@ -720,7 +717,7 @@ var Phoenix = (() => {
           case 0:
           case 500:
             this.onerror(500);
-            this.closeAndRetry(1011, "internal server error", 500);
+            this.closeAndRetry(1011, "internal server error", false);
             break;
           default:
             throw new Error(`unhandled poll status ${status}`);
@@ -731,15 +728,18 @@ var Phoenix = (() => {
     // setTimeout 0, which optimizes back-to-back procedural
     // pushes against an empty buffer
     send(body) {
+      let bodyStr;
       if (typeof body !== "string") {
-        body = arrayBufferToBase64(body);
+        bodyStr = arrayBufferToBase64(body);
+      } else {
+        bodyStr = body;
       }
       if (this.currentBatch) {
-        this.currentBatch.push(body);
+        this.currentBatch.push(bodyStr);
       } else if (this.awaitingBatchAck) {
-        this.batchBuffer.push(body);
+        this.batchBuffer.push(bodyStr);
       } else {
-        this.currentBatch = [body];
+        this.currentBatch = [bodyStr];
         this.currentBatchTimer = setTimeout(() => {
           this.batchSend(this.currentBatch);
           this.currentBatch = null;
@@ -760,14 +760,16 @@ var Phoenix = (() => {
       });
     }
     close(code, reason, wasClean) {
-      for (let req of this.reqs) {
+      for (const req of this.reqs) {
         req.abort();
       }
       this.readyState = SOCKET_STATES.closed;
-      let opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
+      const opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
       this.batchBuffer = [];
-      clearTimeout(this.currentBatchTimer);
-      this.currentBatchTimer = null;
+      if (this.currentBatchTimer !== null) {
+        clearTimeout(this.currentBatchTimer);
+        this.currentBatchTimer = null;
+      }
       if (typeof CloseEvent !== "undefined") {
         this.onclose(new CloseEvent("close", opts));
       } else {
@@ -775,12 +777,11 @@ var Phoenix = (() => {
       }
     }
     ajax(method, headers, body, onCallerTimeout, callback) {
-      let req;
-      let ontimeout = () => {
+      const ontimeout = () => {
         this.reqs.delete(req);
         onCallerTimeout();
       };
-      req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, (resp) => {
+      const req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, (resp) => {
         this.reqs.delete(req);
         if (this.isActive()) {
           callback(resp);
@@ -790,10 +791,13 @@ var Phoenix = (() => {
     }
   };
 
-  // js/phoenix/presence.js
-  var Presence = class {
+  // dist/phoenix/presence.js
+  var Presence = class _Presence {
     constructor(channel, opts = {}) {
-      let events = opts.events || { state: "presence_state", diff: "presence_diff" };
+      const events = opts.events || {
+        state: "presence_state",
+        diff: "presence_diff"
+      };
       this.state = {};
       this.pendingDiffs = [];
       this.channel = channel;
@@ -807,37 +811,57 @@ var Phoenix = (() => {
         }
       };
       this.channel.on(events.state, (newState) => {
-        let { onJoin, onLeave, onSync } = this.caller;
+        const { onJoin, onLeave, onSync } = this.caller;
         this.joinRef = this.channel.joinRef();
-        this.state = Presence.syncState(this.state, newState, onJoin, onLeave);
+        this.state = _Presence.syncState(this.state, newState, onJoin, onLeave);
         this.pendingDiffs.forEach((diff) => {
-          this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave);
+          this.state = _Presence.syncDiff(this.state, diff, onJoin, onLeave);
         });
         this.pendingDiffs = [];
         onSync();
       });
       this.channel.on(events.diff, (diff) => {
-        let { onJoin, onLeave, onSync } = this.caller;
+        const { onJoin, onLeave, onSync } = this.caller;
         if (this.inPendingSyncState()) {
           this.pendingDiffs.push(diff);
         } else {
-          this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave);
+          this.state = _Presence.syncDiff(this.state, diff, onJoin, onLeave);
           onSync();
         }
       });
     }
+    /**
+     * @internal
+     * @private
+     */
     onJoin(callback) {
       this.caller.onJoin = callback;
     }
+    /**
+     * @internal
+     * @private
+     */
     onLeave(callback) {
       this.caller.onLeave = callback;
     }
+    /**
+     * @internal
+     * @private
+     */
     onSync(callback) {
       this.caller.onSync = callback;
     }
+    /**
+     * @internal
+     * @private
+     */
     list(by) {
-      return Presence.list(this.state, by);
+      return _Presence.list(this.state, by);
     }
+    /**
+     * @internal
+     * @private
+     */
     inPendingSyncState() {
       return !this.joinRef || this.joinRef !== this.channel.joinRef();
     }
@@ -847,25 +871,23 @@ var Phoenix = (() => {
      * with the client's state. An optional `onJoin` and `onLeave` callback can
      * be provided to react to changes in the client's local presences across
      * disconnects and reconnects with the server.
-     *
-     * @returns {Presence}
      */
     static syncState(currentState, newState, onJoin, onLeave) {
-      let state = this.clone(currentState);
-      let joins = {};
-      let leaves = {};
+      const state = this.clone(currentState);
+      const joins = {};
+      const leaves = {};
       this.map(state, (key, presence) => {
         if (!newState[key]) {
           leaves[key] = presence;
         }
       });
       this.map(newState, (key, newPresence) => {
-        let currentPresence = state[key];
+        const currentPresence = state[key];
         if (currentPresence) {
-          let newRefs = newPresence.metas.map((m) => m.phx_ref);
-          let curRefs = currentPresence.metas.map((m) => m.phx_ref);
-          let joinedMetas = newPresence.metas.filter((m) => curRefs.indexOf(m.phx_ref) < 0);
-          let leftMetas = currentPresence.metas.filter((m) => newRefs.indexOf(m.phx_ref) < 0);
+          const newRefs = newPresence.metas.map((m) => m.phx_ref);
+          const curRefs = currentPresence.metas.map((m) => m.phx_ref);
+          const joinedMetas = newPresence.metas.filter((m) => curRefs.indexOf(m.phx_ref) < 0);
+          const leftMetas = currentPresence.metas.filter((m) => newRefs.indexOf(m.phx_ref) < 0);
           if (joinedMetas.length > 0) {
             joins[key] = newPresence;
             joins[key].metas = joinedMetas;
@@ -881,16 +903,13 @@ var Phoenix = (() => {
       return this.syncDiff(state, { joins, leaves }, onJoin, onLeave);
     }
     /**
-     *
      * Used to sync a diff of presence join and leave
      * events from the server, as they happen. Like `syncState`, `syncDiff`
      * accepts optional `onJoin` and `onLeave` callbacks to react to a user
      * joining or leaving from a device.
-     *
-     * @returns {Presence}
      */
     static syncDiff(state, diff, onJoin, onLeave) {
-      let { joins, leaves } = this.clone(diff);
+      const { joins, leaves } = this.clone(diff);
       if (!onJoin) {
         onJoin = function() {
         };
@@ -900,21 +919,21 @@ var Phoenix = (() => {
         };
       }
       this.map(joins, (key, newPresence) => {
-        let currentPresence = state[key];
+        const currentPresence = state[key];
         state[key] = this.clone(newPresence);
         if (currentPresence) {
-          let joinedRefs = state[key].metas.map((m) => m.phx_ref);
-          let curMetas = currentPresence.metas.filter((m) => joinedRefs.indexOf(m.phx_ref) < 0);
+          const joinedRefs = state[key].metas.map((m) => m.phx_ref);
+          const curMetas = currentPresence.metas.filter((m) => joinedRefs.indexOf(m.phx_ref) < 0);
           state[key].metas.unshift(...curMetas);
         }
         onJoin(key, currentPresence, newPresence);
       });
       this.map(leaves, (key, leftPresence) => {
-        let currentPresence = state[key];
+        const currentPresence = state[key];
         if (!currentPresence) {
           return;
         }
-        let refsToRemove = leftPresence.metas.map((m) => m.phx_ref);
+        const refsToRemove = leftPresence.metas.map((m) => m.phx_ref);
         currentPresence.metas = currentPresence.metas.filter((p) => {
           return refsToRemove.indexOf(p.phx_ref) < 0;
         });
@@ -927,11 +946,6 @@ var Phoenix = (() => {
     }
     /**
      * Returns the array of presences, with selected metadata.
-     *
-     * @param {Object} presences
-     * @param {Function} chooser
-     *
-     * @returns {Presence}
      */
     static list(presences, chooser) {
       if (!chooser) {
@@ -952,8 +966,8 @@ var Phoenix = (() => {
     }
   };
 
-  // js/phoenix/serializer.js
-  var serializer_default = {
+  // dist/phoenix/serializer.js
+  var Serializer = {
     HEADER_LENGTH: 1,
     META_LENGTH: 4,
     KINDS: { push: 0, reply: 1, broadcast: 2 },
@@ -961,7 +975,7 @@ var Phoenix = (() => {
       if (msg.payload.constructor === ArrayBuffer) {
         return callback(this.binaryEncode(msg));
       } else {
-        let payload = [msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload];
+        const payload = [msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload];
         return callback(JSON.stringify(payload));
       }
     },
@@ -969,16 +983,16 @@ var Phoenix = (() => {
       if (rawPayload.constructor === ArrayBuffer) {
         return callback(this.binaryDecode(rawPayload));
       } else {
-        let [join_ref, ref, topic, event, payload] = JSON.parse(rawPayload);
+        const [join_ref, ref, topic, event, payload] = JSON.parse(rawPayload);
         return callback({ join_ref, ref, topic, event, payload });
       }
     },
     // private
     binaryEncode(message) {
-      let { join_ref, ref, event, topic, payload } = message;
-      let metaLength = this.META_LENGTH + join_ref.length + ref.length + topic.length + event.length;
-      let header = new ArrayBuffer(this.HEADER_LENGTH + metaLength);
-      let view = new DataView(header);
+      const { join_ref, ref, event, topic, payload } = message;
+      const metaLength = this.META_LENGTH + join_ref.length + ref.length + topic.length + event.length;
+      const header = new ArrayBuffer(this.HEADER_LENGTH + metaLength);
+      const view = new DataView(header);
       let offset = 0;
       view.setUint8(offset++, this.KINDS.push);
       view.setUint8(offset++, join_ref.length);
@@ -989,15 +1003,15 @@ var Phoenix = (() => {
       Array.from(ref, (char) => view.setUint8(offset++, char.charCodeAt(0)));
       Array.from(topic, (char) => view.setUint8(offset++, char.charCodeAt(0)));
       Array.from(event, (char) => view.setUint8(offset++, char.charCodeAt(0)));
-      var combined = new Uint8Array(header.byteLength + payload.byteLength);
+      const combined = new Uint8Array(header.byteLength + payload.byteLength);
       combined.set(new Uint8Array(header), 0);
       combined.set(new Uint8Array(payload), header.byteLength);
       return combined.buffer;
     },
     binaryDecode(buffer) {
-      let view = new DataView(buffer);
-      let kind = view.getUint8(0);
-      let decoder = new TextDecoder();
+      const view = new DataView(buffer);
+      const kind = view.getUint8(0);
+      const decoder = new TextDecoder();
       switch (kind) {
         case this.KINDS.push:
           return this.decodePush(buffer, view, decoder);
@@ -1005,56 +1019,78 @@ var Phoenix = (() => {
           return this.decodeReply(buffer, view, decoder);
         case this.KINDS.broadcast:
           return this.decodeBroadcast(buffer, view, decoder);
+        default:
+          throw new Error(`Unknown message kind: ${kind}`);
       }
     },
     decodePush(buffer, view, decoder) {
-      let joinRefSize = view.getUint8(1);
-      let topicSize = view.getUint8(2);
-      let eventSize = view.getUint8(3);
+      const joinRefSize = view.getUint8(1);
+      const topicSize = view.getUint8(2);
+      const eventSize = view.getUint8(3);
       let offset = this.HEADER_LENGTH + this.META_LENGTH - 1;
-      let joinRef = decoder.decode(buffer.slice(offset, offset + joinRefSize));
+      const joinRef = decoder.decode(buffer.slice(offset, offset + joinRefSize));
       offset = offset + joinRefSize;
-      let topic = decoder.decode(buffer.slice(offset, offset + topicSize));
+      const topic = decoder.decode(buffer.slice(offset, offset + topicSize));
       offset = offset + topicSize;
-      let event = decoder.decode(buffer.slice(offset, offset + eventSize));
+      const event = decoder.decode(buffer.slice(offset, offset + eventSize));
       offset = offset + eventSize;
-      let data = buffer.slice(offset, buffer.byteLength);
-      return { join_ref: joinRef, ref: null, topic, event, payload: data };
+      const data = buffer.slice(offset, buffer.byteLength);
+      return {
+        join_ref: joinRef,
+        ref: null,
+        topic,
+        event,
+        payload: data
+      };
     },
     decodeReply(buffer, view, decoder) {
-      let joinRefSize = view.getUint8(1);
-      let refSize = view.getUint8(2);
-      let topicSize = view.getUint8(3);
-      let eventSize = view.getUint8(4);
+      const joinRefSize = view.getUint8(1);
+      const refSize = view.getUint8(2);
+      const topicSize = view.getUint8(3);
+      const eventSize = view.getUint8(4);
       let offset = this.HEADER_LENGTH + this.META_LENGTH;
-      let joinRef = decoder.decode(buffer.slice(offset, offset + joinRefSize));
+      const joinRef = decoder.decode(buffer.slice(offset, offset + joinRefSize));
       offset = offset + joinRefSize;
-      let ref = decoder.decode(buffer.slice(offset, offset + refSize));
+      const ref = decoder.decode(buffer.slice(offset, offset + refSize));
       offset = offset + refSize;
-      let topic = decoder.decode(buffer.slice(offset, offset + topicSize));
+      const topic = decoder.decode(buffer.slice(offset, offset + topicSize));
       offset = offset + topicSize;
-      let event = decoder.decode(buffer.slice(offset, offset + eventSize));
+      const event = decoder.decode(buffer.slice(offset, offset + eventSize));
       offset = offset + eventSize;
-      let data = buffer.slice(offset, buffer.byteLength);
-      let payload = { status: event, response: data };
-      return { join_ref: joinRef, ref, topic, event: CHANNEL_EVENTS.reply, payload };
+      const data = buffer.slice(offset, buffer.byteLength);
+      const payload = { status: event, response: data };
+      return {
+        join_ref: joinRef,
+        ref,
+        topic,
+        event: CHANNEL_EVENTS.reply,
+        payload
+      };
     },
     decodeBroadcast(buffer, view, decoder) {
-      let topicSize = view.getUint8(1);
-      let eventSize = view.getUint8(2);
+      const topicSize = view.getUint8(1);
+      const eventSize = view.getUint8(2);
       let offset = this.HEADER_LENGTH + 2;
-      let topic = decoder.decode(buffer.slice(offset, offset + topicSize));
+      const topic = decoder.decode(buffer.slice(offset, offset + topicSize));
       offset = offset + topicSize;
-      let event = decoder.decode(buffer.slice(offset, offset + eventSize));
+      const event = decoder.decode(buffer.slice(offset, offset + eventSize));
       offset = offset + eventSize;
-      let data = buffer.slice(offset, buffer.byteLength);
-      return { join_ref: null, ref: null, topic, event, payload: data };
+      const data = buffer.slice(offset, buffer.byteLength);
+      return {
+        join_ref: null,
+        ref: null,
+        topic,
+        event,
+        payload: data
+      };
     }
   };
+  var serializer_default = Serializer;
 
-  // js/phoenix/socket.js
+  // dist/phoenix/socket.js
   var Socket = class {
     constructor(endPoint, opts = {}) {
+      var _a;
       this.stateChangeCallbacks = { open: [], close: [], error: [], message: [] };
       this.channels = [];
       this.sendBuffer = [];
@@ -1062,7 +1098,7 @@ var Phoenix = (() => {
       this.timeout = opts.timeout || DEFAULT_TIMEOUT;
       this.transport = opts.transport || global.WebSocket || LongPoll;
       this.primaryPassedHealthCheck = false;
-      this.longPollFallbackMs = opts.longPollFallbackMs;
+      this.longPollFallbackMs = (_a = opts.longPollFallbackMs) !== null && _a !== void 0 ? _a : null;
       this.fallbackTimer = null;
       this.sessionStore = opts.sessionStorage || global && global.sessionStorage;
       this.establishedConnections = 0;
@@ -1072,6 +1108,7 @@ var Phoenix = (() => {
       this.disconnecting = false;
       this.binaryType = opts.binaryType || "arraybuffer";
       this.connectClock = 1;
+      this.conn = null;
       if (this.transport !== LongPoll) {
         this.encode = opts.encode || this.defaultEncoder;
         this.decode = opts.decode || this.defaultDecoder;
@@ -1164,10 +1201,7 @@ var Phoenix = (() => {
      * @returns {string}
      */
     endPointURL() {
-      let uri = Ajax.appendParams(
-        Ajax.appendParams(this.endPoint, this.params()),
-        { vsn: this.vsn }
-      );
+      const uri = Ajax.appendParams(Ajax.appendParams(this.endPoint, this.params()), { vsn: this.vsn });
       if (uri.charAt(0) !== "/") {
         return uri;
       }
@@ -1240,7 +1274,7 @@ var Phoenix = (() => {
      * @param {Function} callback
      */
     onOpen(callback) {
-      let ref = this.makeRef();
+      const ref = this.makeRef();
       this.stateChangeCallbacks.open.push([ref, callback]);
       return ref;
     }
@@ -1249,7 +1283,7 @@ var Phoenix = (() => {
      * @param {Function} callback
      */
     onClose(callback) {
-      let ref = this.makeRef();
+      const ref = this.makeRef();
       this.stateChangeCallbacks.close.push([ref, callback]);
       return ref;
     }
@@ -1261,7 +1295,7 @@ var Phoenix = (() => {
      * @param {Function} callback
      */
     onError(callback) {
-      let ref = this.makeRef();
+      const ref = this.makeRef();
       this.stateChangeCallbacks.error.push([ref, callback]);
       return ref;
     }
@@ -1270,7 +1304,7 @@ var Phoenix = (() => {
      * @param {Function} callback
      */
     onMessage(callback) {
-      let ref = this.makeRef();
+      const ref = this.makeRef();
       this.stateChangeCallbacks.message.push([ref, callback]);
       return ref;
     }
@@ -1284,10 +1318,10 @@ var Phoenix = (() => {
       if (!this.isConnected()) {
         return false;
       }
-      let ref = this.makeRef();
-      let startTime = Date.now();
+      const ref = this.makeRef();
+      const startTime = Date.now();
       this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref });
-      let onMsgRef = this.onMessage((msg) => {
+      const onMsgRef = this.onMessage((msg) => {
         if (msg.ref === ref) {
           this.off([onMsgRef]);
           callback(Date.now() - startTime);
@@ -1296,6 +1330,7 @@ var Phoenix = (() => {
       return true;
     }
     /**
+     * @internal
      * @private
      */
     transportConnect() {
@@ -1303,7 +1338,10 @@ var Phoenix = (() => {
       this.closeWasClean = false;
       let protocols = void 0;
       if (this.authToken) {
-        protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`];
+        protocols = [
+          "phoenix",
+          `${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`
+        ];
       }
       this.conn = new this.transport(this.endPointURL(), protocols);
       this.conn.binaryType = this.binaryType;
@@ -1323,8 +1361,8 @@ var Phoenix = (() => {
       clearTimeout(this.fallbackTimer);
       let established = false;
       let primaryTransport = true;
-      let openRef, errorRef;
-      let fallback = (reason) => {
+      let openRef;
+      const fallback = (reason) => {
         this.log("transport", `falling back to ${fallbackTransport.name}...`, reason);
         this.off([openRef, errorRef]);
         primaryTransport = false;
@@ -1335,7 +1373,7 @@ var Phoenix = (() => {
         return fallback("memorized");
       }
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
-      errorRef = this.onError((reason) => {
+      const errorRef = this.onError((reason) => {
         this.log("transport", "error", reason);
         if (primaryTransport && !established) {
           clearTimeout(this.fallbackTimer);
@@ -1364,6 +1402,10 @@ var Phoenix = (() => {
       clearTimeout(this.heartbeatTimer);
       clearTimeout(this.heartbeatTimeoutTimer);
     }
+    /**
+     * @internal
+     * @private
+     */
     onConnOpen() {
       if (this.hasLogger())
         this.log("transport", `${this.transport.name} connected to ${this.endPointURL()}`);
@@ -1375,9 +1417,6 @@ var Phoenix = (() => {
       this.resetHeartbeat();
       this.stateChangeCallbacks.open.forEach(([, callback]) => callback());
     }
-    /**
-     * @private
-     */
     heartbeatTimeout() {
       if (this.pendingHeartbeatRef) {
         this.pendingHeartbeatRef = null;
@@ -1401,7 +1440,7 @@ var Phoenix = (() => {
       if (!this.conn) {
         return callback && callback();
       }
-      let connectClock = this.connectClock;
+      const connectClock = this.connectClock;
       this.waitForBufferDone(() => {
         if (connectClock !== this.connectClock) {
           return;
@@ -1450,8 +1489,12 @@ var Phoenix = (() => {
         this.waitForSocketClosed(callback, tries + 1);
       }, 150 * tries);
     }
+    /**
+     * @internal
+     * @private
+     */
     onConnClose(event) {
-      let closeCode = event && event.code;
+      const closeCode = event && event.code;
       if (this.hasLogger())
         this.log("transport", "close", event);
       this.triggerChanError();
@@ -1462,13 +1505,14 @@ var Phoenix = (() => {
       this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event));
     }
     /**
+     * @internal
      * @private
      */
     onConnError(error) {
       if (this.hasLogger())
-        this.log("transport", error);
-      let transportBefore = this.transport;
-      let establishedBefore = this.establishedConnections;
+        this.log("transport", "error", error);
+      const transportBefore = this.transport;
+      const establishedBefore = this.establishedConnections;
       this.stateChangeCallbacks.error.forEach(([, callback]) => {
         callback(error, transportBefore, establishedBefore);
       });
@@ -1476,13 +1520,10 @@ var Phoenix = (() => {
         this.triggerChanError();
       }
     }
-    /**
-     * @private
-     */
     triggerChanError() {
       this.channels.forEach((channel) => {
         if (!(channel.isErrored() || channel.isLeaving() || channel.isClosed())) {
-          channel.trigger(CHANNEL_EVENTS.error);
+          channel.trigger(CHANNEL_EVENTS.error, {});
         }
       });
     }
@@ -1508,6 +1549,7 @@ var Phoenix = (() => {
       return this.connectionState() === "open";
     }
     /**
+     * @internal
      * @private
      *
      * @param {Channel}
@@ -1523,11 +1565,13 @@ var Phoenix = (() => {
      *                 `onOpen`, `onClose`, `onError,` and `onMessage`
      */
     off(refs) {
-      for (let key in this.stateChangeCallbacks) {
-        this.stateChangeCallbacks[key] = this.stateChangeCallbacks[key].filter(([ref]) => {
-          return refs.indexOf(ref) === -1;
-        });
-      }
+      const filter = (callbacks) => callbacks.filter(([ref]) => refs.indexOf(ref) === -1);
+      this.stateChangeCallbacks = {
+        open: filter(this.stateChangeCallbacks.open),
+        close: filter(this.stateChangeCallbacks.close),
+        error: filter(this.stateChangeCallbacks.error),
+        message: filter(this.stateChangeCallbacks.message)
+      };
     }
     /**
      * Initiates a new channel for the given topic
@@ -1537,7 +1581,7 @@ var Phoenix = (() => {
      * @returns {Channel}
      */
     channel(topic, chanParams = {}) {
-      let chan = new Channel(topic, chanParams, this);
+      const chan = new Channel(topic, chanParams, this);
       this.channels.push(chan);
       return chan;
     }
@@ -1546,7 +1590,7 @@ var Phoenix = (() => {
      */
     push(data) {
       if (this.hasLogger()) {
-        let { topic, event, payload, ref, join_ref } = data;
+        const { topic, event, payload, ref, join_ref } = data;
         this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload);
       }
       if (this.isConnected()) {
@@ -1560,7 +1604,7 @@ var Phoenix = (() => {
      * @returns {string}
      */
     makeRef() {
-      let newRef = this.ref + 1;
+      const newRef = this.ref + 1;
       if (newRef === this.ref) {
         this.ref = 0;
       } else {
@@ -1568,23 +1612,40 @@ var Phoenix = (() => {
       }
       return this.ref.toString();
     }
+    /**
+     * @internal
+     * @private
+     */
     sendHeartbeat() {
       if (this.pendingHeartbeatRef && !this.isConnected()) {
         return;
       }
       this.pendingHeartbeatRef = this.makeRef();
-      this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef });
+      this.push({
+        topic: "phoenix",
+        event: "heartbeat",
+        payload: {},
+        ref: this.pendingHeartbeatRef
+      });
       this.heartbeatTimeoutTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs);
     }
+    /**
+     * @internal
+     * @private
+     */
     flushSendBuffer() {
       if (this.isConnected() && this.sendBuffer.length > 0) {
         this.sendBuffer.forEach((callback) => callback());
         this.sendBuffer = [];
       }
     }
+    /**
+     * @internal
+     * @private
+     */
     onConnMessage(rawMessage) {
       this.decode(rawMessage.data, (msg) => {
-        let { topic, event, payload, ref, join_ref } = msg;
+        const { topic, event, payload, ref, join_ref } = msg;
         if (ref && ref === this.pendingHeartbeatRef) {
           this.clearHeartbeats();
           this.pendingHeartbeatRef = null;
@@ -1600,13 +1661,17 @@ var Phoenix = (() => {
           channel.trigger(event, payload, ref, join_ref);
         }
         for (let i = 0; i < this.stateChangeCallbacks.message.length; i++) {
-          let [, callback] = this.stateChangeCallbacks.message[i];
+          const [, callback] = this.stateChangeCallbacks.message[i];
           callback(msg);
         }
       });
     }
+    /**
+     * @internal
+     * @private
+     */
     leaveOpenTopic(topic) {
-      let dupChannel = this.channels.find((c) => c.topic === topic && (c.isJoined() || c.isJoining()));
+      const dupChannel = this.channels.find((c) => c.topic === topic && (c.isJoined() || c.isJoining()));
       if (dupChannel) {
         if (this.hasLogger())
           this.log("transport", `leaving duplicate topic "${topic}"`);
