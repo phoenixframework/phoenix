@@ -39,7 +39,7 @@ defmodule MyApp.Accounts.Scope do
 end
 ```
 
-The scope is automatically fetched by the `fetch_current_scope_for_user` plug that is injected into the `:browser` pipeline:
+The scope is automatically fetched by the `fetch_current_scope_for_user` plug that is injected into the `:browser` pipeline.
 
 ```elixir
 # route.ex
@@ -49,6 +49,8 @@ pipeline :browser do
   plug :fetch_current_scope_for_user
 end
 ```
+
+For Controllers:
 
 ```elixir
 # user_auth.ex
@@ -362,7 +364,7 @@ First, we'd adjust our scope struct to also include the organization:
  end
 ```
 
-Let's also assume that the current organization is part of the URL path, like `http://localhost:4000/organizations/foo/posts`. Then, we'd adjust our router to fetch the organization from the path and assign it to the scope:
+Let's also assume that the current organization is part of the URL path, like `http://localhost:4000/organizations/foo/posts`. Then, we'd adjust our router to fetch the organization from the path and assign it to the scope.
 
 ```diff
   # router.ex
@@ -372,6 +374,8 @@ Let's also assume that the current organization is part of the URL path, like `h
 +   plug :assign_org_to_scope
   end
 ```
+
+For Controllers:
 
 ```elixir
 # user_auth.ex
