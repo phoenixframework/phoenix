@@ -186,7 +186,7 @@ In case you stopped the server along the way, the task to restart it is `mix phx
 
 
 
-Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into a separate layout: `lib/hello_web/components/layouts/root.html.heex`, which contains the basic HTML skeleton of the page. If you open this files, you'll see a line that looks like this at the bottom:
+Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into a separate layout: `lib/hello_web/components/layouts/root.html.heex`, which contains the basic HTML skeleton of the page. If you open this file, you'll see a line that looks like this at the bottom:
 
 ```heex
 {@inner_content}
@@ -194,7 +194,7 @@ Also, even though our `index.html.heex` file consists of only a single `section`
 
 This line injects our template into the layout before the HTML is sent off to the browser. We will talk more about layouts in the Controllers guide.
 
-The rest of the page structure is included in the `app` component the is defined in the `lib/hello_web/components/layouts.ex` module.
+The rest of the page structure is included in the `app` component that is defined in the `lib/hello_web/components/layouts.ex` module.
 
 ## From endpoint to views
 
