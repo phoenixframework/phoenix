@@ -4,7 +4,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @moduledoc """
   Generates a context with functions around an Ecto schema.
 
-      $ mix phx.gen.context Accounts User users name:string age:integer
+  ```console
+  $ mix phx.gen.context Accounts User users name:string age:integer
+  ```
 
   The first argument is the context module followed by the schema module
   and its plural name (used as the schema table name).
@@ -140,9 +142,15 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
-  def build(args, help \\ __MODULE__) do
+  def build(args, opts \\ []) do
+    help = Keyword.get(opts, :help_module, __MODULE__)
+    optional = Keyword.get(opts, :name_optional, false)
+
     {opts, parsed, _} = parse_opts(args)
-    [context_name, schema_name, plural | schema_args] = validate_args!(parsed, help)
+
+    {context_name, schema_name, plural, schema_args} =
+      validate_args!(parsed, optional, help)
+
     schema_module = inspect(Module.concat(context_name, schema_name))
     schema = Gen.Schema.build([schema_module, plural | schema_args], opts, help)
     context = Context.new(context_name, schema, opts)
@@ -350,7 +358,25 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
   end
 
-  defp validate_args!([context, schema, _plural | _] = args, help) do
+  defp validate_args!(
+         [maybe_context_name, schema_name_or_plural, plural_or_first_attr | schema_args],
+         optional,
+         help
+       ) do
+    has_context? =
+      case schema_name_or_plural do
+        <<char::integer-size(8), _rest::binary>> when char in ?A..?Z -> true
+        _ -> not optional
+      end
+
+    {context, schema, plural, schema_args} =
+      if has_context? do
+        {maybe_context_name, schema_name_or_plural, plural_or_first_attr, schema_args}
+      else
+        {Phoenix.Naming.camelize(schema_name_or_plural), maybe_context_name,
+         schema_name_or_plural, [plural_or_first_attr | schema_args]}
+      end
+
     cond do
       not Context.valid?(context) ->
         help.raise_with_help(
@@ -374,11 +400,11 @@ defmodule Mix.Tasks.Phx.Gen.Context do
         )
 
       true ->
-        args
+        {context, schema, plural, schema_args}
     end
   end
 
-  defp validate_args!(_, help) do
+  defp validate_args!(_, _, help) do
     help.raise_with_help("Invalid arguments")
   end
 

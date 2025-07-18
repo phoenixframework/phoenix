@@ -376,9 +376,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def change_post"
       end)
 
-      Gen.Context.run(
-        ~w(Blog Comment comments message:string --merge-with-existing-context)
-      )
+      Gen.Context.run(~w(Blog Comment comments message:string --merge-with-existing-context))
 
       refute_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> _notice]}
@@ -517,7 +515,9 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
           assert_file(path, fn file ->
             assert file =~ "create table(:posts)"
             assert file =~ "add :title, :string"
-            assert file =~ "add :user_id, references(:users, type: :binary_id, on_delete: :delete_all)"
+
+            assert file =~
+                     "add :user_id, references(:users, type: :binary_id, on_delete: :delete_all)"
           end)
         end
       )

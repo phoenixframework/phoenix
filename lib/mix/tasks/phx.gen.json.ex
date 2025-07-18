@@ -4,25 +4,40 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   @moduledoc """
   Generates controller, JSON view, and context for a JSON resource.
 
+  The format is:
+
+  ```console
+  $ mix phx.gen.json [<context>] <schema> <table> <attr:type> [<attr:type>...]
+  ```
+
+  For example:
+
+  ```console
+  $ mix phx.gen.json User users name:string age:integer
+  ```
+
+  Will generate a `User` schema for the `users` table within the `Users` context,
+  with the attributes `name` (as a string) and `age` (as an integer).
+
+  You can also explicitly pass the context name as argument, whenever the context
+  is well defined:
+
   ```console
   $ mix phx.gen.json Accounts User users name:string age:integer
   ```
 
-  The first argument is the context module followed by the schema module
-  and its plural name (used as the schema table name).
+  The first argument is the context module (`Accounts`) followed by
+  the schema module (`User`), table name (`users`), and attributes.
 
   The context is an Elixir module that serves as an API boundary for
   the given resource. A context often holds many related resources.
   Therefore, if the context already exists, it will be augmented with
   functions for the given resource.
 
-  > Note: A resource may also be split
-  > over distinct contexts (such as `Accounts.User` and `Payments.User`).
-
   The schema is responsible for mapping the database fields into an
-  Elixir struct. It is followed by an optional list of attributes,
-  with their respective names and types. See `mix phx.gen.schema`
-  for more information on attributes.
+  Elixir struct. It is followed by a list of attributes with their
+  respective names and types. See `mix phx.gen.schema` for more
+  information on attributes.
 
   Overall, this generator will add the following files to `lib/`:
 
@@ -65,21 +80,20 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   Alternatively, the `--context-app` option may be supplied to the generator:
 
   ```console
-  $ mix phx.gen.html Sales User users --context-app my_app
+  $ mix phx.gen.html Accounts User users --context-app my_app
   ```
 
   ## Web namespace
 
-  By default, the controller and JSON view will be namespaced by the schema name.
-  You can customize the web module namespace by passing the `--web` flag with a
-  module name, for example:
+  By default, the controller and HTML views are not namespaced but you can add
+  a namespace by passing the `--web` flag with a module name, for example:
 
   ```console
-  $ mix phx.gen.json Sales User users --web Sales
+  $ mix phx.gen.json Accounts User users --web Accounts
   ```
 
-  Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
-  `lib/app_web/controller/sales/user_json.ex`.
+  Which would generate a `lib/app_web/controllers/accounts/user_controller.ex` and
+  `lib/app_web/controllers/accounts/user_json.ex`.
 
   ## Customizing the context, schema, tables and migrations
 
@@ -112,7 +126,17 @@ defmodule Mix.Tasks.Phx.Gen.Json do
       )
     end
 
-    {context, schema} = Gen.Context.build(args)
+    {context, schema} = Gen.Context.build(args, name_optional: true)
+
+    if schema.attrs == [] do
+      Mix.raise("""
+      No attributes provided. The phx.gen.json generator requires at least one attribute. For example:
+
+        mix phx.gen.json Accounts User users name:string
+
+      """)
+    end
+
     Gen.Context.prompt_for_code_injection(context)
 
     {conn_scope, context_scope_prefix} =

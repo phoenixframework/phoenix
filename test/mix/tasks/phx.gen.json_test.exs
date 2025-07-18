@@ -16,10 +16,6 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         Gen.Json.run(~w(blog Post posts title:string))
       end
 
-      assert_raise Mix.Error, ~r/Expected the schema, "posts", to be a valid module name/, fn ->
-        Gen.Json.run(~w(Post posts title:string))
-      end
-
       assert_raise Mix.Error, ~r/The context and schema should have different names/, fn ->
         Gen.Json.run(~w(Blog Blog blogs))
       end
@@ -30,6 +26,10 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
       assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
         Gen.Json.run(~w(Blog Post))
+      end
+
+      assert_raise Mix.Error, ~r/requires at least one attribute/, fn ->
+        Gen.Json.run(~w(Blog Post posts))
       end
     end)
   end
@@ -119,6 +119,41 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                             resources "/posts", PostController, except: [:new, :edit]
                         """
                       ]}
+    end)
+  end
+
+  test "generates without explicit context", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Json.run(~w(Post posts title slug:unique votes:integer cost:decimal
+                     tags:array:text popular:boolean drafted_at:datetime
+                     params:map
+                     published_at:utc_datetime
+                     published_at_usec:utc_datetime_usec
+                     deleted_at:naive_datetime
+                     deleted_at_usec:naive_datetime_usec
+                     alarm:time
+                     alarm_usec:time_usec
+                     secret:uuid:redact announcement_date:date
+                     weight:float user_id:references:users
+                    ))
+
+      assert_file("lib/phoenix/posts/post.ex")
+      assert_file("lib/phoenix/posts.ex")
+
+      assert_file("test/phoenix/posts_test.exs", fn file ->
+        assert file =~ "use Phoenix.DataCase"
+      end)
+
+      assert_file("lib/phoenix_web/controllers/post_controller.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.PostController"
+        assert file =~ "use PhoenixWeb, :controller"
+        assert file =~ "Posts.get_post!"
+        assert file =~ "Posts.list_posts"
+        assert file =~ "Posts.create_post"
+        assert file =~ "Posts.update_post"
+        assert file =~ "Posts.delete_post"
+        assert file =~ ~s|~p"/api/posts|
+      end)
     end)
   end
 
@@ -360,19 +395,19 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     in_tmp_project(config.test, fn ->
       Gen.Json.run(~w(Blog Post posts title:string --primary-key post_id))
 
-      assert_file "lib/phoenix_web/controllers/post_controller.ex", fn file ->
+      assert_file("lib/phoenix_web/controllers/post_controller.ex", fn file ->
         refute file =~ ~s[%{"id" =>]
         assert file =~ ~s[%{"post_id" =>]
         assert file =~ "Blog.get_post!(post_id)"
-      end
+      end)
 
-      assert_file "lib/phoenix_web/controllers/post_json.ex", fn file ->
+      assert_file("lib/phoenix_web/controllers/post_json.ex", fn file ->
         assert file =~ "post_id: post.post_id,"
-      end
+      end)
 
-      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+      assert_file("test/phoenix_web/controllers/post_controller_test.exs", fn file ->
         assert file =~ ~s["post_id" => ^post_id,]
-      end
+      end)
     end)
   end
 
@@ -392,15 +427,17 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         fn ->
           Gen.Json.run(~w(Blog Post posts title:string --scope organization))
 
-      assert_file "lib/phoenix_web/controllers/post_controller.ex", fn file ->
-        assert file =~ ~s|~p"/api/orgs/\#{conn.assigns.current_organization.organization.slug}/posts|
-      end
+          assert_file("lib/phoenix_web/controllers/post_controller.ex", fn file ->
+            assert file =~
+                     ~s|~p"/api/orgs/\#{conn.assigns.current_organization.organization.slug}/posts|
+          end)
 
-      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
-        assert file =~ ~s|~p"/api/orgs/\#{scope.organization.slug}/posts"|
-        assert file =~ ~s|~p"/api/orgs/\#{scope.organization.slug}/posts/\#{post}"|
-      end
-        end)
-      end)
-    end
+          assert_file("test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+            assert file =~ ~s|~p"/api/orgs/\#{scope.organization.slug}/posts"|
+            assert file =~ ~s|~p"/api/orgs/\#{scope.organization.slug}/posts/\#{post}"|
+          end)
+        end
+      )
+    end)
   end
+end

@@ -16,10 +16,6 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         Gen.Html.run(~w(blog Post posts title:string))
       end
 
-      assert_raise Mix.Error, ~r/Expected the schema, "posts", to be a valid module name/, fn ->
-        Gen.Html.run(~w(Post posts title:string))
-      end
-
       assert_raise Mix.Error, ~r/The context and schema should have different names/, fn ->
         Gen.Html.run(~w(Blog Blog blogs))
       end
@@ -34,6 +30,10 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_raise Mix.Error, ~r/Enum type requires at least one value/, fn ->
         Gen.Html.run(~w(Blog Post posts status:enum))
+      end
+
+      assert_raise Mix.Error, ~r/requires at least one attribute/, fn ->
+        Gen.Html.run(~w(Blog Post posts))
       end
     end)
   end
@@ -225,6 +225,33 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end)
   end
 
+  test "generates without explicit context", config do
+    in_tmp_project(config.test, fn ->
+      Gen.Html.run(~w(Post posts title content:text slug:unique votes:integer cost:decimal
+                        tags:array:text popular:boolean drafted_at:datetime
+                        status:enum:unpublished:published:deleted
+                        published_at:utc_datetime
+                        published_at_usec:utc_datetime_usec
+                        deleted_at:naive_datetime
+                        deleted_at_usec:naive_datetime_usec
+                        alarm:time
+                        alarm_usec:time_usec
+                        secret:uuid:redact announcement_date:date alarm:time
+                        metadata:map
+                        weight:float user_id:references:users
+                      ))
+
+      assert_file("lib/phoenix/posts/post.ex")
+      assert_file("lib/phoenix/posts.ex")
+
+      assert_file("test/phoenix/posts_test.exs", fn file ->
+        assert file =~ "alarm: ~T[15:01:01]"
+        assert file =~ "alarm_usec: ~T[15:01:01.000000]"
+        assert file =~ "announcement_date: #{Date.utc_today() |> Date.add(-1) |> inspect()}"
+      end)
+    end)
+  end
+
   test "generates into existing context without prompt with --merge-with-existing-context",
        config do
     in_tmp_project(config.test, fn ->
@@ -332,6 +359,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   test "with a matching plural and singular term", config do
     in_tmp_project(config.test, fn ->
       Gen.Html.run(~w(Tracker Series series value:integer))
+
       assert_file("lib/phoenix_web/controllers/series_controller.ex", fn file ->
         assert file =~ "render(conn, :index, series_collection: series)"
       end)
@@ -502,35 +530,43 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
           fn ->
             Gen.Html.run(~w(Blog Post posts title:string --scope organization))
 
-        assert_file "lib/phoenix_web/controllers/post_controller.ex", fn file ->
-          assert file =~ ~s|redirect(to: ~p"/orgs/\#{conn.assigns.current_organization.organization.slug}/posts|
-        end
+            assert_file("lib/phoenix_web/controllers/post_controller.ex", fn file ->
+              assert file =~
+                       ~s|redirect(to: ~p"/orgs/\#{conn.assigns.current_organization.organization.slug}/posts|
+            end)
 
-        assert_file "lib/phoenix_web/controllers/post_html/index.html.heex", fn file ->
-          assert file =~ ~s|href={~p"/orgs/\#{@current_organization.organization.slug}/posts/new"|
-          assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts/|
-        end
+            assert_file("lib/phoenix_web/controllers/post_html/index.html.heex", fn file ->
+              assert file =~
+                       ~s|href={~p"/orgs/\#{@current_organization.organization.slug}/posts/new"|
 
-        assert_file "lib/phoenix_web/controllers/post_html/show.html.heex", fn file ->
-          assert file =~ ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts"|
-        end
+              assert file =~
+                       ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts/|
+            end)
 
-        assert_file "lib/phoenix_web/controllers/post_html/edit.html.heex", fn file ->
-          assert file =~ ~s|action={~p"/orgs/\#{@current_organization.organization.slug}/posts/\#{@post}"|
-        end
+            assert_file("lib/phoenix_web/controllers/post_html/show.html.heex", fn file ->
+              assert file =~
+                       ~s|navigate={~p"/orgs/\#{@current_organization.organization.slug}/posts"|
+            end)
 
-        assert_file "lib/phoenix_web/controllers/post_html/new.html.heex", fn file ->
-          assert file =~ ~s|action={~p"/orgs/\#{@current_organization.organization.slug}/posts"|
-        end
+            assert_file("lib/phoenix_web/controllers/post_html/edit.html.heex", fn file ->
+              assert file =~
+                       ~s|action={~p"/orgs/\#{@current_organization.organization.slug}/posts/\#{@post}"|
+            end)
 
-        assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
-          assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts"|
-          assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/new"|
-          assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}"|
-          assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}/edit"|
-        end
-          end)
-        end)
-      end
+            assert_file("lib/phoenix_web/controllers/post_html/new.html.heex", fn file ->
+              assert file =~
+                       ~s|action={~p"/orgs/\#{@current_organization.organization.slug}/posts"|
+            end)
+
+            assert_file("test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+              assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts"|
+              assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/new"|
+              assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}"|
+              assert file =~ ~s|~p"/orgs/\#{scope.organization.slug}/posts/\#{post}/edit"|
+            end)
+          end
+        )
+      end)
+    end
   end
 end
