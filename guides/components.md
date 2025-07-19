@@ -36,10 +36,10 @@ A function component is just a function that receives a map of `assigns` as argu
 Imagine we want to refactor our `show.html.heex` to move the rendering of `<h2>Hello World, from {@messenger}!</h2>` to its own function. Remember that `show.html.heex` is embedded within the `HelloHTML` module. Let's open it up:
 
 ```elixir
-defmodule HelloWeb.Layouts do
+defmodule HelloWeb.HelloHTML do
   use HelloWeb, :html
 
-  embed_templates "layouts/*"
+  embed_templates "hello_html/*"
 end
 ```
 
