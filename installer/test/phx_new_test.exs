@@ -532,6 +532,11 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/config/prod.exs", fn file ->
         refute file =~ "config :phx_blog, PhxBlogWeb.Endpoint, cache_static_manifest:"
       end)
+
+      assert_file("phx_blog/lib/phx_blog_web/components/core_components.ex", fn file ->
+        assert file =~ ~S|onclick="this.hidden = true"|
+        refute file =~ ~S|JS.push("lv:clear-flash"|
+      end)
     end)
   end
 
