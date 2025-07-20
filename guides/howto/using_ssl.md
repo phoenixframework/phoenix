@@ -54,23 +54,33 @@ This can replace your `http` configuration, or you can run HTTP and HTTPS server
 
 ## Force SSL
 
-In many cases, you'll want to force all incoming requests to use SSL by redirecting HTTP to HTTPS. This can be accomplished by setting the `:force_ssl` option in your endpoint configuration. It expects a list of options which are forwarded to `Plug.SSL`. By default, it sets the "strict-transport-security" header in HTTPS requests, forcing browsers to always use HTTPS. If an unsafe (HTTP) request is sent, it redirects to the HTTPS version using the `:host` specified in the `:url` configuration. For example:
+In many cases, you'll want to force all incoming requests to use SSL by redirecting HTTP to HTTPS. This can be accomplished by setting the `:force_ssl` option in your endpoint configuration. It expects a list of options which are forwarded to `Plug.SSL`. By default, it sets the "strict-transport-security" header in HTTPS requests, forcing browsers to always use HTTPS. For example:
 
 ```elixir
 config :my_app, MyAppWeb.Endpoint,
   force_ssl: [rewrite_on: [:x_forwarded_proto]]
 ```
 
-To dynamically redirect to the `host` of the current request, set `:host` in the `:force_ssl` configuration to `nil`.
+
+If an unsafe (HTTP) request is sent, the above will redirect to the HTTPS version using the `:host` specified in the `:url` configuration.  To dynamically redirect to the `host` of the current request, set `:host` in the `:force_ssl` configuration to `nil`.
 
 ```elixir
 config :my_app, MyAppWeb.Endpoint,
   force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil]
 ```
 
-In these examples, the `rewrite_on:` key specifies the HTTP header used by a reverse proxy or load balancer in front of the application to indicate whether the request was received over HTTP or HTTPS. For more information on the implications of offloading TLS to an external element, in particular relating to secure cookies, refer to the [Plug HTTPS Guide](https://hexdocs.pm/plug/https.html#offloading-tls). Keep in mind that the options passed to `Plug.SSL` in that document should be set using the `force_ssl:` endpoint option in a Phoenix application.
+In these examples, the `rewrite_on:` key specifies the HTTP header used by a reverse proxy or load balancer in front of the application to indicate whether the request was received over HTTP or HTTPS.
+
+Furthermore, keep in mind `force_ssl` will redirect all requests, except the ones coming from localhost. If your application is doing probeness checks using another origin, such as "127.0.0.1" or an internal IP address, you may need to explicitly exclude them from `force_ssl`:
+
+```elixir
+config :my_app, MyAppWeb.Endpoint,
+  force_ssl: [rewrite_on: [:x_forwarded_proto], exclude: ["localhost", "127.0.0.1"]]
+```
 
 It is important to note that `force_ssl:` is a *compile* time config, so it normally is set in `prod.exs`, it will not work when set from `runtime.exs`.
+
+For more information on the implications of offloading TLS to an external element, in particular relating to secure cookies, refer to the [Plug HTTPS Guide](https://hexdocs.pm/plug/https.html#offloading-tls). Keep in mind that the options passed to `Plug.SSL` in that document should be set using the `force_ssl:` endpoint option in a Phoenix application.
 
 ## HSTS
 
