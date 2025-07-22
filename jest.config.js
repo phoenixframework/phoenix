@@ -1,9 +1,9 @@
-/*
- * For a detailed explanation regarding each configuration property, visit:
- * https://jestjs.io/docs/configuration
- */
+import { createDefaultPreset } from "ts-jest";
 
-module.exports = {
+const tsJestTransformCfg = createDefaultPreset().transform;
+
+/** @type {import("jest").Config} **/
+export default {
   // Automatically clear mock calls and instances between every test
   clearMocks: true,
 
@@ -17,11 +17,16 @@ module.exports = {
 
   // The test environment that will be used for testing
   testEnvironment: "jest-environment-jsdom",
-  
+
   testEnvironmentOptions: {
-    url: "https://example.com"
+    url: "https://example.com",
   },
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
-  testRegex: "/assets/test/.*_test\\.js$",
-}
+  testRegex: "/assets/test/.*_test\\.(js|ts)$",
+
+  transform: {
+    ...tsJestTransformCfg,
+    "\\.jsx?$": "babel-jest",
+  },
+};

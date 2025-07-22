@@ -3,6 +3,7 @@
   "version": "1.8.0-rc.4",
   "description": "The official JavaScript client for the Phoenix web framework.",
   "license": "MIT",
+  "types": "./assets/dist/phoenix/index.d.ts",
   "module": "./priv/static/phoenix.mjs",
   "main": "./priv/static/phoenix.cjs.js",
   "unpkg": "./priv/static/phoenix.min.js",
@@ -21,6 +22,7 @@
     "LICENSE.md",
     "package.json",
     "priv/static/*",
+    "assets/dist/phoenix/*",
     "assets/js/phoenix/*"
   ],
   "devDependencies": {
@@ -28,19 +30,30 @@
     "@babel/core": "7.28.0",
     "@babel/preset-env": "7.28.0",
     "@eslint/js": "^9.28.0",
-    "@stylistic/eslint-plugin": "^5.0.0",
-    "documentation": "^14.0.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.14",
     "eslint": "9.31.0",
     "eslint-plugin-jest": "29.0.1",
+    "globals": "^16.3.0",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
     "jsdom": "^26.1.0",
-    "mock-socket": "^9.3.1"
+    "mock-socket": "^9.3.1",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.0",
+    "typedoc": "^0.28.7",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.37.0"
   },
   "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
     "test": "jest",
     "test.coverage": "jest --coverage",
     "test.watch": "jest --watch",
-    "docs": "documentation build assets/js/phoenix/index.js -f html -o doc/js"
+    "docs": "typedoc",
+    "lint": "eslint --fix",
+    "format": "prettier --write assets --log-level warn",
+    "format.check": "prettier --check assets --log-level warn"
   }
 }
