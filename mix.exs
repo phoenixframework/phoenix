@@ -195,7 +195,7 @@ defmodule Phoenix.MixProject do
       "guides/howto/writing_a_channels_client.md",
       "guides/cheatsheets/router.cheatmd",
       "CHANGELOG.md",
-      "JS Documentation": [url: "/js/"]
+      "JS Documentation": [url: "js/index.html"]
     ]
   end
 
