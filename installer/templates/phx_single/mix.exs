@@ -29,6 +29,12 @@ defmodule <%= @app_module %>.MixProject do
     ]
   end
 
+  def cli do
+    [
+      preferred_envs: [precommit: :test]
+    ]
+  end
+
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
@@ -83,7 +89,8 @@ defmodule <%= @app_module %>.MixProject do
       "assets.build": <%= inspect Enum.map(@asset_builders, &"#{&1} #{@app_name}") %>,
       "assets.deploy": [
 <%= Enum.map(@asset_builders, &"        \"#{&1} #{@app_name} --minify\",\n") ++ ["        \"phx.digest\""] %>
-      ]<% end %>
+      ]<% end %>,
+      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
     ]
   end
 end

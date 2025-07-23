@@ -12,6 +12,12 @@ defmodule <%= @root_app_module %>.MixProject do
     ]
   end
 
+  def cli do
+    [
+      preferred_envs: [precommit: :test]
+    ]
+  end
+
   # Dependencies can be Hex packages:
   #
   #   {:mydep, "~> 0.3.0"}
@@ -45,7 +51,8 @@ defmodule <%= @root_app_module %>.MixProject do
   defp aliases do
     [
       # run `mix setup` in all child apps
-      setup: ["cmd mix setup"]
+      setup: ["cmd mix setup"],
+      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
     ]
   end
 end
