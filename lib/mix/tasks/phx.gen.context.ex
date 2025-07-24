@@ -365,7 +365,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
        ) do
     has_context? =
       case schema_name_or_plural do
-        <<char::integer-size(8), _rest::binary>> when char in ?A..?Z -> true
+        <<char, _rest::binary>> when char in ?A..?Z -> true
         _ -> not optional
       end
 
