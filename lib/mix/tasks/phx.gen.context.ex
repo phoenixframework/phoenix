@@ -373,8 +373,26 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       if has_context? do
         {maybe_context_name, schema_name_or_plural, plural_or_first_attr, schema_args}
       else
-        {Phoenix.Naming.camelize(schema_name_or_plural), maybe_context_name,
-         schema_name_or_plural, [plural_or_first_attr | schema_args]}
+        # mix phx.gen.live User users name:string
+        # we generate the context from the plural "users" -> Users
+        context = Phoenix.Naming.camelize(schema_name_or_plural)
+
+        if context == maybe_context_name do
+          # if someone did
+          # mix phx.gen.live Users users name
+          Mix.raise("""
+          The given schema #{maybe_context_name} is equal to the camelized version of
+          the table plural #{schema_name_or_plural}, but the schema is expected to be singular.
+
+          Please pass an explicit context option like:
+
+              mix phx.gen.live #{context} #{maybe_context_name} #{schema_name_or_plural}
+
+          if this is what you want.
+          """)
+        end
+
+        {context, maybe_context_name, schema_name_or_plural, [plural_or_first_attr | schema_args]}
       end
 
     cond do
@@ -418,12 +436,13 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     of the generated resource, ending with any number of attributes.
     For example:
 
-        mix phx.gen.html Accounts User users name:string
-        mix phx.gen.json Accounts User users name:string
-        mix phx.gen.live Accounts User users name:string
+        mix phx.gen.html [Accounts] User users name:string
+        mix phx.gen.json [Accounts] User users name:string
+        mix phx.gen.live [Accounts] User users name:string
         mix phx.gen.context Accounts User users name:string
 
     The context serves as the API boundary for the given resource.
+    It is optional except for phx.gen.context.
     Multiple resources may belong to a context and a resource may be
     split over distinct contexts (such as Accounts.User and Payments.User).
     """)
