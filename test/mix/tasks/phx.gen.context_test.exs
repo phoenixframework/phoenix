@@ -48,6 +48,58 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     end)
   end
 
+  test "optional context name", config do
+    in_tmp_project(config.test, fn ->
+      {context, _} =
+        Mix.Tasks.Phx.Gen.Context.build(["User", "users", "name"], name_optional: true)
+
+      assert %Context{
+               alias: Users,
+               base_module: Phoenix,
+               basename: "users",
+               module: Phoenix.Users,
+               web_module: PhoenixWeb,
+               schema: %Mix.Phoenix.Schema{
+                 alias: User,
+                 human_plural: "Users",
+                 human_singular: "User",
+                 module: Phoenix.Users.User,
+                 plural: "users",
+                 singular: "user"
+               }
+             } = context
+
+      assert String.ends_with?(context.dir, "lib/phoenix/users")
+      assert String.ends_with?(context.file, "lib/phoenix/users.ex")
+      assert String.ends_with?(context.test_file, "test/phoenix/users_test.exs")
+
+      assert String.ends_with?(
+               context.test_fixtures_file,
+               "test/support/fixtures/users_fixtures.ex"
+             )
+
+      assert String.ends_with?(context.schema.file, "lib/phoenix/users/user.ex")
+    end)
+  end
+
+  test "optional context name raises if schema is plural", config do
+    in_tmp_project(config.test, fn ->
+      assert_raise Mix.Error, ~r/Please pass an explicit context option/, fn ->
+        Mix.Tasks.Phx.Gen.Context.build(["Users", "users", "name"], name_optional: true)
+      end
+    end)
+  end
+
+  test "context name raises is required by default", config do
+    in_tmp_project(config.test, fn ->
+      assert_raise Mix.Error,
+                   ~r/expect a context module name, followed by singular and plural names/,
+                   fn ->
+                     Mix.Tasks.Phx.Gen.Context.build(["Users", "users", "name"])
+                   end
+    end)
+  end
+
   test "new nested context", config do
     in_tmp_project(config.test, fn ->
       schema = Schema.new("Site.Blog.Post", "posts", [], no_scope: true)
@@ -376,9 +428,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def change_post"
       end)
 
-      Gen.Context.run(
-        ~w(Blog Comment comments message:string --merge-with-existing-context)
-      )
+      Gen.Context.run(~w(Blog Comment comments message:string --merge-with-existing-context))
 
       refute_received {:mix_shell, :info,
                        ["You are generating into an existing context" <> _notice]}
@@ -517,7 +567,9 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
           assert_file(path, fn file ->
             assert file =~ "create table(:posts)"
             assert file =~ "add :title, :string"
-            assert file =~ "add :user_id, references(:users, type: :binary_id, on_delete: :delete_all)"
+
+            assert file =~
+                     "add :user_id, references(:users, type: :binary_id, on_delete: :delete_all)"
           end)
         end
       )

@@ -4,11 +4,21 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   @moduledoc """
   Generates authentication logic and related views for a resource.
 
-      $ mix phx.gen.auth Accounts User users
+  ```console
+  $ mix phx.gen.auth Accounts User users
+  ```
 
   The first argument is the context module followed by the schema module
-  and its plural name (used as the schema table name).
+  and its plural name (used as the schema table name). The example above
+  will generate an `Accounts` context module with two schemas inside:
+  `User` and `UserToken`. You may name the context and schema according
+  to your preferences. For example:
 
+  ```console
+  $ mix phx.gen.auth Identity Client clients
+  ```
+
+  Will generate an `Identity` context with `Client` and `ClientToken` inside.
   Additional information and security considerations are detailed in the
   [`mix phx.gen.auth` guide](mix_phx_gen_auth.html).
 
@@ -75,24 +85,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   For more information about choosing these libraries, see the
   [Comeonin project](https://github.com/riverrun/comeonin).
-
-  ## Web namespace
-
-  By default, the controllers and HTML view will be namespaced by the schema name.
-  You can customize the web module namespace by passing the `--web` flag with a
-  module name, for example:
-
-      $ mix phx.gen.auth Accounts User users --web Warehouse
-
-  Which would generate the controllers, views, templates and associated tests nested in the `MyAppWeb.Warehouse` namespace:
-
-    * `lib/my_app_web/controllers/warehouse/user_auth.ex`
-    * `lib/my_app_web/controllers/warehouse/user_confirmation_controller.ex`
-    * `lib/my_app_web/controllers/warehouse/user_confirmation_html.ex`
-    * `lib/my_app_web/controllers/warehouse/user_confirmation_html/new.html.heex`
-    * `test/my_app_web/controllers/warehouse/user_auth_test.exs`
-    * `test/my_app_web/controllers/warehouse/user_confirmation_controller_test.exs`
-    * and so on...
 
   ## Multiple invocations
 
@@ -193,7 +185,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       OptionParser.to_argv(Keyword.drop(opts, [:scope, :assign_key]), switches: @switches) ++
         parsed
 
-    {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], __MODULE__)
+    {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], help_module: __MODULE__)
 
     context = put_live_option(context)
     Gen.Context.prompt_for_code_injection(context)

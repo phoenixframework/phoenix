@@ -4,22 +4,42 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @moduledoc """
   Generates controller with view, templates, schema and context for an HTML resource.
 
+  The format is:
+
   ```console
+  $ mix phx.gen.html [<context>] <schema> <table> <attr:type> [<attr:type>...]
+  ```
+
+  For example:
+
+  ```console
+  $ mix phx.gen.html User users name:string age:integer
+  ```
+
+  Will generate a `User` schema for the `users` table within the `Users` context,
+  with the attributes `name` (as a string) and `age` (as an integer).
+
+  You can also explicitly pass the context name as argument, whenever the context
+  is well defined:
+
+    ```console
   $ mix phx.gen.html Accounts User users name:string age:integer
   ```
 
-  The first argument, `Accounts`, is the resource's context.
-  A context is an Elixir module that serves as an API boundary for closely related resources.
+  The first argument is the context module (`Accounts`) followed by
+  the schema module (`User`), table name (`users`), and attributes.
 
-  The second argument, `User`, is the resource's schema.
-  A schema is an Elixir module responsible for mapping database fields into an Elixir struct.
-  The `User` schema above specifies two fields with their respective colon-delimited data types:
-  `name:string` and `age:integer`. See `mix phx.gen.schema` for more information on attributes.
+  The context is an Elixir module that serves as an API boundary for
+  the given resource. A context often holds many related resources.
+  Therefore, if the context already exists, it will be augmented with
+  functions for the given resource.
 
-  > Note: A resource may also be split
-  > over distinct contexts (such as `Accounts.User` and `Payments.User`).
+  The schema is responsible for mapping the database fields into an
+  Elixir struct. It is followed by a list of attributes with their
+  respective names and types. See `mix phx.gen.schema` for more
+  information on attributes.
 
-  This generator adds the following files to `lib/`:
+  Overall, this generator will add the following files to `lib/`:
 
     * a controller in `lib/my_app_web/controllers/user_controller.ex`
     * default CRUD HTML templates in `lib/my_app_web/controllers/user_html`
@@ -60,21 +80,20 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   Alternatively, the `--context-app` option may be supplied to the generator:
 
   ```console
-  $ mix phx.gen.html Sales User users --context-app my_app
+  $ mix phx.gen.html Accounts User users --context-app my_app
   ```
 
   ## Web namespace
 
-  By default, the controller and HTML view will be namespaced by the schema name.
-  You can customize the web module namespace by passing the `--web` flag with a
-  module name, for example:
+  By default, the controller and HTML views are not namespaced but you can add
+  a namespace by passing the `--web` flag with a module name, for example:
 
   ```console
-  $ mix phx.gen.html Sales User users --web Sales
+  $ mix phx.gen.html Accounts User users --web Accounts
   ```
 
-  Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
-  `lib/app_web/controllers/sales/user_html.ex`.
+  Which would generate a `lib/app_web/controllers/accounts/user_controller.ex` and
+  `lib/app_web/controllers/accounts/user_html.ex`.
 
   ## Customizing the context, schema, tables and migrations
 
@@ -108,7 +127,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
     Mix.Phoenix.ensure_live_view_compat!(__MODULE__)
 
-    {context, schema} = Gen.Context.build(args)
+    {context, schema} = Gen.Context.build(args, name_optional: true)
 
     if schema.attrs == [] do
       Mix.raise("""

@@ -81,6 +81,10 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert_raise Mix.Error, ~r/Unknown value for --hashing-lib/, fn ->
         Gen.Auth.run(~w(Accounts User users --hashing-lib unknown))
       end
+
+      assert_raise Mix.Error, ~r/expects a context module name/, fn ->
+        Gen.Auth.run(~w(User users))
+      end
     end)
   end
 

@@ -4,7 +4,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   @moduledoc """
   Generates a context with functions around an Ecto schema.
 
-      $ mix phx.gen.context Accounts User users name:string age:integer
+  ```console
+  $ mix phx.gen.context Accounts User users name:string age:integer
+  ```
 
   The first argument is the context module followed by the schema module
   and its plural name (used as the schema table name).
@@ -140,9 +142,15 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   @doc false
-  def build(args, help \\ __MODULE__) do
+  def build(args, opts \\ []) do
+    help = Keyword.get(opts, :help_module, __MODULE__)
+    optional = Keyword.get(opts, :name_optional, false)
+
     {opts, parsed, _} = parse_opts(args)
-    [context_name, schema_name, plural | schema_args] = validate_args!(parsed, help)
+
+    {context_name, schema_name, plural, schema_args} =
+      validate_args!(parsed, optional, help)
+
     schema_module = inspect(Module.concat(context_name, schema_name))
     schema = Gen.Schema.build([schema_module, plural | schema_args], opts, help)
     context = Context.new(context_name, schema, opts)
@@ -350,7 +358,43 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
   end
 
-  defp validate_args!([context, schema, _plural | _] = args, help) do
+  defp validate_args!(
+         [maybe_context_name, schema_name_or_plural, plural_or_first_attr | schema_args],
+         optional,
+         help
+       ) do
+    has_context? =
+      case schema_name_or_plural do
+        <<char, _rest::binary>> when char in ?A..?Z -> true
+        _ -> not optional
+      end
+
+    {context, schema, plural, schema_args} =
+      if has_context? do
+        {maybe_context_name, schema_name_or_plural, plural_or_first_attr, schema_args}
+      else
+        # mix phx.gen.live User users name:string
+        # we generate the context from the plural "users" -> Users
+        context = Phoenix.Naming.camelize(schema_name_or_plural)
+
+        if context == maybe_context_name do
+          # if someone did
+          # mix phx.gen.live Users users name
+          Mix.raise("""
+          The given schema #{maybe_context_name} is equal to the camelized version of
+          the table plural #{schema_name_or_plural}, but the schema is expected to be singular.
+
+          Please pass an explicit context option like:
+
+              mix phx.gen.live #{context} #{maybe_context_name} #{schema_name_or_plural}
+
+          if this is what you want.
+          """)
+        end
+
+        {context, maybe_context_name, schema_name_or_plural, [plural_or_first_attr | schema_args]}
+      end
+
     cond do
       not Context.valid?(context) ->
         help.raise_with_help(
@@ -374,11 +418,11 @@ defmodule Mix.Tasks.Phx.Gen.Context do
         )
 
       true ->
-        args
+        {context, schema, plural, schema_args}
     end
   end
 
-  defp validate_args!(_, help) do
+  defp validate_args!(_, _, help) do
     help.raise_with_help("Invalid arguments")
   end
 
@@ -392,12 +436,13 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     of the generated resource, ending with any number of attributes.
     For example:
 
-        mix phx.gen.html Accounts User users name:string
-        mix phx.gen.json Accounts User users name:string
-        mix phx.gen.live Accounts User users name:string
+        mix phx.gen.html [Accounts] User users name:string
+        mix phx.gen.json [Accounts] User users name:string
+        mix phx.gen.live [Accounts] User users name:string
         mix phx.gen.context Accounts User users name:string
 
     The context serves as the API boundary for the given resource.
+    It is optional except for phx.gen.context.
     Multiple resources may belong to a context and a resource may be
     split over distinct contexts (such as Accounts.User and Payments.User).
     """)

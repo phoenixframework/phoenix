@@ -4,7 +4,9 @@ An ecommerce platform has wide-reaching coupling across a codebase so it's impor
 
 Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`, and `mix phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new product catalog context.
 
-In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have products to showcase on pages for sale, along with descriptions, pricing, etc. Along with selling products, we know we'll need to support carting, order checkout, and so on. While the products being purchased are related to the cart and checkout processes, showcasing a product and managing the *exhibition* of our products is distinctly different than tracking what a user has placed in their cart or how an order is placed. A `Catalog` context is a natural place for the management of our product details and the showcasing of those products we have for sale.
+When we run the generators, the context name is optional, and Phoenix will automatically use the plural name as the context module. This allows us to keep moving forward when starting out or when it is not yet clear how the different parts of our system relate to each other. Luckily, the needs of ecommerce systems are well defined nowadays, so it provides an excellent ground for us to design with intent. So let's take a step back and think about the different parts of our system.
+
+We know that we'll have products to showcase on pages for sale, along with descriptions, pricing, etc. Along with selling products, we know we'll need to support carting, order checkout, and so on. While the products being purchased are related to the cart and checkout processes, showcasing a product and managing the *exhibition* of our products is distinctly different than tracking what a user has placed in their cart or how an order is placed. A `Catalog` context is a natural place for the management of our product details and the showcasing of those products we have for sale.
 
 ## Starting with generators
 
@@ -93,11 +95,11 @@ If we follow the "Back" link, we get a list of all products, which should contai
 
 > #### Naming things is hard {: .tip}
 >
-> When starting a web application, it may be hard to draw lines or name its different contexts, especially when the domain you are working with is not as well established as e-commerce.
+> When starting a web application, it may be hard to draw lines or name its different contexts, especially when the business domain you are working with is not as well established as ecommerce.
 >
-> If you're stuck when defining or naming a context, you can simply create a new context using the plural form of the resource you're creating. For example, a `Products` context for managing products. You will find that, even in such cases, you will organically discover other resources that belong to the `Products` context, such as categories or image galleries.
+> For those reasons, Phoenix generators allow you to skip the context name, which is really helpful when you're stuck or still exploring your business domain. For example, our code above would work the same if we used the default `Products` context for managing products and it would still allow us to organically discover other resources that belong to the `Products` context, such as categories or image galleries.
 >
-> As your applications grows and the different parts of your system become clear, you can simply rename the context or move resources around. The beauty of Elixir modules is moving them around should be simply a matter of renaming the module names and their callers (and renaming the files for consistency).
+> We also advise against being too smart when naming your contexts. Pick a name that is clear and obvious to everyone who works (and might work) in the project. As your applications grows and the different parts of your system become clear, you can simply rename the context or move resources around. The beauty of Elixir modules is moving them around should be simply a matter of renaming the module names and their callers (and renaming the files for consistency).
 
 ## Grokking generated code
 
