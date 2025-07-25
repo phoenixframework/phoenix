@@ -31,6 +31,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name])
 
       assert_file("phx_blog/README.md")
+      assert_file("phx_blog/AGENTS.md")
 
       assert_file("phx_blog/.formatter.exs", fn file ->
         assert file =~ "import_deps: [:ecto, :ecto_sql, :phoenix]"

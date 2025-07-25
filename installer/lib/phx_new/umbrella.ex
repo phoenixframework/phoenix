@@ -14,7 +14,8 @@ defmodule Phx.New.Umbrella do
      "phx_umbrella/mix.exs": "mix.exs",
      "phx_umbrella/README.md": "README.md",
      "phx_umbrella/formatter.exs": ".formatter.exs"},
-    {:config, :project, "phx_umbrella/config/extra_config.exs": "config/config.exs"}
+    {:config, :project, "phx_umbrella/config/extra_config.exs": "config/config.exs"},
+    {:text, :project, "phx_single/AGENTS.md": "AGENTS.md"}
   ])
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do

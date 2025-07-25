@@ -34,6 +34,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([@app, "--umbrella"])
 
       assert_file(root_path(@app, "README.md"))
+      assert_file(root_path(@app, "AGENTS.md"))
       assert_file(root_path(@app, ".gitignore"))
 
       assert_file(app_path(@app, "README.md"))
