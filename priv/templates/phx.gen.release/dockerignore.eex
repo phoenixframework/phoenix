@@ -40,6 +40,7 @@
 erl_crash.dump
 
 # Static artifacts - These should be fetched and built inside the Docker image
+# https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Gen.Release.html#module-docker
 /assets/node_modules/
 /priv/static/assets/
 /priv/static/cache_manifest.json
