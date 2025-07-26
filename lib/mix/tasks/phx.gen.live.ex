@@ -235,7 +235,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       Keyword.merge(binding,
         assigns: %{
           web_namespace: inspect(context.web_module),
-          gettext: true
+          gettext: true,
+          live: true
         }
       )
 

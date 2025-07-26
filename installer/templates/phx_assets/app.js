@@ -80,4 +80,33 @@ import "phoenix_html"
 <%= @live_comment %>    window.liveReloader = reloader
 <%= @live_comment %>  })
 <%= @live_comment %>}
-<% end %>
+
+// Theme selector
+const setTheme = (theme) => {
+  if (theme === "system") {
+    localStorage.removeItem("phx:theme")
+    document.documentElement.removeAttribute("data-theme")
+  } else {
+    localStorage.setItem("phx:theme", theme)
+    document.documentElement.setAttribute("data-theme", theme)
+  }
+}
+if (!document.documentElement.hasAttribute("data-theme")) {
+  setTheme(localStorage.getItem("phx:theme") || "system")
+}
+window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"))<%= if not @live do %>
+document
+  .querySelectorAll("[data-theme-toggle] button[data-phx-theme]")
+  .forEach((el) => {
+    el.addEventListener("click", () => {
+      setTheme(el.dataset.phxTheme)
+    })
+  })
+
+// Handle flash close
+document.querySelectorAll("[role=alert][data-flash]").forEach((el) => {
+  el.addEventListener("click", () => {
+    el.setAttribute("hidden", "")
+  })
+})<% else %>
+window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));<% end %><% end %>
