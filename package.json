@@ -30,7 +30,7 @@
     "@eslint/js": "^9.28.0",
     "@stylistic/eslint-plugin": "^5.0.0",
     "documentation": "^14.0.3",
-    "eslint": "9.31.0",
+    "eslint": "9.32.0",
     "eslint-plugin-jest": "29.0.1",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
