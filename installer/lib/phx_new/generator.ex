@@ -96,6 +96,38 @@ defmodule Phx.New.Generator do
     end
   end
 
+  @rules_files Map.new(File.ls!(Path.join(@phoenix, "../usage-rules")), fn file ->
+                 content = File.read!(Path.join(@phoenix, "../usage-rules/#{file}"))
+                 {file, String.trim_trailing(content)}
+               end)
+
+  @new_project_rules_files Map.new(
+                             File.ls!(Path.expand("../../templates/usage-rules", __DIR__)),
+                             fn file ->
+                               base_path = Path.expand("../../templates/usage-rules", __DIR__)
+                               content = File.read!(Path.join(base_path, file))
+                               {file, String.trim_trailing(content)}
+                             end
+                           )
+
+  def generate_agents_md(%Project{} = project) do
+    content =
+      [
+        @rules_files["elixir.md"],
+        @rules_files["phoenix.md"],
+        project.binding[:ecto] && @rules_files["ecto.md"],
+        project.binding[:html] && @rules_files["html.md"],
+        project.binding[:live] && @rules_files["liveview.md"],
+        @new_project_rules_files["project.md"],
+        @new_project_rules_files["phoenix.md"],
+        project.binding[:html] && @new_project_rules_files["html.md"]
+      ]
+      |> Enum.reject(fn part -> part == nil or part == false end)
+      |> Enum.join("\n\n")
+
+    File.write!(Path.join(project.project_path, "AGENTS.md"), content)
+  end
+
   def config_inject(path, file, to_inject) do
     file = Path.join(path, file)
 

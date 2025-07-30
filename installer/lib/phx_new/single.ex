@@ -26,8 +26,6 @@ defmodule Phx.New.Single do
      "phx_single/test/test_helper.exs": "test/test_helper.exs",
      "phx_test/controllers/error_json_test.exs":
        "test/:lib_web_name/controllers/error_json_test.exs"},
-    {:text, :project,
-     "phx_single/AGENTS.md": "AGENTS.md"},
     {:keep, :web,
      "phx_web/controllers": "lib/:lib_web_name/controllers",
      "phx_test/controllers": "test/:lib_web_name/controllers"}
@@ -142,6 +140,8 @@ defmodule Phx.New.Single do
 
   def generate(%Project{} = project) do
     copy_from(project, __MODULE__, :new)
+
+    generate_agents_md(project)
 
     if Project.ecto?(project), do: gen_ecto(project)
     if Project.html?(project), do: gen_html(project)

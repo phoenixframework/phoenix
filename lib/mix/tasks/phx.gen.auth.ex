@@ -240,6 +240,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> maybe_inject_router_import(binding)
     |> maybe_inject_router_plug(binding)
     |> maybe_inject_app_layout_menu(binding)
+    |> maybe_inject_agents_md(paths, binding)
     |> Gen.Notifier.maybe_print_mailer_installation_instructions()
     |> print_shell_instructions()
   end
@@ -899,6 +900,26 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
         #{scope_config}
         """)
+    end
+
+    context
+  end
+
+  defp maybe_inject_agents_md(%Context{} = context, paths, binding) do
+    auth_content = Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.auth/AGENTS.md", binding)
+
+    file_path =
+      if Mix.Phoenix.in_umbrella?(File.cwd!()) do
+        Path.expand("../../")
+      else
+        File.cwd!()
+      end
+      |> Path.join("AGENTS.md")
+
+    if File.exists?(file_path) do
+      print_injecting(file_path)
+      content = File.read!(file_path)
+      File.write!(file_path, content <> "\n\n" <> String.trim_trailing(auth_content))
     end
 
     context
