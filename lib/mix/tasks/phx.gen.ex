@@ -44,7 +44,6 @@ defmodule Mix.Tasks.Phx.Gen do
   Note generator templates may change between minor or even patch Phoenix releases,
   so custom templates may require updates after upgrading. Use this mechanism at your
   own risk.
-```
   """
 
   def run(_args) do
