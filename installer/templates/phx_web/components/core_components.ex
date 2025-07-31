@@ -54,8 +54,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      role="alert"
+      <%= if @javascript do %>phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      <% else %>onclick="this.hidden = true"
+      <% end %>role="alert"
       class="toast toast-top toast-end z-50"
       {@rest}
     >
