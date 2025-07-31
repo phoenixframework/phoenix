@@ -15,27 +15,6 @@
       mylist = ["blue", "green"]
       Enum.at(mylist, i)
 
-- Elixir supports `if/else` but **does NOT support `if/else if` or `if/elsif`. **Never use `else if` or `elseif` in Elixir**, **always** use `cond` or `case` for multiple conditionals.
-
-  **Never do this (invalid)**:
-
-      <%= if condition do %>
-        ...
-      <% else if other_condition %>
-        ...
-      <% end %>
-
-  Instead **always** do this:
-
-      <%= cond do %>
-        <% condition -> %>
-          ...
-        <% condition2 -> %>
-          ...
-        <% true -> %>
-          ...
-      <% end %>
-
 - Elixir variables are immutable, but can be rebound, so for block expressions like `if`, `case`, `cond`, etc
   you *must* bind the result of the expression to a variable if you want to use it and you CANNOT rebind the result inside the expression, ie:
 
@@ -50,7 +29,6 @@
           assign(socket, :val, val)
         end
 
-- Use `with` for chaining operations that return `{:ok, _}` or `{:error, _}`
 - **Never** nest multiple modules in the same file as it can cause cyclic dependencies and compilation errors
 - **Never** use map access syntax (`changeset[:field]`) on structs as they do not implement the Access behaviour by default. For regular structs, you **must** access the fields directly, such as `my_struct.field` or use higher level APIs that are available on the struct if they exist, `Ecto.Changeset.get_field/2` for changesets
 - Elixir's standard library has everything necessary for date and time manipulation. Familiarize yourself with the common `Time`, `Date`, `DateTime`, and `Calendar` interfaces by accessing their documentation as necessary. **Never** install additional dependencies unless asked or for date/time parsing (which you can use the `date_time_parser` package)
