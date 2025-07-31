@@ -7,6 +7,27 @@
 - **Always** add unique DOM IDs to key elements (like forms, buttons, etc) when writing templates, these IDs can later be used in tests (`<.form for={@form} id="product-form">`)
 - For "app wide" template imports, you can import/alias into the `my_app_web.ex`'s `html_helpers` block, so they will be available to all LiveViews, LiveComponent's, and all modules that do `use MyAppWeb, :html` (replace "my_app" by the actual app name)
 
+- Elixir supports `if/else` but **does NOT support `if/else if` or `if/elsif`. **Never use `else if` or `elseif` in Elixir**, **always** use `cond` or `case` for multiple conditionals.
+
+  **Never do this (invalid)**:
+
+      <%= if condition do %>
+        ...
+      <% else if other_condition %>
+        ...
+      <% end %>
+
+  Instead **always** do this:
+
+      <%= cond do %>
+        <% condition -> %>
+          ...
+        <% condition2 -> %>
+          ...
+        <% true -> %>
+          ...
+      <% end %>
+
 - HEEx require special tag annotation if you want to insert literal curly's like `{` or `}`. If you want to show a textual code snippet on the page in a `<pre>` or `<code>` block you *must* annotate the parent tag with `phx-no-curly-interpolation`:
 
       <code phx-no-curly-interpolation>
