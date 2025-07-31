@@ -23,16 +23,16 @@ defmodule Mix.Tasks.Phx.Gen do
   
   You can override the default templates used by generators.
   
-  For example, to customize `phx.gen.live`, you can copy and edit the generator templates.
-  A common pattern is to place them under `priv/templates/phx.gen.live/` in your project:
+  For example, to customize `phx.gen.live`, you can copy and edit the generator templates
+  to your own project's priv folder:
   
-  Create the directory for your custom `phx.gen.live` templates:
+  First, create the directory for your custom `phx.gen.live` templates:
 
   ```console
   $ mkdir -p priv/templates/phx.gen.live
   ```
 
-  Copy the default phx.gen.live generator templates into your project so you can customize them:
+  Next, copy the default phx.gen.live generator templates into your project so you can customize them:
 
   ```console
   $ cp -r deps/phoenix/priv/templates/phx.gen.live/* priv/templates/phx.gen.live/
