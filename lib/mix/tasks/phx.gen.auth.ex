@@ -166,7 +166,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     live: :boolean,
     compile: :boolean,
     scope: :string,
-    assign_key: :string
+    assign_key: :string,
+    agents_md: :boolean
   ]
 
   @doc false
@@ -182,7 +183,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     hashing_library = build_hashing_library!(opts)
 
     context_args =
-      OptionParser.to_argv(Keyword.drop(opts, [:scope, :assign_key]), switches: @switches) ++
+      OptionParser.to_argv(Keyword.drop(opts, [:scope, :assign_key, :agents_md]),
+        switches: @switches
+      ) ++
         parsed
 
     {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], help_module: __MODULE__)
@@ -223,7 +226,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       datetime_module: datetime_module(schema),
       datetime_now: datetime_now(schema),
       scope_config:
-        scope_config(context, opts[:scope], Keyword.get(opts, :assign_key, "current_scope"))
+        scope_config(context, opts[:scope], Keyword.get(opts, :assign_key, "current_scope")),
+      agents_md: Keyword.get(opts, :agents_md, true)
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -906,20 +910,32 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   defp maybe_inject_agents_md(%Context{} = context, paths, binding) do
-    auth_content = Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.auth/AGENTS.md", binding)
+    if binding[:agents_md] do
+      auth_content =
+        """
+        <!-- phoenix:gen-auth-start -->
+        #{Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.auth/AGENTS.md", binding)}
+        <!-- phoenix:gen-auth-end -->
+        """
 
-    file_path =
-      if Mix.Phoenix.in_umbrella?(File.cwd!()) do
-        Path.expand("../../")
-      else
-        File.cwd!()
+      file_path =
+        if Mix.Phoenix.in_umbrella?(File.cwd!()) do
+          Path.expand("../../")
+        else
+          File.cwd!()
+        end
+        |> Path.join("AGENTS.md")
+
+      if File.exists?(file_path) do
+        print_injecting(file_path)
+        content = File.read!(file_path)
+
+        if content =~ "<!-- phoenix:gen-auth-start -->" do
+          # skip adding, as phx.gen.auth already ran in the past
+        else
+          File.write!(file_path, content <> "\n\n" <> String.trim_trailing(auth_content))
+        end
       end
-      |> Path.join("AGENTS.md")
-
-    if File.exists?(file_path) do
-      print_injecting(file_path)
-      content = File.read!(file_path)
-      File.write!(file_path, content <> "\n\n" <> String.trim_trailing(auth_content))
     end
 
     context

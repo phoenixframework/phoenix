@@ -117,23 +117,38 @@ defmodule Phx.New.Generator do
                            )
 
   def generate_agents_md(%Project{} = project) do
-    content =
-      [
-        @new_project_rules_files["project.md"],
-        @new_project_rules_files["phoenix.md"],
-        project.binding[:html] && @new_project_rules_files["html.md"],
-        "<-- usage-rules-start -->",
-        @rules_files["elixir.md"],
-        @rules_files["phoenix.md"],
-        project.binding[:ecto] && @rules_files["ecto.md"],
-        project.binding[:html] && @rules_files["html.md"],
-        project.binding[:live] && @rules_files["liveview.md"],
-        "<-- usage-rules-end -->"
-      ]
-      |> Enum.reject(fn part -> part == nil or part == false end)
-      |> Enum.join("\n\n")
+    if project.binding[:agents_md] do
+      content =
+        [
+          @new_project_rules_files["project.md"],
+          @new_project_rules_files["phoenix.md"],
+          # --no-assets is equivalent to --no-tailwind && --no-esbuild;
+          # we check for both here
+          project.binding[:esbuild] && project.binding[:tailwind] &&
+            @new_project_rules_files["assets.md"],
+          "<-- usage-rules-start -->",
+          "<!-- phoenix:elixir-start -->",
+          @rules_files["elixir.md"],
+          "<!-- phoenix:elixir-end -->",
+          "<!-- phoenix:phoenix-start -->",
+          @rules_files["phoenix.md"],
+          "<!-- phoenix:phoenix-end -->",
+          "<!-- phoenix:ecto-start -->",
+          project.binding[:ecto] && @rules_files["ecto.md"],
+          "<!-- phoenix:ecto-end -->",
+          "<!-- phoenix:html-start -->",
+          project.binding[:html] && @rules_files["html.md"],
+          "<!-- phoenix:html-end -->",
+          "<!-- phoenix:liveview-start -->",
+          project.binding[:live] && @rules_files["liveview.md"],
+          "<!-- phoenix:liveview-end -->",
+          "<!-- usage-rules-end -->"
+        ]
+        |> Enum.reject(fn part -> part == nil or part == false end)
+        |> Enum.join("\n\n")
 
-    File.write!(Path.join(project.project_path, "AGENTS.md"), content)
+      File.write!(Path.join(project.project_path, "AGENTS.md"), content)
+    end
   end
 
   def config_inject(path, file, to_inject) do
@@ -221,6 +236,7 @@ defmodule Phx.New.Generator do
     from_elixir_install = Keyword.get(opts, :from_elixir_install, false)
     phoenix_path = phoenix_path(project, dev, false)
     phoenix_path_umbrella_root = phoenix_path(project, dev, true)
+    agents_md = Keyword.get(opts, :agents_md, true)
 
     # detect if we're inside a docker env, but if we're in github actions,
     # we want to treat it like regular env for end-user testing purposes
@@ -293,7 +309,8 @@ defmodule Phx.New.Generator do
       from_elixir_install: from_elixir_install,
       elixir_install_otp_bin_path: from_elixir_install && elixir_install_otp_bin_path(),
       elixir_install_bin_path: from_elixir_install && elixir_install_bin_path(),
-      inside_docker_env?: inside_docker_env?
+      inside_docker_env?: inside_docker_env?,
+      agents_md: agents_md
     ]
 
     %{project | binding: binding}
