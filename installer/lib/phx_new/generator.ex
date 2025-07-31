@@ -96,8 +96,14 @@ defmodule Phx.New.Generator do
     end
   end
 
-  @rules_files Map.new(File.ls!(Path.join(@phoenix, "../usage-rules")), fn file ->
-                 content = File.read!(Path.join(@phoenix, "../usage-rules/#{file}"))
+  parent_rules = Path.join(@phoenix, "../usage-rules")
+  # those are copied before publishing to Hex
+  copied_rules = Path.join(@phoenix, "phoenix_usage_rules")
+
+  @usage_rules_path if(File.exists?(parent_rules), do: parent_rules, else: copied_rules)
+
+  @rules_files Map.new(File.ls!(@usage_rules_path), fn file ->
+                 content = File.read!(Path.join(@usage_rules_path, file))
                  {file, String.trim_trailing(content)}
                end)
 
@@ -113,14 +119,16 @@ defmodule Phx.New.Generator do
   def generate_agents_md(%Project{} = project) do
     content =
       [
+        @new_project_rules_files["project.md"],
+        @new_project_rules_files["phoenix.md"],
+        project.binding[:html] && @new_project_rules_files["html.md"],
+        "<-- usage-rules-start -->",
         @rules_files["elixir.md"],
         @rules_files["phoenix.md"],
         project.binding[:ecto] && @rules_files["ecto.md"],
         project.binding[:html] && @rules_files["html.md"],
         project.binding[:live] && @rules_files["liveview.md"],
-        @new_project_rules_files["project.md"],
-        @new_project_rules_files["phoenix.md"],
-        project.binding[:html] && @new_project_rules_files["html.md"]
+        "<-- usage-rules-end -->"
       ]
       |> Enum.reject(fn part -> part == nil or part == false end)
       |> Enum.join("\n\n")

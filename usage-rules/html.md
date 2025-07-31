@@ -1,3 +1,4 @@
+<!-- phoenix:html-start -->
 ## Phoenix HTML guidelines
 
 - Phoenix templates **always** use `~H` or .html.heex files (known as HEEx), **never** use `~E`
@@ -53,3 +54,4 @@
         {if @invalid_block_construct do}
         {end}
       </div>
+<!-- phoenix:html-end -->

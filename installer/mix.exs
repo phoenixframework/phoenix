@@ -26,6 +26,7 @@ defmodule Phx.New.MixProject do
       version: @version,
       elixir: @elixir_requirement,
       deps: deps(),
+      aliases: aliases(),
       package: [
         maintainers: [
           "Chris McCord",
@@ -35,7 +36,7 @@ defmodule Phx.New.MixProject do
         ],
         licenses: ["MIT"],
         links: %{"GitHub" => @scm_url},
-        files: ~w(lib templates mix.exs README.md)
+        files: ~w(lib templates phoenix_usage_rules mix.exs README.md)
       ],
       source_url: @scm_url,
       docs: docs(),
@@ -69,5 +70,18 @@ defmodule Phx.New.MixProject do
     [
       source_url_pattern: "#{@scm_url}/blob/v#{@version}/installer/%{path}#L%{line}"
     ]
+  end
+
+  defp aliases do
+    [
+      "hex.publish": [
+        &copy_agents_md/1,
+        "hex.publish"
+      ]
+    ]
+  end
+
+  defp copy_agents_md(_) do
+    File.cp_r!("../usage-rules", "phoenix_usage_rules")
   end
 end
