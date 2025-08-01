@@ -929,28 +929,24 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         end
         |> Path.join("AGENTS.md")
 
-      if File.exists?(file_path) do
+      with true <- File.exists?(file_path),
+           content = File.read!(file_path),
+           false <- content =~ "<!-- phoenix-gen-auth-start -->" do
         print_injecting(file_path)
-        content = File.read!(file_path)
+        # inject before usage rules
+        case String.split(content, "<!-- usage-rules-start -->", parts: 2) do
+          [pre, post] ->
+            File.write!(file_path, [
+              pre,
+              String.trim_trailing(auth_content),
+              "\n\n",
+              "<!-- usage-rules-start -->",
+              post
+            ])
 
-        if content =~ "<!-- phoenix-gen-auth-start -->" do
-          # skip adding, as phx.gen.auth already ran in the past
-        else
-          # inject before usage rules
-          case String.split(content, "<!-- usage-rules-start -->", parts: 2) do
-            [pre, post] ->
-              File.write!(file_path, [
-                pre,
-                String.trim_trailing(auth_content),
-                "\n\n",
-                "<!-- usage-rules-start -->",
-                post
-              ])
-
-            _ ->
-              # just append
-              File.write!(file_path, content <> "\n\n" <> String.trim_trailing(auth_content))
-          end
+          _ ->
+            # just append
+            File.write!(file_path, content <> "\n\n" <> String.trim_trailing(auth_content))
         end
       end
     end
