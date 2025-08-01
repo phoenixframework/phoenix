@@ -238,7 +238,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
           end
 
           @doc """
-          Creates a organization.
+          Creates an organization.
           """
           def create_organization(scope, attrs \\ %{}) do
             %Organization{}
