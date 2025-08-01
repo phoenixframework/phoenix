@@ -36,7 +36,7 @@ defmodule Phx.New.MixProject do
         ],
         licenses: ["MIT"],
         links: %{"GitHub" => @scm_url},
-        files: ~w(lib templates phoenix_usage_rules mix.exs README.md)
+        files: ~w(lib templates mix.exs README.md)
       ],
       source_url: @scm_url,
       docs: docs(),
@@ -84,7 +84,7 @@ defmodule Phx.New.MixProject do
   defp copy_agents_md(_) do
     File.cp_r!(
       Path.expand("../usage-rules", __DIR__),
-      Path.expand("./phoenix_usage_rules", __DIR__)
+      Path.expand("./templates/phoenix-usage-rules", __DIR__)
     )
   end
 end

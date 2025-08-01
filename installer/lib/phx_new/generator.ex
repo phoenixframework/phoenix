@@ -98,7 +98,7 @@ defmodule Phx.New.Generator do
 
   parent_rules = Path.join(@phoenix, "../usage-rules")
   # those are copied before publishing to Hex
-  copied_rules = Path.join(@phoenix, "phoenix_usage_rules")
+  copied_rules = Path.expand("../../templates/phoenix-usage-rules", __DIR__)
 
   @usage_rules_path if(File.exists?(parent_rules), do: parent_rules, else: copied_rules)
 
