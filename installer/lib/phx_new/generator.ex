@@ -126,7 +126,7 @@ defmodule Phx.New.Generator do
           # we check for both here
           project.binding[:esbuild] && project.binding[:tailwind] &&
             @new_project_rules_files["assets.md"],
-          "<-- usage-rules-start -->",
+          "<!-- usage-rules-start -->",
           "<!-- phoenix:elixir-start -->",
           @rules_files["elixir.md"],
           "<!-- phoenix:elixir-end -->",

@@ -911,11 +911,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
   defp maybe_inject_agents_md(%Context{} = context, paths, binding) do
     if binding[:agents_md] do
+      # we add our own comment marker (not related to usage_rules)
+      # to check if phx.gen.auth already ran as we only want to inject once
+      # even if other options were used
       auth_content =
         """
-        <!-- phoenix:gen-auth-start -->
+        <!-- phoenix-gen-auth-start -->
         #{Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.auth/AGENTS.md", binding)}
-        <!-- phoenix:gen-auth-end -->
+        <!-- phoenix-gen-auth-end -->
         """
 
       file_path =
@@ -930,10 +933,24 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         print_injecting(file_path)
         content = File.read!(file_path)
 
-        if content =~ "<!-- phoenix:gen-auth-start -->" do
+        if content =~ "<!-- phoenix-gen-auth-start -->" do
           # skip adding, as phx.gen.auth already ran in the past
         else
-          File.write!(file_path, content <> "\n\n" <> String.trim_trailing(auth_content))
+          # inject before usage rules
+          case String.split(content, "<!-- usage-rules-start -->", parts: 2) do
+            [pre, post] ->
+              File.write!(file_path, [
+                pre,
+                String.trim_trailing(auth_content),
+                "\n\n",
+                "<!-- usage-rules-start -->",
+                post
+              ])
+
+            _ ->
+              # just append
+              File.write!(file_path, content <> "\n\n" <> String.trim_trailing(auth_content))
+          end
         end
       end
     end
