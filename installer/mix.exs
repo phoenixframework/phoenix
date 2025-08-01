@@ -82,6 +82,9 @@ defmodule Phx.New.MixProject do
   end
 
   defp copy_agents_md(_) do
-    File.cp_r!("../usage-rules", "phoenix_usage_rules")
+    File.cp_r!(
+      Path.expand("../usage-rules", __DIR__),
+      Path.expand("./phoenix_usage_rules", __DIR__)
+    )
   end
 end
