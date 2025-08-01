@@ -120,28 +120,43 @@ defmodule Phx.New.Generator do
     if project.binding[:agents_md] do
       content =
         [
+          # rules specific to new apps
           @new_project_rules_files["project.md"],
           @new_project_rules_files["phoenix.md"],
           # --no-assets is equivalent to --no-tailwind && --no-esbuild;
           # we check for both here
           project.binding[:esbuild] && project.binding[:tailwind] &&
             @new_project_rules_files["assets.md"],
+          # generic usage rules
           "<!-- usage-rules-start -->",
-          "<!-- phoenix:elixir-start -->",
-          @rules_files["elixir.md"],
-          "<!-- phoenix:elixir-end -->",
-          "<!-- phoenix:phoenix-start -->",
-          @rules_files["phoenix.md"],
-          "<!-- phoenix:phoenix-end -->",
-          "<!-- phoenix:ecto-start -->",
-          project.binding[:ecto] && @rules_files["ecto.md"],
-          "<!-- phoenix:ecto-end -->",
-          "<!-- phoenix:html-start -->",
-          project.binding[:html] && @rules_files["html.md"],
-          "<!-- phoenix:html-end -->",
-          "<!-- phoenix:liveview-start -->",
-          project.binding[:live] && @rules_files["liveview.md"],
-          "<!-- phoenix:liveview-end -->",
+          [
+            "<!-- phoenix:elixir-start -->\n",
+            @rules_files["elixir.md"],
+            "\n<!-- phoenix:elixir-end -->"
+          ],
+          [
+            "<!-- phoenix:phoenix-start -->\n",
+            @rules_files["phoenix.md"],
+            "\n<!-- phoenix:phoenix-end -->"
+          ],
+          project.binding[:ecto] &&
+            [
+              "<!-- phoenix:ecto-start -->\n",
+              @rules_files["ecto.md"],
+              "\n<!-- phoenix:ecto-end -->"
+            ],
+          project.binding[:html] &&
+            [
+              "<!-- phoenix:html-start -->\n",
+              @rules_files["html.md"],
+              "\n<!-- phoenix:html-end -->"
+            ],
+          project.binding[:live] &&
+            [
+              "<!-- phoenix:liveview-start -->\n",
+              @rules_files["liveview.md"],
+              "\n<!-- phoenix:liveview-end -->"
+            ],
           "<!-- usage-rules-end -->"
         ]
         |> Enum.reject(fn part -> part == nil or part == false end)
