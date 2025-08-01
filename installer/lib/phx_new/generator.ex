@@ -128,7 +128,7 @@ defmodule Phx.New.Generator do
           project.binding[:esbuild] && project.binding[:tailwind] &&
             @new_project_rules_files["assets.md"],
           # generic usage rules
-          "<!-- usage-rules-start -->",
+          "\n<!-- usage-rules-start -->",
           [
             "<!-- phoenix:elixir-start -->\n",
             @rules_files["elixir.md"],
@@ -160,7 +160,7 @@ defmodule Phx.New.Generator do
           "<!-- usage-rules-end -->"
         ]
         |> Enum.reject(fn part -> part == nil or part == false end)
-        |> Enum.join("\n\n")
+        |> Enum.intersperse("\n")
 
       File.write!(Path.join(project.project_path, "AGENTS.md"), content)
     end
