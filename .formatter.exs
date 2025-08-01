@@ -91,7 +91,10 @@ locals_without_parens = [
   assert_redirected: 2,
   assert_reply: 2,
   assert_reply: 3,
+  refute_redirected: 1,
   refute_redirected: 2,
+  refute_patched: 1,
+  refute_patched: 2,
   refute_push_event: 3,
   refute_push_event: 4
 ]
