@@ -731,6 +731,14 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
+  test "umbrella with --no-agents-md" do
+    in_tmp("umbrella with no agents md", fn ->
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-agents-md"])
+      
+      refute_file(root_path(@app, "AGENTS.md"))
+    end)
+  end
+
   describe "ecto task" do
     test "can only be run within an umbrella app dir", %{tmp_dir: tmp_dir} do
       in_tmp(tmp_dir, fn ->

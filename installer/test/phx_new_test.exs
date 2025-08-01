@@ -822,6 +822,14 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
+  test "new with --no-agents-md" do
+    in_tmp("new with no agents md", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-agents-md"])
+      
+      refute_file("phx_blog/AGENTS.md")
+    end)
+  end
+
   describe "PHX_NEW_CACHE_DIR" do
     @phx_new_cache_dir System.get_env("PHX_NEW_CACHE_DIR")
     test "new with PHX_NEW_CACHE_DIR" do

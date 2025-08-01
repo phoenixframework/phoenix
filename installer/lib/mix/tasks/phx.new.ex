@@ -71,6 +71,8 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-version-check` - skip the version check for the latest phx_new version
 
+    * `--no-agents-md` - do not generate an `AGENTS.md` file
+
   When passing the `--no-ecto` flag, Phoenix generators such as
   `phx.gen.html`, `phx.gen.json`, `phx.gen.live`, and `phx.gen.context`
   may no longer work as expected as they generate context files that rely
@@ -173,7 +175,8 @@ defmodule Mix.Tasks.Phx.New do
     adapter: :string,
     inside_docker_env: :boolean,
     from_elixir_install: :boolean,
-    version_check: :boolean
+    version_check: :boolean,
+    agents_md: :boolean
   ]
 
   @reserved_app_names ~w(server table)

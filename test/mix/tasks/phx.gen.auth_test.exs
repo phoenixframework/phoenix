@@ -1435,4 +1435,138 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       end)
     end)
   end
+
+  test "with --no-agents-md does not inject content to AGENTS.md", config do
+    in_tmp_phx_project(config.test, fn ->
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      Gen.Auth.run(
+        ~w(Accounts User users --no-agents-md --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
+      )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
+
+      # AGENTS.md should still exist from phx.new but should not contain phx.gen.auth content
+      assert_file("AGENTS.md", fn file ->
+        refute file =~ "phoenix-gen-auth-start"
+        refute file =~ "phoenix-gen-auth-end"
+      end)
+    end)
+  end
+
+  test "injects phx.gen.auth content into AGENTS.md at the correct location", config do
+    in_tmp_phx_project(config.test, fn ->
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      Gen.Auth.run(
+        ~w(Accounts User users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
+      )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
+
+      # Should inject content before usage-rules-start
+      assert_file("AGENTS.md", fn file ->
+        assert file =~ "phoenix-gen-auth-start"
+        assert file =~ "phoenix-gen-auth-end"
+        assert file =~ "usage-rules-start"
+
+        # Verify the order: gen.auth content comes before usage-rules
+        auth_start_pos = :binary.match(file, "phoenix-gen-auth-start") |> elem(0)
+        usage_rules_pos = :binary.match(file, "usage-rules-start") |> elem(0)
+        assert auth_start_pos < usage_rules_pos
+      end)
+    end)
+  end
+
+  test "does not duplicate phx.gen.auth content when run multiple times", config do
+    in_tmp_phx_project(config.test, fn ->
+      # First run
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      Gen.Auth.run(
+        ~w(Accounts User users --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
+      )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
+
+      # Second run with different schema
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      Gen.Auth.run(
+        ~w(Admins Admin admins --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
+      )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
+
+      # Should only have one instance of the gen.auth markers
+      assert_file("AGENTS.md", fn file ->
+        auth_start_matches = Regex.scan(~r/phoenix-gen-auth-start/, file)
+        assert length(auth_start_matches) == 1
+
+        auth_end_matches = Regex.scan(~r/phoenix-gen-auth-end/, file)
+        assert length(auth_end_matches) == 1
+      end)
+    end)
+  end
+
+  test "injects different content for --live vs non-live", config do
+    in_tmp_phx_project(config.test, fn ->
+      # First test with --live
+      Gen.Auth.run(
+        ~w(Accounts User users --live --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
+      )
+
+      assert_file("AGENTS.md", fn file ->
+        # Check for LiveView-specific content
+        assert file =~ "live_session"
+        assert file =~ "LiveViews that require login"
+        assert file =~ "live_session :require_authenticated_user"
+        assert file =~ "live_session :current_user"
+        assert file =~ "on_mount:"
+        assert file =~ "MyAppWeb.UserAuth, :require_authenticated"
+        assert file =~ "MyAppWeb.UserAuth, :mount_current_scope"
+        assert file =~ "or LiveViews"
+        assert file =~ "**Never** duplicate `live_session` names"
+      end)
+
+      # Clean up AGENTS.md for second test
+      File.rm!("AGENTS.md")
+      # Re-create it as phx.new would
+      File.write!("AGENTS.md", """
+      ## Project-specific information
+
+      <!-- usage-rules-start -->
+      <!-- usage-rules-end -->
+      """)
+
+      # Now test without --live
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      Gen.Auth.run(
+        ~w(Admins Admin admins --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
+      )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
+
+      assert_file("AGENTS.md", fn file ->
+        # Should not have LiveView-specific content
+        refute file =~ "live_session"
+        refute file =~ "LiveViews that require login"
+        refute file =~ "on_mount:"
+        refute file =~ "or LiveViews"
+        refute file =~ "**Never** duplicate `live_session` names"
+
+        # But should still have general auth content
+        assert file =~ "Authentication"
+        assert file =~ "require_authenticated_admin"
+        assert file =~ "Controller routes must be placed"
+      end)
+    end)
+  end
 end
