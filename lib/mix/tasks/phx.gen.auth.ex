@@ -166,7 +166,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     live: :boolean,
     compile: :boolean,
     scope: :string,
-    assign_key: :string
+    assign_key: :string,
+    agents_md: :boolean
   ]
 
   @doc false
@@ -182,7 +183,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     hashing_library = build_hashing_library!(opts)
 
     context_args =
-      OptionParser.to_argv(Keyword.drop(opts, [:scope, :assign_key]), switches: @switches) ++
+      OptionParser.to_argv(Keyword.drop(opts, [:scope, :assign_key, :agents_md]),
+        switches: @switches
+      ) ++
         parsed
 
     {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], help_module: __MODULE__)
@@ -223,7 +226,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       datetime_module: datetime_module(schema),
       datetime_now: datetime_now(schema),
       scope_config:
-        scope_config(context, opts[:scope], Keyword.get(opts, :assign_key, "current_scope"))
+        scope_config(context, opts[:scope], Keyword.get(opts, :assign_key, "current_scope")),
+      agents_md: Keyword.get(opts, :agents_md, true)
     ]
 
     paths = Mix.Phoenix.generator_paths()
@@ -240,6 +244,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> maybe_inject_router_import(binding)
     |> maybe_inject_router_plug(binding)
     |> maybe_inject_app_layout_menu(binding)
+    |> maybe_inject_agents_md(paths, binding)
     |> Gen.Notifier.maybe_print_mailer_installation_instructions()
     |> print_shell_instructions()
   end
@@ -899,6 +904,51 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
         #{scope_config}
         """)
+    end
+
+    context
+  end
+
+  defp maybe_inject_agents_md(%Context{} = context, paths, binding) do
+    if binding[:agents_md] do
+      # we add our own comment marker (not related to usage_rules)
+      # to check if phx.gen.auth already ran as we only want to inject once
+      # even if other options were used
+      auth_content =
+        """
+        <!-- phoenix-gen-auth-start -->
+        #{Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.auth/AGENTS.md", binding)}
+        <!-- phoenix-gen-auth-end -->
+        """
+
+      file_path =
+        if Mix.Phoenix.in_umbrella?(File.cwd!()) do
+          Path.expand("../../")
+        else
+          File.cwd!()
+        end
+        |> Path.join("AGENTS.md")
+
+      with true <- File.exists?(file_path),
+           content = File.read!(file_path),
+           false <- content =~ "<!-- phoenix-gen-auth-start -->" do
+        print_injecting(file_path)
+        # inject before usage rules
+        case String.split(content, "<!-- usage-rules-start -->", parts: 2) do
+          [pre, post] ->
+            File.write!(file_path, [
+              pre,
+              String.trim_trailing(auth_content),
+              "\n\n",
+              "<!-- usage-rules-start -->",
+              post
+            ])
+
+          _ ->
+            # just append
+            File.write!(file_path, content <> "\n\n" <> String.trim_trailing(auth_content))
+        end
+      end
     end
 
     context

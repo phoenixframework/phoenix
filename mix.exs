@@ -124,7 +124,7 @@ defmodule Phoenix.MixProject do
         "Changelog" => "https://hexdocs.pm/phoenix/changelog.html"
       },
       files: ~w(
-          assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs
+          assets/js lib priv usage-rules CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs
           installer/templates/phx_web/components/core_components.ex
         )
     ]
