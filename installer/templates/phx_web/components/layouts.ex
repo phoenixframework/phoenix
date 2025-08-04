@@ -86,7 +86,7 @@ defmodule <%= @web_namespace %>.Layouts do
     ~H"""
     <div id={@id} aria-live="polite">
       <.flash kind={:info} flash={@flash} />
-      <.flash kind={:error} flash={@flash} /><%= if @live do %>
+      <.flash kind={:error} flash={@flash} /><%= if @live and @javascript do %>
 
       <.flash
         id="client-error"
