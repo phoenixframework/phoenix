@@ -26,7 +26,17 @@
           setTheme(localStorage.getItem("phx:theme") || "system");
         }
         window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
-        window.addEventListener("phx:set-theme", ({ detail: { theme } }) => setTheme(theme));
+        <%= if not @live do %>
+        document.addEventListener("DOMContentLoaded", () => {
+          document
+            .querySelectorAll("button[data-phx-theme]")
+            .forEach((el) => {
+              el.addEventListener("click", () => {
+                setTheme(el.dataset.phxTheme)
+              })
+            })
+        })<% else %>
+        window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));<% end %>
       })();
     </script><% end %>
   </head>
