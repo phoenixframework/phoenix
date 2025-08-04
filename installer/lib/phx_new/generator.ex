@@ -96,6 +96,76 @@ defmodule Phx.New.Generator do
     end
   end
 
+  parent_rules = Path.join(@phoenix, "../usage-rules")
+  # those are copied before publishing to Hex
+  copied_rules = Path.expand("../../templates/phoenix-usage-rules", __DIR__)
+
+  @usage_rules_path if(File.exists?(parent_rules), do: parent_rules, else: copied_rules)
+
+  @rules_files Map.new(File.ls!(@usage_rules_path), fn file ->
+                 content = File.read!(Path.join(@usage_rules_path, file))
+                 {file, String.trim_trailing(content)}
+               end)
+
+  @new_project_rules_files Map.new(
+                             File.ls!(Path.expand("../../templates/usage-rules", __DIR__)),
+                             fn file ->
+                               base_path = Path.expand("../../templates/usage-rules", __DIR__)
+                               content = File.read!(Path.join(base_path, file))
+                               {file, String.trim_trailing(content)}
+                             end
+                           )
+
+  def generate_agents_md(%Project{} = project) do
+    if project.binding[:agents_md] do
+      content =
+        [
+          # rules specific to new apps
+          @new_project_rules_files["project.md"],
+          @new_project_rules_files["phoenix.md"],
+          # --no-assets is equivalent to --no-tailwind && --no-esbuild;
+          # we check for both here
+          project.binding[:esbuild] && project.binding[:tailwind] &&
+            @new_project_rules_files["assets.md"],
+          # generic usage rules
+          "\n<!-- usage-rules-start -->",
+          [
+            "<!-- phoenix:elixir-start -->\n",
+            @rules_files["elixir.md"],
+            "\n<!-- phoenix:elixir-end -->"
+          ],
+          [
+            "<!-- phoenix:phoenix-start -->\n",
+            @rules_files["phoenix.md"],
+            "\n<!-- phoenix:phoenix-end -->"
+          ],
+          project.binding[:ecto] &&
+            [
+              "<!-- phoenix:ecto-start -->\n",
+              @rules_files["ecto.md"],
+              "\n<!-- phoenix:ecto-end -->"
+            ],
+          project.binding[:html] &&
+            [
+              "<!-- phoenix:html-start -->\n",
+              @rules_files["html.md"],
+              "\n<!-- phoenix:html-end -->"
+            ],
+          project.binding[:live] &&
+            [
+              "<!-- phoenix:liveview-start -->\n",
+              @rules_files["liveview.md"],
+              "\n<!-- phoenix:liveview-end -->"
+            ],
+          "<!-- usage-rules-end -->"
+        ]
+        |> Enum.reject(fn part -> part == nil or part == false end)
+        |> Enum.intersperse("\n")
+
+      File.write!(Path.join(project.project_path, "AGENTS.md"), content)
+    end
+  end
+
   def config_inject(path, file, to_inject) do
     file = Path.join(path, file)
 
@@ -181,6 +251,7 @@ defmodule Phx.New.Generator do
     from_elixir_install = Keyword.get(opts, :from_elixir_install, false)
     phoenix_path = phoenix_path(project, dev, false)
     phoenix_path_umbrella_root = phoenix_path(project, dev, true)
+    agents_md = Keyword.get(opts, :agents_md, true)
 
     # detect if we're inside a docker env, but if we're in github actions,
     # we want to treat it like regular env for end-user testing purposes
@@ -253,7 +324,8 @@ defmodule Phx.New.Generator do
       from_elixir_install: from_elixir_install,
       elixir_install_otp_bin_path: from_elixir_install && elixir_install_otp_bin_path(),
       elixir_install_bin_path: from_elixir_install && elixir_install_bin_path(),
-      inside_docker_env?: inside_docker_env?
+      inside_docker_env?: inside_docker_env?,
+      agents_md: agents_md
     ]
 
     %{project | binding: binding}
