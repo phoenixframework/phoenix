@@ -29,7 +29,7 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience
 
-## 1.8.0 (Unreleased)
+## 1.8.0 (2025-08-05)
 
 ### Bug fixes
   - [phx.new] Don't include node_modules override in generated `tsconfig.json`
@@ -38,7 +38,7 @@ This release introduces deprecation warnings for several features that have been
   - [phx.gen.live|html|json] - Make context argument optional. Defaults to the plural name.
   - [phx.new] Add `mix precommit` alias
   - [phx.new] Add `AGENTS.md` generation compatible with [`usage_rules`](https://hexdocs.pm/usage_rules/)
-  - Add `usage_rules` folder allowing to sync generic Phoenix rules
+  - [phx.new] Add `usage_rules` folder to installer, allowing to sync generic Phoenix rules into new projects
   - [phx.new] Use LiveView 1.1 release in generated code
   - [phx.new] Ensure theme selector and flash closing works without LiveView
 
