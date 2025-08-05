@@ -27,9 +27,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   """
   use Phoenix.Component<%= if @gettext do %>
-  use Gettext, backend: <%= @web_namespace %>.Gettext<% end %>
+  use Gettext, backend: <%= @web_namespace %>.Gettext<% end %><%= if @live do %>
 
-  alias Phoenix.LiveView.JS
+  alias Phoenix.LiveView.JS<% end %>
 
   @doc """
   Renders flash notices.
@@ -53,8 +53,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
-      id={@id}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      id={@id}<%= if @live and @javascript do %>
+      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}<% else %>
+      data-flash<% end %>
       role="alert"
       class="toast toast-top toast-end z-50"
       {@rest}
@@ -417,7 +418,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <span class={[@name, @class]} />
     """
-  end
+  end<%= if @live do %>
 
   ## JS Commands
 
@@ -440,7 +441,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         {"transition-all ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
     )
-  end
+  end<% end %>
 
   @doc """
   Translates an error message using gettext.

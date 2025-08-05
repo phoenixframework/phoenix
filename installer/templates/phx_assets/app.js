@@ -80,4 +80,11 @@ import "phoenix_html"
 <%= @live_comment %>    window.liveReloader = reloader
 <%= @live_comment %>  })
 <%= @live_comment %>}
-<% end %>
+
+<%= if not @live do %>
+// Handle flash close
+document.querySelectorAll("[role=alert][data-flash]").forEach((el) => {
+  el.addEventListener("click", () => {
+    el.setAttribute("hidden", "")
+  })
+})<% end %><% end %>
