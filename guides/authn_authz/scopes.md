@@ -42,7 +42,7 @@ end
 The scope is automatically fetched by the `fetch_current_scope_for_user` plug that is injected into the `:browser` pipeline:
 
 ```elixir
-# route.ex
+# router.ex
 ...
 pipeline :browser do
   ...
