@@ -923,8 +923,9 @@ defmodule Phoenix.Endpoint do
 
           check_origin: {MyAppWeb.Auth, :my_check_origin?, []}
 
-      The MFA is invoked with the request `%URI{}` as the first argument,
-      followed by arguments in the MFA list, and must return a boolean.
+      The MFA is invoked with the request `%URI{}` as the first argument, 
+      `%Conn{}` as the second argument followed by arguments in the MFA list, 
+      and must return a boolean.
 
     * `:check_csrf` - if the transport should perform CSRF check. To avoid
       "Cross-Site WebSocket Hijacking", you must have at least one of

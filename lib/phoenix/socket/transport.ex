@@ -607,8 +607,8 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp origin_allowed?({module, function, arguments}, uri, _endpoint, _conn),
-    do: apply(module, function, [uri | arguments])
+  defp origin_allowed?({module, function, arguments}, uri, _endpoint, conn),
+    do: apply(module, function, [uri, conn| arguments])
 
   defp origin_allowed?(:conn, uri, _endpoint, %Plug.Conn{} = conn) do
     uri.host == conn.host and
