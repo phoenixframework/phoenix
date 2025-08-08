@@ -4,13 +4,14 @@
 - **Always** be mindful of where to place routes. `phx.gen.auth` creates multiple router plugs<%= if live? do %> and `live_session` scopes<% end %>:
   - A plug `:fetch_current_<%= schema.singular %>` that is included in the default browser pipeline
   - A plug `:require_authenticated_<%= schema.singular %>` that redirects to the log in page when the <%= schema.singular %> is not authenticated<%= if live? do %>
-  - A `live_session :current_<%= schema.singular %>` scope - For routes that need the current <%= schema.singular %> but don't require authentication, similar to `:fetch_current_<%= schema.singular %>`
-  - A `live_session :require_authenticated_<%= schema.singular %>` scope - For routes that require authentication, similar to the plug with the same name<% end %>
+  - A `live_session :current_<%= schema.singular %>` scope - for routes that need the current <%= schema.singular %> but don't require authentication, similar to `:fetch_current_<%= schema.singular %>`
+  - A `live_session :require_authenticated_<%= schema.singular %>` scope - for routes that require authentication, similar to the plug with the same name<% end %>
   - In both cases, a `@<%= scope_config.scope.assign_key %>` is assigned to the Plug connection<%= if live? do %> and LiveView socket<% end %>
   - A plug `redirect_if_<%= schema.singular %>_is_authenticated` that redirects to a default path in case the <%= schema.singular %> is authenticated - useful for a registration page that should only be shown to unauthenticated <%= schema.plural %>
 - **Always let the user know in which router scopes<%= if live? do%>, `live_session`,<% end %> and pipeline you are placing the route, AND SAY WHY**
-- `phx.gen.auth` assigns the `<%= scope_config.scope.assign_key %>` assign - it **does not assign a `current_<%= schema.singular %>` assign**.
-- To derive/access `current_<%= schema.singular %>`, **always use the `<%= scope_config.scope.assign_key %>.<%= schema.singular %>` assign**, never use **`@current_<%= schema.singular %>`** in templates<%= if live? do %> or LiveViews
+- `phx.gen.auth` assigns the `<%= scope_config.scope.assign_key %>` assign - it **does not assign a `current_<%= schema.singular %>` assign**
+- Always pass the assign `<%= scope_config.scope.assign_key %>` to context modules as first argument. When performing queries, use `<%= scope_config.scope.assign_key %>.<%= schema.singular %>` to filter the query results
+- To derive/access `current_<%= schema.singular %>` in templates, **always use the `@<%= scope_config.scope.assign_key %>.<%= schema.singular %>`**, never use **`@current_<%= schema.singular %>`** in templates<%= if live? do %> or LiveViews
 - **Never** duplicate `live_session` names. A `live_session :current_<%= schema.singular %>` can only be defined __once__ in the router, so all routes for the `live_session :current_<%= schema.singular %>`  must be grouped in a single block<% end %>
 - Anytime you hit `<%= scope_config.scope.assign_key %>` errors or the logged in session isn't displaying the right content, **always double check the router and ensure you are using the correct plug<%= if live? do %> and `live_session`<% end %> as described below**
 
