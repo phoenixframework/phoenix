@@ -209,4 +209,33 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert message == "You must log in to access this page."
     end
   end
+
+  describe "delete <%= schema.singular %>" do
+    setup %{conn: conn} do
+      <%= schema.singular %> = <%= schema.singular %>_fixture()
+      %{conn: log_in_<%= schema.singular %>(conn, <%= schema.singular %>), <%= schema.singular %>: <%= schema.singular %>}
+    end
+
+    test "deletes the <%= schema.singular %>", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/settings")
+
+      lv
+      |> element("button", "Delete Account")
+      |> render_click()
+
+      assert_raise Ecto.NoResultsError, fn ->
+        <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id)
+      end
+    end
+
+    test "redirect to root page once deleted", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"<%= schema.route_prefix %>/settings")
+
+      lv
+      |> element("button", "Delete Account")
+      |> render_click()
+
+      assert_redirected(lv, ~p"/")
+    end
+  end
 end
