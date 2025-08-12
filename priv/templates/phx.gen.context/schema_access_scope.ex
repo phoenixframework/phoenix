@@ -16,13 +16,13 @@
     key = scope.<%= Enum.join(scope.access_path, ".") %>
 
     Phoenix.PubSub.subscribe(<%= inspect context.base_module %>.PubSub, "<%= scope.name %>:#{key}:<%= schema.plural %>")
-  end<%= if add_broadcast do %>
+  end
 
-  defp broadcast(%<%= inspect scope.alias %>{} = scope, message) do
+  defp broadcast_<%= schema.singular %>(%<%= inspect scope.alias %>{} = scope, message) do
     key = scope.<%= Enum.join(scope.access_path, ".") %>
 
     Phoenix.PubSub.broadcast(<%= inspect context.base_module %>.PubSub, "<%= scope.name %>:#{key}:<%= schema.plural %>", message)
-  end<% end %>
+  end
 
   @doc """
   Returns the list of <%= schema.plural %>.
@@ -51,8 +51,8 @@
       ** (Ecto.NoResultsError)
 
   """
-  def get_<%= schema.singular %>!(%<%= inspect scope.alias %>{} = scope, id) do
-    Repo.get_by!(<%= inspect schema.alias %>, id: id, <%= scope.schema_key %>: scope.<%= Enum.join(scope.access_path, ".") %>)
+  def get_<%= schema.singular %>!(%<%= inspect scope.alias %>{} = scope, <%= primary_key %>) do
+    Repo.get_by!(<%= inspect schema.alias %>, <%= primary_key %>: <%= primary_key %>, <%= scope.schema_key %>: scope.<%= Enum.join(scope.access_path, ".") %>)
   end
 
   @doc """
@@ -72,7 +72,7 @@
            %<%= inspect schema.alias %>{}
            |> <%= inspect schema.alias %>.changeset(attrs, scope)
            |> Repo.insert() do
-      broadcast(scope, {:created, <%= schema.singular %>})
+      broadcast_<%= schema.singular %>(scope, {:created, <%= schema.singular %>})
       {:ok, <%= schema.singular %>}
     end
   end
@@ -96,7 +96,7 @@
            <%= schema.singular %>
            |> <%= inspect schema.alias %>.changeset(attrs, scope)
            |> Repo.update() do
-      broadcast(scope, {:updated, <%= schema.singular %>})
+      broadcast_<%= schema.singular %>(scope, {:updated, <%= schema.singular %>})
       {:ok, <%= schema.singular %>}
     end
   end
@@ -118,7 +118,7 @@
 
     with {:ok, <%= schema.singular %> = %<%= inspect schema.alias %>{}} <-
            Repo.delete(<%= schema.singular %>) do
-      broadcast(scope, {:deleted, <%= schema.singular %>})
+      broadcast_<%= schema.singular %>(scope, {:deleted, <%= schema.singular %>})
       {:ok, <%= schema.singular %>}
     end
   end

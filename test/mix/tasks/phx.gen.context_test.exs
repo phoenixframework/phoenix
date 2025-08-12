@@ -542,6 +542,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
           assert_file("lib/phoenix/blog.ex", fn file ->
             assert file =~ "def subscribe_posts(%Scope{} = scope)"
+            assert file =~ "defp broadcast_post(%Scope{} = scope, message)"
             assert file =~ "def get_post!(%Scope{} = scope, id)"
             assert file =~ "def list_posts(%Scope{} = scope)"
             assert file =~ "def create_post(%Scope{} = scope, attrs)"

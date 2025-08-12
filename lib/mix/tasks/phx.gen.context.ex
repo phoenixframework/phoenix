@@ -206,13 +206,6 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   defp inject_schema_access(%Context{file: file} = context, paths, binding) do
     ensure_context_file_exists(context, paths, binding)
 
-    binding =
-      if File.exists?(file) and File.read!(file) =~ "defp broadcast" do
-        [{:add_broadcast, false} | binding]
-      else
-        [{:add_broadcast, true} | binding]
-      end
-
     paths
     |> Mix.Phoenix.eval_from(
       "priv/templates/phx.gen.context/#{schema_access_template(context)}",
