@@ -14,7 +14,8 @@ defmodule Phoenix.Router.Scope do
             private: %{},
             assigns: %{},
             log: :debug,
-            trailing_slash?: false
+            trailing_slash?: false,
+            has_routes?: false
 
   @doc """
   Initializes the scope.
@@ -32,6 +33,10 @@ defmodule Phoenix.Router.Scope do
     unless is_atom(plug) do
       raise ArgumentError, "routes expect a module plug as second argument, got: #{inspect(plug)}"
     end
+
+    # Mark that we have routes defined in this scope
+    top = get_top(module)
+    put_top(module, %{top | has_routes?: true})
 
     top = get_top(module)
     path = validate_path(path)
@@ -120,7 +125,35 @@ defmodule Phoenix.Router.Scope do
   """
   def pipe_through(module, new_pipes) do
     new_pipes = List.wrap(new_pipes)
-    %{pipes: pipes} = top = get_top(module)
+    %{pipes: pipes, has_routes?: has_routes?} = top = get_top(module)
+
+    # Issue deprecation warning if routes have already been defined
+    if has_routes? do
+      require Logger
+
+      Logger.warning("""
+      Calling pipe_through/1 after defining routes is deprecated and may not work as expected.
+
+      Routes defined before pipe_through/1 will not have the specified pipelines applied.
+      Move all pipe_through/1 calls to the beginning of the scope block.
+
+      Current scope has routes defined, but pipe_through #{inspect(new_pipes)} was called after them.
+
+      Instead of:
+        scope "/" do
+          get "/", HomeController, :index      # This route won't get :browser pipeline
+          pipe_through [:browser]              # Called too late
+          get "/users", UserController, :index # This route gets :browser pipeline
+        end
+
+      Do this:
+        scope "/" do
+          pipe_through [:browser]              # Call first
+          get "/", HomeController, :index      # Both routes get :browser pipeline
+          get "/users", UserController, :index
+        end
+      """)
+    end
 
     if pipe = Enum.find(new_pipes, &(&1 in pipes)) do
       raise ArgumentError,
@@ -171,7 +204,8 @@ defmodule Phoenix.Router.Scope do
       private: Map.merge(top.private, private),
       assigns: Map.merge(top.assigns, assigns),
       log: Keyword.get(opts, :log, top.log),
-      trailing_slash?: deprecated_trailing_slash(opts, top)
+      trailing_slash?: deprecated_trailing_slash(opts, top),
+      has_routes?: false
     })
   end
 
