@@ -176,10 +176,10 @@ This is a web application written using the Phoenix web framework.
         messages = list_messages(filter)
 
         {:noreply,
-        socket
-        |> assign(:messages_empty?, messages == [])
-        # reset the stream with the new messages
-        |> stream(:messages, messages, reset: true)}
+         socket
+         |> assign(:messages_empty?, messages == [])
+         # reset the stream with the new messages
+         |> stream(:messages, messages, reset: true)}
       end
 
 - LiveView streams *do not support counting or empty states*. If you need to display a count, you must track it using a separate assign. For empty states, you can use Tailwind classes:
@@ -192,6 +192,35 @@ This is a web application written using the Phoenix web framework.
       </div>
 
   The above only works if the empty state is the only HTML block alongside the stream for-comprehension.
+
+- When updating an assign that should change content inside any streamed item(s), you MUST re-stream the items
+  along with the updated assign:
+
+      def handle_event("edit_message", %{"message_id" => message_id}, socket) do
+        message = Chat.get_message!(message_id)
+        edit_form = to_form(Chat.change_message(message, %{content: message.content}))
+
+        # re-insert message so @editing_message_id toggle logic takes effect for that stream item
+        {:noreply,
+         socket
+         |> stream_insert(:messages, message)
+         |> assign(:editing_message_id, String.to_integer(message_id))
+         |> assign(:edit_form, edit_form)}
+      end
+
+  And in the template:
+
+      <div id="messages" phx-update="stream">
+        <div :for={{id, message} <- @streams.messages} id={id} class="flex group">
+          {message.username}
+          <%= if @editing_message_id == message.id do %>
+            <!-- Edit mode -->
+            <.form for={@edit_form} id="edit-form-#{message.id}" phx-submit="save_edit">
+              ...
+            </.form>
+          <% end %>
+        </div>
+      </div>
 
 - **Never** use the deprecated `phx-update="append"` or `phx-update="prepend"` for collections
 
