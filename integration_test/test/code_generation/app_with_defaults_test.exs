@@ -20,6 +20,23 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithDefaultsTest do
         assert_tests_pass(app_root_path)
       end)
     end
+
+    test "has functioning core_components" do
+      with_installer_tmp("app_with_defaults", fn tmp_dir ->
+        {app_root_path, _} = generate_phoenix_app(tmp_dir, "default_app")
+
+        dest = Path.join(app_root_path, "test/default_app_web/components")
+
+        File.mkdir_p!(dest)
+        File.cp!(
+          Path.expand("../fixtures/core_components.exs", __DIR__),
+          Path.join(dest, "core_components_test.exs")
+        )
+
+        drop_test_database(app_root_path)
+        assert_tests_pass(app_root_path)
+      end)
+    end
   end
 
   describe "phx.gen.html" do
