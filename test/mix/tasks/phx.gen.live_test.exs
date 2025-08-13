@@ -385,7 +385,7 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file("lib/phoenix/tracker/series.ex")
 
       assert_file("lib/phoenix_web/live/series_live/index.ex", fn file ->
-        assert file =~ "|> stream(:series_collection, Tracker.list_series())"
+        assert file =~ "|> stream(:series_collection, list_series())"
       end)
 
       assert_file("lib/phoenix_web/live/series_live/show.ex")
