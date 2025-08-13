@@ -6,7 +6,7 @@ config :<%= @app_name %><%= if @namespaced? do %>,
   namespace: <%= @app_module %><% end %><%= if @ecto do %>,
   ecto_repos: [<%= @app_module %>.Repo]<% end %><% end %><%= if @mailer do %>
 
-# Configures the mailer
+# Configure the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
 # locally. You can see the emails in your browser, at "/dev/mailbox".

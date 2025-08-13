@@ -1,7 +1,7 @@
 import Config
 
 <%= if @mailer do %>
-# Configures Swoosh API Client
+# Configure Swoosh API Client
 config :swoosh, :api_client, Swoosh.ApiClient.Req
 
 # Disable Swoosh Local Memory Storage
