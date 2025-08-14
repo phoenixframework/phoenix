@@ -68,7 +68,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:noreply, stream(socket, :<%= schema.collection %>, list_<%= schema.plural %>(<%= socket_scope %>), reset: true)}
   end
 
-  defp list_<%= schema.plural %>(current_scope) do
-    <%= inspect context.alias %>.list_<%= schema.plural %>(current_scope)
+  defp list_<%= schema.plural %>(<%= scope && scope.assign_key %>) do
+    <%= inspect context.alias %>.list_<%= schema.plural %>(<%= scope && scope.assign_key %>)
   end<% end %>
 end
