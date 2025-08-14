@@ -62,6 +62,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           Save Password
         </.button>
       </.form>
+
+      <div class="divider" />
+
+      <div class="flex justify-center my-4">
+        <.button
+          phx-click="delete_<%= schema.singular %>"
+          data-confirm="Are you sure you want to delete your account?"
+          variant="error"
+          phx-disable-with="Deleting..."
+        >
+          Delete Account
+        </.button>
+      </div>
     </Layouts.app>
     """
   end
@@ -149,6 +162,24 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     case <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>, <%= schema.singular %>_params) do
       %{valid?: true} = changeset ->
         {:noreply, assign(socket, trigger_submit: true, password_form: to_form(changeset))}
+
+      changeset ->
+        {:noreply, assign(socket, password_form: to_form(changeset, action: :insert))}
+    end
+  end
+
+  def handle_event("delete_<%= schema.singular %>", _params, socket) do
+    <%= schema.singular %> = socket.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>
+    true = <%= inspect context.alias %>.sudo_mode?(<%= schema.singular %>)
+
+    case <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>) do
+      {:ok, _<%= schema.singular %>} ->
+        socket =
+          socket
+          |> put_flash(:info, "Account deleted.")
+          |> push_navigate(to: ~p"/")
+
+        {:noreply, socket}
 
       changeset ->
         {:noreply, assign(socket, password_form: to_form(changeset, action: :insert))}

@@ -273,6 +273,13 @@
     :ok
   end
 
+  @doc """
+  Deletes a <%= schema.singular %>.
+  """
+  def delete_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
+    Repo.delete(<%= schema.singular %>)
+  end
+
   ## Token helper
 
   defp update_<%= schema.singular %>_and_delete_all_tokens(changeset) do
