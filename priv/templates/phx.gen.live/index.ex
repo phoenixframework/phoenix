@@ -66,9 +66,9 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   def handle_info({type, %<%= inspect schema.module %>{}}, socket)
       when type in [:created, :updated, :deleted] do
     {:noreply, stream(socket, :<%= schema.collection %>, list_<%= schema.plural %>(<%= socket_scope %>), reset: true)}
-  end
+  end<% end %>
 
   defp list_<%= schema.plural %>(<%= scope && scope.assign_key %>) do
     <%= inspect context.alias %>.list_<%= schema.plural %>(<%= scope && scope.assign_key %>)
-  end<% end %>
+  end
 end
