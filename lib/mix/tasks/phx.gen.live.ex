@@ -236,7 +236,10 @@ defmodule Mix.Tasks.Phx.Gen.Live do
         assigns: %{
           web_namespace: inspect(context.web_module),
           gettext: true,
-          live: true
+          live: true,
+          # the core components are also generated in phx.new, so we check for
+          # esbuild (@javascript) - here we just assume that it's there
+          javascript: true
         }
       )
 
