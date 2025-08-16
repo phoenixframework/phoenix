@@ -262,11 +262,14 @@ If we wanted to render an XML version of our `home` action, we might implement t
 def home(conn, _params) do
   conn
   |> put_resp_content_type("text/xml")
+  |> put_format(:xml)
   |> render(:home, content: some_xml_content)
 end
 ```
 
-We would then need to provide an `home.xml.eex` template which created valid XML, and we would be done.
+Then we would need to provide a `home.xml.eex` template that creates XML and a `PageXML` view that embeds the template, and that would be it.
+
+Note: The `home.xml.eex` template uses the `.eex` extension. `.eex` templates are rendered by [`EEx`](https://hexdocs.pm/eex/main/EEx.html).
 
 For a list of valid content mime-types, please see the `MIME` library.
 
