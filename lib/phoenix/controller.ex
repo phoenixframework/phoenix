@@ -937,7 +937,7 @@ defmodule Phoenix.Controller do
         def show(conn, _params) do
           conn
           |> put_view(html: MyAppWeb.UserHTML)
-          render(conn, "show.html", message: "Hello")
+          |> render("show.html", message: "Hello")
         end
       end
 
