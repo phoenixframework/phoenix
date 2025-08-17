@@ -20,7 +20,7 @@ Contexts are also useful to nest resources. For example, if you are adding comme
 $ mix phx.gen.live Posts Comment comments post_id:references:posts body:text
 ```
 
-The first argument to the generator above is the context module, instructing Phoenix to colocate the comments functionality with posts. There is also a `post_id` attribute which specifies a foreign key reference to the posts table. As your application grows, contexts help you group realted schemas, instead of having several dozens of schemas with no insights on how they relate to each other.
+The first argument to the generator above is the context module, instructing Phoenix to colocate the comments functionality with posts. There is also a `post_id` attribute which specifies a foreign key reference to the posts table. As your application grows, contexts help you group related schemas, instead of having several dozens of schemas with no insights on how they relate to each other.
 
 Developers may also use contexts to intentionally name parts of their application. For example, `mix phx.gen.auth` requires a context name to be explicitly given. It is often invoked as:
 
