@@ -99,7 +99,7 @@ If we follow the "Back" link, we get a list of all products, which should contai
 >
 > For those reasons, Phoenix generators allow you to skip the context name, which is really helpful when you're stuck or still exploring your business domain. For example, our code above would work the same if we used the default `Products` context for managing products and it would still allow us to organically discover other resources that belong to the `Products` context, such as categories or image galleries.
 >
-> We also advise against being too smart when naming your contexts. Pick a name that is clear and obvious to everyone who works (and might work) in the project. As your applications grows and the different parts of your system become clear, you can simply rename the context or move resources around. The beauty of Elixir modules is moving them around should be simply a matter of renaming the module names and their callers (and renaming the files for consistency).
+> We also advise against being too smart when naming your contexts. Pick a name that is clear and obvious to everyone who works (and might work) in the project. As your application grows and the different parts of your system become clear, you can simply rename the context or move resources around. The beauty of Elixir modules is moving them around should be simply a matter of renaming the module names and their callers (and renaming the files for consistency).
 
 ## Grokking generated code
 
@@ -177,7 +177,7 @@ defmodule Hello.Catalog do
 end
 ```
 
-This module will be the public API for all product catalog functionality in our system. For example, in addition to product detail management, we may also handle product category classification and product variants for things like optional sizing, trims, etc. If we look at the `list_products/0` function, we can see the private details of product fetching. And it's super simple. We have a call to `Repo.all(Product)`. We saw how Ecto repo queries worked in the [Ecto guide](ecto.html), so this call should look familiar. Our `list_products` function is a generalized function name specifying the *intent* of our code – namely to list products. The details of that intent where we use our Repo to fetch the products from our PostgreSQL database is hidden from our callers. This is a common theme we'll see re-iterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
+This module will be the public API for all product catalog functionality in our system. For example, in addition to product detail management, we may also handle product category classification and product variants for things like optional sizing, trims, etc. If we look at the `list_products/0` function, we can see the private details of product fetching. And it's super simple. We have a call to `Repo.all(Product)`. We saw how Ecto repo queries worked in the [Ecto guide](ecto.html), so this call should look familiar. Our `list_products` function is a generalized function name specifying the *intent* of our code – namely to list products. The details of that intent where we use our Repo to fetch the products from our PostgreSQL database, are hidden from our callers. This is a common theme we'll see reiterated as we use the Phoenix generators. Phoenix will push us to think about where we have different responsibilities in our application, and then to wrap up those different areas behind well-named modules and functions that make the intent of our code clear, while encapsulating the details.
 
 Now we know how data is fetched, but how are products persisted? Let's take a look at the `Catalog.create_product/1` function:
 
@@ -298,4 +298,4 @@ UPDATE "products" AS p0 SET "views" = p0."views" + $1 WHERE (p0."id" = $2) RETUR
 
 Good work!
 
-As we've seen, designing with contexts gives you a solid foundation to grow your application from. Using discrete, well-defined APIs that expose the intent of your system allows you to write more maintainable applications with reusable code. Now that we know how to start extending our context API, lets explore handling relationships within a context.
+As we've seen, designing with contexts gives you a solid foundation to grow your application from. Using discrete, well-defined APIs that expose the intent of your system allows you to write more maintainable applications with reusable code. Now that we know how to start extending our context API, let's explore handling relationships within a context.
