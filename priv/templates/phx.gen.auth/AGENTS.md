@@ -2,9 +2,9 @@
 
 - **Always** handle authentication flow at the router level with proper redirects
 - **Always** be mindful of where to place routes. `phx.gen.auth` creates multiple router plugs<%= if live? do %> and `live_session` scopes<% end %>:
-  - A plug `:fetch_current_<%= schema.singular %>` that is included in the default browser pipeline
+  - A plug `:fetch_<%= scope_config.scope.assign_key %>_for_<%= schema.singular %>` that is included in the default browser pipeline
   - A plug `:require_authenticated_<%= schema.singular %>` that redirects to the log in page when the <%= schema.singular %> is not authenticated<%= if live? do %>
-  - A `live_session :current_<%= schema.singular %>` scope - for routes that need the current <%= schema.singular %> but don't require authentication, similar to `:fetch_current_<%= schema.singular %>`
+  - A `live_session :current_<%= schema.singular %>` scope - for routes that need the current <%= schema.singular %> but don't require authentication, similar to `:fetch_<%= scope_config.scope.assign_key %>_for_<%= schema.singular %>`
   - A `live_session :require_authenticated_<%= schema.singular %>` scope - for routes that require authentication, similar to the plug with the same name<% end %>
   - In both cases, a `@<%= scope_config.scope.assign_key %>` is assigned to the Plug connection<%= if live? do %> and LiveView socket<% end %>
   - A plug `redirect_if_<%= schema.singular %>_is_authenticated` that redirects to a default path in case the <%= schema.singular %> is authenticated - useful for a registration page that should only be shown to unauthenticated <%= schema.plural %>
