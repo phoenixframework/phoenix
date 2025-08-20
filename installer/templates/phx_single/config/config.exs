@@ -13,7 +13,7 @@ config :<%= @app_name %><%= if @namespaced? do %>,
   ecto_repos: [<%= @app_module %>.Repo]<% end %><%= if @generators do %>,
   generators: <%= inspect @generators %><% end %><% end %>
 
-# Configures the endpoint
+# Configure the endpoint
 config :<%= @app_name %>, <%= @endpoint_module %>,
   url: [host: "localhost"],
   adapter: <%= inspect @web_adapter_module %>,
@@ -24,7 +24,7 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
   pubsub_server: <%= @app_module %>.PubSub,
   live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @mailer do %>
 
-# Configures the mailer
+# Configure the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
 # locally. You can see the emails in your browser, at "/dev/mailbox".
@@ -54,7 +54,7 @@ config :tailwind,
     cd: Path.expand("..<%= if @in_umbrella, do: "/apps/#{@app_name}" %>", __DIR__),
   ]<% end %>
 
-# Configures Elixir's Logger
+# Configure Elixir's Logger
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
