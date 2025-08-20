@@ -222,7 +222,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
     |> Ecto.Multi.run(:prune_cart, fn _repo, _changes ->
       ShoppingCart.prune_cart_items(scope, cart)
     end)
-    |> Repo.transaction()
+    |> Repo.transact()
     |> case do
       {:ok, %{order: order}} ->
         broadcast(scope, {:created, order})
