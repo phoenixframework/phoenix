@@ -15,6 +15,10 @@
    Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
 @plugin "../vendor/daisyui" {
   themes: false;
+  /* Uncomment to include specific built-in themes or all themes. Then remove the custom
+     themes below and update "layouts/root.html.heex" to select which themes to use. */
+  /* themes: corporate --default, business --prefersdark; */
+  /* themes: all; */
 }
 
 /* daisyUI theme plugin. You can update this file by fetching the latest version with:
@@ -22,7 +26,7 @@
   We ship with two themes, a light one inspired on Phoenix colors and a dark one inspired
   on Elixir colors. Build your own at: https://daisyui.com/theme-generator/ */
 @plugin "../vendor/daisyui-theme" {
-  name: "dark";
+  name: "elixir-dark";
   default: false;
   prefersdark: true;
   color-scheme: "dark";
@@ -57,7 +61,7 @@
 }
 
 @plugin "../vendor/daisyui-theme" {
-  name: "light";
+  name: "phoenix-light";
   default: true;
   prefersdark: false;
   color-scheme: "light";
@@ -97,7 +101,7 @@
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
 /* Use the data attribute for dark mode  */
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+@custom-variant dark (&:where([data-phx-theme*=dark], [data-phx-theme*=dark] *));
 
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }

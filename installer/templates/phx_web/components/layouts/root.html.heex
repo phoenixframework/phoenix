@@ -13,16 +13,33 @@
     </script><%= if @css do %>
     <script>
       (() => {
+        // Configure the desired themes. Must be loaded in "assets/css/app.css".
+        const lightTheme = "phoenix-light";
+        const darkTheme = "elixir-dark";
+
+        const prefersDarkMatch = window.matchMedia("(prefers-color-scheme: dark)");
+        const setSystemTheme = () => {
+          if (prefersDarkMatch.matches) {
+            document.documentElement.setAttribute("data-phx-theme", "system-dark");
+            document.documentElement.setAttribute("data-theme", darkTheme);
+          } else {
+            document.documentElement.setAttribute("data-phx-theme", "system-light");
+            document.documentElement.setAttribute("data-theme", lightTheme);
+          }
+        }
         const setTheme = (theme) => {
           if (theme === "system") {
             localStorage.removeItem("phx:theme");
-            document.documentElement.removeAttribute("data-theme");
+            prefersDarkMatch.addEventListener("change", setSystemTheme);
+            setSystemTheme();
           } else {
             localStorage.setItem("phx:theme", theme);
-            document.documentElement.setAttribute("data-theme", theme);
+            prefersDarkMatch.removeEventListener("change", setSystemTheme);
+            document.documentElement.setAttribute("data-phx-theme", theme);
+            document.documentElement.setAttribute("data-theme", theme === "light" ? lightTheme : darkTheme);
           }
         };
-        if (!document.documentElement.hasAttribute("data-theme")) {
+        if (!document.documentElement.hasAttribute("data-phx-theme")) {
           setTheme(localStorage.getItem("phx:theme") || "system");
         }
         window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
