@@ -65,7 +65,7 @@ With the new route in place, Phoenix reminds us to update our repo by running `m
 -     add :views, :integer
 +     add :views, :integer, default: 0, null: false
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
 ```
 
@@ -216,7 +216,7 @@ defmodule Hello.Catalog.Product do
     field :title, :string
     field :views, :integer
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc false

@@ -114,7 +114,7 @@ Perfect. Before we integrate categories in the web layer, we need to let our con
 
 +   many_to_many :categories, Category, join_through: "product_categories", on_replace: :delete
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
 ```
@@ -128,7 +128,9 @@ With our schema associations set up, we can implement the selection of categorie
 
 - def get_product!(id), do: Repo.get!(Product, id)
 + def get_product!(id) do
-+   Product |> Repo.get!(id) |> Repo.preload(:categories)
++   Product
++   |> Repo.get!(id)
++   |> Repo.preload(:categories)
 + end
 
   def create_product(attrs) do
