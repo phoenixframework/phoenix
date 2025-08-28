@@ -51,7 +51,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
      socket
      |> assign(:page_title, "Listing <%= schema.human_plural %>")<%= if primary_key != :id do %>
      |> stream_configure(:<%= schema.collection %>, dom_id: &"<%= schema.table %>-#{&1.<%= primary_key %>}")<% end %>
-     |> stream(:<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>(<%= socket_scope %>))}
+     |> stream(:<%= schema.collection %>, list_<%= schema.plural %>(<%= socket_scope %>))}
   end
 
   @impl true
@@ -65,6 +65,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   @impl true
   def handle_info({type, %<%= inspect schema.module %>{}}, socket)
       when type in [:created, :updated, :deleted] do
-    {:noreply, stream(socket, :<%= schema.collection %>, <%= inspect context.alias %>.list_<%= schema.plural %>(<%= socket_scope %>), reset: true)}
+    {:noreply, stream(socket, :<%= schema.collection %>, list_<%= schema.plural %>(<%= socket_scope %>), reset: true)}
   end<% end %>
+
+  defp list_<%= schema.plural %>(<%= scope && scope.assign_key %>) do
+    <%= inspect context.alias %>.list_<%= schema.plural %>(<%= scope && scope.assign_key %>)
+  end
 end

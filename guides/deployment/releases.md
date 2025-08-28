@@ -170,11 +170,11 @@ If you call `mix phx.gen.release --docker` you'll see a new file with these cont
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
 #   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20230612-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.15.8-erlang-25.3.2.15-debian-bookworm-20241016-slim
+#   - Ex: hexpm/elixir:1.18.4-erlang-27.3.4.2-debian-bookworm-20250811-slim
 #
-ARG ELIXIR_VERSION=1.15.8
-ARG OTP_VERSION=25.3.2.15
-ARG DEBIAN_VERSION=bookworm-20241016-slim
+ARG ELIXIR_VERSION=1.18.4
+ARG OTP_VERSION=27.3.4.2
+ARG DEBIAN_VERSION=bookworm-20250811-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
