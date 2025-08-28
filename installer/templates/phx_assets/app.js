@@ -64,7 +64,7 @@ import "phoenix_html"
 <%= @live_comment %>    //   * click with "d" key pressed to open at function component definition location
 <%= @live_comment %>    let keyDown
 <%= @live_comment %>    window.addEventListener("keydown", e => keyDown = e.key)
-<%= @live_comment %>    window.addEventListener("keyup", e => keyDown = null)
+<%= @live_comment %>    window.addEventListener("keyup", _e => keyDown = null)
 <%= @live_comment %>    window.addEventListener("click", e => {
 <%= @live_comment %>      if(keyDown === "c"){
 <%= @live_comment %>        e.preventDefault()
