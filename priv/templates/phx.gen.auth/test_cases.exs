@@ -365,6 +365,12 @@
     end
   end
 
+  test "delete_<%= schema.singular %>/1" do
+    <%= schema.singular %> = <%= schema.singular %>_fixture()
+    assert {:ok, %<%= inspect schema.alias %>{}} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
+    assert_raise Ecto.NoResultsError, fn -> <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.<%= schema.opts[:primary_key] || :id %>) end
+  end
+
   describe "deliver_login_instructions/2" do
     setup do
       %{<%= schema.singular %>: unconfirmed_<%= schema.singular %>_fixture()}
