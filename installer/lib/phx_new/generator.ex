@@ -160,7 +160,7 @@ defmodule Phx.New.Generator do
           "<!-- usage-rules-end -->"
         ]
         |> Enum.reject(fn part -> part == nil or part == false end)
-        |> Enum.intersperse("\n")
+        |> Enum.intersperse("\n\n")
 
       File.write!(Path.join(project.project_path, "AGENTS.md"), content)
     end
