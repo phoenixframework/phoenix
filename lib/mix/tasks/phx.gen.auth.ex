@@ -173,7 +173,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   @doc false
   def run(args, test_opts \\ []) do
     if Mix.Project.umbrella?() do
-      Mix.raise("mix phx.gen.auth can only be run inside an application directory")
+      Mix.raise(
+        "mix phx.gen.auth must be invoked from within your *_web application root directory"
+      )
     end
 
     Mix.Phoenix.ensure_live_view_compat!(__MODULE__)
