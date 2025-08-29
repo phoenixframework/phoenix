@@ -9,7 +9,11 @@ For now, categories will contain only textual information. Our first order of bu
 ```console
 $ mix phx.gen.context Catalog Category categories \
 title:string:unique --no-scope
+```
 
+You will see the following output in your terminal: 
+
+```console
 You are generating into an existing context.
 ...
 Would you like to proceed? [Yn] y
@@ -28,7 +32,11 @@ This time around, we used `mix phx.gen.context`, which is just like `mix phx.gen
 
 ```console
 $ mix ecto.gen.migration create_product_categories
+```
 
+You will see the following output confirming the migration file was created:
+
+```console
 * creating priv/repo/migrations/20250203192958_create_product_categories.exs
 ```
 
@@ -58,7 +66,11 @@ With our migrations in place, we can migrate up.
 
 ```console
 $ mix ecto.migrate
+```
 
+You will see the following output confirming the migration succeeded:
+
+```
 18:20:36.489 [info] == Running 20250222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
 
 18:20:36.493 [info] create table categories
@@ -90,7 +102,11 @@ We simply enumerate over a list of category titles and use the generated `create
 
 ```console
 $ mix run priv/repo/seeds.exs
+```
 
+The output in the terminal confirms the `seeds.exs` executed successfully: 
+
+```
 [debug] QUERY OK db=3.1ms decode=1.1ms queue=0.7ms idle=2.2ms
 INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Home Improvement", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 [debug] QUERY OK db=1.2ms queue=1.3ms idle=12.3ms
