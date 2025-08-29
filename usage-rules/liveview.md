@@ -3,8 +3,6 @@
 - **Never** use the deprecated `live_redirect` and `live_patch` functions, instead **always** use the `<.link navigate={href}>` and  `<.link patch={href}>` in templates, and `push_navigate` and `push_patch` functions LiveViews
 - **Avoid LiveComponent's** unless you have a strong, specific need for them
 - LiveViews should be named like `AppWeb.WeatherLive`, with a `Live` suffix. When you go to add LiveView routes to the router, the default `:browser` scope is **already aliased** with the `AppWeb` module, so you can just do `live "/weather", WeatherLive`
-- Remember anytime you use `phx-hook="MyHook"` and that js hook manages its own DOM, you **must** also set the `phx-update="ignore"` attribute
-- **Never** write embedded `<script>` tags in HEEx. Instead always write your scripts and hooks in the `assets/js` directory and integrate them with the `assets/js/app.js` file
 
 ### LiveView streams
 
@@ -29,10 +27,10 @@
         messages = list_messages(filter)
 
         {:noreply,
-        socket
-        |> assign(:messages_empty?, messages == [])
-        # reset the stream with the new messages
-        |> stream(:messages, messages, reset: true)}
+         socket
+         |> assign(:messages_empty?, messages == [])
+         # reset the stream with the new messages
+         |> stream(:messages, messages, reset: true)}
       end
 
 - LiveView streams *do not support counting or empty states*. If you need to display a count, you must track it using a separate assign. For empty states, you can use Tailwind classes:
@@ -46,7 +44,112 @@
 
   The above only works if the empty state is the only HTML block alongside the stream for-comprehension.
 
+- When updating an assign that should change content inside any streamed item(s), you MUST re-stream the items
+  along with the updated assign:
+
+      def handle_event("edit_message", %{"message_id" => message_id}, socket) do
+        message = Chat.get_message!(message_id)
+        edit_form = to_form(Chat.change_message(message, %{content: message.content}))
+
+        # re-insert message so @editing_message_id toggle logic takes effect for that stream item
+        {:noreply,
+         socket
+         |> stream_insert(:messages, message)
+         |> assign(:editing_message_id, String.to_integer(message_id))
+         |> assign(:edit_form, edit_form)}
+      end
+
+  And in the template:
+
+      <div id="messages" phx-update="stream">
+        <div :for={{id, message} <- @streams.messages} id={id} class="flex group">
+          {message.username}
+          <%= if @editing_message_id == message.id do %>
+            <%!-- Edit mode --%>
+            <.form for={@edit_form} id="edit-form-#{message.id}" phx-submit="save_edit">
+              ...
+            </.form>
+          <% end %>
+        </div>
+      </div>
+
 - **Never** use the deprecated `phx-update="append"` or `phx-update="prepend"` for collections
+
+### LiveView JavaScript interop
+
+- Remember anytime you use `phx-hook="MyHook"` and that JS hook manages its own DOM, you **must** also set the `phx-update="ignore"` attribute
+- **Always** provide an unique DOM id alongside `phx-hook` otherwise a compiler error will be raised
+
+LiveView hooks come in two flavors, 1) colocated js hooks for "inline" scripts defined inside HEEx,
+and 2) external `phx-hook` annotations where JavaScript object literals are defined and passed to the `LiveSocket` constructor.
+
+#### Inline colocated js hooks
+
+**Never** write raw embedded `<script>` tags in heex as they are incompatible with LiveView.
+Instead, **always use a colocated js hook script tag (`:type={Phoenix.LiveView.ColocatedHook}`)
+when writing scripts inside the template**:
+
+    <input type="text" name="user[phone_number]" id="user-phone-number" phx-hook=".PhoneNumber" />
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".PhoneNumber">
+      export default {
+        mounted() {
+          this.el.addEventListener("input", e => {
+            let match = this.el.value.replace(/\D/g, "").match(/^(\d{3})(\d{3})(\d{4})$/)
+            if(match) {
+              this.el.value = `${match[1]}-${match[2]}-${match[3]}`
+            }
+          })
+        }
+      }
+    </script>
+
+- colocated hooks are automatically integrated into the app.js bundle
+- colocated hooks names **MUST ALWAYS** start with a `.` prefix, i.e. `.PhoneNumber`
+
+#### External phx-hook
+
+External JS hooks (`<div id="myhook" phx-hook="MyHook">`) must be placed in `assets/js/` and passed to the
+LiveSocket constructor:
+
+    const MyHook = {
+      mounted() { ... }
+    }
+    let liveSocket = new LiveSocket("/live", Socket, {
+      hooks: { MyHook }
+    });
+
+#### Pushing events between client and server
+
+Use LiveView's `push_event/3` when you need to push events/data to the client for a phx-hook to handle.
+**Always** return or rebind the socket on `push_event/3` when pushing events:
+
+    # re-bind socket so we maintain event state to be pushed
+    socket = push_event(socket, "my_event", %{...})
+
+    # or return the modified socket directly:
+    def handle_event("some_event", _, socket) do
+      {:noreply, push_event(socket, "my_event", %{...})}
+    end
+
+Pushed events can then be picked up in a JS hook with `this.handleEvent`:
+
+    mounted() {
+      this.handleEvent("my_event", data => console.log("from server:", data));
+    }
+
+Clients can also push an event to the server and receive a reply with `this.pushEvent`:
+
+    mounted() {
+      this.el.addEventListener("click", e => {
+        this.pushEvent("my_event", { one: 1 }, reply => console.log("got reply from server:", reply));
+      })
+    }
+
+Where the server handled it via:
+
+    def handle_event("my_event", %{"one" => 1}, socket) do
+      {:reply, %{two: 2}, socket}
+    end
 
 ### LiveView tests
 
