@@ -125,7 +125,7 @@ defmodule Phx.New.Generator do
           @new_project_rules_files["phoenix.md"],
           # --no-assets is equivalent to --no-tailwind && --no-esbuild;
           # we check for both here
-          project.binding[:esbuild] && project.binding[:tailwind] &&
+          project.binding[:javascript] && project.binding[:css] &&
             @new_project_rules_files["assets.md"],
           # generic usage rules
           "\n<!-- usage-rules-start -->",

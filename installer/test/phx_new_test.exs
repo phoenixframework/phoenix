@@ -31,7 +31,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name])
 
       assert_file("phx_blog/README.md")
-      assert_file("phx_blog/AGENTS.md")
+      assert_file("phx_blog/AGENTS.md", fn file ->
+        assert file =~ "### UI/UX & design guidelines"
+      end)
 
       assert_file("phx_blog/.formatter.exs", fn file ->
         assert file =~ "import_deps: [:ecto, :ecto_sql, :phoenix]"
@@ -825,7 +827,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   test "new with --no-agents-md" do
     in_tmp("new with no agents md", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--no-agents-md"])
-      
+
       refute_file("phx_blog/AGENTS.md")
     end)
   end
