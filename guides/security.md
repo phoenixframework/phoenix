@@ -247,7 +247,7 @@ Related to the above concept, the design of Ecto in Phoenix takes the risk of ma
     field :confirmed_at, :naive_datetime
     field :is_admin, :boolean 
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
 
