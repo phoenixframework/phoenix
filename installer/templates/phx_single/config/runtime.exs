@@ -20,6 +20,9 @@ if System.get_env("PHX_SERVER") do
   config :<%= @app_name %>, <%= @endpoint_module %>, server: true
 end
 
+config :<%= @app_name %>, <%= @endpoint_module %>,
+  http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
@@ -34,7 +37,6 @@ if config_env() == :prod do
       """
 
   host = System.get_env("PHX_HOST") || "example.com"
-  port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :<%= @app_name %>, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
@@ -45,8 +47,7 @@ if config_env() == :prod do
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
       # See the documentation on <%= @web_adapter_docs %>
       # for details about using IPv6 vs IPv4 and loopback vs public addresses.
-      ip: {0, 0, 0, 0, 0, 0, 0, 0},
-      port: port
+      ip: {0, 0, 0, 0, 0, 0, 0, 0}
     ],
     secret_key_base: secret_key_base
 
