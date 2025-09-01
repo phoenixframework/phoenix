@@ -51,7 +51,7 @@ To create projects outside of the `installer/` directory, add the latest archive
 To build the documentation:
 
 ```bash
-npm install --prefix assets
+npm install
 MIX_ENV=docs mix docs
 ```
 
