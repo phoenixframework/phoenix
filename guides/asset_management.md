@@ -325,7 +325,7 @@ setting width, height, and background color classes.
     <.icon name="ri-github" class="ml-1 w-3 h-3 animate-spin" />
 """
 attr :name, :string, required: true
-attr :class, :string, default: "size-5"
+attr :class, :any, default: "size-5"
 
 def icon(%{name: "ri-" <> _} = assigns) do
   ~H"""
