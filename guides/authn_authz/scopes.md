@@ -200,7 +200,7 @@ In this example, the scope is called `user` and it is the `default` scope that i
 
 * `access_path` - a list of keys that define the path to the identifying field in the scope struct. The generators generate code like `where: schema_key == ^scope.user.id`.
 
-* `route_prefix` - (optional) a path template string for how resources should be nested. For example, `/orgs/:org` would generate routes like `/orgs/:org/posts`. The parameter segment (`:org`) will be replaced with the appropriate scope access value in templates and LiveViews.
+* `route_prefix` - (optional) a path template string for how resources should be nested. For example, `/organizations/:org` would generate routes like `/organizations/:org/posts`. The parameter segment (`:org`) will be replaced with the appropriate scope access value in templates and LiveViews.
 
 * `route_access_path` - (optional) list of keys that define the path to the field used in route generation (if `route_prefix` is set). This is particularly useful for user-friendly URLs where you might want to use a slug instead of an ID. If not specified, it defaults to `Enum.drop(scope.access_path, -1)` or `access_path` if the former is empty. For example, if the `access_path` is `[:organization, :id]`, it defaults to `[:organization]`, assuming that the value at `scope.organization` implements the `Phoenix.Param` protocol.
 
@@ -435,7 +435,8 @@ config :my_app, :scopes,
     module: MyApp.Accounts.Scope,
     assign_key: :current_scope,
     access_path: [:organization, :id],
-    route_prefix: "/orgs/:org",
+    route_prefix: "/organizations/:org",
+    route_access_path: [:organization, :slug],
     schema_key: :org_id,
     schema_type: :id,
     schema_table: :organizations,
@@ -462,7 +463,7 @@ defmodule MyAppWeb.ConnCase do
   ...
 
   def register_and_log_in_user_with_org(context) do
-    %{conn: conn, user: user, scope: scope} = register_and_log_in_user(context)
+    %{conn: conn, user: _user, scope: scope} = register_and_log_in_user(context)
     %{conn: conn, scope: MyApp.AccountsFixtures.organization_scope_fixture(scope)}
   end
 end
