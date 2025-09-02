@@ -62,14 +62,14 @@ config :my_app, MyAppWeb.Endpoint,
 ```
 
 
-If an unsafe (HTTP) request is sent, the above will redirect to the HTTPS version using the `:host` specified in the `:url` configuration.  To dynamically redirect to the `host` of the current request, set `:host` in the `:force_ssl` configuration to `nil`.
+If an unsafe (HTTP) request is sent, the above will redirect to the HTTPS version using the `:host` specified in the `:url` configuration. The `rewrite_on:` key specifies the HTTP header used by a reverse proxy or load balancer in front of the application to indicate whether the request was received over HTTP or HTTPS.
+
+To dynamically redirect to the `host` of the current request, set `:host` in the `:force_ssl` configuration to `nil`. In such cases, you must also set `x_forwarded_host` and `x_forwarded_port` if running behind a proxy:
 
 ```elixir
 config :my_app, MyAppWeb.Endpoint,
-  force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil]
+  force_ssl: [rewrite_on: [:x_forwarded_proto, :x_forwarded_host, :x_forwarded_port], host: nil]
 ```
-
-In these examples, the `rewrite_on:` key specifies the HTTP header used by a reverse proxy or load balancer in front of the application to indicate whether the request was received over HTTP or HTTPS.
 
 Furthermore, keep in mind `force_ssl` will redirect all requests, except the ones coming from localhost. If your application is doing probeness checks using another origin, such as "127.0.0.1" or an internal IP address, you may need to explicitly exclude them from `force_ssl`:
 
