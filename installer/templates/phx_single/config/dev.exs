@@ -46,14 +46,18 @@ config :<%= @app_name %>, <%= @endpoint_module %>,<%= if @inside_docker_env? do 
 # configured to run both http and https servers on
 # different ports.<%= if @html do %>
 
-# Watch static and templates for browser reloading.
+# Reload browser tabs when matching files change.
 config :<%= @app_name %>, <%= @endpoint_module %>,
   live_reload: [
     web_console_logger: true,
     patterns: [
-      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
-      ~r"priv/gettext/.*(po)$",<% end %>
-      ~r"lib/<%= @lib_web_name %>/(?:controllers|live|components|router)/?.*\.(ex|heex)$"
+      # Static assets, except user uploads
+      ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
+      # Gettext translations
+      ~r"priv/gettext/.*\.po$",<% end %>
+      # Router, Controllers, LiveViews and LiveComponents
+      ~r"lib/<%= @lib_web_name %>/router\.ex$",
+      ~r"lib/<%= @lib_web_name %>/(controllers|live|components)/.*\.(ex|heex)$"
     ]
   ]<% end %>
 

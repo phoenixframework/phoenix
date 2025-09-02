@@ -72,7 +72,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(@app, "config/dev.exs"), fn file ->
         assert file =~ ~r[esbuild: {Esbuild]
-        assert file =~ "lib/#{@app}_web/(?:controllers|live|components|router)/?.*\\.(ex|heex)$"
+        assert file =~ "lib/#{@app}_web/router\\.ex$"
+        assert file =~ "lib/#{@app}_web/(controllers|live|components)/.*\\.(ex|heex)$"
         assert file =~ "config :#{@app}_web, dev_routes: true"
       end)
 
@@ -734,7 +735,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   test "umbrella with --no-agents-md" do
     in_tmp("umbrella with no agents md", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-agents-md"])
-      
+
       refute_file(root_path(@app, "AGENTS.md"))
     end)
   end
