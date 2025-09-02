@@ -32,6 +32,19 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert html =~ "Keep me logged in on this device"
     end
 
+    test "renders login page for already logged in <%= schema.singular %>", %{conn: conn, confirmed_<%= schema.singular %>: <%= schema.singular %>} do
+      conn = log_in_<%= schema.singular %>(conn, <%= schema.singular %>)
+
+      token =
+        extract_<%= schema.singular %>_token(fn url ->
+          <%= inspect context.alias %>.deliver_login_instructions(<%= schema.singular %>, url)
+        end)
+
+      {:ok, _lv, html} = live(conn, ~p"<%= schema.route_prefix %>/log-in/#{token}")
+      refute html =~ "Confirm my account"
+      assert html =~ "Log in"
+    end
+
     test "confirms the given token once", %{conn: conn, unconfirmed_<%= schema.singular %>: <%= schema.singular %>} do
       token =
         extract_<%= schema.singular %>_token(fn url ->
