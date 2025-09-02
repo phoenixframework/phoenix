@@ -85,7 +85,7 @@ defmodule Hello.Repo.Migrations.CreateUsers do
       add :bio, :string
       add :number_of_pets, :integer
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
   end
 end
@@ -97,15 +97,15 @@ And here's what that translates to in the actual `users` table.
 $ psql
 hello_dev=# \d users
 Table "public.users"
-Column         |            Type             | Modifiers
----------------+-----------------------------+----------------------------------------------------
-id             | bigint                      | not null default nextval('users_id_seq'::regclass)
-name           | character varying(255)      |
-email          | character varying(255)      |
-bio            | character varying(255)      |
-number_of_pets | integer                     |
-inserted_at    | timestamp without time zone | not null
-updated_at     | timestamp without time zone | not null
+Column         |            Type                | Modifiers
+---------------+--------------------------------+----------------------------------------------------
+id             | bigint                         | not null default nextval('users_id_seq'::regclass)
+name           | character varying(255)         |
+email          | character varying(255)         |
+bio            | character varying(255)         |
+number_of_pets | integer                        |
+inserted_at    | timestamp(0) without time zone | not null 
+updated_at     | timestamp(0) without time zone | not null 
 Indexes:
 "users_pkey" PRIMARY KEY, btree (id)
 ```
@@ -162,7 +162,7 @@ defmodule Hello.User do
     field :name, :string
     field :number_of_pets, :integer
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc false
@@ -403,32 +403,32 @@ iex> alias Hello.{Repo, User}
 
 iex> Repo.insert(%User{email: "user1@example.com"})
 [debug] QUERY OK db=6.5ms queue=0.5ms idle=1358.3ms
-INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", ~N[2021-02-25 01:58:55], ~N[2021-02-25 01:58:55]]
+INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", ~U[2021-02-25 01:58:55Z], ~U[2021-02-25 01:58:55Z]]
 {:ok,
  %Hello.User{
    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
    bio: nil,
    email: "user1@example.com",
    id: 1,
-   inserted_at: ~N[2021-02-25 01:58:55],
+   inserted_at: ~U[2021-02-25 01:58:55Z],
    name: nil,
    number_of_pets: nil,
-   updated_at: ~N[2021-02-25 01:58:55]
+   updated_at: ~U[2021-02-25 01:58:55Z]
  }}
 
 iex> Repo.insert(%User{email: "user2@example.com"})
 [debug] QUERY OK db=1.3ms idle=1402.7ms
-INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user2@example.com", ~N[2021-02-25 02:03:28], ~N[2021-02-25 02:03:28]]
+INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user2@example.com", ~U[2021-02-25 02:03:28Z], ~U[2021-02-25 02:03:28Z]]
 {:ok,
  %Hello.User{
    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
    bio: nil,
    email: "user2@example.com",
    id: 2,
-   inserted_at: ~N[2021-02-25 02:03:28],
+   inserted_at: ~U[2021-02-25 02:03:28Z],
    name: nil,
    number_of_pets: nil,
-   updated_at: ~N[2021-02-25 02:03:28]
+   updated_at: ~U[2021-02-25 02:03:28Z]
  }}
 ```
 
@@ -448,20 +448,20 @@ SELECT u0."id", u0."bio", u0."email", u0."name", u0."number_of_pets", u0."insert
     bio: nil,
     email: "user1@example.com",
     id: 1,
-    inserted_at: ~N[2021-02-25 01:58:55],
+    inserted_at: ~U[2021-02-25 01:58:55Z],
     name: nil,
     number_of_pets: nil,
-    updated_at: ~N[2021-02-25 01:58:55]
+    updated_at: ~U[2021-02-25 01:58:55Z]
   },
   %Hello.User{
     __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
     bio: nil,
     email: "user2@example.com",
     id: 2,
-    inserted_at: ~N[2021-02-25 02:03:28],
+    inserted_at: ~U[2021-02-25 02:03:28Z],
     name: nil,
     number_of_pets: nil,
-    updated_at: ~N[2021-02-25 02:03:28]
+    updated_at: ~U[2021-02-25 02:03:28Z]
   }
 ]
 ```
@@ -624,7 +624,8 @@ def change do
   create table(:comments) do
     add :body, :string
     add :word_count, :integer
-    timestamps()
+
+    timestamps(type: :utc_datetime)
   end
 end
 ...

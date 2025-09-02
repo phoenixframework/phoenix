@@ -34,7 +34,7 @@ We generated an `Orders` context. The order is automatically scoped to the curre
 +     add :total_price, :decimal, precision: 15, scale: 6, null: false
       add :user_id, references(:users, type: :id, on_delete: :delete_all)
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
   end
 ```
@@ -73,7 +73,7 @@ We used the `phx.gen.context` command to generate the `LineItem` Ecto schema and
       add :order_id, references(:orders, on_delete: :nothing)
       add :product_id, references(:products, on_delete: :nothing)
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
 
     create index(:order_line_items, [:order_id])
@@ -92,7 +92,7 @@ With our migration in place, let's wire up our orders and line items association
 +   has_many :line_items, Hello.Orders.LineItem
 +   has_many :products, through: [:line_items, :product]
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 ```
 
@@ -108,7 +108,7 @@ We used `has_many :line_items` to associate orders and line items, just like we'
 +   belongs_to :order, Hello.Orders.Order
 +   belongs_to :product, Hello.Catalog.Product
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 ```
 
@@ -222,7 +222,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
     |> Ecto.Multi.run(:prune_cart, fn _repo, _changes ->
       ShoppingCart.prune_cart_items(scope, cart)
     end)
-    |> Repo.transaction()
+    |> Repo.transact()
     |> case do
       {:ok, %{order: order}} ->
         broadcast(scope, {:created, order})
