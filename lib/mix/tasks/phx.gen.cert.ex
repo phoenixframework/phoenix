@@ -122,7 +122,7 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
     configuration in config/dev.exs:
 
       config #{inspect(app)}, #{inspect(Mix.Phoenix.web_module(base))}.Endpoint,
-        http: [port: String.to_integer(System.get_env("PORT") || "4000")],
+        ...,
         https: [
           port: 4001,
           cipher_suite: :strong,
