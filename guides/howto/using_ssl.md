@@ -10,7 +10,7 @@ Here's an example configuration from `config/runtime.exs`.
 import Config
 
 config :hello, HelloWeb.Endpoint,
-  http: [port: {:system, "PORT"}],
+  http: [port: String.to_integer(System.get_env("PORT"))],
   url: [host: "example.com"],
   cache_static_manifest: "priv/static/cache_manifest.json",
   https: [
