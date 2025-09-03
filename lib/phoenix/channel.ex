@@ -706,7 +706,7 @@ defmodule Phoenix.Channel do
 
         def join(topic, auth_msg, socket) do
           ...
-          send(self, :after_join)
+          send(self(), :after_join)
           {:ok, socket}
         end
 
