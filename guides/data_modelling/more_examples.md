@@ -225,7 +225,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
     |> Repo.transact()
     |> case do
       {:ok, %{order: order}} ->
-        broadcast(scope, {:created, order})
+        broadcast_order(scope, {:created, order})
         {:ok, order}
 
       {:error, name, value, _changes_so_far} ->
@@ -266,25 +266,27 @@ end
 Next we can create the template at `lib/hello_web/controllers/order_html/show.html.heex`:
 
 ```heex
-<.header>
-  Thank you for your order!
-  <:subtitle>
-     <strong>Email: </strong>{@current_scope.user.email}
-  </:subtitle>
-</.header>
+<Layouts.app flash={@flash}>
+  <.header>
+    Thank you for your order!
+    <:subtitle>
+      <strong>Email: </strong>{@current_scope.user.email}
+    </:subtitle>
+  </.header>
 
-<.table id="items" rows={@order.line_items}>
-  <:col :let={item} label="Title">{item.product.title}</:col>
-  <:col :let={item} label="Quantity">{item.quantity}</:col>
-  <:col :let={item} label="Price">
-    {HelloWeb.CartHTML.currency_to_str(item.price)}
-  </:col>
-</.table>
+  <.table id="items" rows={@order.line_items}>
+    <:col :let={item} label="Title">{item.product.title}</:col>
+    <:col :let={item} label="Quantity">{item.quantity}</:col>
+    <:col :let={item} label="Price">
+      {HelloWeb.CartHTML.currency_to_str(item.price)}
+    </:col>
+  </.table>
 
-<strong>Total price:</strong>
-{HelloWeb.CartHTML.currency_to_str(@order.total_price)}
+  <strong>Total price:</strong>
+  {HelloWeb.CartHTML.currency_to_str(@order.total_price)}
 
-<.button navigate={~p"/products"}>Back to products</.button>
+  <.button navigate={~p"/products"}>Back to products</.button>
+</Layouts.app>
 ```
 
 To show our completed order, we displayed the order's user, followed by the line item listing with product title, quantity, and the price we "transacted" when completing the order, along with the total price.
