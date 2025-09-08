@@ -8,3 +8,7 @@ import Config
 config :<%= @web_app_name %>, <%= @endpoint_module %>,
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json"
+
+# Force using SSL in production. This also sets the "strict-security-transport" header,
+# also known as HSTS. `:force_ssl` is required to be set at compile-time.
+config :<%= @web_app_name %>, <%= @endpoint_module %>, force_ssl: [rewrite_on: [:x_forwarded_proto]]
