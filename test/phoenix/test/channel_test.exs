@@ -29,7 +29,9 @@ defmodule Phoenix.Test.ChannelTest do
   defmodule Channel do
     use Phoenix.Channel
 
-    intercept ["stop"]
+    intercept ["stop", {"intercept", &Channel.intercept_predicate/1}]
+
+    def intercept_predicate(socket), do: socket.assigns[:intercept]
 
     def join("foo:ok", _, socket) do
       {:ok, socket}
@@ -60,6 +62,10 @@ defmodule Phoenix.Test.ChannelTest do
 
     def join("foo:payload", %{"string" => _payload}, socket) do
       {:ok, socket}
+    end
+
+    def join("foo:intercept", payload, socket) do
+      {:ok, assign(socket, :intercept, payload["intercept"])}
     end
 
     def handle_in("broadcast", broadcast, socket) do
@@ -100,6 +106,12 @@ defmodule Phoenix.Test.ChannelTest do
 
     def handle_in("stop_and_reply", %{}, socket) do
       {:stop, :shutdown, :ok, socket}
+    end
+
+    def handle_out("intercept", payload, socket) do
+      payload = Map.put(payload, "intercepted", true)
+      push(socket, "intercept", payload)
+      {:noreply, socket}
     end
 
     def handle_out("stop", _payload, socket) do
@@ -433,6 +445,18 @@ defmodule Phoenix.Test.ChannelTest do
     pid = socket.channel_pid
     assert_receive {:terminate, :shutdown}
     assert_graceful_exit(pid)
+  end
+
+  test "broadcast is intercepted when socket predicate returns true" do
+    {:ok, _, socket} = subscribe_and_join(socket(UserSocket), Channel, "foo:intercept", %{"intercept" => true})
+    broadcast_from!(socket, "intercept", %{"intercepted" => false})
+    assert_push "intercept", %{"intercepted" => true}
+  end
+
+  test "broadcast isn't intercepted when socket predicate returns false" do
+    {:ok, _, socket} = subscribe_and_join(socket(UserSocket), Channel, "foo:intercept")
+    broadcast_from!(socket, "intercept", %{"intercepted" => false})
+    assert_push "intercept", %{"intercepted" => false}
   end
 
   ## handle_info
