@@ -521,14 +521,18 @@ defmodule Phoenix.Channel do
   """
   defmacro intercept(events) do
     quote do
-      @phoenix_intercepts unquote(events)
+      @phoenix_intercepts Map.new(unquote(events),
+        fn {event, predicate} -> {event, predicate}
+           event -> {event, true}
+      end)
     end
   end
 
   @doc false
   def __on_definition__(env, :def, :handle_out, [event, _payload, _socket], _, _)
       when is_binary(event) do
-    unless event in Module.get_attribute(env.module, :phoenix_intercepts) do
+    intercepts = Module.get_attribute(env.module, :phoenix_intercepts)
+    unless event in Map.keys(intercepts) do
       IO.write(
         "#{Path.relative_to(env.file, File.cwd!())}:#{env.line}: [warning] " <>
           "An intercept for event \"#{event}\" has not yet been defined in #{env.module}.handle_out/3. " <>
