@@ -19,12 +19,21 @@ Most of the cart functionality is tied to a specific user. Therefore, in order t
 
 ```console
 mix phx.gen.auth Accounts User users
+```
 
+You will see output similar to the following: 
+
+```console
 An authentication system can be created in two different ways:
 - Using Phoenix.LiveView (default)
 - Using Phoenix.Controller only
-Do you want to create a LiveView based authentication system? [Yn] n
+Do you want to create a LiveView based authentication system? [Yn]
+```
 
+Type `n` followed by `Return` key,
+you will see output similar to:
+
+```console
 ...
 * creating lib/hello/accounts/scope.ex
 ...
