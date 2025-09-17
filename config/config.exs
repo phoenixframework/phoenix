@@ -5,7 +5,7 @@ config :logger, :console,
   format: "\n$time $metadata[$level] $message\n"
 
 config :phoenix,
-  json_library: Jason,
+  json_library: JSON,
   stacktrace_depth: 20,
   trim_on_html_eex_engine: false
 
