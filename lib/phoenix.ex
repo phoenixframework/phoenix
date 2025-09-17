@@ -6,6 +6,8 @@ defmodule Phoenix do
   """
   use Application
 
+  @default_json_library if Code.ensure_loaded?(JSON), do: JSON, else: Jason
+
   @doc false
   def start(_type, _args) do
     # Warm up caches
@@ -45,7 +47,7 @@ defmodule Phoenix do
 
   """
   def json_library do
-    Application.get_env(:phoenix, :json_library, Jason)
+    Application.get_env(:phoenix, :json_library, @default_json_library)
   end
 
   @doc """

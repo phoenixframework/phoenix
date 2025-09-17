@@ -24,7 +24,7 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
     msg = %Message{topic: "t", event: "e", payload: "m"}
     encoded = encode!(@serializer, msg)
 
-    assert Jason.decode!(encoded) == %{
+    assert JSON.decode!(encoded) == %{
              "event" => "e",
              "payload" => "m",
              "ref" => nil,
@@ -36,7 +36,7 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
     msg = %Reply{topic: "t", ref: "null"}
     encoded = encode!(@serializer, msg)
 
-    assert Jason.decode!(encoded) == %{
+    assert JSON.decode!(encoded) == %{
              "event" => "phx_reply",
              "payload" => %{"response" => nil, "status" => nil},
              "ref" => "null",
@@ -61,7 +61,7 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
     msg = %Broadcast{topic: "t", event: "e", payload: "m"}
     encoded = fastlane!(@serializer, msg)
 
-    assert Jason.decode!(encoded) == %{
+    assert JSON.decode!(encoded) == %{
              "event" => "e",
              "payload" => "m",
              "ref" => nil,
