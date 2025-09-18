@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   You can also explicitly pass the context name as argument, whenever the context
   is well defined:
 
-    ```console
+  ```console
   $ mix phx.gen.html Accounts User users name:string age:integer
   ```
 
