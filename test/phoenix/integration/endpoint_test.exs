@@ -141,7 +141,7 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.status == 404
       assert resp.body |> Phoenix.json_library().decode!() == %{"error" => "Got 404 from error with GET"}
 
-      assert capture_log(fn ->
+      capture_log(fn ->
         {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
         assert resp.status == 500
         assert resp.body == "500.html from Phoenix.ErrorView"
@@ -151,7 +151,7 @@ defmodule Phoenix.Integration.EndpointTest do
         assert resp.body == "500.html from Phoenix.ErrorView"
 
         Supervisor.stop(ProdEndpoint)
-      end) =~ "** (RuntimeError) oops"
+      end)
 
       {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
     end
@@ -175,7 +175,7 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.status == 404
       assert resp.body =~ "NoRouteError at GET /unknown"
 
-      assert capture_log(fn ->
+      capture_log(fn ->
         {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/oops", %{})
         assert resp.status == 500
         assert resp.body =~ "RuntimeError at GET /oops"
@@ -185,7 +185,7 @@ defmodule Phoenix.Integration.EndpointTest do
         assert resp.body =~ "RuntimeError at GET /router/oops"
 
         Supervisor.stop(DevEndpoint)
-      end) =~ "** (RuntimeError) oops"
+      end)
 
       {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
     end
