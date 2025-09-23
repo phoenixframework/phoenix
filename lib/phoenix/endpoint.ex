@@ -730,7 +730,7 @@ defmodule Phoenix.Endpoint do
 
     longpoll =
       opts
-      |> Keyword.get(:longpoll, true)
+      |> Keyword.get(:longpoll, false)
       |> maybe_validate_keys(
         common_config ++
           [
