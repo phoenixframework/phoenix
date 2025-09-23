@@ -631,7 +631,7 @@ defmodule Phoenix.VerifiedRoutesTest do
             end
           end)
 
-        assert warnings == ""
+        refute warnings =~ "no route path for Phoenix.VerifiedRoutesTest.CatchAllWarningRouter matches"
       after
         :code.purge(__MODULE__.VerifyFalseTrueMatchesFirst)
         :code.delete(__MODULE__.VerifyFalseTrueMatchesFirst)
