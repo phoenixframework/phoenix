@@ -470,7 +470,7 @@ defmodule Mix.Phoenix.Schema do
 
     assocs =
       Enum.map(assocs, fn {key_id, {:references, source}} ->
-        validate_scope_and_reference_conflict!(scope, source)
+        validate_scope_and_reference_conflict!(scope, key_id)
 
         key = String.replace(Atom.to_string(key_id), "_id", "")
         base = schema_module |> Module.split() |> Enum.drop(-1)
@@ -482,11 +482,11 @@ defmodule Mix.Phoenix.Schema do
   end
 
   defp validate_scope_and_reference_conflict!(
-         %Mix.Phoenix.Scope{schema_table: table_name},
-         table_name
+         %Mix.Phoenix.Scope{schema_key: reference_key},
+         reference_key
        ) do
     Mix.raise("""
-    A reference conflicts with the scope, either not pass it or pass it with the --no-scope flag.
+    Reference #{inspect(reference_key)} has the same name as the scope schema key, either skip the reference or pass it with the --no-scope flag.
     """)
   end
 

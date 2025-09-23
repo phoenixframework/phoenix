@@ -681,7 +681,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         ],
         fn ->
           assert_raise Mix.Error,
-                       ~r"A reference conflicts with the scope, either not pass it or pass it with the --no-scope flag.",
+                       ~r"Reference :user_id has the same name as the scope schema key, either skip the reference or pass it with the --no-scope flag.",
                        fn ->
                          Gen.Schema.run(
                            ~w(Blog.Post blog_posts title:string user_id:references:users)
