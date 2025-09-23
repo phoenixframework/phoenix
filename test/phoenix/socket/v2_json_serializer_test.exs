@@ -102,7 +102,7 @@ defmodule Phoenix.Socket.V2.JSONSerializerTest do
     msg = %Reply{topic: "t", payload: %{m: 1}}
     encoded = encode!(@serializer, msg)
 
-    assert JSON.decode!(encoded) == [
+    assert Phoenix.json_library().decode!(encoded) == [
              nil,
              nil,
              "t",
