@@ -64,7 +64,12 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "config :logger, level: :info"
       end)
 
-      assert_file("phx_blog/config/runtime.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/)
+      assert_file("phx_blog/config/runtime.exs", fn file ->
+        assert file =~
+                 ~r/^  http: \[port: String.to_integer\(System.get_env\("PORT", "4000"\)\)\]$/m
+
+        assert file =~ ~r/^\s+ip: {0, 0, 0, 0, 0, 0, 0, 0}$/m
+      end)
 
       assert_file("phx_blog/lib/phx_blog/application.ex", ~r/defmodule PhxBlog.Application do/)
       assert_file("phx_blog/lib/phx_blog.ex", ~r/defmodule PhxBlog do/)
@@ -147,7 +152,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "esbuild: {Esbuild,"
         assert file =~ "lib/phx_blog_web/router\\.ex$"
         assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*\\.(ex|heex)$"
-        assert file =~ "http: [ip: {127, 0, 0, 1}"
+        assert file =~ "http: [ip: {127, 0, 0, 1}]"
       end)
 
       # tailwind
