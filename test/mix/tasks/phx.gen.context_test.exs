@@ -576,4 +576,32 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       )
     end)
   end
+
+  test "raises when a reference conflicts with the scope", config do
+    in_tmp_project(config.test, fn ->
+      with_scope_env(
+        :phoenix,
+        [
+          user: [
+            default: true,
+            module: MyApp.Accounts.Scope,
+            assign_key: :current_scope,
+            access_path: [:user, :id],
+            schema_key: :user_id,
+            schema_type: :binary_id,
+            schema_table: :users
+          ]
+        ],
+        fn ->
+          assert_raise Mix.Error,
+                       ~r"A reference conflicts with the scope, either not pass it or pass it with the --no-scope flag.",
+                       fn ->
+                         Gen.Context.run(
+                           ~w(Blog Post posts title:string user_id:references:users)
+                         )
+                       end
+        end
+      )
+    end)
+  end
 end
