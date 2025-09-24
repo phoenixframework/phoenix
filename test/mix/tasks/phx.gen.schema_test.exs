@@ -663,4 +663,32 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       end
     )
   end
+
+  test "raises when a reference conflicts with the scope", config do
+    in_tmp_project(config.test, fn ->
+      with_scope_env(
+        :phoenix,
+        [
+          user: [
+            default: true,
+            module: MyApp.Accounts.Scope,
+            assign_key: :current_scope,
+            access_path: [:user, :id],
+            schema_key: :user_id,
+            schema_type: :id,
+            schema_table: :users
+          ]
+        ],
+        fn ->
+          assert_raise Mix.Error,
+                       ~r"Reference :user_id has the same name as the scope schema key, either skip the reference or pass it with the --no-scope flag.",
+                       fn ->
+                         Gen.Schema.run(
+                           ~w(Blog.Post blog_posts title:string user_id:references:users)
+                         )
+                       end
+        end
+      )
+    end)
+  end
 end
