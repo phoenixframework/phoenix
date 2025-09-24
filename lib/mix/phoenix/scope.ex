@@ -110,13 +110,13 @@ defmodule Mix.Phoenix.Scope do
 
   ## Examples
 
-      scope_route_prefix("socket.assigns.current_scope", schema_with_scope)
+      route_prefix("socket.assigns.current_scope", schema_with_scope)
       # => "/orgs/\#{socket.assigns.current_scope.organization.slug}"
 
-      scope_route_prefix("@current_scope", schema_with_scope)
+      route_prefix("@current_scope", schema_with_scope)
       # => "/orgs/\#{@current_scope.organization.slug}"
 
-      scope_route_prefix("scope", schema_with_scope)
+      route_prefix("scope", schema_with_scope)
       # => "/orgs/\#{scope.organization.slug}"
   """
   def route_prefix(
