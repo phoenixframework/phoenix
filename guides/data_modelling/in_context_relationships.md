@@ -25,7 +25,7 @@ The Hello.Catalog context currently has 7 functions and 1 file in its directory.
 Would you like to proceed? [Yn]
 ```
 
-Type `Y` followed by the `Return` key.
+Type `y` followed by the `Return` key.
 You should see output similar to:
 
 ```console
