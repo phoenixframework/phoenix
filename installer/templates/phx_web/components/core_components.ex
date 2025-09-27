@@ -175,7 +175,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
     |> assign(field: nil, id: assigns.id || field.id)
     |> assign(:errors, Enum.map(errors, &translate_error(&1)))
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
-    |> assign_new(:value, fn -> field.value end)
+    |> assign(:value, if(is_nil(assigns[:value]), do: field.value, else: assigns[:value]))
     |> input()
   end
 
