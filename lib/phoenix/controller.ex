@@ -3,7 +3,6 @@ defmodule Phoenix.Controller do
   alias Plug.Conn.AlreadySentError
 
   require Logger
-  require Phoenix.Endpoint
 
   @unsent [:unset, :set, :set_chunked, :set_file]
 

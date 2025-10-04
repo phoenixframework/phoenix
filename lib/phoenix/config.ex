@@ -6,7 +6,6 @@ defmodule Phoenix.Config do
   # at runtime using the `config/2` function.
   @moduledoc false
 
-  require Logger
   use GenServer
 
   @doc """
