@@ -7,7 +7,7 @@ defmodule Phoenix.VerifiedRoutes do
   For example, the following path and URL usages:
 
       ~H"""
-      <.link href={~p"/sessions/new"} method="post">Log in</.link>
+      <a href={~p"/sessions/new"}>Log in</a>
       """
 
       redirect(to: url(~p"/posts/#{post}"))

@@ -184,8 +184,8 @@ Notice how the first call to an existing route, `~p"/comments"` gave no warning,
 Phoenix projects are set up out of the box to allow use of verified routes throughout your web layer, including tests. For example in your templates you can render `~p` links:
 
 ```heex
-<.link href={~p"/"}>Welcome Page!</.link>
-<.link href={~p"/comments"}>View Comments</.link>
+<a href={~p"/"}>Welcome Page!</a>
+<a href={~p"/comments"}>View Comments</a>
 ```
 
 Or in a controller, issue a redirect:
