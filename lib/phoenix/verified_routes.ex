@@ -171,7 +171,7 @@ defmodule Phoenix.VerifiedRoutes do
       defmodule UnlocalizedRoutes do
         use Phoenix.VerifiedRoutes,
           router: AppWeb.Router,
-          endpoint: AppWeb.Endpoint,
+          endpoint: AppWeb.Endpoint
 
         # Since :path_prefixes was not declared,
         # the code below won't prepend the locale and still be verified
