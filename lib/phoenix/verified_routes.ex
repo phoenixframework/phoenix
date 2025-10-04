@@ -938,7 +938,14 @@ defmodule Phoenix.VerifiedRoutes do
   defp rewrite_path(route, endpoint, router, config) do
     {:<<>>, meta, segments} = route
     {path_rewrite, query_rewrite} = verify_segment(segments, route)
-    path_rewrite = compile_prefixes(config.path_prefixes, meta) ++ path_rewrite
+
+    path_rewrite =
+      if config.path_prefixes != [] and
+           static_path?(path_rewrite |> Enum.slice(0, 1) |> materialize_path(), config.statics) do
+        path_rewrite
+      else
+        compile_prefixes(config.path_prefixes, meta) ++ path_rewrite
+      end
 
     rewrite_route =
       if query_rewrite == [] do
@@ -956,8 +963,7 @@ defmodule Phoenix.VerifiedRoutes do
         end
       end
 
-    test_path = Enum.map_join(path_rewrite, &if(is_binary(&1), do: &1, else: "1"))
-
+    test_path = materialize_path(path_rewrite)
     static? = static_path?(test_path, config.statics)
 
     path_ast =
@@ -971,6 +977,10 @@ defmodule Phoenix.VerifiedRoutes do
       end
 
     {static?, meta, test_path, path_ast, static_ast}
+  end
+
+  defp materialize_path(path) do
+    Enum.map_join(path, &if(is_binary(&1), do: &1, else: "1"))
   end
 
   defp compile_prefixes(path_prefixes, meta) do

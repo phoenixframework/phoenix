@@ -230,15 +230,18 @@ defmodule Phoenix.VerifiedRoutesTest do
       use Phoenix.VerifiedRoutes,
         endpoint: unquote(@endpoint),
         router: unquote(@router),
-        path_prefixes: [{__MODULE__, :locale, [{1, 2, 3}]}]
+        path_prefixes: [{__MODULE__, :locale, [{1, 2, 3}]}],
+        statics: ["images"]
 
       def locale({1, 2, 3}), do: "en"
       def foo, do: ~p"/foo"
       def bar, do: ~p"/bar"
+      def images_baz, do: ~p"/images/baz"
     end
 
     assert PathPrefixes.foo() == "/en/foo"
     assert PathPrefixes.bar() == "/en/bar"
+    assert PathPrefixes.images_baz() == "/images/baz"
   end
 
   test "unverified_path" do
@@ -631,7 +634,8 @@ defmodule Phoenix.VerifiedRoutesTest do
             end
           end)
 
-        refute warnings =~ "no route path for Phoenix.VerifiedRoutesTest.CatchAllWarningRouter matches"
+        refute warnings =~
+                 "no route path for Phoenix.VerifiedRoutesTest.CatchAllWarningRouter matches"
       after
         :code.purge(__MODULE__.VerifyFalseTrueMatchesFirst)
         :code.delete(__MODULE__.VerifyFalseTrueMatchesFirst)
