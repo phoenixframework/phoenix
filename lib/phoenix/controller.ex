@@ -131,10 +131,9 @@ defmodule Phoenix.Controller do
       respectively rendering each format.
 
   The `:formats` option is required. You may set it to an empty list
-  if you don't expect to render any format upfront. If `:formats` is not
-  set, the default view is set to `MyAppWeb.UserView` for backwards
-  compatibility. This behaviour can be explicitly retained by passing a
-  suffix to the `:formats` option:
+  if you don't expect to render any format upfront. To retain the
+  behaviour of older Phoenix versions, you can explicitly pass the
+  "View" suffix to the `:formats` option:
 
       use Phoenix.Controller, formats: [html: "View", json: "View"]
 
