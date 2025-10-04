@@ -196,7 +196,6 @@ defmodule Phoenix.Socket do
   """
 
   require Logger
-  require Phoenix.Endpoint
   alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message, Reply}
 
