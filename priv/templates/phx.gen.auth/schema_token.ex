@@ -31,7 +31,7 @@ defmodule <%= inspect schema.module %>Token do
 
   The reason why we store session tokens in the database, even
   though Phoenix already provides a session cookie, is because
-  Phoenix' default session cookies are not persisted, they are
+  Phoenix's default session cookies are not persisted, they are
   simply signed and potentially encrypted. This means they are
   valid indefinitely, unless you change the signing/encryption
   salt.
