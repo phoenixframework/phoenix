@@ -9,7 +9,7 @@
   <.form :let={f} for={@email_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_email">
     <input type="hidden" name="action" value="update_email" />
 
-    <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
+    <.input field={f[:email]} type="email" label="Email" autocomplete="email" required />
 
     <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
   </.form>
