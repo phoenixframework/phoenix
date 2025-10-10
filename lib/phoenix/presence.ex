@@ -79,6 +79,21 @@ defmodule Phoenix.Presence do
 
   See `c:list/1` for more information on the presence data structure.
 
+  ## Custom dispatcher
+
+  It's possible to customize the dispatcher module used to broadcast.
+  By default, `Phoenix.Channel.Server` is used, which is the same dispatcher
+  used by channels. To customize the dispatcher, pass the `:dispatcher` option
+  when using `Phoenix.Presence`:
+
+      use Phoenix.Presence,
+        otp_app: :my_app,
+        pubsub_server: MyApp.PubSub,
+        dispatcher: MyApp.CustomDispatcher
+
+  See `m:Phoenix.PubSub#module-custom-dispatching` for more information on
+  custom dispatchers.
+
   ## Fetching Presence Information
 
   Presence metadata should be minimized and used to store small,
@@ -417,9 +432,11 @@ defmodule Phoenix.Presence do
       pubsub_server =
         opts[:pubsub_server] || raise "use Phoenix.Presence expects :pubsub_server to be given"
 
+      dispatcher = opts[:dispatcher] || Phoenix.Channel.Server
+
       Phoenix.Tracker.start_link(
         __MODULE__,
-        {module, task_supervisor, pubsub_server},
+        {module, task_supervisor, pubsub_server, dispatcher},
         opts
       )
     end
@@ -455,7 +472,7 @@ defmodule Phoenix.Presence do
   end
 
   @doc false
-  def init({module, task_supervisor, pubsub_server}) do
+  def init({module, task_supervisor, pubsub_server, dispatcher}) do
     state = %{
       module: module,
       task_supervisor: task_supervisor,
@@ -463,7 +480,8 @@ defmodule Phoenix.Presence do
       topics: %{},
       tasks: :queue.new(),
       current_task: nil,
-      client_state: nil
+      client_state: nil,
+      dispatcher: dispatcher
     }
 
     client_state =
@@ -507,12 +525,13 @@ defmodule Phoenix.Presence do
     Task.shutdown(task)
 
     Enum.each(computed_diffs, fn {topic, presence_diff} ->
-      Phoenix.Channel.Server.local_broadcast(
-        state.pubsub_server,
-        topic,
-        "presence_diff",
-        presence_diff
-      )
+      broadcast = %Phoenix.Socket.Broadcast{
+        topic: topic,
+        event: "presence_diff",
+        payload: presence_diff
+      }
+
+      Phoenix.PubSub.local_broadcast(state.pubsub_server, topic, broadcast, state.dispatcher)
     end)
 
     new_state =
