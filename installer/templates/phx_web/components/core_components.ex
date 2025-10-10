@@ -135,8 +135,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
     * For live file uploads, see `Phoenix.Component.live_file_input/1`
 
   See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-  for more information. Unsupported types, such as hidden and radio,
-  are best written directly in your templates.
+  for more information. Unsupported types, such as radio, are best
+  written directly in your templates.
 
   ## Examples
 
