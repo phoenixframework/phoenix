@@ -194,7 +194,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} form={@rest[:form]} />
+        <input
+          type="hidden"
+          name={@name}
+          value="false"
+          disabled={@rest[:disabled]}
+          form={@rest[:form]}
+        />
         <span class="label">
           <input
             type="checkbox"
