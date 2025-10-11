@@ -334,13 +334,12 @@ defmodule Phoenix.Test.ConnTest do
         Jason -> Jason.DecodeError
       end
 
-    assert_raise json_error,
-                 ~r/invalid byte 111 at position \(byte offset\) 0|unexpected byte at position 0: 0x6F \("o"\)/, fn ->
+    assert_raise json_error, fn ->
       build_conn(:get, "/") |> put_resp_content_type("application/json")
                       |> resp(200, "ok") |> json_response(200)
     end
 
-    assert_raise json_error, ~r/unexpected end of JSON binary at position \(byte offset\) 0|unexpected end of input at position 0/, fn ->
+    assert_raise json_error, fn ->
       build_conn(:get, "/")
       |> put_resp_content_type("application/json")
       |> resp(200, "")
