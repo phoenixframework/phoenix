@@ -171,7 +171,7 @@ defmodule HelloWeb.UrlJSON do
 end
 ```
 
-This view is very simple. The `index` function receives all URLs, and converts them into a list of maps. Those maps are placed inside the data key at the root, exactly as we saw when interfacing with our application from `cURL`. In other words, our JSON view converts our complex data into simple Elixir data-structures. Once our view layer returns, Phoenix uses the `Jason` library to encode JSON and send the response to the client.
+This view is very simple. The `index` function receives all URLs, and converts them into a list of maps. Those maps are placed inside the data key at the root, exactly as we saw when interfacing with our application from `cURL`. In other words, our JSON view converts our complex data into simple Elixir data-structures. Once our view layer returns, Phoenix uses the built-in [JSON library](https://hexdocs.pm/elixir/1.18/JSON.html) to encode JSON and send the response to the client.
 
 If you explore the remaining controller, you will learn the `show` action is similar to the `index` one. For `create`, `update`, and `delete` actions, Phoenix uses one other important feature, called "Action fallback".
 

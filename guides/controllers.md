@@ -94,7 +94,7 @@ end
 
 Now [`/hello/Frank`] in your browser should display `From messenger Frank` as plain text without any HTML.
 
-A step beyond this is rendering pure JSON with the [`json/2`] function. We need to pass it something that the [Jason library](`Jason`) can decode into JSON, such as a map. (Jason is one of Phoenix's dependencies.)
+A step beyond this is rendering pure JSON with the [`json/2`] function. We need to pass it something that the [JSON library](https://hexdocs.pm/elixir/JSON.html) can decode into JSON, such as a map.
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
