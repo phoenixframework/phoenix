@@ -1889,6 +1889,20 @@ defmodule Phoenix.Controller do
     Phoenix.VerifiedRoutes.unverified_url(conn, current_path(conn, params))
   end
 
+  @doc """
+  Assigns multiple key-value pairs to the connection.
+
+  This function accepts a map or keyword list of assigns and merges them into
+  the connection's assigns. It is equivalent to calling `Plug.Conn.assign/3`
+  multiple times.
+
+  ## Examples
+
+      assign(conn, name: "Alice", role: :admin)
+      assign(conn, %{name: "Alice", role: :admin})
+  """
+  defdelegate assign(conn, assigns), to: Plug.Conn, as: :merge_assigns
+
   @doc false
   def __plugs__(controller_module, opts) do
     if Keyword.get(opts, :put_default_views, true) do
