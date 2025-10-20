@@ -170,7 +170,11 @@ lib/hello_web
 
 Now that we've got the route, controller, view, and template, we should be able to point our browser at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix!
 
-![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/hello-from-phoenix-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/images/hello-from-phoenix.png" />
+  <img src="assets/images/hello-from-phoenix.png" alt="Phoenix Greets Us" />
+</picture>
 
 In case you stopped the server along the way, the task to restart it is `mix phx.server`. If you didn't stop it, everything should update on the fly: Phoenix has hot code reloading!
 
@@ -279,7 +283,11 @@ For the last piece of this puzzle, we'll need a new template. Since it is for th
 
 If you point your browser to [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
 
-![Frank Greets Us from Phoenix](assets/images/hello-world-from-frank.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/hello-world-from-frank-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/images/hello-world-from-frank.png" />
+  <img src="assets/images/hello-world-from-frank.png" alt="Frank Greets Us from Phoenix" />
+</picture>
 
 Let's break what the template does into parts. This template has the `.heex` extension which stands for HTML + Embedded Elixir). There are three features from HEEx we are using in the template above:
 
