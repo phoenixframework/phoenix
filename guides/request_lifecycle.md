@@ -289,7 +289,7 @@ If you point your browser to [http://localhost:4000/hello/Frank](http://localhos
   <img src="assets/images/hello-world-from-frank.png" alt="Frank Greets Us from Phoenix" />
 </picture>
 
-Let's break what the template does into parts. This template has the `.heex` extension which stands for HTML + Embedded Elixir). There are three features from HEEx we are using in the template above:
+Let's break what the template does into parts. This template has the `.heex` extension which stands for HTML + Embedded Elixir. There are three features from HEEx we are using in the template above:
 
   * Assigns, such as `@messenger` and `@flash` - values we pass to the view from the controller are collectively called our "assigns". We could access our messenger value via `assigns.messenger` and `assigns.flash`, but Phoenix gives us the much cleaner `@` syntax for use in templates.
 
