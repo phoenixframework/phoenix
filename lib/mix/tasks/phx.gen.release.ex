@@ -185,7 +185,9 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
   defp parse_args(args) do
     args
-    |> OptionParser.parse(strict: [ecto: :boolean, docker: :boolean, elixir: :string, otp: :string])
+    |> OptionParser.parse(
+      strict: [ecto: :boolean, docker: :boolean, elixir: :string, otp: :string]
+    )
     |> elem(0)
     |> Keyword.put_new_lazy(:ecto, &ecto_sql_installed?/0)
     |> Keyword.put_new_lazy(:socket_db_adaptor_installed, &socket_db_adaptor_installed?/0)
@@ -236,7 +238,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> map_size() > 0
   end
 
-  @debian "bookworm"
+  @debian "trixie"
   defp elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
     url =
       "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"
@@ -254,13 +256,14 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   end
 
   defp gen_docker(binding, opts) do
-    wanted_elixir_vsn = opts[:elixir] ||
-      case Version.parse!(System.version()) do
-        %{major: major, minor: minor, pre: ["dev"]} -> "#{major}.#{minor - 1}.0"
-        _ -> System.version()
-      end
+    wanted_elixir_vsn =
+      opts[:elixir] ||
+        case Version.parse!(System.version()) do
+          %{major: major, minor: minor, pre: ["dev"]} -> "#{major}.#{minor - 1}.0"
+          _ -> System.version()
+        end
 
-    otp_vsn =  opts[:otp] || otp_vsn()
+    otp_vsn = opts[:otp] || otp_vsn()
 
     vsns =
       case elixir_and_debian_vsn(wanted_elixir_vsn, otp_vsn) do
