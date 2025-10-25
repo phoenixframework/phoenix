@@ -544,25 +544,16 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
 ```elixir
   def update_cart(%Scope{} = scope, %Cart{} = cart, attrs) do
     true = cart.user_id == scope.user.id
-
+  
     changeset =
       cart
       |> Cart.changeset(attrs, scope)
       |> Ecto.Changeset.cast_assoc(:items, with: &CartItem.changeset/2)
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:cart, changeset)
-    |> Ecto.Multi.delete_all(:discarded_items, fn %{cart: cart} ->
-      from(i in CartItem, where: i.cart_id == ^cart.id and i.quantity == 0)
-    end)
-    |> Repo.transact()
-    |> case do
-      {:ok, %{cart: cart}} ->
-        broadcast_cart(scope, {:updated, cart})
-        {:ok, cart}
-
-      {:error, :cart, changeset, _changes_so_far} ->
-        {:error, changeset}
+  
+    with {:ok, cart} <- Repo.update(changeset) do
+      Repo.delete_all(from(i in CartItem, where: i.cart_id == ^cart.id and i.quantity == 0))
+      broadcast_cart(scope, {:updated, cart})
+      {:ok, cart}
     end
   end
 ```
