@@ -38,7 +38,7 @@ defmodule Phoenix.MixProject do
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       name: "Phoenix",
-      docs: docs(),
+      docs: &docs/0,
       aliases: aliases(),
       source_url: @scm_url,
       homepage_url: "https://www.phoenixframework.org",
@@ -132,6 +132,25 @@ defmodule Phoenix.MixProject do
 
   defp docs do
     [
+      search: [
+        %{
+          name: "Latest",
+          help:
+            "Search latest versions of Plug, Phoenix, Phoenix.{HTML, LiveView, PubSub, Template}",
+          packages: [
+            :plug,
+            :phoenix,
+            :phoenix_html,
+            :phoenix_live_view,
+            :phoenix_pubsub,
+            :phoenix_template
+          ]
+        },
+        %{
+          name: "Current version",
+          help: "Search only this project"
+        }
+      ],
       source_ref: "v#{@version}",
       main: "overview",
       logo: "logo.png",
