@@ -42,7 +42,8 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
-  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"<%= if @live and @javascript do %>
+  attr :duration, :integer, default: 5000, doc: "the duration in ms that the flash message stays on screen. set to zero to keep on screen"<% end %>
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -54,7 +55,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}<%= if @live and @javascript do %>
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}<% else %>
+      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      style={"--flash-progress-width:0; --flash-progress-duration:#{@duration}ms"}
+      data-duration={@duration}<% else %>
       data-flash<% end %>
       role="alert"
       class="toast toast-top toast-end z-50"
@@ -76,7 +79,57 @@ defmodule <%= @web_namespace %>.CoreComponents do
           <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
         </button>
       </div>
-    </div>
+    </div><%= if @live and @javascript do %>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".FlashDisappear">
+      let timer = null;
+      let start = 0;
+      let duration = 0;
+      let hasSetupListeners = false;
+      export default {
+        mounted() {
+          this._start();
+        },
+        updated() {
+          this._start();
+        },
+        _start() {
+          duration = this.el.dataset.duration;
+          this.el.style.setProperty('--flash-progress-width', `0`);
+          this.el.style.setProperty('--flash-progress-duration', `0ms`);
+          if (parseInt(duration, 10) > 0) {
+            this._setupListeners();
+            this._resume();
+          }
+        },
+        _cancel() {
+          clearTimeout(timer);
+        },
+        _pause() {
+          this._cancel();
+          duration = duration - (new Date() - start);
+          this.el.style.setProperty('--flash-progress-width', `${(this.el.dataset.duration - duration) / this.el.dataset.duration * 100}%`);
+          this.el.style.setProperty('--flash-progress-duration', `${duration}ms`);
+        },
+        _resume() {
+          this._cancel();
+          requestAnimationFrame(() => {
+            this.el.style.setProperty('--flash-progress-duration', `${duration}ms`);
+            this.el.style.setProperty('--flash-progress-width', '100%');
+            start = new Date();
+            timer = setTimeout(() => {
+              this.el.click();
+            }, duration);
+          });
+        },
+        _setupListeners() {
+          if (!hasSetupListeners) {
+            this.el.addEventListener("mouseenter", e => this._pause());
+            this.el.addEventListener("mouseleave", e => this._resume());
+            hasSetupListeners = true;
+          }
+        }
+      }
+    </script><% end %>
     """
   end
 

@@ -80,17 +80,19 @@ defmodule <%= @web_namespace %>.Layouts do
       <.flash_group flash={@flash} />
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
-  attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
+  attr :id, :string, default: "flash-group", doc: "the optional id of flash container"<%= if @live and @javascript do %>
+  attr :duration, :integer, default: 5000, doc: "the duration in ms that the flash message stays on screen. set to zero to keep on screen"<% end %>
 
   def flash_group(assigns) do
     ~H"""
     <div id={@id} aria-live="polite">
-      <.flash kind={:info} flash={@flash} />
-      <.flash kind={:error} flash={@flash} /><%= if @live and @javascript do %>
+      <.flash kind={:info} flash={@flash}<%= if @live and @javascript do %> duration={@duration}<% end %> />
+      <.flash kind={:error} flash={@flash}<%= if @live and @javascript do %> duration={@duration}<% end %> /><%= if @live and @javascript do %>
 
       <.flash
         id="client-error"
-        kind={:error}
+        kind={:error}<%= if @live and @javascript do %>
+        duration={0}<% end %>
         title=<%= maybe_heex_attr_gettext.("We can't find the internet", @gettext) %>
         phx-disconnected={show(".phx-client-error #client-error") |> JS.remove_attribute("hidden")}
         phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
@@ -102,7 +104,8 @@ defmodule <%= @web_namespace %>.Layouts do
 
       <.flash
         id="server-error"
-        kind={:error}
+        kind={:error}<%= if @live and @javascript do %>
+        duration={0}<% end %>
         title=<%= maybe_heex_attr_gettext.("Something went wrong!", @gettext) %>
         phx-disconnected={show(".phx-server-error #server-error") |> JS.remove_attribute("hidden")}
         phx-connected={hide("#server-error") |> JS.set_attribute({"hidden", ""})}
