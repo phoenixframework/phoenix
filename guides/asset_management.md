@@ -20,13 +20,13 @@ If you want to import JavaScript dependencies, you have at least three options t
    import topbar from "../vendor/topbar"
    ```
 
-2. Call `npm install topbar --prefix assets` will create `package.json` and `package-lock.json` inside your assets directory and `esbuild` will be able to automatically pick them up:
+2. Call `npm install topbar --prefix assets`, which will create `package.json` and `package-lock.json` inside your assets directory, and `esbuild` will be able to automatically pick them up:
 
    ```javascript
    import topbar from "topbar"
    ```
 
-   To ensure that `npm install` is being run when checking out your project, or when building a release add a `"cmd --cd assets npm ci"` step in `mix.exs` to the `assets.deploy` and  `assets.build` steps:
+   To ensure that `npm install` is being run when checking out your project, or when building a release, add a `"cmd --cd assets npm ci"` step in `mix.exs` to the `assets.deploy` and  `assets.build` steps:
 
 ```elixir   
       "assets.build": ["cmd --cd assets npm ci", "tailwind your_app", "esbuild your_app"],
