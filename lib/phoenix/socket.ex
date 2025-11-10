@@ -360,6 +360,19 @@ defmodule Phoenix.Socket do
   end
 
   @doc """
+  Evaluates `fun` and puts the result under `key` in socket assigns.
+
+  The function receives the current assigns.
+
+  ## Examples
+
+      iex> socket |> assign(:name, "Elixir") |> assign_lazy(:label, fn %{name: name} -> "Label: \#{name}" end)
+  """
+  def assign_lazy(%Socket{} = socket, key, fun) when is_function(fun, 1) do
+    assign(socket, [{key, fun.(socket.assigns)}])
+  end
+
+  @doc """
   Defines a channel matching the given topic and transports.
 
     * `topic_pattern` - The string pattern, for example `"room:*"`, `"users:*"`,

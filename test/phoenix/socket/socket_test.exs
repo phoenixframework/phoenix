@@ -82,6 +82,17 @@ defmodule Phoenix.SocketTest do
     end
   end
 
+  describe "assign_lazy/3" do
+    test "assigns to socket" do
+      socket = %Phoenix.Socket{}
+      assert socket.assigns[:foo] == nil
+      socket = assign(socket, :foo, :bar)
+      assert socket.assigns[:foo] == :bar
+      socket = assign_lazy(socket, :baz, fn %{foo: :bar} -> :baz end)
+      assert socket.assigns[:baz] == :baz
+    end
+  end
+
   describe "drainer_spec/1" do
     defmodule Endpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
