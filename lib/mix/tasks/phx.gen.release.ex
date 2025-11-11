@@ -236,7 +236,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> map_size() > 0
   end
 
-  @debian "bookworm"
+  @debian "trixie"
   defp elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
     url =
       "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"
@@ -260,7 +260,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         _ -> System.version()
       end
 
-    otp_vsn =  opts[:otp] || otp_vsn()
+    otp_vsn = opts[:otp] || otp_vsn()
 
     vsns =
       case elixir_and_debian_vsn(wanted_elixir_vsn, otp_vsn) do
