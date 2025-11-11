@@ -80,16 +80,14 @@ defmodule Phoenix.SocketTest do
       assert socket.assigns[:foo] == :baz
       assert socket.assigns[:abc] == :def
     end
-  end
 
-  describe "assign_lazy/3" do
-    test "assigns to socket" do
+    test "accepts functions" do
       socket = %Phoenix.Socket{}
       assert socket.assigns[:foo] == nil
       socket = assign(socket, :foo, :bar)
       assert socket.assigns[:foo] == :bar
-      socket = assign_lazy(socket, :baz, fn %{foo: :bar} -> :baz end)
-      assert socket.assigns[:baz] == :baz
+      socket = assign(socket, fn %{foo: :bar} -> [baz: :quux] end)
+      assert socket.assigns[:baz] == :quux
     end
   end
 
