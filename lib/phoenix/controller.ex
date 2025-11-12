@@ -923,7 +923,7 @@ defmodule Phoenix.Controller do
   you can pass an atom instead (without the extension):
 
       def show(conn, _params) do
-        render(conn, :show.html, message: "Hello")
+        render(conn, :show, message: "Hello")
       end
 
   If the formats are not known at compile-time, you can call `put_view/2`
