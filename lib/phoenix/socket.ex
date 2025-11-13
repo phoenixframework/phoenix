@@ -345,18 +345,27 @@ defmodule Phoenix.Socket do
 
   @doc """
   Adds key/value pairs to socket assigns.
+  Accepts a keyword list, a map, or a single-argument function.
 
-  A keyword list or a map of assigns must be given as argument to be merged into existing assigns.
+  When a keyword list or map is provided, it will be merged into the existing assigns.
+
+  If a function is given, it takes the current assigns as an argument and its return
+  value will be merged into the current assigns.
 
   ## Examples
 
       iex> assign(socket, name: "Elixir", logo: "💧")
       iex> assign(socket, %{name: "Elixir"})
+      iex> assign(socket, fn %{name: name, logo: logo} -> %{title: Enum.join([name, logo], " | ")} end)
 
   """
   def assign(%Socket{} = socket, keyword_or_map)
       when is_map(keyword_or_map) or is_list(keyword_or_map) do
     %{socket | assigns: Map.merge(socket.assigns, Map.new(keyword_or_map))}
+  end
+
+  def assign(%Socket{} = socket, fun) when is_function(fun, 1) do
+    assign(socket, fun.(socket.assigns))
   end
 
   @doc """

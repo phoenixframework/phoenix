@@ -80,6 +80,15 @@ defmodule Phoenix.SocketTest do
       assert socket.assigns[:foo] == :baz
       assert socket.assigns[:abc] == :def
     end
+
+    test "accepts functions" do
+      socket = %Phoenix.Socket{}
+      assert socket.assigns[:foo] == nil
+      socket = assign(socket, :foo, :bar)
+      assert socket.assigns[:foo] == :bar
+      socket = assign(socket, fn %{foo: :bar} -> [baz: :quux] end)
+      assert socket.assigns[:baz] == :quux
+    end
   end
 
   describe "drainer_spec/1" do
