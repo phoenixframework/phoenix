@@ -50,7 +50,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     {:ok,
      socket
      |> assign(:page_title, "Listing <%= schema.human_plural %>")<%= if primary_key != :id do %>
-     |> stream_configure(:<%= schema.collection %>, dom_id: &"<%= schema.table %>-#{&1.<%= primary_key %>}")<% end %>
+     |> stream_configure(:<%= schema.collection %>, dom_id: &"<%= schema.collection %>-#{&1.<%= primary_key %>}")<% end %>
      |> stream(:<%= schema.collection %>, list_<%= schema.plural %>(<%= socket_scope %>))}
   end
 
