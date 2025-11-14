@@ -13,7 +13,10 @@ defmodule Phoenix.Integration.MixProject do
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      test_ignore_filters: [
+        &String.starts_with?(&1, "test/fixtures")
+      ]
     ]
   end
 
