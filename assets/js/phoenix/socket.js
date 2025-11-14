@@ -108,6 +108,10 @@ import Timer from "./timer"
  *       removeItem(keyName) { delete this.storage[keyName] }
  *       setItem(keyName, keyValue) { this.storage[keyName] = keyValue }
  *     }
+ * 
+ * @param {boolean} [opts.disableWindowEventListeners] - Boolean that determines if window event listeners should be active
+ *
+ * Defaults to false.
  *
 */
 export default class Socket {
@@ -137,7 +141,8 @@ export default class Socket {
       this.decode = this.defaultDecoder
     }
     let awaitingConnectionOnPageShow = null
-    if(phxWindow && phxWindow.addEventListener){
+    this.disableWindowEventListeners = opts.disableWindowEventListeners || false
+    if(!this.disableWindowEventListeners && phxWindow && phxWindow.addEventListener){
       phxWindow.addEventListener("pagehide", _e => {
         if(this.conn){
           this.disconnect()
