@@ -76,6 +76,7 @@ export default class LongPoll {
           // is gone. We fail so that the client rejoins its channels.
           this.onerror(410)
           this.closeAndRetry(3410, "session_gone", false)
+          return
         }
         this.token = token
       } else {
