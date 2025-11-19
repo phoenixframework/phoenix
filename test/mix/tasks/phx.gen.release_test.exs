@@ -9,6 +9,16 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
 
   setup do
     Mix.Task.clear()
+
+    Process.put({Mix.Tasks.Phx.Gen.Release, :http_client}, fn url ->
+      case to_string(url) do
+        "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?" <> _ ->
+          Phoenix.json_library().encode!(%{
+            results: [%{name: "1.18.4-erlang-25.3.2.17-debian-trixie-20251117-slim"}]
+          })
+      end
+    end)
+
     :ok
   end
 
@@ -59,9 +69,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
         assert file =~ ~S|PHX_SERVER=true exec ./phoenix start|
       end)
 
-      refute_file "lib/phoenix/release.ex"
-      refute_file "rel/overlays/bin/migrate"
-      refute_file "rel/overlays/bin/migrate.bat"
+      refute_file("lib/phoenix/release.ex")
+      refute_file("rel/overlays/bin/migrate")
+      refute_file("rel/overlays/bin/migrate.bat")
       refute_file("Dockerfile")
       refute_file(".dockerignore")
 
@@ -86,7 +96,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       end)
 
       assert_file("Dockerfile", fn file ->
-        assert file =~ ~S|COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/phoenix ./|
+        assert file =~
+                 ~S|COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/phoenix ./|
+
         assert file =~ ~S|CMD ["/app/bin/server"]|
       end)
 

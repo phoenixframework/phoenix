@@ -347,10 +347,15 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       ]
     ]
 
-    case :httpc.request(:get, {url, []}, http_options, body_format: :binary) do
-      {:ok, {{_, 200, _}, _headers, body}} -> body
-      other -> raise "couldn't fetch #{url}: #{inspect(other)}"
-    end
+    http_client =
+      Process.get({__MODULE__, :http_client}, fn url ->
+        case :httpc.request(:get, {url, []}, http_options, body_format: :binary) do
+          {:ok, {{_, 200, _}, _headers, body}} -> body
+          other -> raise "couldn't fetch #{url}: #{inspect(other)}"
+        end
+      end)
+
+    http_client.(url)
   end
 
   defp protocol_versions do
