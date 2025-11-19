@@ -116,6 +116,7 @@ export default class Socket {
     this.channels = []
     this.sendBuffer = []
     this.ref = 0
+    this.fallbackRef = null
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
     this.transport = opts.transport || global.WebSocket || LongPoll
     this.primaryPassedHealthCheck = false
@@ -129,6 +130,7 @@ export default class Socket {
     this.disconnecting = false
     this.binaryType = opts.binaryType || "arraybuffer"
     this.connectClock = 1
+    this.pageHidden = false
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -148,6 +150,17 @@ export default class Socket {
         if(awaitingConnectionOnPageShow === this.connectClock){
           awaitingConnectionOnPageShow = null
           this.connect()
+        }
+      })
+      phxWindow.addEventListener("visibilitychange", () => {
+        if(document.visibilityState === "hidden"){
+          this.pageHidden = true
+        } else {
+          this.pageHidden = false
+          // reconnect immediately
+          if(!this.isConnected()){
+            this.teardown(() => this.connect())
+          }
         }
       })
     }
@@ -178,6 +191,11 @@ export default class Socket {
     this.heartbeatTimer = null
     this.pendingHeartbeatRef = null
     this.reconnectTimer = new Timer(() => {
+      if(this.pageHidden){
+        this.log("Not reconnecting as page is hidden!")
+        this.teardown()
+        return
+      }
       this.teardown(() => this.connect())
     }, this.reconnectAfterMs)
     this.authToken = opts.authToken
@@ -396,7 +414,10 @@ export default class Socket {
         fallback(reason)
       }
     })
-    this.onOpen(() => {
+    if(this.fallbackRef){
+      this.off([this.fallbackRef])
+    }
+    this.fallbackRef = this.onOpen(() => {
       established = true
       if(!primaryTransport){
         // only memorize LP if we never connected to primary
@@ -502,6 +523,7 @@ export default class Socket {
   }
 
   onConnClose(event){
+    if(this.conn) this.conn.onclose = () => {} // noop to prevent recursive calls in teardown
     let closeCode = event && event.code
     if(this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
