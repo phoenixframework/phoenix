@@ -29,6 +29,23 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience. This may also lead to errors on application boot if you were previously incorrectly setting compile time config at runtime.
 
+## 1.8.2 (Unreleased)
+
+### Bug fixes
+  - [phoenix.js] fix issue where LongPoll can cause "unmatched topic" errors (observed on iOS only) ([#6538](https://github.com/phoenixframework/phoenix/pull/6538))
+  - [phx.gen.live] fix tests when schema and table names are equal ([#6477](https://github.com/phoenixframework/phoenix/pull/6477))
+  - [Verified Routes] do not add path prefixes for static routes
+  - [Phoenix.Endpoint] fix LongPoll being active by default since 1.8.0 ([#6487](https://github.com/phoenixframework/phoenix/pull/6487))
+
+### Enhancements
+  - [phoenix.js] socket now stops reconnection attempts while the page is hidden ([#6534](https://github.com/phoenixframework/phoenix/pull/6534))
+  - [phx.new] (re-)add `<.input field={@form[:foo]} type="hidden" />` support in core components
+  - [phx.new] set `force_ssl` in `prod.exs` by default ([#6435](https://github.com/phoenixframework/phoenix/pull/6435))
+  - [phx.new] change `--docker` base image to debian trixie ([#6521](https://github.com/phoenixframework/phoenix/pull/6521))
+  - [Phoenix.Socket.assign/2] allow passing a function as second argument `assign(socket, fn _existing_assigns -> %{this_gets: "merged"} end)` ([#6530](https://github.com/phoenixframework/phoenix/pull/6530))
+  - [Phoenix.Controller.assign/2] support keyword lists and maps as second argument similar to LiveView ([#6513](https://github.com/phoenixframework/phoenix/pull/6513))
+  - [Presence] support custom dispatcher for `presence_diff` broadcast ([#6500](https://github.com/phoenixframework/phoenix/pull/6500))
+
 ## 1.8.1 (2025-08-28)
 
 ### Bug fixes
