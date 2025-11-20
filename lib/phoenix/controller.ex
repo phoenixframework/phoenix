@@ -1891,16 +1891,27 @@ defmodule Phoenix.Controller do
 
   @doc """
   Assigns multiple key-value pairs to the connection.
+  Accepts a keyword list, a map, or a single-argument function.
 
   This function accepts a map or keyword list of assigns and merges them into
   the connection's assigns. It is equivalent to calling `Plug.Conn.assign/3`
   multiple times.
 
+  If a function is given, it takes the current assigns as an argument and its return
+  value will be merged into the current assigns.
+
   ## Examples
 
       assign(conn, name: "Alice", role: :admin)
       assign(conn, %{name: "Alice", role: :admin})
+      assign(conn, fn %{name: name, logo: logo} -> %{title: Enum.join([name, logo], " | ")} end)
   """
+  def assign(conn, keyword_or_map_or_fun)
+
+  def assign(conn, fun) when is_function(fun, 1) do
+    assign(conn, fun.(conn.assigns))
+  end
+
   defdelegate assign(conn, assigns), to: Plug.Conn, as: :merge_assigns
 
   @doc false
