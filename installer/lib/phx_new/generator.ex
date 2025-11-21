@@ -325,7 +325,8 @@ defmodule Phx.New.Generator do
       elixir_install_otp_bin_path: from_elixir_install && elixir_install_otp_bin_path(),
       elixir_install_bin_path: from_elixir_install && elixir_install_bin_path(),
       inside_docker_env?: inside_docker_env?,
-      agents_md: agents_md
+      agents_md: agents_md,
+      config_regex_E: Version.match?(System.version(), "~> 1.19.3 or ~> 1.20") && "E" || ""
     ]
 
     %{project | binding: binding}

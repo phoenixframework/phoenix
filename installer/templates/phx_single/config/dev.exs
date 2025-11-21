@@ -52,12 +52,12 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
     web_console_logger: true,
     patterns: [
       # Static assets, except user uploads
-      ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
+      ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$"<%= @config_regex_E %>,<%= if @gettext do %>
       # Gettext translations
-      ~r"priv/gettext/.*\.po$",<% end %>
+      ~r"priv/gettext/.*\.po$"<%= @config_regex_E %>,<% end %>
       # Router, Controllers, LiveViews and LiveComponents
-      ~r"lib/<%= @lib_web_name %>/router\.ex$",
-      ~r"lib/<%= @lib_web_name %>/(controllers|live|components)/.*\.(ex|heex)$"
+      ~r"lib/<%= @lib_web_name %>/router\.ex$"<%= @config_regex_E %>,
+      ~r"lib/<%= @lib_web_name %>/(controllers|live|components)/.*\.(ex|heex)$"<%= @config_regex_E %>
     ]
   ]<% end %>
 
