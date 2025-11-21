@@ -994,4 +994,24 @@ defmodule Phoenix.Controller.ControllerTest do
       assert current_url(conn, %{three: 3}) == "https://www.example.com/foo?three=3"
     end
   end
+
+  describe "assign/2" do
+    test "merges assigns" do
+      conn = conn(:get, "/")
+
+      refute conn.assigns[:foo]
+
+      conn = assign(conn, %{foo: :bar})
+      assert conn.assigns.foo == :bar
+
+      conn = assign(conn, bar: :baz)
+      assert conn.assigns.foo == :bar
+      assert conn.assigns.bar == :baz
+
+      conn = assign(conn, fn %{foo: :bar} -> [baz: :quux] end)
+      assert conn.assigns.foo == :bar
+      assert conn.assigns.bar == :baz
+      assert conn.assigns.baz == :quux
+    end
+  end
 end
