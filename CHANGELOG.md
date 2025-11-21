@@ -43,6 +43,7 @@ This release introduces deprecation warnings for several features that have been
   - [phx.new] set `force_ssl` in `prod.exs` by default ([#6435](https://github.com/phoenixframework/phoenix/pull/6435))
   - [phx.new] change `--docker` base image to debian trixie ([#6521](https://github.com/phoenixframework/phoenix/pull/6521))
   - [Phoenix.Socket.assign/2] allow passing a function as second argument `assign(socket, fn _existing_assigns -> %{this_gets: "merged"} end)` ([#6530](https://github.com/phoenixframework/phoenix/pull/6530))
+  - [Phoenix.Controller.assign/2] allow passing a function as second argument ([#6542](https://github.com/phoenixframework/phoenix/pull/6542))
   - [Phoenix.Controller.assign/2] support keyword lists and maps as second argument similar to LiveView ([#6513](https://github.com/phoenixframework/phoenix/pull/6513))
   - [Presence] support custom dispatcher for `presence_diff` broadcast ([#6500](https://github.com/phoenixframework/phoenix/pull/6500))
 
