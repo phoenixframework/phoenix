@@ -202,7 +202,6 @@ From our requirements alone, we can start to see why a generic `create_order` fu
   alias Hello.Orders.LineItem
   alias Hello.ShoppingCart
 
-
   def complete_order(%Scope{} = scope, %ShoppingCart.Cart{} = cart) do
     true = cart.user_id == scope.user.id
   
@@ -225,10 +224,17 @@ From our requirements alone, we can start to see why a generic `create_order` fu
     Repo.transact(fn ->
       with {:ok, order} <- Repo.insert(order_changeset),
            {:ok, _cart} <- ShoppingCart.prune_cart_items(scope, cart) do
-        broadcast(scope, {:created, order})
         {:ok, order}
       end
     end)
+    |> case do
+      {:ok, order} ->
+        broadcast_order(scope, {:created, order})
+        {:ok, order}
+  
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 ```
 

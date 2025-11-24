@@ -551,12 +551,19 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
       |> Ecto.Changeset.cast_assoc(:items, with: &CartItem.changeset/2)
   
     Repo.transact(fn ->
-      with {:ok, cart} <- Repo.update(changeset) do
-        Repo.delete_all(from(i in CartItem, where: i.cart_id == ^cart.id and i.quantity == 0))
-        broadcast_cart(scope, {:updated, cart})
+      with {:ok, cart} <- Repo.update(changeset),
+           {_count, _cart_items} = Repo.delete_all(from(i in CartItem, where: i.cart_id == ^cart.id and i.quantity == 0)) do
         {:ok, cart}
       end
     end)
+    |> case do
+      {:ok, cart} ->
+        broadcast_cart(scope, {:updated, cart})
+        {:ok, cart}
+  
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 ```
 
