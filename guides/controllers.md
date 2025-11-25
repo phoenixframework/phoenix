@@ -254,7 +254,7 @@ Using `Plug` functions in this way, we can craft just the response we need.
 
 Analogous to the `_format` query string param, we can render any sort of format we want by modifying the HTTP Content-Type Header and providing the appropriate template.
 
-If we wanted to render an XML version of our `home` action, we might implement the action like this in `lib/hello_web/page_controller.ex`.
+If we wanted to render an XML version of our `home` action, we might implement the action like this in `lib/hello_web/controllers/page_controller.ex`.
 
 ```elixir
 def home(conn, _params) do
