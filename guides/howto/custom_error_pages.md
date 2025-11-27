@@ -90,7 +90,7 @@ Phoenix generates an `ErrorHTML` for us, but it doesn't give us a `lib/hello_web
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Welcome to Phoenix!</title>
     <link rel="stylesheet" href="/assets/css/app.css"/>
-    <script defer type="text/javascript" src="/assets/js/app.js"></script>
+    <script type="module" src="/assets/js/app.js"></script>
   </head>
   <body>
     <header>
