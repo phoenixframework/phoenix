@@ -165,8 +165,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert File.exists?("phx_blog/assets/vendor")
 
       assert_file("phx_blog/config/config.exs", fn file ->
-        assert file =~ "cd: Path.expand(\"../assets\", __DIR__)"
         assert file =~ "config :esbuild"
+        assert file =~ "--format=esm"
+        assert file =~ "cd: Path.expand(\"../assets\", __DIR__)"
       end)
 
       # Ecto
