@@ -42,6 +42,10 @@ defmodule Phoenix.VerifiedRoutes do
   Like path segments, query strings params are proper URL encoded and may be interpolated
   directly into the ~p string.
 
+  To ease url comparisons during tests (e.g. when using `assert_redirect/3`) query params
+  will be sorted. This is controlled by the `phoenix: [sort_verified_routes_query_params: true]`
+  configuration option.
+
   ## What about named routes?
 
   Many web frameworks, and early versions of Phoenix, provided a feature called "named routes".
@@ -821,7 +825,11 @@ defmodule Phoenix.VerifiedRoutes do
             "interpolated query string params must be separated by &, got: #{Macro.to_string(route)}"
     end
 
-    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m3, [arg]}, bin]}
+    sort_params? = Application.get_env(:phoenix, :sort_verified_routes_query_params, false)
+
+    rewrite =
+      {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m3, [arg, sort_params?]}, bin]}
+
     verify_query(rest, route, [rewrite | acc])
   end
 
@@ -880,14 +888,22 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @doc false
-  def __encode_query__(dict) when is_list(dict) or (is_map(dict) and not is_struct(dict)) do
+  def __encode_query__(dict, sort? \\ false)
+
+  def __encode_query__(dict, sort?)
+      when is_list(dict) or (is_map(dict) and not is_struct(dict)) do
     case Plug.Conn.Query.encode(dict, &to_param/1) do
       "" -> ""
-      query_str -> query_str
+      query_str -> maybe_sort_query(query_str, sort?)
     end
   end
 
-  def __encode_query__(val), do: val |> to_param() |> URI.encode_www_form()
+  def __encode_query__(val, _sort?), do: val |> to_param() |> URI.encode_www_form()
+
+  defp maybe_sort_query(query_str, false), do: query_str
+
+  defp maybe_sort_query(query, true),
+    do: query |> String.split("&") |> Enum.sort() |> Enum.join("&")
 
   defp to_param(int) when is_integer(int), do: Integer.to_string(int)
   defp to_param(bin) when is_binary(bin), do: bin
