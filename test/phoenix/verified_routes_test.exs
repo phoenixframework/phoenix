@@ -371,6 +371,14 @@ defmodule Phoenix.VerifiedRoutesTest do
 
     assert ~p"/posts/5?#{[foo: %{__struct__: Foo, id: 5}]}" ==
              "/posts/5?foo=5"
+
+    # {key, value} params pairs are sorted
+    assert ~p"/posts/5?#{[b: 2, a: 1, c: 3]}" == "/posts/5?a=1&b=2&c=3"
+    assert ~p"/posts/5?#{%{b: 2, a: 1, c: 3}}" == "/posts/5?a=1&b=2&c=3"
+    # array values are sorted
+    assert ~p"/posts/5?#{[foo: ~w(b a)]}" == "/posts/5?foo[]=a&foo[]=b"
+    # ampersands are escaped and won't mess with splitting query at '&'
+    assert ~p"/posts/5?#{[foo: "bar", "a&b": "e&f"]}" == "/posts/5?a%26b=e%26f&foo=bar"
   end
 
   test "~p mixed query string interpolation" do

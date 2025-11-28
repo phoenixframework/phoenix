@@ -7,7 +7,8 @@ config :logger, :console,
 config :phoenix,
   json_library: Jason,
   stacktrace_depth: 20,
-  trim_on_html_eex_engine: false
+  trim_on_html_eex_engine: false,
+  sort_verified_routes_query_params: true
 
 if Mix.env() == :dev do
   esbuild = fn args ->
