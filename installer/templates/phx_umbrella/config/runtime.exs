@@ -7,7 +7,7 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
-config :<%= @app_name %>, <%= @endpoint_module %>,
+config :<%= @web_app_name %>, <%= @endpoint_module %>,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :prod do
