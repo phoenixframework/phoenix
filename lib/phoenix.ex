@@ -45,6 +45,7 @@ defmodule Phoenix do
 
   """
   def json_library do
+    # TODO: Change the default json library to JSON in Phoenix v2.0
     Application.get_env(:phoenix, :json_library, Jason)
   end
 
