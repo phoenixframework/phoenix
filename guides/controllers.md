@@ -47,7 +47,7 @@ defmodule HelloWeb.PageController do
   ...
 
   def index(conn, _params) do
-    render(conn, :home)
+    render(conn, :index)
   end
 end
 ```
