@@ -14,35 +14,23 @@
  *
  */
 export default class Timer {
-  /**
-  * @param {() => void} callback
-  * @param {(tries: number) => number} timerCalc
-  */
-  constructor(callback, timerCalc){
+    /**
+    * @param {() => void} callback
+    * @param {(tries: number) => number} timerCalc
+    */
+    constructor(callback: () => void, timerCalc: (tries: number) => number);
     /** @type {() => void} */
-    this.callback = callback
+    callback: () => void;
     /** @type {(tries: number) => number} */
-    this.timerCalc = timerCalc
+    timerCalc: (tries: number) => number;
     /** @type {ReturnType<typeof setTimeout> | null} */
-    this.timer = null
+    timer: ReturnType<typeof setTimeout> | null;
     /** @type {number} */
-    this.tries = 0
-  }
-
-  reset(){
-    this.tries = 0
-    clearTimeout(this.timer)
-  }
-
-  /**
-   * Cancels any previous scheduleTimeout and schedules callback
-   */
-  scheduleTimeout(){
-    clearTimeout(this.timer)
-
-    this.timer = setTimeout(() => {
-      this.tries = this.tries + 1
-      this.callback()
-    }, this.timerCalc(this.tries + 1))
-  }
+    tries: number;
+    reset(): void;
+    /**
+     * Cancels any previous scheduleTimeout and schedules callback
+     */
+    scheduleTimeout(): void;
 }
+//# sourceMappingURL=timer.d.ts.map

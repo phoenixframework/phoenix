@@ -1,7 +1,10 @@
 // js/phoenix/utils.js
 var closure = (value) => {
   if (typeof value === "function") {
-    return value;
+    return (
+      /** @type {() => T} */
+      value
+    );
   } else {
     let closure2 = function() {
       return value;
@@ -15,34 +18,56 @@ var globalSelf = typeof self !== "undefined" ? self : null;
 var phxWindow = typeof window !== "undefined" ? window : null;
 var global = globalSelf || phxWindow || globalThis;
 var DEFAULT_VSN = "2.0.0";
-var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var DEFAULT_TIMEOUT = 1e4;
 var WS_CLOSE_NORMAL = 1e3;
-var CHANNEL_STATES = {
-  closed: "closed",
-  errored: "errored",
-  joined: "joined",
-  joining: "joining",
-  leaving: "leaving"
-};
-var CHANNEL_EVENTS = {
-  close: "phx_close",
-  error: "phx_error",
-  join: "phx_join",
-  reply: "phx_reply",
-  leave: "phx_leave"
-};
-var TRANSPORTS = {
-  longpoll: "longpoll",
-  websocket: "websocket"
-};
-var XHR_STATES = {
-  complete: 4
-};
+var SOCKET_STATES = (
+  /** @type {const} */
+  { connecting: 0, open: 1, closing: 2, closed: 3 }
+);
+var CHANNEL_STATES = (
+  /** @type {const} */
+  {
+    closed: "closed",
+    errored: "errored",
+    joined: "joined",
+    joining: "joining",
+    leaving: "leaving"
+  }
+);
+var CHANNEL_EVENTS = (
+  /** @type {const} */
+  {
+    close: "phx_close",
+    error: "phx_error",
+    join: "phx_join",
+    reply: "phx_reply",
+    leave: "phx_leave"
+  }
+);
+var TRANSPORTS = (
+  /** @type {const} */
+  {
+    longpoll: "longpoll",
+    websocket: "websocket"
+  }
+);
+var XHR_STATES = (
+  /** @type {const} */
+  {
+    complete: 4
+  }
+);
 var AUTH_TOKEN_PREFIX = "base64url.bearer.phx.";
 
 // js/phoenix/push.js
 var Push = class {
+  /**
+   * Initializes the Push
+   * @param {Channel} channel - The Channel
+   * @param {ChannelEvent} event - The event, for example `"phx_join"`
+   * @param {() => Record<string, unknown>} payload - The payload, for example `{user_id: 123}`
+   * @param {number} timeout - The push timeout in milliseconds
+   */
   constructor(channel, event, payload, timeout) {
     this.channel = channel;
     this.event = event;
@@ -54,6 +79,7 @@ var Push = class {
     this.timeoutTimer = null;
     this.recHooks = [];
     this.sent = false;
+    this.ref = void 0;
   }
   /**
    *
@@ -83,8 +109,8 @@ var Push = class {
   }
   /**
    *
-   * @param {*} status
-   * @param {*} callback
+   * @param {string} status
+   * @param {(response: any) => void} callback
    */
   receive(status, callback) {
     if (this.hasReceived(status)) {
@@ -160,6 +186,10 @@ var Push = class {
 
 // js/phoenix/timer.js
 var Timer = class {
+  /**
+  * @param {() => void} callback
+  * @param {(tries: number) => number} timerCalc
+  */
   constructor(callback, timerCalc) {
     this.callback = callback;
     this.timerCalc = timerCalc;
@@ -184,6 +214,11 @@ var Timer = class {
 
 // js/phoenix/channel.js
 var Channel = class {
+  /**
+   * @param {string} topic
+   * @param {Params | (() => Params)} params
+   * @param {Socket} socket
+   */
   constructor(topic, params, socket) {
     this.state = CHANNEL_STATES.closed;
     this.topic = topic;
@@ -254,7 +289,7 @@ var Channel = class {
   }
   /**
    * Join the channel
-   * @param {integer} timeout
+   * @param {number} timeout
    * @returns {Push}
    */
   join(timeout = this.timeout) {
@@ -269,14 +304,15 @@ var Channel = class {
   }
   /**
    * Hook into channel close
-   * @param {Function} callback
+   * @param {BindingCallback} callback
    */
   onClose(callback) {
     this.on(CHANNEL_EVENTS.close, callback);
   }
   /**
    * Hook into channel errors
-   * @param {Function} callback
+   * @param {(reason: unknown) => void} callback
+   * @return {number}
    */
   onError(callback) {
     return this.on(CHANNEL_EVENTS.error, (reason) => callback(reason));
@@ -295,8 +331,8 @@ var Channel = class {
    * // while do_other_stuff will keep firing on the "event"
    *
    * @param {string} event
-   * @param {Function} callback
-   * @returns {integer} ref
+   * @param {BindingCallback} callback
+   * @returns {number} ref
    */
   on(event, callback) {
     let ref = this.bindingRef++;
@@ -319,7 +355,7 @@ var Channel = class {
    * channel.off("event")
    *
    * @param {string} event
-   * @param {integer} ref
+   * @param {number} [ref]
    */
   off(event, ref) {
     this.bindings = this.bindings.filter((bind) => {
@@ -377,7 +413,7 @@ var Channel = class {
    * @example
    * channel.leave().receive("ok", () => alert("left!") )
    *
-   * @param {integer} timeout
+   * @param {number} timeout
    * @returns {Push}
    */
   leave(timeout = this.timeout) {
@@ -404,11 +440,11 @@ var Channel = class {
    *
    * Must return the payload, modified or unmodified
    * @param {string} event
-   * @param {Object} payload
-   * @param {integer} ref
-   * @returns {Object}
+   * @param {unknown} payload
+   * @param {number} ref
+   * @returns {unknown}
    */
-  onMessage(_event, payload, _ref) {
+  onMessage(event, payload, ref) {
     return payload;
   }
   /**
@@ -763,8 +799,15 @@ var LongPoll = class {
 
 // js/phoenix/presence.js
 var Presence = class _Presence {
+  /**
+   * Initializes the Presence
+   * @param {Channel} channel - The Channel
+   * @param {{events?: Events}} [opts] - The options,
+   *        for example `{events: {state: "state", diff: "diff"}}`
+   */
   constructor(channel, opts = {}) {
-    let events = opts.events || { state: "presence_state", diff: "presence_diff" };
+    let events = opts.events || /** @type {Events} */
+    { state: "presence_state", diff: "presence_diff" };
     this.state = {};
     this.pendingDiffs = [];
     this.channel = channel;
@@ -797,15 +840,32 @@ var Presence = class _Presence {
       }
     });
   }
+  /**
+   * @param {OnJoin} callback
+   */
   onJoin(callback) {
     this.caller.onJoin = callback;
   }
+  /**
+   * @param {OnLeave} callback
+   */
   onLeave(callback) {
     this.caller.onLeave = callback;
   }
+  /**
+   * @param {OnSync} callback
+   */
   onSync(callback) {
     this.caller.onSync = callback;
   }
+  /**
+   * Returns the array of presences, with selected metadata.
+   *
+   * @template [T=PresenceState]
+   * @param {((key: string, obj: PresenceState) => T)} [by]
+   *
+   * @returns {T[]}
+   */
   list(by) {
     return _Presence.list(this.state, by);
   }
@@ -819,7 +879,12 @@ var Presence = class _Presence {
    * be provided to react to changes in the client's local presences across
    * disconnects and reconnects with the server.
    *
-   * @returns {Presence}
+   * @param {State} currentState
+   * @param {State} newState
+   * @param {OnJoin} onJoin
+   * @param {OnLeave} onLeave
+   *
+   * @returns {State}
    */
   static syncState(currentState, newState, onJoin, onLeave) {
     let state = this.clone(currentState);
@@ -858,7 +923,12 @@ var Presence = class _Presence {
    * accepts optional `onJoin` and `onLeave` callbacks to react to a user
    * joining or leaving from a device.
    *
-   * @returns {Presence}
+   * @param {State} state
+   * @param {Diff} diff
+   * @param {OnJoin} onJoin
+   * @param {OnLeave} onLeave
+   *
+   * @returns {State}
    */
   static syncDiff(state, diff, onJoin, onLeave) {
     let { joins, leaves } = this.clone(diff);
@@ -899,10 +969,11 @@ var Presence = class _Presence {
   /**
    * Returns the array of presences, with selected metadata.
    *
-   * @param {Object} presences
-   * @param {Function} chooser
+   * @template [T=PresenceState]
+   * @param {State} presences
+   * @param {((key: string, obj: Presence) => T)} [chooser]
    *
-   * @returns {Presence}
+   * @returns {T[]}
    */
   static list(presences, chooser) {
     if (!chooser) {
@@ -915,9 +986,19 @@ var Presence = class _Presence {
     });
   }
   // private
+  /**
+  * @template T
+  * @param {State} obj
+  * @param {(key: string, obj: PresenceState) => T} func
+  */
   static map(obj, func) {
     return Object.getOwnPropertyNames(obj).map((key) => func(key, obj[key]));
   }
+  /**
+  * @template T
+  * @param {T} obj
+  * @returns {T}
+  */
   static clone(obj) {
     return JSON.parse(JSON.stringify(obj));
   }
@@ -928,6 +1009,12 @@ var serializer_default = {
   HEADER_LENGTH: 1,
   META_LENGTH: 4,
   KINDS: { push: 0, reply: 1, broadcast: 2 },
+  /**
+  * @template T
+  * @param {ArrayBuffer | string} msg
+  * @param {(msg: Message<unknown>) => T} callback
+  * @returns {T}
+  */
   encode(msg, callback) {
     if (msg.payload.constructor === ArrayBuffer) {
       return callback(this.binaryEncode(msg));
@@ -936,6 +1023,12 @@ var serializer_default = {
       return callback(JSON.stringify(payload));
     }
   },
+  /**
+  * @template T
+  * @param {Message<Record<string, any>>} rawPayload
+  * @param {(msg: ArrayBuffer | string) => T} callback
+  * @returns {T}
+  */
   decode(rawPayload, callback) {
     if (rawPayload.constructor === ArrayBuffer) {
       return callback(this.binaryDecode(rawPayload));
@@ -944,7 +1037,7 @@ var serializer_default = {
       return callback({ join_ref, ref, topic, event, payload });
     }
   },
-  // private
+  /** @private */
   binaryEncode(message) {
     let { join_ref, ref, event, topic, payload } = message;
     let metaLength = this.META_LENGTH + join_ref.length + ref.length + topic.length + event.length;
@@ -965,6 +1058,7 @@ var serializer_default = {
     combined.set(new Uint8Array(payload), header.byteLength);
     return combined.buffer;
   },
+  /** @private */
   binaryDecode(buffer) {
     let view = new DataView(buffer);
     let kind = view.getUint8(0);
@@ -978,6 +1072,7 @@ var serializer_default = {
         return this.decodeBroadcast(buffer, view, decoder);
     }
   },
+  /** @private */
   decodePush(buffer, view, decoder) {
     let joinRefSize = view.getUint8(1);
     let topicSize = view.getUint8(2);
@@ -992,6 +1087,7 @@ var serializer_default = {
     let data = buffer.slice(offset, buffer.byteLength);
     return { join_ref: joinRef, ref: null, topic, event, payload: data };
   },
+  /** @private */
   decodeReply(buffer, view, decoder) {
     let joinRefSize = view.getUint8(1);
     let refSize = view.getUint8(2);
@@ -1010,6 +1106,7 @@ var serializer_default = {
     let payload = { status: event, response: data };
     return { join_ref: joinRef, ref, topic, event: CHANNEL_EVENTS.reply, payload };
   },
+  /** @private */
   decodeBroadcast(buffer, view, decoder) {
     let topicSize = view.getUint8(1);
     let eventSize = view.getUint8(2);
@@ -1025,6 +1122,16 @@ var serializer_default = {
 
 // js/phoenix/socket.js
 var Socket = class {
+  /** Initializes the Socket *
+   *
+   * For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
+   *
+   * @constructor
+   * @param {string} endPoint - The string WebSocket endpoint, ie, `"ws://example.com/socket"`,
+   *                                               `"wss://example.com"`
+   *                                               `"/socket"` (inherited host & protocol)
+   * @param {SocketOptions} [opts] - Optional configuration
+   */
   constructor(endPoint, opts = {}) {
     this.stateChangeCallbacks = { open: [], close: [], error: [], message: [] };
     this.channels = [];
@@ -1033,6 +1140,7 @@ var Socket = class {
     this.fallbackRef = null;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
     this.transport = opts.transport || global.WebSocket || LongPoll;
+    this.conn = void 0;
     this.primaryPassedHealthCheck = false;
     this.longPollFallbackMs = opts.longPollFallbackMs;
     this.fallbackTimer = null;
@@ -1045,6 +1153,8 @@ var Socket = class {
     this.binaryType = opts.binaryType || "arraybuffer";
     this.connectClock = 1;
     this.pageHidden = false;
+    this.encode = void 0;
+    this.decode = void 0;
     if (this.transport !== LongPoll) {
       this.encode = opts.encode || this.defaultEncoder;
       this.decode = opts.decode || this.defaultDecoder;
@@ -1124,7 +1234,7 @@ var Socket = class {
   /**
    * Disconnects and replaces the active transport
    *
-   * @param {Function} newTransport - The new transport class to instantiate
+   * @param {SocketTransport} newTransport - The new transport class to instantiate
    *
    */
   replaceTransport(newTransport) {
@@ -1141,7 +1251,7 @@ var Socket = class {
   /**
    * Returns the socket protocol
    *
-   * @returns {string}
+   * @returns {"wss" | "ws"}
    */
   protocol() {
     return location.protocol.match(/^https/) ? "wss" : "ws";
@@ -1169,9 +1279,9 @@ var Socket = class {
    *
    * See https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes for valid status codes.
    *
-   * @param {Function} callback - Optional callback which is called after socket is disconnected.
-   * @param {integer} code - A status code for disconnection (Optional).
-   * @param {string} reason - A textual description of the reason to disconnect. (Optional)
+   * @param {() => void} callback - Optional callback which is called after socket is disconnected.
+   * @param {number} [code] - A status code for disconnection (Optional).
+   * @param {string} [reason] - A textual description of the reason to disconnect. (Optional)
    */
   disconnect(callback, code, reason) {
     this.connectClock++;
@@ -1185,8 +1295,7 @@ var Socket = class {
     }, code, reason);
   }
   /**
-   *
-   * @param {Object} params - The params to send when connecting, for example `{user_id: userToken}`
+   * @param {Params} [params] - [DEPRECATED] The params to send when connecting, for example `{user_id: userToken}`
    *
    * Passing params to connect is deprecated; pass them in the Socket constructor instead:
    * `new Socket("/socket", {params: {user_id: userToken}})`.
@@ -1225,7 +1334,7 @@ var Socket = class {
    *
    * @example socket.onOpen(function(){ console.info("the socket was opened") })
    *
-   * @param {Function} callback
+   * @param {OnOpenCallback} callback
    */
   onOpen(callback) {
     let ref = this.makeRef();
@@ -1234,7 +1343,8 @@ var Socket = class {
   }
   /**
    * Registers callbacks for connection close events
-   * @param {Function} callback
+   * @param {OnCloseCallback} callback
+   * @returns {string}
    */
   onClose(callback) {
     let ref = this.makeRef();
@@ -1246,7 +1356,8 @@ var Socket = class {
    *
    * @example socket.onError(function(error){ alert("An error occurred") })
    *
-   * @param {Function} callback
+   * @param {OnErrorCallback} callback
+   * @returns {string}
    */
   onError(callback) {
     let ref = this.makeRef();
@@ -1255,7 +1366,8 @@ var Socket = class {
   }
   /**
    * Registers callbacks for connection message events
-   * @param {Function} callback
+   * @param {OnMessageCallback} callback
+   * @returns {string}
    */
   onMessage(callback) {
     let ref = this.makeRef();
@@ -1264,7 +1376,7 @@ var Socket = class {
   }
   /**
    * Pings the server and invokes the callback with the RTT in milliseconds
-   * @param {Function} callback
+   * @param {(timeDelta: number) => void} callback
    *
    * Returns true if the ping was pushed or false if unable to be pushed.
    */
@@ -1455,6 +1567,9 @@ var Socket = class {
       this.waitForSocketClosed(callback, tries + 1);
     }, 150 * tries);
   }
+  /**
+  * @param {CloseEvent} event
+  */
   onConnClose(event) {
     if (this.conn) this.conn.onclose = () => {
     };
@@ -1469,6 +1584,7 @@ var Socket = class {
   }
   /**
    * @private
+   * @param {Event} error
    */
   onConnError(error) {
     if (this.hasLogger()) this.log("transport", error);
@@ -1524,7 +1640,7 @@ var Socket = class {
   /**
    * Removes `onOpen`, `onClose`, `onError,` and `onMessage` registrations.
    *
-   * @param {refs} - list of refs returned by calls to
+   * @param {string[]} refs - list of refs returned by calls to
    *                 `onOpen`, `onClose`, `onError,` and `onMessage`
    */
   off(refs) {
@@ -1538,7 +1654,7 @@ var Socket = class {
    * Initiates a new channel for the given topic
    *
    * @param {string} topic
-   * @param {Object} chanParams - Parameters for the channel
+   * @param {Params | () => Params} [chanParams]- Parameters for the channel
    * @returns {Channel}
    */
   channel(topic, chanParams = {}) {
@@ -1547,7 +1663,7 @@ var Socket = class {
     return chan;
   }
   /**
-   * @param {Object} data
+   * @param {Message<Record<string, any>>} data
    */
   push(data) {
     if (this.hasLogger()) {
@@ -1587,6 +1703,9 @@ var Socket = class {
       this.sendBuffer = [];
     }
   }
+  /**
+  * @param {MessageEvent<any>} rawMessage
+  */
   onConnMessage(rawMessage) {
     this.decode(rawMessage.data, (msg) => {
       let { topic, event, payload, ref, join_ref } = msg;

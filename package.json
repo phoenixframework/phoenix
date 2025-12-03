@@ -5,11 +5,18 @@
   "license": "MIT",
   "module": "./priv/static/phoenix.mjs",
   "main": "./priv/static/phoenix.cjs.js",
+  "types": "./priv/static/types/index.d.ts",
   "unpkg": "./priv/static/phoenix.min.js",
   "jsdelivr": "./priv/static/phoenix.min.js",
   "exports": {
-    "import": "./priv/static/phoenix.mjs",
-    "require": "./priv/static/phoenix.cjs.js"
+    "import": {
+      "types": "./priv/static/types/index.d.ts",
+      "default": "./priv/static/phoenix.mjs"
+    },
+    "require": {
+      "types": "./priv/static/types/index.d.ts",
+      "default": "./priv/static/phoenix.cjs.js"
+    }
   },
   "repository": {
     "type": "git",
@@ -20,6 +27,7 @@
     "README.md",
     "LICENSE.md",
     "package.json",
+    "tsconfig.json",
     "priv/static/*",
     "assets/js/phoenix/*"
   ],
@@ -35,12 +43,14 @@
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
     "jsdom": "^27.0.0",
-    "mock-socket": "^9.3.1"
+    "mock-socket": "^9.3.1",
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "test": "jest",
     "test.coverage": "jest --coverage",
     "test.watch": "jest --watch",
+    "build.types": "tsc",
     "docs": "documentation build assets/js/phoenix/index.js -f html -o doc/js"
   }
 }

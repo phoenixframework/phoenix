@@ -1,20 +1,33 @@
 /**
- * Initializes the Push
- * @param {Channel} channel - The Channel
- * @param {string} event - The event, for example `"phx_join"`
- * @param {Object} payload - The payload, for example `{user_id: 123}`
- * @param {number} timeout - The push timeout in milliseconds
+ * @import Channel from "./channel"
+ * @import { ChannelEvent } from "./types"
  */
 export default class Push {
+  /**
+   * Initializes the Push
+   * @param {Channel} channel - The Channel
+   * @param {ChannelEvent} event - The event, for example `"phx_join"`
+   * @param {() => Record<string, unknown>} payload - The payload, for example `{user_id: 123}`
+   * @param {number} timeout - The push timeout in milliseconds
+   */
   constructor(channel, event, payload, timeout){
+    /** @type{Channel} */
     this.channel = channel
+    /** @type{ChannelEvent} */
     this.event = event
+    /** @type{() => Record<string, unknown>} */
     this.payload = payload || function (){ return {} }
     this.receivedResp = null
+    /** @type{number} */
     this.timeout = timeout
+    /** @type{(ReturnType<typeof setTimeout>) | null} */
     this.timeoutTimer = null
+    /** @type{{status: string; callback: (response: any) => void}[]} */
     this.recHooks = []
+    /** @type{boolean} */
     this.sent = false
+    /** @type{number | undefined} */
+    this.ref = undefined
   }
 
   /**
@@ -45,8 +58,8 @@ export default class Push {
 
   /**
    *
-   * @param {*} status
-   * @param {*} callback
+   * @param {string} status
+   * @param {(response: any) => void} callback
    */
   receive(status, callback){
     if(this.hasReceived(status)){

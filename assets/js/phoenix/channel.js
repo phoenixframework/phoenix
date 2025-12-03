@@ -8,25 +8,41 @@ import Push from "./push"
 import Timer from "./timer"
 
 /**
- *
+* @import Socket from "./socket"
+* @import { ChannelState, Params, BindingCallback, Binding } from "./types"
+*/
+
+export default class Channel {
+/**
  * @param {string} topic
- * @param {(Object|function)} params
+ * @param {Params | (() => Params)} params
  * @param {Socket} socket
  */
-export default class Channel {
   constructor(topic, params, socket){
+    /** @type{ChannelState} */
     this.state = CHANNEL_STATES.closed
+    /** @type{string} */
     this.topic = topic
+    /** @type{() => Params} */
     this.params = closure(params || {})
+    /** @type {Socket} */
     this.socket = socket
+    /** @type{Binding[]} */
     this.bindings = []
+    /** @type{number} */
     this.bindingRef = 0
+    /** @type{number} */
     this.timeout = this.socket.timeout
+    /** @type{boolean} */
     this.joinedOnce = false
+    /** @type{Push} */
     this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout)
+    /** @type{Push[]} */
     this.pushBuffer = []
+    /** @type{string[]} */
     this.stateChangeRefs = []
 
+    /** @type{Timer} */
     this.rejoinTimer = new Timer(() => {
       if(this.socket.isConnected()){ this.rejoin() }
     }, this.socket.rejoinAfterMs)
@@ -73,7 +89,7 @@ export default class Channel {
 
   /**
    * Join the channel
-   * @param {integer} timeout
+   * @param {number} timeout
    * @returns {Push}
    */
   join(timeout = this.timeout){
@@ -89,7 +105,7 @@ export default class Channel {
 
   /**
    * Hook into channel close
-   * @param {Function} callback
+   * @param {BindingCallback} callback
    */
   onClose(callback){
     this.on(CHANNEL_EVENTS.close, callback)
@@ -97,7 +113,8 @@ export default class Channel {
 
   /**
    * Hook into channel errors
-   * @param {Function} callback
+   * @param {(reason: unknown) => void} callback
+   * @return {number}
    */
   onError(callback){
     return this.on(CHANNEL_EVENTS.error, reason => callback(reason))
@@ -117,8 +134,8 @@ export default class Channel {
    * // while do_other_stuff will keep firing on the "event"
    *
    * @param {string} event
-   * @param {Function} callback
-   * @returns {integer} ref
+   * @param {BindingCallback} callback
+   * @returns {number} ref
    */
   on(event, callback){
     let ref = this.bindingRef++
@@ -142,7 +159,7 @@ export default class Channel {
    * channel.off("event")
    *
    * @param {string} event
-   * @param {integer} ref
+   * @param {number} [ref]
    */
   off(event, ref){
     this.bindings = this.bindings.filter((bind) => {
@@ -200,7 +217,7 @@ export default class Channel {
    * @example
    * channel.leave().receive("ok", () => alert("left!") )
    *
-   * @param {integer} timeout
+   * @param {number} timeout
    * @returns {Push}
    */
   leave(timeout = this.timeout){
@@ -229,11 +246,11 @@ export default class Channel {
    *
    * Must return the payload, modified or unmodified
    * @param {string} event
-   * @param {Object} payload
-   * @param {integer} ref
-   * @returns {Object}
+   * @param {unknown} payload
+   * @param {number} ref
+   * @returns {unknown}
    */
-  onMessage(_event, payload, _ref){ return payload }
+  onMessage(event, payload, ref){ return payload }
 
   /**
    * @private

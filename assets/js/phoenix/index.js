@@ -197,11 +197,12 @@ import LongPoll from "./longpoll"
 import Presence from "./presence"
 import Serializer from "./serializer"
 import Socket from "./socket"
+export * from "./types"
 
 export {
   Channel,
   LongPoll,
   Presence,
   Serializer,
-  Socket
+  Socket,
 }

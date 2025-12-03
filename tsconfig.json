@@ -1,0 +1,20 @@
+{
+  "include": [
+    "assets/js/phoenix/**/*.js"
+  ],
+  "compilerOptions": {
+    "target": "es2016",                       /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+    "module": "ESNext",                       /* Specify what module code is generated. */
+    "moduleResolution": "bundler",            /* Specify how TypeScript looks up a file from a given module specifier. */
+    "rootDir": "./assets/js/phoenix",         /* Specify the root folder within your source files. */
+    "allowJs": true,                          /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */
+    "declaration": true,                      /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
+    "declarationMap": true,                   /* Create sourcemaps for d.ts files. */
+    "emitDeclarationOnly": true,              /* Only output d.ts files and not JavaScript files. */
+    "outDir": "./priv/static/types",          /* Specify an output folder for all emitted files. */
+    "esModuleInterop": true,                  /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
+    "forceConsistentCasingInFileNames": true, /* Ensure that casing is correct in imports. */
+    "strict": true,                           /* Enable all strict type-checking options. */
+    "skipLibCheck": true                      /* Skip type checking all .d.ts files. */
+  }
+}

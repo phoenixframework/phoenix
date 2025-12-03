@@ -20,117 +20,66 @@ import LongPoll from "./longpoll"
 import Serializer from "./serializer"
 import Timer from "./timer"
 
-/** Initializes the Socket *
- *
- * For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
- *
- * @param {string} endPoint - The string WebSocket endpoint, ie, `"ws://example.com/socket"`,
- *                                               `"wss://example.com"`
- *                                               `"/socket"` (inherited host & protocol)
- * @param {Object} [opts] - Optional configuration
- * @param {Function} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
- *
- * Defaults to WebSocket with automatic LongPoll fallback if WebSocket is not defined.
- * To fallback to LongPoll when WebSocket attempts fail, use `longPollFallbackMs: 2500`.
- *
- * @param {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
- * before falling back to the LongPoll transport. Disabled by default.
- *
- * @param {boolean} [opts.debug] - When true, enables debug logging. Default false.
- *
- * @param {Function} [opts.encode] - The function to encode outgoing messages.
- *
- * Defaults to JSON encoder.
- *
- * @param {Function} [opts.decode] - The function to decode incoming messages.
- *
- * Defaults to JSON:
- *
- * ```javascript
- * (payload, callback) => callback(JSON.parse(payload))
- * ```
- *
- * @param {number} [opts.timeout] - The default timeout in milliseconds to trigger push timeouts.
- *
- * Defaults `DEFAULT_TIMEOUT`
- * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
- * @param {Function} [opts.reconnectAfterMs] - The optional function that returns the
- * socket reconnect interval, in milliseconds.
- *
- * Defaults to stepped backoff of:
- *
- * ```javascript
- * function(tries){
- *   return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
- * }
- * ````
- *
- * @param {Function} [opts.rejoinAfterMs] - The optional function that returns the millisec
- * rejoin interval for individual channels.
- *
- * ```javascript
- * function(tries){
- *   return [1000, 2000, 5000][tries - 1] || 10000
- * }
- * ````
- *
- * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
- *
- * ```javascript
- * function(kind, msg, data) {
- *   console.log(`${kind}: ${msg}`, data)
- * }
- * ```
- *
- * @param {number} [opts.longpollerTimeout] - The maximum timeout of a long poll AJAX request.
- *
- * Defaults to 20s (double the server long poll timer).
- *
- * @param {(Object|function)} [opts.params] - The optional params to pass when connecting
- * @param {string} [opts.authToken] - the optional authentication token to be exposed on the server
- * under the `:auth_token` connect_info key.
- * @param {string} [opts.binaryType] - The binary type to use for binary WebSocket frames.
- *
- * Defaults to "arraybuffer"
- *
- * @param {vsn} [opts.vsn] - The serializer's protocol version to send on connect.
- *
- * Defaults to DEFAULT_VSN.
- *
- * @param {Object} [opts.sessionStorage] - An optional Storage compatible object
- * Phoenix uses sessionStorage for longpoll fallback history. Overriding the store is
- * useful when Phoenix won't have access to `sessionStorage`. For example, This could
- * happen if a site loads a cross-domain channel in an iframe. Example usage:
- *
- *     class InMemoryStorage {
- *       constructor() { this.storage = {} }
- *       getItem(keyName) { return this.storage[keyName] || null }
- *       removeItem(keyName) { delete this.storage[keyName] }
- *       setItem(keyName, keyValue) { this.storage[keyName] = keyValue }
- *     }
- *
+/**
+* @import { Encode, Decode, Message, Vsn, SocketTransport, Params, OnOpenCallback, OnCloseCallback, OnErrorCallback, OnMessageCallback, SocketOptions, StateChangeCallbacks } from "./types"
 */
+
 export default class Socket {
+  /** Initializes the Socket *
+   *
+   * For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
+   *
+   * @constructor
+   * @param {string} endPoint - The string WebSocket endpoint, ie, `"ws://example.com/socket"`,
+   *                                               `"wss://example.com"`
+   *                                               `"/socket"` (inherited host & protocol)
+   * @param {SocketOptions} [opts] - Optional configuration
+   */
   constructor(endPoint, opts = {}){
+    /** @type{StateChangeCallbacks} */
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
+    /** @type{Channel[]} */
     this.channels = []
+    /** @type{(() => void)[]} */
     this.sendBuffer = []
+    /** @type{number} */
     this.ref = 0
+    /** @type{?string} */
     this.fallbackRef = null
+    /** @type{number} */
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
+    /** @type{SocketTransport} */
     this.transport = opts.transport || global.WebSocket || LongPoll
+    /** @type{InstanceType<SocketTransport> | undefined} */
+    this.conn = undefined;
+    /** @type{boolean} */
     this.primaryPassedHealthCheck = false
+    /** @type{number | undefined} */
     this.longPollFallbackMs = opts.longPollFallbackMs
+    /** @type{?ReturnType<typeof setTimeout>} */
     this.fallbackTimer = null
+    /** @type{Storage} */
     this.sessionStore = opts.sessionStorage || (global && global.sessionStorage)
+    /** @type{number} */
     this.establishedConnections = 0
+    /** @type{Encode<void>} */
     this.defaultEncoder = Serializer.encode.bind(Serializer)
+    /** @type{Decode<void>} */
     this.defaultDecoder = Serializer.decode.bind(Serializer)
+    /** @type{boolean} */
     this.closeWasClean = false
+    /** @type{boolean} */
     this.disconnecting = false
+    /** @type{BinaryType} */
     this.binaryType = opts.binaryType || "arraybuffer"
+    /** @type{number} */
     this.connectClock = 1
+    /** @type{number} */
     this.pageHidden = false
+    /** @type{Encode<void>} */
+    this.encode = undefined;
+    /** @type{Decode<void>} */
+    this.decode = undefined;
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -164,7 +113,9 @@ export default class Socket {
         }
       })
     }
+    /** @type{number} */
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000
+    /** @type{(tries: number) => number} */
     this.rejoinAfterMs = (tries) => {
       if(opts.rejoinAfterMs){
         return opts.rejoinAfterMs(tries)
@@ -172,6 +123,7 @@ export default class Socket {
         return [1000, 2000, 5000][tries - 1] || 10000
       }
     }
+    /** @type{(tries: number) => number} */
     this.reconnectAfterMs = (tries) => {
       if(opts.reconnectAfterMs){
         return opts.reconnectAfterMs(tries)
@@ -179,17 +131,26 @@ export default class Socket {
         return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
       }
     }
+    /** @type{(kind: string, msg: string, data: any) => void} */
     this.logger = opts.logger || null
     if(!this.logger && opts.debug){
       this.logger = (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
     }
+    /** @type{number} */
     this.longpollerTimeout = opts.longpollerTimeout || 20000
+    /** @type{() => Params} */
     this.params = closure(opts.params || {})
+    /** @type{string} */
     this.endPoint = `${endPoint}/${TRANSPORTS.websocket}`
+    /** @type{Vsn} */
     this.vsn = opts.vsn || DEFAULT_VSN
+    /** @type{?ReturnType<typeof setTimeout>} */
     this.heartbeatTimeoutTimer = null
+    /** @type{?ReturnType<typeof setTimeout>} */
     this.heartbeatTimer = null
+    /** @type{?string} */
     this.pendingHeartbeatRef = null
+    /** @type{Timer} */
     this.reconnectTimer = new Timer(() => {
       if(this.pageHidden){
         this.log("Not reconnecting as page is hidden!")
@@ -198,6 +159,7 @@ export default class Socket {
       }
       this.teardown(() => this.connect())
     }, this.reconnectAfterMs)
+    /** @type{string | undefined} */
     this.authToken = opts.authToken
   }
 
@@ -209,7 +171,7 @@ export default class Socket {
   /**
    * Disconnects and replaces the active transport
    *
-   * @param {Function} newTransport - The new transport class to instantiate
+   * @param {SocketTransport} newTransport - The new transport class to instantiate
    *
    */
   replaceTransport(newTransport){
@@ -227,7 +189,7 @@ export default class Socket {
   /**
    * Returns the socket protocol
    *
-   * @returns {string}
+   * @returns {"wss" | "ws"}
    */
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
@@ -250,9 +212,9 @@ export default class Socket {
    *
    * See https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes for valid status codes.
    *
-   * @param {Function} callback - Optional callback which is called after socket is disconnected.
-   * @param {integer} code - A status code for disconnection (Optional).
-   * @param {string} reason - A textual description of the reason to disconnect. (Optional)
+   * @param {() => void} callback - Optional callback which is called after socket is disconnected.
+   * @param {number} [code] - A status code for disconnection (Optional).
+   * @param {string} [reason] - A textual description of the reason to disconnect. (Optional)
    */
   disconnect(callback, code, reason){
     this.connectClock++
@@ -267,8 +229,7 @@ export default class Socket {
   }
 
   /**
-   *
-   * @param {Object} params - The params to send when connecting, for example `{user_id: userToken}`
+   * @param {Params} [params] - [DEPRECATED] The params to send when connecting, for example `{user_id: userToken}`
    *
    * Passing params to connect is deprecated; pass them in the Socket constructor instead:
    * `new Socket("/socket", {params: {user_id: userToken}})`.
@@ -304,7 +265,7 @@ export default class Socket {
    *
    * @example socket.onOpen(function(){ console.info("the socket was opened") })
    *
-   * @param {Function} callback
+   * @param {OnOpenCallback} callback
    */
   onOpen(callback){
     let ref = this.makeRef()
@@ -314,7 +275,8 @@ export default class Socket {
 
   /**
    * Registers callbacks for connection close events
-   * @param {Function} callback
+   * @param {OnCloseCallback} callback
+   * @returns {string}
    */
   onClose(callback){
     let ref = this.makeRef()
@@ -327,7 +289,8 @@ export default class Socket {
    *
    * @example socket.onError(function(error){ alert("An error occurred") })
    *
-   * @param {Function} callback
+   * @param {OnErrorCallback} callback
+   * @returns {string}
    */
   onError(callback){
     let ref = this.makeRef()
@@ -337,7 +300,8 @@ export default class Socket {
 
   /**
    * Registers callbacks for connection message events
-   * @param {Function} callback
+   * @param {OnMessageCallback} callback
+   * @returns {string}
    */
   onMessage(callback){
     let ref = this.makeRef()
@@ -347,7 +311,7 @@ export default class Socket {
 
   /**
    * Pings the server and invokes the callback with the RTT in milliseconds
-   * @param {Function} callback
+   * @param {(timeDelta: number) => void} callback
    *
    * Returns true if the ping was pushed or false if unable to be pushed.
    */
@@ -541,6 +505,9 @@ export default class Socket {
     }, 150 * tries)
   }
 
+  /**
+  * @param {CloseEvent} event
+  */
   onConnClose(event){
     if(this.conn) this.conn.onclose = () => {} // noop to prevent recursive calls in teardown
     let closeCode = event && event.code
@@ -555,6 +522,7 @@ export default class Socket {
 
   /**
    * @private
+   * @param {Event} error
    */
   onConnError(error){
     if(this.hasLogger()) this.log("transport", error)
@@ -609,7 +577,7 @@ export default class Socket {
   /**
    * Removes `onOpen`, `onClose`, `onError,` and `onMessage` registrations.
    *
-   * @param {refs} - list of refs returned by calls to
+   * @param {string[]} refs - list of refs returned by calls to
    *                 `onOpen`, `onClose`, `onError,` and `onMessage`
    */
   off(refs){
@@ -624,7 +592,7 @@ export default class Socket {
    * Initiates a new channel for the given topic
    *
    * @param {string} topic
-   * @param {Object} chanParams - Parameters for the channel
+   * @param {Params | () => Params} [chanParams]- Parameters for the channel
    * @returns {Channel}
    */
   channel(topic, chanParams = {}){
@@ -634,7 +602,7 @@ export default class Socket {
   }
 
   /**
-   * @param {Object} data
+   * @param {Message<Record<string, any>>} data
    */
   push(data){
     if(this.hasLogger()){
@@ -674,6 +642,9 @@ export default class Socket {
     }
   }
 
+  /**
+  * @param {MessageEvent<any>} rawMessage
+  */
   onConnMessage(rawMessage){
     this.decode(rawMessage.data, msg => {
       let {topic, event, payload, ref, join_ref} = msg
