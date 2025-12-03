@@ -60,7 +60,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end)
 
       assert_file(root_path(@app, "config/config.exs"), fn file ->
-        assert file =~ ~r/config :esbuild/
+        assert file =~ "config :esbuild"
+        assert file =~ "--format=esm"
         assert file =~ "cd: Path.expand(\"../apps/phx_umb_web/assets\", __DIR__)"
         assert file =~ ~S[import_config "#{config_env()}.exs"]
         assert file =~ "config :phoenix, :json_library, Jason"
