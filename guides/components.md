@@ -16,7 +16,7 @@ In this chapter, we will recap how components are used and dig deeper to discove
 
 ## Function components
 
-Function components are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. They serve as a shared abstraction for the standard MVC controller-based applications, LiveView applications, layouts, and smaller UI definitions you'll use throughout other templates. Their documentation is available in [the `Phoenix.Component` module](https://hexdocs/phoenix_live_view/Phoenix.Component.html).
+Function components are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. They serve as a shared abstraction for the standard MVC controller-based applications, LiveView applications, layouts, and smaller UI definitions you'll use throughout other templates. Their documentation is available in [the `Phoenix.Component` module](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html).
 
 At the end of the Request life-cycle chapter, we created a template at `lib/hello_web/controllers/hello_html/show.html.heex`, let's open it up:
 
