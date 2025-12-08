@@ -29,6 +29,15 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience. This may also lead to errors on application boot if you were previously incorrectly setting compile time config at runtime.
 
+## 1.8.3 (2025-12-8)
+
+### Enhancements
+  - Add top-level phoenix config: `sort_verified_routes_query_params` to enable sorting query params in verified routes during tests
+
+### Bug fixes
+  - Fix endpoint port config in an umbrella application. ([#6549](https://github.com/phoenixframework/phoenix/pull/6549))
+  - Drop incoming channel messages with stale join refs
+
 ## 1.8.2 (2025-11-26)
 
 ### Bug fixes
