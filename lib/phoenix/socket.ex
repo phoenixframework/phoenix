@@ -765,9 +765,19 @@ defmodule Phoenix.Socket do
     end
   end
 
-  defp handle_in({pid, _ref, _status}, message, state, socket) do
-    send(pid, message)
-    {:ok, {state, socket}}
+  defp handle_in({pid, _ref, _status}, msg, state, socket) do
+    %{topic: topic, join_ref: join_ref} = msg
+
+    case state.channels_inverse do
+      # we need to match on nil to handle v1 protocol
+      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+        send(pid, msg)
+        {:ok, {state, socket}}
+
+      # the client has sent a stale message to a previous join_ref, ignore
+      %{^pid => {^topic, _old_join_ref}} ->
+        {:ok, {state, socket}}
+    end
   end
 
   defp handle_in(

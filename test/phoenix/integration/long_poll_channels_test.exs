@@ -436,7 +436,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
         test "#{@mode}: publishing events" do
           Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
-          session = join("/ws", "room:lobby", @vsn, "1", @mode)
+          join_ref = "1"
+          session = join("/ws", "room:lobby", @vsn, join_ref, @mode)
 
           # Publish successfully
           resp =
@@ -444,6 +445,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
               "topic" => "room:lobby",
               "event" => "new_msg",
               "ref" => "1",
+              "join_ref" => join_ref,
               "payload" => %{"body" => "hi!"}
             })
 
