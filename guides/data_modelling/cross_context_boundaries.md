@@ -544,7 +544,7 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
 ```elixir
   def update_cart(%Scope{} = scope, %Cart{} = cart, attrs) do
     true = cart.user_id == scope.user.id
-  
+
     changeset =
       cart
       |> Cart.changeset(attrs, scope)
@@ -560,7 +560,7 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
       {:ok, cart} ->
         broadcast_cart(scope, {:updated, cart})
         {:ok, cart}
-  
+
       {:error, reason} ->
         {:error, reason}
     end
