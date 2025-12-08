@@ -204,7 +204,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
 
   def complete_order(%Scope{} = scope, %ShoppingCart.Cart{} = cart) do
     true = cart.user_id == scope.user.id
-  
+
     line_items =
       Enum.map(cart.items, fn item ->
         %{
@@ -213,14 +213,14 @@ From our requirements alone, we can start to see why a generic `create_order` fu
           quantity: item.quantity
         }
       end)
-  
+
     order_changeset =
       Ecto.Changeset.change(%Order{}, %{
         user_id: scope.user.id,
         total_price: ShoppingCart.total_cart_price(cart),
         line_items: line_items
       })
-  
+
     Repo.transact(fn ->
       with {:ok, order} <- Repo.insert(order_changeset),
            {:ok, _cart} <- ShoppingCart.prune_cart_items(scope, cart) do
