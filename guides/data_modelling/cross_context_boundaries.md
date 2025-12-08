@@ -549,26 +549,26 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
       cart
       |> Cart.changeset(attrs, scope)
       |> Ecto.Changeset.cast_assoc(:items, with: &CartItem.changeset/2)
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:cart, changeset)
-    |> Ecto.Multi.delete_all(:discarded_items, fn %{cart: cart} ->
-      from(i in CartItem, where: i.cart_id == ^cart.id and i.quantity == 0)
+  
+    Repo.transact(fn ->
+      with {:ok, cart} <- Repo.update(changeset),
+           {_count, _cart_items} = Repo.delete_all(from(i in CartItem, where: i.cart_id == ^cart.id and i.quantity == 0)) do
+        {:ok, cart}
+      end
     end)
-    |> Repo.transact()
     |> case do
-      {:ok, %{cart: cart}} ->
+      {:ok, cart} ->
         broadcast_cart(scope, {:updated, cart})
         {:ok, cart}
 
-      {:error, :cart, changeset, _changes_so_far} ->
-        {:error, changeset}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 ```
 
-We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
+We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. 
 
-For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transact/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
+Once the `changeset` is ready, we wrap everything in `Repo.transact/2` so the operations run safely as one. Inside the transaction, we update the cart using `Repo.update/1`. If the update succeeds, we follow up with a cleanup step using `Repo.delete_all/2` to remove any cart items with zero quantity. Running both steps in the same transaction prevents partial updates and keeps the cart data accurate. Finally, we broadcast the updated cart so that any connected LiveViews can instantly show the changes.
 
 Let's head back to the browser and try it out. Add a few products to your cart, update the quantities, and watch the values changes along with the price calculations. Setting any quantity to 0 will also remove the item. You can also try logging out and registering a new user to see how the carts are scoped to the current user. Pretty neat!

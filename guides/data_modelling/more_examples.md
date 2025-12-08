@@ -207,34 +207,38 @@ From our requirements alone, we can start to see why a generic `create_order` fu
 
     line_items =
       Enum.map(cart.items, fn item ->
-        %{product_id: item.product_id, price: item.product.price, quantity: item.quantity}
+        %{
+          product_id: item.product_id,
+          price: item.product.price,
+          quantity: item.quantity
+        }
       end)
 
-    order =
-      Ecto.Changeset.change(%Order{},
+    order_changeset =
+      Ecto.Changeset.change(%Order{}, %{
         user_id: scope.user.id,
         total_price: ShoppingCart.total_cart_price(cart),
         line_items: line_items
-      )
+      })
 
-    Ecto.Multi.new()
-    |> Ecto.Multi.insert(:order, order)
-    |> Ecto.Multi.run(:prune_cart, fn _repo, _changes ->
-      ShoppingCart.prune_cart_items(scope, cart)
+    Repo.transact(fn ->
+      with {:ok, order} <- Repo.insert(order_changeset),
+           {:ok, _cart} <- ShoppingCart.prune_cart_items(scope, cart) do
+        {:ok, order}
+      end
     end)
-    |> Repo.transact()
     |> case do
-      {:ok, %{order: order}} ->
+      {:ok, order} ->
         broadcast_order(scope, {:created, order})
         {:ok, order}
-
-      {:error, name, value, _changes_so_far} ->
-        {:error, {name, value}}
+  
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 ```
 
-We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into a map of order line items structs. The job of the order line item record is to capture the price of the product *at payment transaction time*, so we reference the product's price here. Next, we create a bare order changeset with `Ecto.Changeset.change/2` and associate our user UUID, set our total price calculation, and place our order line items in the changeset. With a fresh order changeset ready to be inserted, we can again make use of `Ecto.Multi` to execute our operations in a database transaction. We start by inserting the order, followed by a `run` operation. The `Ecto.Multi.run/3` function allows us to run any code in the function which must either succeed with `{:ok, result}` or error, which halts and rolls back the transaction. Here, we simply call into our shopping cart context and ask it to prune all items in a cart. Running the transaction will execute the multi as before and we return the result to the caller.
+We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into a map of order line items structs. The job of the order line item record is to capture the price of the product *at payment transaction time*, so we reference the product's price here. Next, we create a bare order changeset with `Ecto.Changeset.change/2` and associate our user UUID, set our total price calculation, and place our order line items in the changeset. With a fresh order changeset ready to be inserted, we now make use of `Repo.transact/2` to execute our operations in a database transaction. We start by inserting the order, followed by a step that prunes all items from the user’s cart. The function wrapped inside `Repo.transact/2` must either return `{:ok, result}` or error, which halts and rolls back the transaction. Running the transaction will execute these operations in sequence, and we return the result to the caller once completed.
 
 To close out our order completion, we need to implement the `ShoppingCart.prune_cart_items/1` function in `lib/hello/shopping_cart.ex`:
 
