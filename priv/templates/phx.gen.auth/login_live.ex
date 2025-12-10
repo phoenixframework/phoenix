@@ -75,7 +75,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             required
           />
           <.input
-            field={@form[:password]}
+            field={f[:password]}
             type="password"
             label="Password"
             autocomplete="current-password"
