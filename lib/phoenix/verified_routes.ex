@@ -329,6 +329,7 @@ defmodule Phoenix.VerifiedRoutes do
     |> Enum.at(0)
     |> String.split("/")
     |> Enum.filter(fn segment -> segment != "" end)
+    |> Enum.map(&URI.decode/1)
   end
 
   defp expand_alias({:__aliases__, _, _} = alias, env),

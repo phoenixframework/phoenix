@@ -56,6 +56,7 @@ defmodule Phoenix.VerifiedRoutesTest do
     get "/posts/file/*file", PostController, :file
     get "/posts/skip", PostController, :skip
     get "/should-warn/*all", PostController, :all, warn_on_verify: true
+    get "/ø", PostController, :unicode
 
     scope "/", host: "users." do
       post "/host_users/:id/info", UserController, :create
@@ -432,6 +433,10 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/5/?#{[id: 5]}" == "/posts/5/?id=5"
     assert ~p"/posts/5/?#{%{"id" => "foo"}}" == "/posts/5/?id=foo"
     assert ~p"/posts/5/?#{%{"id" => "foo bar"}}" == "/posts/5/?id=foo+bar"
+  end
+
+  test "~p with unicode characters" do
+    assert ~p"/ø" == "/%C3%B8"
   end
 
   describe "with static path" do
