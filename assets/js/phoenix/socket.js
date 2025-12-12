@@ -108,6 +108,10 @@ import Timer from "./timer"
  *       removeItem(keyName) { delete this.storage[keyName] }
  *       setItem(keyName, keyValue) { this.storage[keyName] = keyValue }
  *     }
+ * 
+ * @param {boolean} [opts.disableAutoDisconnectOnPageHide] - Boolean that determines if the socket should auto disconnect on page hide
+ *
+ * Defaults to false.
  *
 */
 export default class Socket {
@@ -139,7 +143,8 @@ export default class Socket {
       this.decode = this.defaultDecoder
     }
     let awaitingConnectionOnPageShow = null
-    if(phxWindow && phxWindow.addEventListener){
+    this.disableAutoDisconnectOnPageHide = opts.disableAutoDisconnectOnPageHide || false
+    if(!this.disableAutoDisconnectOnPageHide && phxWindow && phxWindow.addEventListener){
       phxWindow.addEventListener("pagehide", _e => {
         if(this.conn){
           this.disconnect()
