@@ -103,8 +103,8 @@ defmodule <%= inspect schema.module %>Token do
   If found, the query returns a tuple of the form `{<%= schema.singular %>, token}`.
 
   The given token is valid if it matches its hashed counterpart in the
-  database. This function also checks if the token is being used within
-  15 minutes. The context of a magic link token is always "login".
+  database. This function also checks whether the token has expired. The context
+  of a magic link token is always "login".
   """
   def verify_magic_link_token_query(token) do
     case Base.url_decode64(token, padding: false) do
