@@ -9,7 +9,7 @@ import Timer from "./timer"
 
 /**
 * @import Socket from "./socket"
-* @import { ChannelState, Params, BindingCallback, Binding } from "./types"
+* @import { ChannelState, Params, ChannelBindingCallback, ChannelOnMessage, ChannelOnErrorCallback, ChannelBinding } from "./types"
 */
 
 export default class Channel {
@@ -27,7 +27,7 @@ export default class Channel {
     this.params = closure(params || {})
     /** @type {Socket} */
     this.socket = socket
-    /** @type{Binding[]} */
+    /** @type{ChannelBinding[]} */
     this.bindings = []
     /** @type{number} */
     this.bindingRef = 0
@@ -105,7 +105,7 @@ export default class Channel {
 
   /**
    * Hook into channel close
-   * @param {BindingCallback} callback
+   * @param {ChannelBindingCallback} callback
    */
   onClose(callback){
     this.on(CHANNEL_EVENTS.close, callback)
@@ -113,7 +113,7 @@ export default class Channel {
 
   /**
    * Hook into channel errors
-   * @param {(reason: unknown) => void} callback
+   * @param {ChannelOnErrorCallback} callback
    * @return {number}
    */
   onError(callback){
@@ -134,7 +134,7 @@ export default class Channel {
    * // while do_other_stuff will keep firing on the "event"
    *
    * @param {string} event
-   * @param {BindingCallback} callback
+   * @param {ChannelBindingCallback} callback
    * @returns {number} ref
    */
   on(event, callback){
@@ -245,16 +245,10 @@ export default class Channel {
    * before dispatching to the channel callbacks.
    *
    * Must return the payload, modified or unmodified
-   * @param {string} event
-   * @param {unknown} payload
-   * @param {number} ref
-   * @returns {unknown}
+   * @type{ChannelOnMessage}
    */
   onMessage(event, payload, ref){ return payload }
 
-  /**
-   * @private
-   */
   isMember(topic, event, payload, joinRef){
     if(this.topic !== topic){ return false }
 
@@ -266,10 +260,7 @@ export default class Channel {
     }
   }
 
-  /**
-   * @private
-   */
-  joinRef(){ return this.joinPush.ref }
+  joinRef(){ return /** @type{string} */ (this.joinPush.ref) }
 
   /**
    * @private
@@ -282,7 +273,10 @@ export default class Channel {
   }
 
   /**
-   * @private
+   * @param {string} event
+   * @param {unknown} [payload]
+   * @param {?string} [ref]
+   * @param {?string} [joinRef]
    */
   trigger(event, payload, ref, joinRef){
     let handledPayload = this.onMessage(event, payload, ref, joinRef)
@@ -297,32 +291,17 @@ export default class Channel {
   }
 
   /**
-   * @private
-   */
+  * @param {string} ref
+  */
   replyEventName(ref){ return `chan_reply_${ref}` }
 
-  /**
-   * @private
-   */
   isClosed(){ return this.state === CHANNEL_STATES.closed }
 
-  /**
-   * @private
-   */
   isErrored(){ return this.state === CHANNEL_STATES.errored }
 
-  /**
-   * @private
-   */
   isJoined(){ return this.state === CHANNEL_STATES.joined }
 
-  /**
-   * @private
-   */
   isJoining(){ return this.state === CHANNEL_STATES.joining }
 
-  /**
-   * @private
-   */
   isLeaving(){ return this.state === CHANNEL_STATES.leaving }
 }

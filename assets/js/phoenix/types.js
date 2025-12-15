@@ -9,14 +9,16 @@
 
 /**
  * @template T
- * @typedef {T | () => T} Closure
+ * @typedef {T | (() => T)} Closure
  *
  */
 
 /**
  * CHANNEL
- * @typedef {(payload: unknown, ref: number, joinRef: number) => void} BindingCallback
- * @typedef {({event: string, ref: number, callback: BindingCallback})} Binding
+ * @typedef {(payload: unknown, ref: string | null | undefined, joinRef: string) => void} ChannelBindingCallback
+ * @typedef {(reason: unknown) => void} ChannelOnErrorCallback
+ * @typedef {({event: string, ref: number, callback: ChannelBindingCallback})} ChannelBinding
+ * @typedef {(event: string, payload?: unknown, ref?: ?string, joinRef?: ?string) => unknown} ChannelOnMessage
  */
 
 
@@ -33,12 +35,11 @@
 
 /**
  * PRESENCE
- * @typedef {{state: string, diff: string}} Events
- * @typedef {(key: string, currentPresence: PresenceState, newPresence: PresenceState) => void} OnJoin
- * @typedef {(key: string, currentPresence: PresenceState, leftPresence: PresenceState) => void} OnLeave
- * @typedef {() => void} OnSync
- * @typedef {Record<string, PresenceState>} State
- * @typedef {({joins: State, leaves: State})} Diff
+ * @typedef {{state: string, diff: string}} PresenceEvents
+ * @typedef {(key: string, currentPresence: PresenceState, newPresence: PresenceState) => void} PresenceOnJoin
+ * @typedef {(key: string, currentPresence: PresenceState, leftPresence: PresenceState) => void} PresenceOnLeave
+ * @typedef {() => void} PresenceOnSync
+ * @typedef {({joins: PresenceState, leaves: PresenceState})} PresenceDiff
  * @typedef {(
  *  {
  *    metas: {
@@ -48,6 +49,9 @@
  *    }[]
  *  }
  *)} PresenceState
+ *
+ * @typedef {Object} PresenceOptions
+ * @property {PresenceEvents} [events]
  */
 
 /**
@@ -60,10 +64,12 @@
  * topic: string;
  * payload: T;
  * })} Message
- *
+ */
+/**
  * @template T
  * @typedef {(msg: Message<Record<string, any>>, callback: (result: ArrayBuffer | string) => T) => T} Encode
- *
+ */
+/**
  * @template T
  * @typedef {(rawPayload: ArrayBuffer | string, callback: (msg: Message<unknown>) => T) => T} Decode
  */
@@ -71,44 +77,44 @@
 /**
  * SOCKET
  * @typedef {(typeof WebSocket | typeof LongPoll)} SocketTransport
- * @typedef {() => void} OnOpenCallback
- * @typedef {(event: CloseEvent) => void} OnCloseCallback
- * @typedef {(error, transportBefore, establishedBefore) => void} OnErrorCallback
- * @typedef {(rawMessage: MessageEvent<any>) => void} OnMessageCallback
+ * @typedef {() => void} SocketOnOpen
+ * @typedef {(event: CloseEvent) => void} SocketOnClose
+ * @typedef {(error: Event, transportBefore: SocketTransport, establishedBefore: number) => void} SocketOnError
+ * @typedef {(rawMessage: Message<unknown>) => void} SocketOnMessage
  * @typedef {({
- *   open: [string, OnOpenCallback][]
- *   close: [string, OnCloseCallback][]
- *   error: [string, OnErrorCallback][]
- *   message: [string, OnMessageCallback][]
- * })} StateChangeCallbacks
+ *   open: [string, SocketOnOpen][]
+ *   close: [string, SocketOnClose][]
+ *   error: [string, SocketOnError][]
+ *   message: [string, SocketOnMessage][]
+ * })} SocketStateChangeCallbacks
  *
  *
  *
  * @typedef {Object} SocketOptions
- * @property {SocketTransport} [opts.transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
+ * @property {SocketTransport} [transport] - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
  *
- * @property {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
+ * @property {number} [longPollFallbackMs] - The millisecond time to attempt the primary transport
  * before falling back to the LongPoll transport. Disabled by default.
  *
- * @property {number} [opts.longpollerTimeout] - The millisecond time before LongPoll transport times out. Default 20000.
+ * @property {number} [longpollerTimeout] - The millisecond time before LongPoll transport times out. Default 20000.
  *
- * @property {boolean} [opts.debug] - When true, enables debug logging. Default false.
+ * @property {boolean} [debug] - When true, enables debug logging. Default false.
  *
- * @property {Encode<void>} [opts.encode] - The function to encode outgoing messages.
+ * @property {Encode<void>} [encode] - The function to encode outgoing messages.
  * Defaults to JSON encoder.
  *
- * @property {Decode<void>} [opts.decode] - The function to decode incoming messages.
+ * @property {Decode<void>} [decode] - The function to decode incoming messages.
  * Defaults to JSON:
  *
  * ```javascript
  * (payload, callback) => callback(JSON.parse(payload))
  * ```
  *
- * @property {number} [opts.timeout] - The default timeout in milliseconds to trigger push timeouts.
+ * @property {number} [timeout] - The default timeout in milliseconds to trigger push timeouts.
  * Defaults `DEFAULT_TIMEOUT`
- * @property {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
+ * @property {number} [heartbeatIntervalMs] - The millisec interval to send a heartbeat message
  *
- * @property {(tries: number) => number} [opts.reconnectAfterMs] - The optional function that returns the
+ * @property {(tries: number) => number} [reconnectAfterMs] - The optional function that returns the
  * socket reconnect interval, in milliseconds.
  *
  * Defaults to stepped backoff of:
@@ -119,7 +125,7 @@
  * }
  * ````
  *
- * @property {(tries: number) => number} [opts.rejoinAfterMs] - The optional function that returns the millisec
+ * @property {(tries: number) => number} [rejoinAfterMs] - The optional function that returns the millisec
  * rejoin interval for individual channels.
  *
  * ```javascript
@@ -128,7 +134,7 @@
  * }
  * ````
  *
- * @property {(kind: string, msg: string, data: any) => void} [opts.logger] - The optional function for specialized logging, ie:
+ * @property {(kind: string, msg: string, data: any) => void} [logger] - The optional function for specialized logging, ie:
  *
  * ```javascript
  * function(kind, msg, data) {
@@ -136,20 +142,20 @@
  * }
  * ```
  *
- * @property {Closure<Params>} [opts.params] - The optional params to pass when connecting
+ * @property {Closure<Params>} [params] - The optional params to pass when connecting
  *
- * @property {string} [opts.authToken] - the optional authentication token to be exposed on the server
+ * @property {string} [authToken] - the optional authentication token to be exposed on the server
  * under the `:auth_token` connect_info key.
  *
- * @property {BinaryType} [opts.binaryType] - The binary type to use for binary WebSocket frames.
+ * @property {BinaryType} [binaryType] - The binary type to use for binary WebSocket frames.
  *
  * Defaults to "arraybuffer"
  *
- * @property {Vsn} [opts.vsn] - The serializer's protocol version to send on connect.
+ * @property {Vsn} [vsn] - The serializer's protocol version to send on connect.
  *
  * Defaults to DEFAULT_VSN.
  *
- * @property {Storage} [opts.sessionStorage] - An optional Storage compatible object
+ * @property {Storage} [sessionStorage] - An optional Storage compatible object
  * Phoenix uses sessionStorage for longpoll fallback history. Overriding the store is
  * useful when Phoenix won't have access to `sessionStorage`. For example, This could
  * happen if a site loads a cross-domain channel in an iframe. Example usage:

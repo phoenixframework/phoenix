@@ -6,15 +6,23 @@ export type Closure<T> = T | (() => T);
 /**
  * CHANNEL
  */
-export type BindingCallback = (payload: unknown, ref: number, joinRef: number) => void;
+export type ChannelBindingCallback = (payload: unknown, ref: string | null | undefined, joinRef: string) => void;
 /**
  * CHANNEL
  */
-export type Binding = ({
+export type ChannelOnErrorCallback = (reason: unknown) => void;
+/**
+ * CHANNEL
+ */
+export type ChannelBinding = ({
     event: string;
     ref: number;
-    callback: BindingCallback;
+    callback: ChannelBindingCallback;
 });
+/**
+ * CHANNEL
+ */
+export type ChannelOnMessage = (event: string, payload?: unknown, ref?: string | null, joinRef?: string | null) => unknown;
 /**
  * CONSTANTS
  */
@@ -42,32 +50,28 @@ export type XhrState = (typeof XHR_STATES)[keyof typeof XHR_STATES];
 /**
  * PRESENCE
  */
-export type Events = {
+export type PresenceEvents = {
     state: string;
     diff: string;
 };
 /**
  * PRESENCE
  */
-export type OnJoin = (key: string, currentPresence: PresenceState, newPresence: PresenceState) => void;
+export type PresenceOnJoin = (key: string, currentPresence: PresenceState, newPresence: PresenceState) => void;
 /**
  * PRESENCE
  */
-export type OnLeave = (key: string, currentPresence: PresenceState, leftPresence: PresenceState) => void;
+export type PresenceOnLeave = (key: string, currentPresence: PresenceState, leftPresence: PresenceState) => void;
 /**
  * PRESENCE
  */
-export type OnSync = () => void;
+export type PresenceOnSync = () => void;
 /**
  * PRESENCE
  */
-export type State = Record<string, PresenceState>;
-/**
- * PRESENCE
- */
-export type Diff = ({
-    joins: State;
-    leaves: State;
+export type PresenceDiff = ({
+    joins: PresenceState;
+    leaves: PresenceState;
 });
 /**
  * PRESENCE
@@ -80,6 +84,12 @@ export type PresenceState = ({
     }[];
 });
 /**
+ * PRESENCE
+ */
+export type PresenceOptions = {
+    events?: PresenceEvents | undefined;
+};
+/**
  * SERIALIZER
  */
 export type Message<T> = ({
@@ -89,13 +99,7 @@ export type Message<T> = ({
     topic: string;
     payload: T;
 });
-/**
- * SERIALIZER
- */
 export type Encode<T> = (msg: Message<Record<string, any>>, callback: (result: ArrayBuffer | string) => T) => T;
-/**
- * SERIALIZER
- */
 export type Decode<T> = (rawPayload: ArrayBuffer | string, callback: (msg: Message<unknown>) => T) => T;
 /**
  * SOCKET
@@ -104,27 +108,27 @@ export type SocketTransport = (typeof WebSocket | typeof LongPoll);
 /**
  * SOCKET
  */
-export type OnOpenCallback = () => void;
+export type SocketOnOpen = () => void;
 /**
  * SOCKET
  */
-export type OnCloseCallback = (event: CloseEvent) => void;
+export type SocketOnClose = (event: CloseEvent) => void;
 /**
  * SOCKET
  */
-export type OnErrorCallback = (error: any, transportBefore: any, establishedBefore: any) => void;
+export type SocketOnError = (error: Event, transportBefore: SocketTransport, establishedBefore: number) => void;
 /**
  * SOCKET
  */
-export type OnMessageCallback = (rawMessage: MessageEvent<any>) => void;
+export type SocketOnMessage = (rawMessage: Message<unknown>) => void;
 /**
  * SOCKET
  */
-export type StateChangeCallbacks = ({
-    open: [string, OnOpenCallback][];
-    close: [string, OnCloseCallback][];
-    error: [string, OnErrorCallback][];
-    message: [string, OnMessageCallback][];
+export type SocketStateChangeCallbacks = ({
+    open: [string, SocketOnOpen][];
+    close: [string, SocketOnClose][];
+    error: [string, SocketOnError][];
+    message: [string, SocketOnMessage][];
 });
 /**
  * SOCKET

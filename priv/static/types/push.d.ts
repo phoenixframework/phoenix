@@ -29,8 +29,8 @@ export default class Push {
     }[];
     /** @type{boolean} */
     sent: boolean;
-    /** @type{number | undefined} */
-    ref: number | undefined;
+    /** @type{string | null | undefined} */
+    ref: string | null | undefined;
     /**
      *
      * @param {number} timeout
@@ -46,10 +46,7 @@ export default class Push {
      * @param {(response: any) => void} callback
      */
     receive(status: string, callback: (response: any) => void): this;
-    /**
-     * @private
-     */
-    private reset;
+    reset(): void;
     refEvent: string | null | undefined;
     /**
      * @private
@@ -59,22 +56,13 @@ export default class Push {
      * @private
      */
     private cancelRefEvent;
-    /**
-     * @private
-     */
-    private cancelTimeout;
-    /**
-     * @private
-     */
-    private startTimeout;
+    cancelTimeout(): void;
+    startTimeout(): void;
     /**
      * @private
      */
     private hasReceived;
-    /**
-     * @private
-     */
-    private trigger;
+    trigger(status: any, response: any): void;
 }
 import type Channel from "./channel";
 import type { ChannelEvent } from "./types";

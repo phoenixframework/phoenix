@@ -1,6 +1,6 @@
 /**
 * @import Socket from "./socket"
-* @import { ChannelState, Params, BindingCallback, Binding } from "./types"
+* @import { ChannelState, Params, ChannelBindingCallback, ChannelOnMessage, ChannelOnErrorCallback, ChannelBinding } from "./types"
 */
 export default class Channel {
     /**
@@ -17,8 +17,8 @@ export default class Channel {
     params: () => Params;
     /** @type {Socket} */
     socket: Socket;
-    /** @type{Binding[]} */
-    bindings: Binding[];
+    /** @type{ChannelBinding[]} */
+    bindings: ChannelBinding[];
     /** @type{number} */
     bindingRef: number;
     /** @type{number} */
@@ -41,15 +41,15 @@ export default class Channel {
     join(timeout?: number): Push;
     /**
      * Hook into channel close
-     * @param {BindingCallback} callback
+     * @param {ChannelBindingCallback} callback
      */
-    onClose(callback: BindingCallback): void;
+    onClose(callback: ChannelBindingCallback): void;
     /**
      * Hook into channel errors
-     * @param {(reason: unknown) => void} callback
+     * @param {ChannelOnErrorCallback} callback
      * @return {number}
      */
-    onError(callback: (reason: unknown) => void): number;
+    onError(callback: ChannelOnErrorCallback): number;
     /**
      * Subscribes on channel events
      *
@@ -64,10 +64,10 @@ export default class Channel {
      * // while do_other_stuff will keep firing on the "event"
      *
      * @param {string} event
-     * @param {BindingCallback} callback
+     * @param {ChannelBindingCallback} callback
      * @returns {number} ref
      */
-    on(event: string, callback: BindingCallback): number;
+    on(event: string, callback: ChannelBindingCallback): number;
     /**
      * Unsubscribes off of channel events
      *
@@ -125,65 +125,36 @@ export default class Channel {
      * @returns {Push}
      */
     leave(timeout?: number): Push;
-    /**
-     * Overridable message hook
-     *
-     * Receives all events for specialized message handling
-     * before dispatching to the channel callbacks.
-     *
-     * Must return the payload, modified or unmodified
-     * @param {string} event
-     * @param {unknown} payload
-     * @param {number} ref
-     * @returns {unknown}
-     */
-    onMessage(event: string, payload: unknown, ref: number): unknown;
-    /**
-     * @private
-     */
-    private isMember;
-    /**
-     * @private
-     */
-    private joinRef;
+    onMessage(event: string, payload?: unknown, ref?: string | null, joinRef?: string | null): unknown;
+    isMember(topic: any, event: any, payload: any, joinRef: any): boolean;
+    joinRef(): string;
     /**
      * @private
      */
     private rejoin;
     /**
-     * @private
+     * @param {string} event
+     * @param {unknown} [payload]
+     * @param {?string} [ref]
+     * @param {?string} [joinRef]
      */
-    private trigger;
+    trigger(event: string, payload?: unknown, ref?: string | null, joinRef?: string | null): void;
     /**
-     * @private
-     */
-    private replyEventName;
-    /**
-     * @private
-     */
-    private isClosed;
-    /**
-     * @private
-     */
-    private isErrored;
-    /**
-     * @private
-     */
-    private isJoined;
-    /**
-     * @private
-     */
-    private isJoining;
-    /**
-     * @private
-     */
-    private isLeaving;
+    * @param {string} ref
+    */
+    replyEventName(ref: string): string;
+    isClosed(): boolean;
+    isErrored(): boolean;
+    isJoined(): boolean;
+    isJoining(): boolean;
+    isLeaving(): boolean;
 }
 import type { ChannelState } from "./types";
 import type { Params } from "./types";
 import type Socket from "./socket";
-import type { Binding } from "./types";
+import type { ChannelBinding } from "./types";
 import Push from "./push";
 import Timer from "./timer";
-import type { BindingCallback } from "./types";
+import type { ChannelBindingCallback } from "./types";
+import type { ChannelOnErrorCallback } from "./types";
 //# sourceMappingURL=channel.d.ts.map

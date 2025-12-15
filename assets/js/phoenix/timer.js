@@ -23,8 +23,8 @@ export default class Timer {
     this.callback = callback
     /** @type {(tries: number) => number} */
     this.timerCalc = timerCalc
-    /** @type {ReturnType<typeof setTimeout> | null} */
-    this.timer = null
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
+    this.timer = undefined
     /** @type {number} */
     this.tries = 0
   }

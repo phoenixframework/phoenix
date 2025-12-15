@@ -23,8 +23,8 @@ export default class Timer {
     callback: () => void;
     /** @type {(tries: number) => number} */
     timerCalc: (tries: number) => number;
-    /** @type {ReturnType<typeof setTimeout> | null} */
-    timer: ReturnType<typeof setTimeout> | null;
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
+    timer: ReturnType<typeof setTimeout> | undefined;
     /** @type {number} */
     tries: number;
     reset(): void;

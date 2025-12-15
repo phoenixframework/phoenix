@@ -26,7 +26,7 @@ export default class Push {
     this.recHooks = []
     /** @type{boolean} */
     this.sent = false
-    /** @type{number | undefined} */
+    /** @type{string | null | undefined} */
     this.ref = undefined
   }
 
@@ -70,9 +70,6 @@ export default class Push {
     return this
   }
 
-  /**
-   * @private
-   */
   reset(){
     this.cancelRefEvent()
     this.ref = null
@@ -97,17 +94,11 @@ export default class Push {
     this.channel.off(this.refEvent)
   }
 
-  /**
-   * @private
-   */
   cancelTimeout(){
     clearTimeout(this.timeoutTimer)
     this.timeoutTimer = null
   }
 
-  /**
-   * @private
-   */
   startTimeout(){
     if(this.timeoutTimer){ this.cancelTimeout() }
     this.ref = this.channel.socket.makeRef()
@@ -132,9 +123,6 @@ export default class Push {
     return this.receivedResp && this.receivedResp.status === status
   }
 
-  /**
-   * @private
-   */
   trigger(status, response){
     this.channel.trigger(this.refEvent, {status, response})
   }

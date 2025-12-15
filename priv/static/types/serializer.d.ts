@@ -8,21 +8,23 @@ declare namespace _default {
     }
     /**
     * @template T
-    * @param {ArrayBuffer | string} msg
-    * @param {(msg: Message<unknown>) => T} callback
-    * @returns {T}
-    */
-    function encode<T>(msg: ArrayBuffer | string, callback: (msg: Message<unknown>) => T): T;
-    /**
-    * @template T
-    * @param {Message<Record<string, any>>} rawPayload
+    * @param {Message<Record<string, any>>} msg
     * @param {(msg: ArrayBuffer | string) => T} callback
     * @returns {T}
     */
-    function decode<T>(rawPayload: Message<Record<string, any>>, callback: (msg: ArrayBuffer | string) => T): T;
+    function encode<T>(msg: Message<Record<string, any>>, callback: (msg: ArrayBuffer | string) => T): T;
+    /**
+    * @template T
+    * @param {ArrayBuffer | string} rawPayload
+    * @param {(msg: Message<unknown>) => T} callback
+    * @returns {T}
+    */
+    function decode<T>(rawPayload: ArrayBuffer | string, callback: (msg: Message<unknown>) => T): T;
     /** @private */
     function binaryEncode(message: any): any;
-    /** @private */
+    /**
+    * @private
+    */
     function binaryDecode(buffer: any): {
         join_ref: any;
         ref: null;

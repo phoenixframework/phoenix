@@ -1,26 +1,25 @@
 /**
  * @import Channel from "./channel"
- * @import { Events, OnJoin, OnLeave, OnSync, State, Diff, PresenceState } from "./types"
+ * @import { PresenceEvents, PresenceOnJoin, PresenceOnLeave, PresenceOnSync, PresenceState, PresenceDiff, PresenceOptions } from "./types"
  */
 export default class Presence {
 
   /**
    * Initializes the Presence
    * @param {Channel} channel - The Channel
-   * @param {{events?: Events}} [opts] - The options,
-   *        for example `{events: {state: "state", diff: "diff"}}`
+   * @param {PresenceOptions} [opts] - The options, for example `{events: {state: "state", diff: "diff"}}`
    */
   constructor(channel, opts = {}){
-    let events = opts.events || /** @type {Events} */ ({state: "presence_state", diff: "presence_diff"})
-    /** @type{State} */
+    let events = opts.events || /** @type {PresenceEvents} */ ({state: "presence_state", diff: "presence_diff"})
+    /** @type{Record<string, PresenceState>} */
     this.state = {}
-    /** @type{Diff[]} */
+    /** @type{PresenceDiff[]} */
     this.pendingDiffs = []
     /** @type{Channel} */
     this.channel = channel
     /** @type{?number} */
     this.joinRef = null
-    /** @type{({ onJoin: OnJoin; onLeave: OnLeave; onSync: OnSync })} */
+    /** @type{({ onJoin: PresenceOnJoin; onLeave: PresenceOnLeave; onSync: PresenceOnSync })} */
     this.caller = {
       onJoin: function (){ },
       onLeave: function (){ },
@@ -53,17 +52,17 @@ export default class Presence {
   }
 
   /**
-   * @param {OnJoin} callback
+   * @param {PresenceOnJoin} callback
    */
   onJoin(callback){ this.caller.onJoin = callback }
 
   /**
-   * @param {OnLeave} callback
+   * @param {PresenceOnLeave} callback
    */
   onLeave(callback){ this.caller.onLeave = callback }
 
   /**
-   * @param {OnSync} callback
+   * @param {PresenceOnSync} callback
    */
   onSync(callback){ this.caller.onSync = callback }
 
@@ -89,12 +88,12 @@ export default class Presence {
    * be provided to react to changes in the client's local presences across
    * disconnects and reconnects with the server.
    *
-   * @param {State} currentState
-   * @param {State} newState
-   * @param {OnJoin} onJoin
-   * @param {OnLeave} onLeave
+   * @param {Record<string, PresenceState>} currentState
+   * @param {Record<string, PresenceState>} newState
+   * @param {PresenceOnJoin} onJoin
+   * @param {PresenceOnLeave} onLeave
    *
-   * @returns {State}
+   * @returns {Record<string, PresenceState>}
    */
   static syncState(currentState, newState, onJoin, onLeave){
     let state = this.clone(currentState)
@@ -135,12 +134,12 @@ export default class Presence {
    * accepts optional `onJoin` and `onLeave` callbacks to react to a user
    * joining or leaving from a device.
    *
-   * @param {State} state
-   * @param {Diff} diff
-   * @param {OnJoin} onJoin
-   * @param {OnLeave} onLeave
+   * @param {Record<string, PresenceState>} state
+   * @param {PresenceDiff} diff
+   * @param {PresenceOnJoin} onJoin
+   * @param {PresenceOnLeave} onLeave
    *
-   * @returns {State}
+   * @returns {Record<string, PresenceState>}
    */
   static syncDiff(state, diff, onJoin, onLeave){
     let {joins, leaves} = this.clone(diff)
@@ -176,8 +175,8 @@ export default class Presence {
    * Returns the array of presences, with selected metadata.
    *
    * @template [T=PresenceState]
-   * @param {State} presences
-   * @param {((key: string, obj: Presence) => T)} [chooser]
+   * @param {Record<string, PresenceState>} presences
+   * @param {((key: string, obj: PresenceState) => T)} [chooser]
    *
    * @returns {T[]}
    */
@@ -193,7 +192,7 @@ export default class Presence {
 
   /**
   * @template T
-  * @param {State} obj
+  * @param {Record<string, PresenceState>} obj
   * @param {(key: string, obj: PresenceState) => T} func
   */
   static map(obj, func){

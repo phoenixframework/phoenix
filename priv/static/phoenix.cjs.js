@@ -149,9 +149,6 @@ var Push = class {
     this.recHooks.push({ status, callback });
     return this;
   }
-  /**
-   * @private
-   */
   reset() {
     this.cancelRefEvent();
     this.ref = null;
@@ -174,16 +171,10 @@ var Push = class {
     }
     this.channel.off(this.refEvent);
   }
-  /**
-   * @private
-   */
   cancelTimeout() {
     clearTimeout(this.timeoutTimer);
     this.timeoutTimer = null;
   }
-  /**
-   * @private
-   */
   startTimeout() {
     if (this.timeoutTimer) {
       this.cancelTimeout();
@@ -206,9 +197,6 @@ var Push = class {
   hasReceived(status) {
     return this.receivedResp && this.receivedResp.status === status;
   }
-  /**
-   * @private
-   */
   trigger(status, response) {
     this.channel.trigger(this.refEvent, { status, response });
   }
@@ -223,7 +211,7 @@ var Timer = class {
   constructor(callback, timerCalc) {
     this.callback = callback;
     this.timerCalc = timerCalc;
-    this.timer = null;
+    this.timer = void 0;
     this.tries = 0;
   }
   reset() {
@@ -334,14 +322,14 @@ var Channel = class {
   }
   /**
    * Hook into channel close
-   * @param {BindingCallback} callback
+   * @param {ChannelBindingCallback} callback
    */
   onClose(callback) {
     this.on(CHANNEL_EVENTS.close, callback);
   }
   /**
    * Hook into channel errors
-   * @param {(reason: unknown) => void} callback
+   * @param {ChannelOnErrorCallback} callback
    * @return {number}
    */
   onError(callback) {
@@ -361,7 +349,7 @@ var Channel = class {
    * // while do_other_stuff will keep firing on the "event"
    *
    * @param {string} event
-   * @param {BindingCallback} callback
+   * @param {ChannelBindingCallback} callback
    * @returns {number} ref
    */
   on(event, callback) {
@@ -469,17 +457,11 @@ var Channel = class {
    * before dispatching to the channel callbacks.
    *
    * Must return the payload, modified or unmodified
-   * @param {string} event
-   * @param {unknown} payload
-   * @param {number} ref
-   * @returns {unknown}
+   * @type{ChannelOnMessage}
    */
   onMessage(event, payload, ref) {
     return payload;
   }
-  /**
-   * @private
-   */
   isMember(topic, event, payload, joinRef) {
     if (this.topic !== topic) {
       return false;
@@ -491,11 +473,11 @@ var Channel = class {
       return true;
     }
   }
-  /**
-   * @private
-   */
   joinRef() {
-    return this.joinPush.ref;
+    return (
+      /** @type{string} */
+      this.joinPush.ref
+    );
   }
   /**
    * @private
@@ -509,7 +491,10 @@ var Channel = class {
     this.joinPush.resend(timeout);
   }
   /**
-   * @private
+   * @param {string} event
+   * @param {unknown} [payload]
+   * @param {?string} [ref]
+   * @param {?string} [joinRef]
    */
   trigger(event, payload, ref, joinRef) {
     let handledPayload = this.onMessage(event, payload, ref, joinRef);
@@ -523,38 +508,23 @@ var Channel = class {
     }
   }
   /**
-   * @private
-   */
+  * @param {string} ref
+  */
   replyEventName(ref) {
     return `chan_reply_${ref}`;
   }
-  /**
-   * @private
-   */
   isClosed() {
     return this.state === CHANNEL_STATES.closed;
   }
-  /**
-   * @private
-   */
   isErrored() {
     return this.state === CHANNEL_STATES.errored;
   }
-  /**
-   * @private
-   */
   isJoined() {
     return this.state === CHANNEL_STATES.joined;
   }
-  /**
-   * @private
-   */
   isJoining() {
     return this.state === CHANNEL_STATES.joining;
   }
-  /**
-   * @private
-   */
   isLeaving() {
     return this.state === CHANNEL_STATES.leaving;
   }
@@ -832,11 +802,10 @@ var Presence = class _Presence {
   /**
    * Initializes the Presence
    * @param {Channel} channel - The Channel
-   * @param {{events?: Events}} [opts] - The options,
-   *        for example `{events: {state: "state", diff: "diff"}}`
+   * @param {PresenceOptions} [opts] - The options, for example `{events: {state: "state", diff: "diff"}}`
    */
   constructor(channel, opts = {}) {
-    let events = opts.events || /** @type {Events} */
+    let events = opts.events || /** @type {PresenceEvents} */
     { state: "presence_state", diff: "presence_diff" };
     this.state = {};
     this.pendingDiffs = [];
@@ -871,19 +840,19 @@ var Presence = class _Presence {
     });
   }
   /**
-   * @param {OnJoin} callback
+   * @param {PresenceOnJoin} callback
    */
   onJoin(callback) {
     this.caller.onJoin = callback;
   }
   /**
-   * @param {OnLeave} callback
+   * @param {PresenceOnLeave} callback
    */
   onLeave(callback) {
     this.caller.onLeave = callback;
   }
   /**
-   * @param {OnSync} callback
+   * @param {PresenceOnSync} callback
    */
   onSync(callback) {
     this.caller.onSync = callback;
@@ -909,12 +878,12 @@ var Presence = class _Presence {
    * be provided to react to changes in the client's local presences across
    * disconnects and reconnects with the server.
    *
-   * @param {State} currentState
-   * @param {State} newState
-   * @param {OnJoin} onJoin
-   * @param {OnLeave} onLeave
+   * @param {Record<string, PresenceState>} currentState
+   * @param {Record<string, PresenceState>} newState
+   * @param {PresenceOnJoin} onJoin
+   * @param {PresenceOnLeave} onLeave
    *
-   * @returns {State}
+   * @returns {Record<string, PresenceState>}
    */
   static syncState(currentState, newState, onJoin, onLeave) {
     let state = this.clone(currentState);
@@ -953,12 +922,12 @@ var Presence = class _Presence {
    * accepts optional `onJoin` and `onLeave` callbacks to react to a user
    * joining or leaving from a device.
    *
-   * @param {State} state
-   * @param {Diff} diff
-   * @param {OnJoin} onJoin
-   * @param {OnLeave} onLeave
+   * @param {Record<string, PresenceState>} state
+   * @param {PresenceDiff} diff
+   * @param {PresenceOnJoin} onJoin
+   * @param {PresenceOnLeave} onLeave
    *
-   * @returns {State}
+   * @returns {Record<string, PresenceState>}
    */
   static syncDiff(state, diff, onJoin, onLeave) {
     let { joins, leaves } = this.clone(diff);
@@ -1000,8 +969,8 @@ var Presence = class _Presence {
    * Returns the array of presences, with selected metadata.
    *
    * @template [T=PresenceState]
-   * @param {State} presences
-   * @param {((key: string, obj: Presence) => T)} [chooser]
+   * @param {Record<string, PresenceState>} presences
+   * @param {((key: string, obj: PresenceState) => T)} [chooser]
    *
    * @returns {T[]}
    */
@@ -1018,7 +987,7 @@ var Presence = class _Presence {
   // private
   /**
   * @template T
-  * @param {State} obj
+  * @param {Record<string, PresenceState>} obj
   * @param {(key: string, obj: PresenceState) => T} func
   */
   static map(obj, func) {
@@ -1041,8 +1010,8 @@ var serializer_default = {
   KINDS: { push: 0, reply: 1, broadcast: 2 },
   /**
   * @template T
-  * @param {ArrayBuffer | string} msg
-  * @param {(msg: Message<unknown>) => T} callback
+  * @param {Message<Record<string, any>>} msg
+  * @param {(msg: ArrayBuffer | string) => T} callback
   * @returns {T}
   */
   encode(msg, callback) {
@@ -1055,8 +1024,8 @@ var serializer_default = {
   },
   /**
   * @template T
-  * @param {Message<Record<string, any>>} rawPayload
-  * @param {(msg: ArrayBuffer | string) => T} callback
+  * @param {ArrayBuffer | string} rawPayload
+  * @param {(msg: Message<unknown>) => T} callback
   * @returns {T}
   */
   decode(rawPayload, callback) {
@@ -1088,7 +1057,9 @@ var serializer_default = {
     combined.set(new Uint8Array(payload), header.byteLength);
     return combined.buffer;
   },
-  /** @private */
+  /**
+  * @private
+  */
   binaryDecode(buffer) {
     let view = new DataView(buffer);
     let kind = view.getUint8(0);
@@ -1309,7 +1280,7 @@ var Socket = class {
    *
    * See https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes for valid status codes.
    *
-   * @param {() => void} callback - Optional callback which is called after socket is disconnected.
+   * @param {() => void} [callback] - Optional callback which is called after socket is disconnected.
    * @param {number} [code] - A status code for disconnection (Optional).
    * @param {string} [reason] - A textual description of the reason to disconnect. (Optional)
    */
@@ -1364,7 +1335,7 @@ var Socket = class {
    *
    * @example socket.onOpen(function(){ console.info("the socket was opened") })
    *
-   * @param {OnOpenCallback} callback
+   * @param {SocketOnOpen} callback
    */
   onOpen(callback) {
     let ref = this.makeRef();
@@ -1373,7 +1344,7 @@ var Socket = class {
   }
   /**
    * Registers callbacks for connection close events
-   * @param {OnCloseCallback} callback
+   * @param {SocketOnClose} callback
    * @returns {string}
    */
   onClose(callback) {
@@ -1386,7 +1357,7 @@ var Socket = class {
    *
    * @example socket.onError(function(error){ alert("An error occurred") })
    *
-   * @param {OnErrorCallback} callback
+   * @param {SocketOnError} callback
    * @returns {string}
    */
   onError(callback) {
@@ -1396,7 +1367,7 @@ var Socket = class {
   }
   /**
    * Registers callbacks for connection message events
-   * @param {OnMessageCallback} callback
+   * @param {SocketOnMessage} callback
    * @returns {string}
    */
   onMessage(callback) {
@@ -1659,9 +1630,8 @@ var Socket = class {
     return this.connectionState() === "open";
   }
   /**
-   * @private
    *
-   * @param {Channel}
+   * @param {Channel} channel
    */
   remove(channel) {
     this.off(channel.stateChangeRefs);
@@ -1684,7 +1654,7 @@ var Socket = class {
    * Initiates a new channel for the given topic
    *
    * @param {string} topic
-   * @param {Params | () => Params} [chanParams]- Parameters for the channel
+   * @param {Params | (() => Params)} [chanParams]- Parameters for the channel
    * @returns {Channel}
    */
   channel(topic, chanParams = {}) {
