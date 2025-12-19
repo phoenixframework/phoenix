@@ -181,7 +181,7 @@ As we've seen in [Request life-cycle](request_lifecycle.html), all controller ac
 
 ### Minimal example
 
-Let's consider this minimal setup, with two API routes (`lib/hello_web/router.ex`):
+Let's consider this minimal setup, with three API routes (`lib/hello_web/router.ex`):
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -194,8 +194,8 @@ defmodule HelloWeb.Router do
   scope "/api", HelloWeb do
     pipe_through :api
 
-    get "/:name", HelloController, :show
     get "/", HelloController, :show
+    get "/:name", HelloController, :show
     post "/", HelloController, :show
   end
 ```
@@ -248,6 +248,7 @@ Following our last example, lets add another POST request handler which accepts 
   scope "/api", HelloWeb do
     pipe_through :api
 
+    get "/", HelloController, :show
     get "/:name", HelloController, :show
     post "/", HelloController, :show
     post "/:name", HelloController, :show # New route
@@ -431,5 +432,13 @@ The output should contain the following:
 ```
 
 The `--no-html` is the obvious one we want to use when creating any Phoenix application for an API in order to leave out all the unnecessary HTML scaffolding. You may also pass `--no-assets`, if you don't want any of the asset management bit, `--no-gettext` if you don't support internationalization, and so on.
+
+So, in order to generate a simple API called **Hello**, without a frontend, mailing service, database connection or dashboard, you can provide the following flags:
+
+```
+$ mix phx.new hello --no-assets --no-dashboard --no-ecto --no-gettext --no-html --no-mailer
+```
+
+This still includes the Telemetry, PubSub and DNSCluster modules by default, which you can remove manually if necessary.
 
 Also bear in mind that nothing stops you to have a backend that supports simultaneously the REST API and a Web App (HTML, assets, internationalization and sockets).
