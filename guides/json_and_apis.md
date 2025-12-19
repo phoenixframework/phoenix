@@ -433,12 +433,12 @@ The output should contain the following:
 
 The `--no-html` is the obvious one we want to use when creating any Phoenix application for an API in order to leave out all the unnecessary HTML scaffolding. You may also pass `--no-assets`, if you don't want any of the asset management bit, `--no-gettext` if you don't support internationalization, and so on.
 
-So, in order to generate a simple API called **Hello**, without a frontend, mailing service, database connection or dashboard, you can provide the following flags:
+So, in order to generate a simple API called **Hello**, without any frontend, database connection, internationalization or mailing service, you can provide the following flags:
 
 ```
 $ mix phx.new hello --no-assets --no-dashboard --no-ecto --no-gettext --no-html --no-mailer
 ```
 
-This still includes the Telemetry, PubSub and DNSCluster modules by default, which you can remove manually if necessary.
+This still includes the Telemetry, PubSub and DNS Cluster modules by default, which you can remove manually if necessary.
 
 Also bear in mind that nothing stops you to have a backend that supports simultaneously the REST API and a Web App (HTML, assets, internationalization and sockets).
