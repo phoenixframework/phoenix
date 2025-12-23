@@ -20,7 +20,7 @@ When we use `mix phx.new` to generate a new Phoenix application, it builds a top
 
 We will go over those directories one by one:
 
-  * `_build` - a directory created by the `mix` command line tool that ships as part of Elixir that holds all compilation artifacts. As we have seen in "[Up and Running](up_and_running.html)", `mix` is the main interface to your application. We use Mix to compile our code, create databases, run our server, and more. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to rebuild your application from scratch.
+  * `_build` - a directory that holds all compilation artifacts, created by the `mix` command line tool (shipped as part of Elixir). As we have seen in "[Up and Running](up_and_running.html)", `mix` is the main interface to your application. We use Mix to compile our code, create databases, run our server, and more. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to rebuild your application from scratch.
 
   * `assets` - a directory that keeps source code for your front-end assets, typically JavaScript and CSS. These sources are automatically bundled by the `esbuild` tool. Static files like images and fonts go in `priv/static`.
 
