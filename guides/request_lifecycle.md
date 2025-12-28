@@ -157,7 +157,7 @@ Next, we need to add files to the `lib/hello_web/controllers/hello_html` directo
 
 Phoenix will see the template file and compile it into an `index(assigns)` function, similar as before. There is no runtime or performance difference between the two styles.
 
-Also note the controller name (`HelloController`) and the view name (`HelloHTML`) and their respective files, `hello_controller.ex` and `hello_html.ex` all follow the same naming convention.  and are named after each other. You could name the directory anything you want, as long as you update the `embed_templates` setting accordingly, but it's best to follow conventions.
+Also note the controller name (`HelloController`) and the view name (`HelloHTML`) and their respective files, `hello_controller.ex` and `hello_html.ex` all follow the same naming convention, and are named after each other. You could name the directory anything you want, as long as you update the `embed_templates` setting accordingly, but it's best to follow conventions.
 
 ```console
 lib/hello_web
