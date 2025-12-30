@@ -16,7 +16,7 @@ Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by def
 
 Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README](https://github.com/elixir-ecto/ecto) for general information.
 
-This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For using other databases, see the [Using other databases](#using-other-databases) section.
+This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For using other databases, see the [Swapping Databases](swapping_databases.html) how-to guide.
 
 ## Using `phx.gen.schema`
 
@@ -104,8 +104,8 @@ name           | character varying(255)         |
 email          | character varying(255)         |
 bio            | character varying(255)         |
 number_of_pets | integer                        |
-inserted_at    | timestamp(0) without time zone | not null 
-updated_at     | timestamp(0) without time zone | not null 
+inserted_at    | timestamp(0) without time zone | not null
+updated_at     | timestamp(0) without time zone | not null
 Indexes:
 "users_pkey" PRIMARY KEY, btree (id)
 ```
