@@ -60,7 +60,7 @@ jobs:
 
       - name: Push updated assets
         id: push_assets
-        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
         with:
           commit_message: Update assets
           file_pattern: priv/static
