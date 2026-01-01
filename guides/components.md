@@ -4,7 +4,7 @@
 
 > **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
 
-The Phoenix endpoint pipeline takes a request, routes it to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connections assigns, and the function's job is to return a HEEx template. We call any function that accepts an `assigns` parameter and returns a HEEx template a *function component*.
+The Phoenix endpoint pipeline takes a request, routes it to a controller, and calls a view module to render a template. The view interface from the controller is simple – the controller calls a view function with the connection's assigns, and the function's job is to return a HEEx template. We call any function that accepts an `assigns` parameter and returns a HEEx template a *function component*.
 
 > The Phoenix framework is designed for HTML applications, JSON APIs, GraphQL endpoints, etc. For this reason, all of the functionality related to HTML rendering comes as part of two separate packages:
 >
@@ -188,7 +188,7 @@ Likewise, for comprehensions may be written as:
 
 In a new Phoenix application, you will also find a `core_components.ex` module inside the `components` folder. This module is a great example of defining function components to be reused throughout our application. This guarantees that, as our application evolves, our components will look consistent.
 
-If you look inside `def html` in `HelloWeb` placed at `lib/hello_web.ex`, you will see that `CoreComponents` are automatically imported into all HTML views via `use HelloWeb, :html`. This is also the reason why `CoreComponents` itself performs `use Phoenix.Component` instead `use HelloWeb, :html` at the top: doing the latter would cause a deadlock as we would try to import `CoreComponents` into itself.
+If you look inside `def html` in `HelloWeb` placed at `lib/hello_web.ex`, you will see that `CoreComponents` are automatically imported into all HTML views via `use HelloWeb, :html`. This is also the reason why `CoreComponents` itself performs `use Phoenix.Component` instead of `use HelloWeb, :html` at the top: doing the latter would cause a deadlock as we would try to import `CoreComponents` into itself.
 
 CoreComponents also play an important role in Phoenix code generators, as the code generators assume those components are available in order to quickly scaffold your application. In case you want to learn more about all of these pieces, you may:
 
@@ -216,7 +216,7 @@ In a newly generated app, the template itself can be found at `lib/hello_web/com
 {@inner_content}
 ```
 
-That's where our templates are injected once they rendered. The root layout is reused by controllers and live views alike.
+That's where our templates are injected once they are rendered. The root layout is reused by controllers and live views alike.
 
 Any dynamic functionality of your application is then implemented as function components. For example, your application menu and sidebar is typically part of the `app` component in `lib/hello_web/components/layouts.ex`, which is invoked in every template:
 
