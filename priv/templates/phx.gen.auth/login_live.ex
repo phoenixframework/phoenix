@@ -93,6 +93,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   end
 
   @impl true
+  def mount(_params, _session, %{assigns: %{<%= scope_config.scope.assign_key %>: %{<%= schema.singular %>: <%= schema.singular %>}}} = socket)
+      when not is_nil(<%= schema.singular %>) do
+    {:ok, redirect(socket, to: <%= inspect auth_module %>.signed_in_path(socket))}
+  end
+
   def mount(_params, _session, socket) do
     email =
       Phoenix.Flash.get(socket.assigns.flash, :email) ||
