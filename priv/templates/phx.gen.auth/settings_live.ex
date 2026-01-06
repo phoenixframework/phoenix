@@ -49,6 +49,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           type="password"
           label="New password"
           autocomplete="new-password"
+          spellcheck="false"
           required
         />
         <.input
@@ -56,6 +57,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           type="password"
           label="Confirm new password"
           autocomplete="new-password"
+          spellcheck="false"
         />
         <.button variant="primary" phx-disable-with="Saving...">
           Save Password
