@@ -42,7 +42,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           name={@password_form[:email].name}
           type="hidden"
           id="hidden_<%= schema.singular %>_email"
-          autocomplete="username"
           value={@current_email}
         />
         <.input
