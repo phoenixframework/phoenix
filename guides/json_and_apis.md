@@ -177,7 +177,7 @@ If you explore the remaining controller, you will learn the `show` action is sim
 
 ## Reading request data
 
-As we've seen in [Request life-cycle](request_lifecycle.html), all controller actions take two arguments, `conn` and `params`. Phoenix automatically parses path parameters, query parameters and the request body into the `params` argument.
+As we've seen in [Request life-cycle](request_lifecycle.html), all controller actions take two arguments, `conn` and `params`. Plug automatically parses path parameters, query parameters and the request body into the `params` argument.
 
 ### Minimal example
 
@@ -198,6 +198,7 @@ defmodule HelloWeb.Router do
     get "/:name", HelloController, :show
     post "/", HelloController, :show
   end
+end
 ```
 
 A controller with a single action (`lib/hello_web/controllers/hello_controller.ex`):
@@ -238,7 +239,7 @@ In the exact same way: `Hello world!`
 
 ### Request data is merged
 
-Since all data is merged under a single map, providing more than one source of data (such as both a path parameter and a JSON body, or a query parameter and a form), will result in **fields with the same name overriding eachother.**
+Since all data is merged under a single map, providing more than one source of data (such as both a path parameter and a JSON body, or a query parameter and a form), will result in **fields with the same name overriding each other.**
 
 The priority is as follows: `Path Parameters > Body (any kind) > Query Parameters`
 
