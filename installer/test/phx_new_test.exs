@@ -555,6 +555,12 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\"]"
         refute file =~ "subdirectories:"
       end)
+
+      assert_file("phx_blog/AGENTS.md", fn file ->
+        refute file =~ "Ecto"
+        refute file =~ "changeset"
+        refute file =~ "Ecto.Schema"
+      end)
     end)
   end
 
