@@ -123,11 +123,12 @@ defmodule Phx.New.Generator do
           # rules specific to new apps
           @new_project_rules_files["project.md"],
           @new_project_rules_files["phoenix.md"],
+          project.binding[:html] && @new_project_rules_files["phoenix-ui.md"],
           project.binding[:html] && @new_project_rules_files["phoenix-html.md"],
           project.binding[:live] && @new_project_rules_files["phoenix-live.md"],
           # --no-assets is equivalent to --no-tailwind && --no-esbuild;
-          # we check for both here
-          project.binding[:javascript] && project.binding[:css] &&
+          # Only include assets.md for HTML projects (not API-only)
+          project.binding[:html] && project.binding[:javascript] && project.binding[:css] &&
             @new_project_rules_files["assets.md"],
           # generic usage rules
           "\n<!-- usage-rules-start -->",

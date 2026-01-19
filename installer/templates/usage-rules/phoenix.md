@@ -1,4 +1,3 @@
 ### Phoenix v1.8 guidelines
 
-- The `MyAppWeb.Layouts` module is aliased in the `my_app_web.ex` file, so you can use it without needing to alias it again
-- Phoenix v1.8 moved the `<.flash_group>` component to the `Layouts` module. You are **forbidden** from calling `<.flash_group>` outside of the `layouts.ex` module
+This section intentionally minimal - core Phoenix concepts are covered in the main usage-rules sections below.
