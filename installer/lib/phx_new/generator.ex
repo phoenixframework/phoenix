@@ -123,6 +123,8 @@ defmodule Phx.New.Generator do
           # rules specific to new apps
           @new_project_rules_files["project.md"],
           @new_project_rules_files["phoenix.md"],
+          project.binding[:html] && @new_project_rules_files["phoenix-html.md"],
+          project.binding[:live] && @new_project_rules_files["phoenix-live.md"],
           # --no-assets is equivalent to --no-tailwind && --no-esbuild;
           # we check for both here
           project.binding[:javascript] && project.binding[:css] &&
@@ -156,6 +158,13 @@ defmodule Phx.New.Generator do
               "<!-- phoenix:liveview-start -->\n",
               @rules_files["liveview.md"],
               "\n<!-- phoenix:liveview-end -->"
+            ],
+          # Include ecto-forms when both ecto and html are present
+          project.binding[:ecto] && project.binding[:html] &&
+            [
+              "<!-- phoenix:ecto-forms-start -->\n",
+              @rules_files["ecto-forms.md"],
+              "\n<!-- phoenix:ecto-forms-end -->"
             ],
           "<!-- usage-rules-end -->"
         ]

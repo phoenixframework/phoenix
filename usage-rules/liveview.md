@@ -186,22 +186,10 @@ You can also specify a name to nest the params:
       {:noreply, assign(socket, form: to_form(user_params, as: :user))}
     end
 
-Always give the form an explicit, unique DOM ID, like `id="todo-form"`.
+In the template, the form assign can be passed to the `<.form>` function component:
 
-#### Avoiding form errors
-
-**Always** use a form assigned via `to_form/2` in the LiveView, and the `<.input>` component in the template. In the template **always access forms this**:
-
-    <%!-- ALWAYS do this (valid) --%>
-    <.form for={@form} id="my-form">
+    <.form for={@form} id="todo-form" phx-change="validate" phx-submit="save">
       <.input field={@form[:field]} type="text" />
     </.form>
 
-And **never** do this:
-
-    <%!-- NEVER do this (invalid) --%>
-    <.form for={@data} id="my-form">
-      <.input field={@data[:field]} type="text" />
-    </.form>
-
-- **Never** use `<.form let={f} ...>` in the template, instead **always use `<.form for={@form} ...>`**, then drive all form references from the form assign as in `@form[:field]`. The UI should **always** be driven by a `to_form/1` or `to_form/2` assigned in the LiveView module
+Always give the form an explicit, unique DOM ID, like `id="todo-form"`.

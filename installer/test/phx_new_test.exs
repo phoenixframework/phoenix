@@ -518,6 +518,40 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/config/test.exs", fn file ->
         refute file =~ ~s|config :phoenix_live_view|
       end)
+
+      assert_file("phx_blog/AGENTS.md", fn file ->
+        refute file =~ "<.form"
+        refute file =~ "<.input"
+        refute file =~ "LiveView"
+      end)
+    end)
+  end
+
+  test "new with --no-live" do
+    in_tmp("new with no_live", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-live"])
+
+      assert_file("phx_blog/AGENTS.md", fn file ->
+        refute file =~ "## Phoenix LiveView guidelines"
+        refute file =~ "LiveView streams"
+        refute file =~ "push_event"
+        refute file =~ "handle_event"
+        refute file =~ "phx-hook"
+      end)
+    end)
+  end
+
+  test "new with --no-ecto --no-live" do
+    in_tmp("new with no_ecto and no_live", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-ecto", "--no-live"])
+
+      assert_file("phx_blog/AGENTS.md", fn file ->
+        refute file =~ "Ecto"
+        refute file =~ "changeset"
+        refute file =~ "## Phoenix LiveView guidelines"
+        refute file =~ "LiveView streams"
+        refute file =~ "phx-hook"
+      end)
     end)
   end
 
@@ -560,6 +594,7 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ "Ecto"
         refute file =~ "changeset"
         refute file =~ "Ecto.Schema"
+        refute file =~ "Ecto.Changeset"
       end)
     end)
   end
