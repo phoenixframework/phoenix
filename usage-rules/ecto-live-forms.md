@@ -1,8 +1,8 @@
-## Ecto Forms
+## Ecto LiveView Forms
 
-### Creating forms from changesets
+### Creating LiveView forms from changesets
 
-When using changesets, the underlying data, form params, and errors are retrieved from it. The `:as` option is automatically computed too. E.g. if you have a user schema:
+When using changesets with LiveView, the underlying data, form params, and errors are retrieved from it. The `:as` option is automatically computed too. E.g. if you have a user schema:
 
     defmodule MyApp.Users.User do
       use Ecto.Schema
@@ -19,7 +19,7 @@ Once the form is submitted, the params will be available under `%{"user" => user
 
 In the template, the form assign can be passed to the `<.form>` function component:
 
-    <.form for={@form} id="todo-form">
+    <.form for={@form} id="todo-form" phx-change="validate" phx-submit="save">
       <.input field={@form[:field]} type="text" />
     </.form>
 
@@ -27,7 +27,7 @@ Always give the form an explicit, unique DOM ID, like `id="todo-form"`.
 
 ### Avoiding form errors with changesets
 
-**Always** use a form assigned via `to_form/1` or `to_form/2`, and the `<.input>` component in the template. In the template **always access forms this way**:
+**Always** use a form assigned via `to_form/1` or `to_form/2` in the LiveView, and the `<.input>` component in the template. In the template **always access forms this way**:
 
     <%!-- ALWAYS do this (valid) --%>
     <.form for={@form} id="my-form">

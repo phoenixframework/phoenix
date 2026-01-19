@@ -159,12 +159,19 @@ defmodule Phx.New.Generator do
               @rules_files["liveview.md"],
               "\n<!-- phoenix:liveview-end -->"
             ],
-          # Include ecto-forms when both ecto and html are present
-          project.binding[:ecto] && project.binding[:html] &&
+          # Include ecto-forms when ecto and html are present, but NOT live
+          project.binding[:ecto] && project.binding[:html] && !project.binding[:live] &&
             [
               "<!-- phoenix:ecto-forms-start -->\n",
               @rules_files["ecto-forms.md"],
               "\n<!-- phoenix:ecto-forms-end -->"
+            ],
+          # Include ecto-live-forms when both ecto and live are present
+          project.binding[:ecto] && project.binding[:live] &&
+            [
+              "<!-- phoenix:ecto-live-forms-start -->\n",
+              @rules_files["ecto-live-forms.md"],
+              "\n<!-- phoenix:ecto-live-forms-end -->"
             ],
           "<!-- usage-rules-end -->"
         ]
