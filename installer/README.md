@@ -14,4 +14,4 @@ ensure any previous archive versions are removed:
 Then run:
 
     $ cd installer
-    $ MIX_ENV=prod mix do archive.build, archive.install
+    $ MIX_ENV=prod mix do archive.build + archive.install
