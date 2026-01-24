@@ -79,7 +79,7 @@ Next we need to update `show.html.heex`:
 </Layouts.app>
 ```
 
-When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before! The `show.html.heex` is now invoking two different funcion components:
+When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before! The `show.html.heex` is now invoking two different function components:
 
   * `<Layouts.app` - the syntax for invoking function componente defined in a separate module and it follows the same rules as calling any other function in Elixir
 
