@@ -207,7 +207,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
     ~H"""
     <div class="fieldset mb-2">
-      <label>
+      <label for={@id}>
         <input
           type="hidden"
           name={@name}
@@ -235,7 +235,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "select"} = assigns) do
     ~H"""
     <div class="fieldset mb-2">
-      <label>
+      <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
         <select
           id={@id}
@@ -256,7 +256,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(%{type: "textarea"} = assigns) do
     ~H"""
     <div class="fieldset mb-2">
-      <label>
+      <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
         <textarea
           id={@id}
@@ -277,7 +277,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
   def input(assigns) do
     ~H"""
     <div class="fieldset mb-2">
-      <label>
+      <label for={@id}>
         <span :if={@label} class="label mb-1">{@label}</span>
         <input
           type={@type}
