@@ -260,7 +260,7 @@ describe("Ajax.request", () => {
     expect(global.XMLHttpRequest).toHaveBeenCalled()
   })
 
-  it("should use fetch when XMLHttpRequest is not availble", () => {
+  it("should use fetch when XMLHttpRequest is not available", () => {
     global.XMLHttpRequest = undefined // Simulate it being unavailable
     Ajax.request("GET", "/test-endpoint", {}, null, 0, null, (response) => {
       expect(response).toEqual({success: true})
