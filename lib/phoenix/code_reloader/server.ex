@@ -330,8 +330,15 @@ defmodule Phoenix.CodeReloader.Server do
     # assets in priv are copied to the build directory.
     Mix.Project.build_structure(config)
 
-    # TODO: The purge option may no longer be required from Elixir v1.18
-    args = ["--purge-consolidation-path-if-stale", consolidation_path | compile_args]
+    args = [
+      # TODO: The purge option may no longer be required from Elixir v1.18
+      "--purge-consolidation-path-if-stale",
+      consolidation_path,
+      # Since Elixir v1.20, Elixir no longer automatically purges compiler
+      # modules, which is ok for most workflows, but since code reloading never
+      # shuts down the server, we enable purging to avoid too many temp modules.
+      "--purge-compiler-modules" | compile_args
+    ]
 
     {status, diagnostics} =
       with_logger_app(config, fn ->
