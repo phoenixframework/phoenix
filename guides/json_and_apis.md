@@ -175,6 +175,104 @@ This view is very simple. The `index` function receives all URLs, and converts t
 
 If you explore the remaining controller, you will learn the `show` action is similar to the `index` one. For `create`, `update`, and `delete` actions, Phoenix uses one other important feature, called "Action fallback".
 
+## Reading request data
+
+As we've seen in [Request life-cycle](request_lifecycle.html), all controller actions take two arguments, `conn` and `params`. Plug automatically parses path parameters, query parameters and the request body into the `params` argument.
+
+### Minimal example
+
+Let's consider this minimal setup, with three API routes (`lib/hello_web/router.ex`):
+
+```elixir
+defmodule HelloWeb.Router do
+  use HelloWeb, :router
+
+  pipeline :api do
+    plug :accepts, ["json"]
+  end
+
+  scope "/api", HelloWeb do
+    pipe_through :api
+
+    get "/", HelloController, :show
+    get "/:name", HelloController, :show
+    post "/", HelloController, :show
+  end
+end
+```
+
+A controller with a single action (`lib/hello_web/controllers/hello_controller.ex`):
+
+```elixir
+defmodule HelloWeb.HelloController do
+  use HelloWeb, :controller
+
+  def show(conn, params) do
+    render(conn, :greet, params)
+  end
+end
+```
+
+and a JSON view (`lib/hello_web/controllers/hello_json.ex`):
+
+```elixir
+defmodule HelloWeb.HelloJSON do
+  def greet(%{"name" => name}) do
+    %{greeting: "Hello #{name}!"}
+  end
+end
+```
+
+This simple setup can process all of the following requests:
+
+```console
+$ curl http://localhost:4000/api/world
+
+$ curl http://localhost:4000/api?name=world
+
+$ curl -iX POST http://localhost:4000/api \
+   -H 'Content-Type: application/json' \
+   -d '{"name": "world"}'
+```
+
+In the exact same way: `Hello world!`
+
+### Request data is merged
+
+Since all data is merged under a single map, providing more than one source of data (such as both a path parameter and a JSON body, or a query parameter and a form), will result in **fields with the same name overriding each other.**
+
+The priority is as follows: `Path Parameters > Body (any kind) > Query Parameters`
+
+Following our last example, lets add another POST request handler which accepts a path parameter:
+
+```elixir
+  scope "/api", HelloWeb do
+    pipe_through :api
+
+    get "/", HelloController, :show
+    get "/:name", HelloController, :show
+    post "/", HelloController, :show
+    post "/:name", HelloController, :show # New route
+    #      ^^^^^ New parameter
+  end
+```
+
+Now consider the following requests:
+
+```console
+$ curl -iX POST http://localhost:4000/api/name1?name=name3 \
+   -H 'Content-Type: application/json' \
+   -d '{"name": "name2"}'
+
+$ curl -iX POST http://localhost:4000/api?name=name3 \
+   -H 'Content-Type: application/json' \
+   -d '{"name": "name2"}'
+
+$ curl -iX POST http://localhost:4000/api?name=name3
+```
+
+They would return, respectively, `Hello name1!` (Path parameter), `Hello name2!` (Request body) and `Hello name3!` (Query parameter).
+
 ## Action fallback
 
 Action fallback allows us to centralize error handling code in plugs, which are called when a controller action fails to return a [`%Plug.Conn{}`](`t:Plug.Conn.t/0`) struct. These plugs receive both the `conn` which was originally passed to the controller action along with the return value of the action.
@@ -335,5 +433,13 @@ The output should contain the following:
 ```
 
 The `--no-html` is the obvious one we want to use when creating any Phoenix application for an API in order to leave out all the unnecessary HTML scaffolding. You may also pass `--no-assets`, if you don't want any of the asset management bit, `--no-gettext` if you don't support internationalization, and so on.
+
+So, in order to generate a simple API called **Hello**, without any frontend, database connection, internationalization or mailing service, you can provide the following flags:
+
+```
+$ mix phx.new hello --no-assets --no-dashboard --no-ecto --no-gettext --no-html --no-mailer
+```
+
+This still includes the Telemetry, PubSub and DNS Cluster modules by default, which you can remove manually if necessary.
 
 Also bear in mind that nothing stops you to have a backend that supports simultaneously the REST API and a Web App (HTML, assets, internationalization and sockets).
