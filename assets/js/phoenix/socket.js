@@ -158,7 +158,7 @@ export default class Socket {
         } else {
           this.pageHidden = false
           // reconnect immediately
-          if(!this.isConnected()){
+          if(!this.isConnected() && !this.closeWasClean){
             this.teardown(() => this.connect())
           }
         }
