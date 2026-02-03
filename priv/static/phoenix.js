@@ -1100,7 +1100,7 @@ var Phoenix = (() => {
             this.pageHidden = true;
           } else {
             this.pageHidden = false;
-            if (!this.isConnected()) {
+            if (!this.isConnected() && !this.closeWasClean) {
               this.teardown(() => this.connect());
             }
           }
