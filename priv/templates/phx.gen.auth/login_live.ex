@@ -47,7 +47,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             field={f[:email]}
             type="email"
             label="Email"
-            autocomplete="email"
+            autocomplete="username"
             spellcheck="false"
             required
             phx-mounted={JS.focus()}
@@ -72,7 +72,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             field={f[:email]}
             type="email"
             label="Email"
-            autocomplete="email"
+            autocomplete="username"
             spellcheck="false"
             required
           />
