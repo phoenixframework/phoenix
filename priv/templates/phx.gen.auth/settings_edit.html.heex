@@ -9,7 +9,14 @@
   <.form :let={f} for={@email_changeset} action={~p"<%= schema.route_prefix %>/settings"} id="update_email">
     <input type="hidden" name="action" value="update_email" />
 
-    <.input field={f[:email]} type="email" label="Email" autocomplete="email" required />
+    <.input
+      field={f[:email]}
+      type="email"
+      label="Email"
+      autocomplete="email"
+      spellcheck="false"
+      required
+    />
 
     <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
   </.form>
@@ -24,6 +31,7 @@
       type="password"
       label="New password"
       autocomplete="new-password"
+      spellcheck="false"
       required
     />
     <.input
@@ -31,6 +39,7 @@
       type="password"
       label="Confirm new password"
       autocomplete="new-password"
+      spellcheck="false"
       required
     />
     <.button variant="primary" phx-disable-with="Changing...">

@@ -28,6 +28,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
             type="email"
             label="Email"
             autocomplete="username"
+            spellcheck="false"
             required
             phx-mounted={JS.focus()}
           />

@@ -22,6 +22,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           type="email"
           label="Email"
           autocomplete="username"
+          spellcheck="false"
           required
         />
         <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
@@ -42,6 +43,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           name={@password_form[:email].name}
           type="hidden"
           id="hidden_<%= schema.singular %>_email"
+          spellcheck="false"
           value={@current_email}
         />
         <.input
@@ -49,6 +51,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           type="password"
           label="New password"
           autocomplete="new-password"
+          spellcheck="false"
           required
         />
         <.input
@@ -56,6 +59,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
           type="password"
           label="Confirm new password"
           autocomplete="new-password"
+          spellcheck="false"
         />
         <.button variant="primary" phx-disable-with="Saving...">
           Save Password
