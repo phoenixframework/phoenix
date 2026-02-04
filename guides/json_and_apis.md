@@ -272,6 +272,7 @@ $ curl -iX POST http://localhost:4000/api?name=name3
 ```
 
 They would return, respectively, `Hello name1!` (Path parameter), `Hello name2!` (Request body) and `Hello name3!` (Query parameter).
+You can access those parameters individually if desired via `conn.path_params`, `conn.body_params`, and `conn.query_params` respectively.
 
 ## Action fallback
 
