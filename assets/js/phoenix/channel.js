@@ -9,7 +9,7 @@ import Timer from "./timer"
 
 /**
 * @import Socket from "./socket"
-* @import { ChannelState, Params, ChannelBindingCallback, ChannelOnMessage, ChannelOnErrorCallback, ChannelBinding } from "./types"
+* @import { ChannelState, Params, ChannelBindingCallback, ChannelOnMessage, ChannelFilterBindings, ChannelOnErrorCallback, ChannelBinding } from "./types"
 */
 
 export default class Channel {
@@ -58,13 +58,14 @@ export default class Channel {
       this.pushBuffer.forEach(pushEvent => pushEvent.send())
       this.pushBuffer = []
     })
-    this.joinPush.receive("error", () => {
+    this.joinPush.receive("error", (reason) => {
       this.state = CHANNEL_STATES.errored
+      if(this.socket.hasLogger()) this.socket.log("channel", `error ${this.topic}`, reason)
       if(this.socket.isConnected()){ this.rejoinTimer.scheduleTimeout() }
     })
     this.onClose(() => {
       this.rejoinTimer.reset()
-      if(this.socket.hasLogger()) this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
+      if(this.socket.hasLogger()) this.socket.log("channel", `close ${this.topic}`)
       this.state = CHANNEL_STATES.closed
       this.socket.remove(this)
     })
@@ -75,7 +76,7 @@ export default class Channel {
       if(this.socket.isConnected()){ this.rejoinTimer.scheduleTimeout() }
     })
     this.joinPush.receive("timeout", () => {
-      if(this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
+      if(this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic}`, this.joinPush.timeout)
       let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout)
       leavePush.send()
       this.state = CHANNEL_STATES.errored
@@ -101,6 +102,20 @@ export default class Channel {
       this.rejoin()
       return this.joinPush
     }
+  }
+
+  /**
+   * Teardown the channel.
+   *
+   * Destroys and stops related timers.
+   */
+  teardown(){
+    this.pushBuffer.forEach((push) => push.destroy())
+    this.pushBuffer = []
+    this.rejoinTimer.reset()
+    this.joinPush.destroy()
+    this.state = CHANNEL_STATES.closed
+    this.bindings = {}
   }
 
   /**
@@ -247,7 +262,16 @@ export default class Channel {
    * Must return the payload, modified or unmodified
    * @type{ChannelOnMessage}
    */
-  onMessage(event, payload, ref){ return payload }
+  onMessage(_event, payload, _ref){ return payload }
+
+  /**
+   * Overridable filter hook
+   *
+   * If this function returns `true`, `binding`'s callback will be called.
+   *
+   * @type{ChannelFilterBindings}
+   */
+  filterBindings(_binding, _payload, _ref){ return true }
 
   isMember(topic, event, payload, joinRef){
     if(this.topic !== topic){ return false }
@@ -260,7 +284,7 @@ export default class Channel {
     }
   }
 
-  joinRef(){ return /** @type{string} */ (this.joinPush.ref) }
+  joinRef(){ return this.joinPush.ref }
 
   /**
    * @private
@@ -282,7 +306,7 @@ export default class Channel {
     let handledPayload = this.onMessage(event, payload, ref, joinRef)
     if(payload && !handledPayload){ throw new Error("channel onMessage callbacks must return the payload, modified or unmodified") }
 
-    let eventBindings = this.bindings.filter(bind => bind.event === event)
+    let eventBindings = this.bindings.filter(bind => bind.event === event && this.filterBindings(bind, payload, ref))
 
     for(let i = 0; i < eventBindings.length; i++){
       let bind = eventBindings[i]

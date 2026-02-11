@@ -24,6 +24,10 @@ export type ChannelBinding = ({
  */
 export type ChannelOnMessage = (event: string, payload?: unknown, ref?: string | null, joinRef?: string | null) => unknown;
 /**
+ * CHANNEL
+ */
+export type ChannelFilterBindings = (binding: ChannelBinding, payload: unknown, ref?: string | null) => boolean;
+/**
  * CONSTANTS
  */
 export type Vsn = "1.0.0" | "2.0.0";
@@ -133,6 +137,14 @@ export type SocketStateChangeCallbacks = ({
 /**
  * SOCKET
  */
+export type HeartbeatStatus = "sent" | "ok" | "error" | "timeout" | "disconnected";
+/**
+ * SOCKET
+ */
+export type HeartbeatCallback = (status: HeartbeatStatus, latency?: number) => void;
+/**
+ * SOCKET
+ */
 export type SocketOptions = {
     /**
      * - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
@@ -174,6 +186,17 @@ export type SocketOptions = {
      * - The millisec interval to send a heartbeat message
      */
     heartbeatIntervalMs?: number | undefined;
+    /**
+     * - Whether to automatically send heartbeats after
+     * connection is established.
+     *
+     * Defaults to true.
+     */
+    autoSendHeartbeat?: boolean | undefined;
+    /**
+     * - The optional function to handle heartbeat status and latency.
+     */
+    heartbeatCallback?: HeartbeatCallback | undefined;
     /**
      * - The optional function that returns the
      * socket reconnect interval, in milliseconds.
@@ -243,6 +266,10 @@ export type SocketOptions = {
      * }
      */
     sessionStorage?: Storage | undefined;
+    /**
+     * - Callback ran before socket tries to reconnect.
+     */
+    beforeReconnect?: (() => Promise<void>) | undefined;
 };
 import type { SOCKET_STATES } from "./constants";
 import type { CHANNEL_STATES } from "./constants";

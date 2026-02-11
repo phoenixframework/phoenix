@@ -97,10 +97,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: npm install and test
+      - name: npm install, lint and test
         run: |
           cd assets
           npm install
+          npm run lint
           npm test
 
   integration-test-elixir:

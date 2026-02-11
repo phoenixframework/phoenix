@@ -21,7 +21,7 @@ import Serializer from "./serializer"
 import Timer from "./timer"
 
 /**
-* @import { Encode, Decode, Message, Vsn, SocketTransport, Params, SocketOnOpen, SocketOnClose, SocketOnError, SocketOnMessage, SocketOptions, SocketStateChangeCallbacks } from "./types"
+* @import { Encode, Decode, Message, Vsn, SocketTransport, Params, SocketOnOpen, SocketOnClose, SocketOnError, SocketOnMessage, SocketOptions, SocketStateChangeCallbacks, HeartbeatCallback } from "./types"
 */
 
 export default class Socket {
@@ -51,7 +51,7 @@ export default class Socket {
     /** @type{SocketTransport} */
     this.transport = opts.transport || global.WebSocket || LongPoll
     /** @type{InstanceType<SocketTransport> | undefined | null} */
-    this.conn = undefined;
+    this.conn = undefined
     /** @type{boolean} */
     this.primaryPassedHealthCheck = false
     /** @type{number | undefined} */
@@ -77,9 +77,9 @@ export default class Socket {
     /** @type{boolean} */
     this.pageHidden = false
     /** @type{Encode<void>} */
-    this.encode = undefined;
+    this.encode = undefined
     /** @type{Decode<void>} */
-    this.decode = undefined;
+    this.decode = undefined
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -108,7 +108,7 @@ export default class Socket {
         } else {
           this.pageHidden = false
           // reconnect immediately
-          if(!this.isConnected() && !this.closeWasClean){
+          if(!this.isConnected()){
             this.teardown(() => this.connect())
           }
         }
@@ -116,6 +116,10 @@ export default class Socket {
     }
     /** @type{number} */
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000
+    /** @type{boolean} */
+    this.autoSendHeartbeat = opts.autoSendHeartbeat ?? true
+    /** @type{HeartbeatCallback} */
+    this.heartbeatCallback = opts.heartbeatCallback ?? (() => {})
     /** @type{(tries: number) => number} */
     this.rejoinAfterMs = (tries) => {
       if(opts.rejoinAfterMs){
@@ -149,16 +153,22 @@ export default class Socket {
     this.heartbeatTimeoutTimer = null
     /** @type{ReturnType<typeof setTimeout>} */
     this.heartbeatTimer = null
+    /** @type{number | null} */
+    this.heartbeatSentAt = null
     /** @type{?string} */
     this.pendingHeartbeatRef = null
     /** @type{Timer} */
-    this.reconnectTimer = new Timer(() => {
+    this.reconnectTimer = new Timer( () => {
       if(this.pageHidden){
         this.log("Not reconnecting as page is hidden!")
         this.teardown()
         return
       }
-      this.teardown(() => this.connect())
+
+      this.teardown(async () => {
+        if(opts.beforeReconnect) await opts.beforeReconnect()
+        this.connect()
+      })
     }, this.reconnectAfterMs)
     /** @type{string | undefined} */
     this.authToken = opts.authToken
@@ -311,6 +321,15 @@ export default class Socket {
   }
 
   /**
+   * Sets a callback that receives lifecycle events for internal heartbeat messages.
+   * Useful for instrumenting connection health (e.g. sent/ok/timeout/disconnected).
+   * @param {HeartbeatCallback} callback
+   */
+  onHeartbeat(callback){
+    this.heartbeatCallback = callback
+  }
+
+  /**
    * Pings the server and invokes the callback with the RTT in milliseconds
    * @param {(timeDelta: number) => void} callback
    *
@@ -332,25 +351,8 @@ export default class Socket {
 
   /**
    * @private
-   *
-   * @param {Function}
    */
-  transportName(transport){
-    // JavaScript minification, enabled by default in production in Phoenix
-    // projects, renames symbols to reduce code size.
-    // See https://esbuild.github.io/api/#keep-names.
-    // This helper ensures we return the correct name for the LongPoll transport
-    // even after minification. The other common transport is WebSocket, which
-    // is native to browsers and does not need special handling.
-    switch(transport){
-      case LongPoll: return "LongPoll"
-      default: return transport.name
-    }
-  }
 
-  /**
-   * @private
-   */
   transportConnect(){
     this.connectClock++
     this.closeWasClean = false
@@ -378,15 +380,14 @@ export default class Socket {
     let established = false
     let primaryTransport = true
     let openRef, errorRef
-    let fallbackTransportName = this.transportName(fallbackTransport)
     let fallback = (reason) => {
-      this.log("transport", `falling back to ${fallbackTransportName}...`, reason)
+      this.log("transport", `falling back to ${fallbackTransport.name}...`, reason)
       this.off([openRef, errorRef])
       primaryTransport = false
       this.replaceTransport(fallbackTransport)
       this.transportConnect()
     }
-    if(this.getSession(`phx:fallback:${fallbackTransportName}`)){ return fallback("memorized") }
+    if(this.getSession(`phx:fallback:${fallbackTransport.name}`)){ return fallback("memorized") }
 
     this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
 
@@ -403,10 +404,9 @@ export default class Socket {
     this.fallbackRef = this.onOpen(() => {
       established = true
       if(!primaryTransport){
-        let fallbackTransportName = this.transportName(fallbackTransport)
         // only memorize LP if we never connected to primary
-        if(!this.primaryPassedHealthCheck){ this.storeSession(`phx:fallback:${fallbackTransportName}`, "true") }
-        return this.log("transport", `established ${fallbackTransportName} fallback`)
+        if(!this.primaryPassedHealthCheck){ this.storeSession(`phx:fallback:${fallbackTransport.name}`, "true") }
+        return this.log("transport", `established ${fallbackTransport.name} fallback`)
       }
       // if we've established primary, give the fallback a new period to attempt ping
       clearTimeout(this.fallbackTimer)
@@ -426,14 +426,16 @@ export default class Socket {
   }
 
   onConnOpen(){
-    if(this.hasLogger()) this.log("transport", `${this.transportName(this.transport)} connected to ${this.endPointURL()}`)
+    if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
     this.closeWasClean = false
     this.disconnecting = false
     this.establishedConnections++
     this.flushSendBuffer()
     this.reconnectTimer.reset()
-    this.resetHeartbeat()
-    this.stateChangeCallbacks.open.forEach(([, callback]) => callback())
+    if(this.autoSendHeartbeat){
+      this.resetHeartbeat()
+    }
+    this.triggerStateCallbacks("open")
   }
 
   /**
@@ -443,7 +445,13 @@ export default class Socket {
   heartbeatTimeout(){
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
+      this.heartbeatSentAt = null
       if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
+      try {
+        this.heartbeatCallback("timeout")
+      } catch (e){
+        this.log("error", "error in heartbeat callback", e)
+      }
       this.triggerChanError()
       this.closeWasClean = false
       this.teardown(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout")
@@ -511,14 +519,13 @@ export default class Socket {
   */
   onConnClose(event){
     if(this.conn) this.conn.onclose = () => {} // noop to prevent recursive calls in teardown
-    let closeCode = event && event.code
     if(this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
     this.clearHeartbeats()
-    if(!this.closeWasClean && closeCode !== 1000){
+    if(!this.closeWasClean){
       this.reconnectTimer.scheduleTimeout()
     }
-    this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))
+    this.triggerStateCallbacks("close", event)
   }
 
   /**
@@ -529,9 +536,7 @@ export default class Socket {
     if(this.hasLogger()) this.log("transport", error)
     let transportBefore = this.transport
     let establishedBefore = this.establishedConnections
-    this.stateChangeCallbacks.error.forEach(([, callback]) => {
-      callback(error, transportBefore, establishedBefore)
-    })
+    this.triggerStateCallbacks("error", error, transportBefore, establishedBefore)
     if(transportBefore === this.transport || establishedBefore > 0){
       this.triggerChanError()
     }
@@ -629,9 +634,26 @@ export default class Socket {
   }
 
   sendHeartbeat(){
-    if(this.pendingHeartbeatRef && !this.isConnected()){ return }
+    if(!this.isConnected()){
+      try {
+        this.heartbeatCallback("disconnected")
+      } catch (e){
+        this.log("error", "error in heartbeat callback", e)
+      }
+      return
+    }
+    if(this.pendingHeartbeatRef){
+      this.heartbeatTimeout()
+      return
+    }
     this.pendingHeartbeatRef = this.makeRef()
+    this.heartbeatSentAt = Date.now()
     this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef})
+    try {
+      this.heartbeatCallback("sent")
+    } catch (e){
+      this.log("error", "error in heartbeat callback", e)
+    }
     this.heartbeatTimeoutTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs)
   }
 
@@ -649,12 +671,21 @@ export default class Socket {
     this.decode(rawMessage.data, msg => {
       let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){
+        const latency = this.heartbeatSentAt ? Date.now() - this.heartbeatSentAt : undefined
         this.clearHeartbeats()
+        try {
+          this.heartbeatCallback(payload.status === "ok" ? "ok" : "error", latency)
+        } catch (e){
+          this.log("error", "error in heartbeat callback", e)
+        }
         this.pendingHeartbeatRef = null
-        this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+        this.heartbeatSentAt = null
+        if(this.autoSendHeartbeat){
+          this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+        }
       }
 
-      if(this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
+      if(this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`.trim(), payload)
 
       for(let i = 0; i < this.channels.length; i++){
         const channel = this.channels[i]
@@ -662,11 +693,29 @@ export default class Socket {
         channel.trigger(event, payload, ref, join_ref)
       }
 
-      for(let i = 0; i < this.stateChangeCallbacks.message.length; i++){
-        let [, callback] = this.stateChangeCallbacks.message[i]
-        callback(msg)
-      }
+      this.triggerStateCallbacks("message", msg)
     })
+  }
+
+  /**
+   * @private
+   * @template {keyof SocketStateChangeCallbacks} K
+   * @param {K} event
+   * @param {...Parameters<SocketStateChangeCallbacks[K][number][1]>} args
+   * @returns {void}
+   */
+  triggerStateCallbacks(event, ...args){
+    try {
+      this.stateChangeCallbacks[event].forEach(([_, callback]) => {
+        try {
+          callback(...args)
+        } catch (e){
+          this.log("error", `error in ${event} callback`, e)
+        }
+      })
+    } catch (e){
+      this.log("error", `error triggering ${event} callbacks`, e)
+    }
   }
 
   leaveOpenTopic(topic){

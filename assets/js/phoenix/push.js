@@ -78,6 +78,11 @@ export default class Push {
     this.sent = false
   }
 
+  destroy(){
+    this.cancelRefEvent()
+    this.cancelTimeout()
+  }
+
   /**
    * @private
    */

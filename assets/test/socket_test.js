@@ -1,4 +1,4 @@
-import {jest} from "@jest/globals"
+import {beforeEach, describe, expect, jest} from "@jest/globals"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
@@ -12,7 +12,7 @@ describe("with transports", function (){
     const mockSend = jest.fn()
     const mockAbort = jest.fn()
     const mockSetRequestHeader = jest.fn()
-    
+
     global.XMLHttpRequest = jest.fn(() => ({
       open: mockOpen,
       send: mockSend,
@@ -41,6 +41,7 @@ describe("with transports", function (){
       expect(socket.logger).toBeNull()
       expect(socket.binaryType).toBe("arraybuffer")
       expect(typeof socket.reconnectAfterMs).toBe("function")
+      expect(typeof socket.heartbeatCallback).toBe("function")
     })
 
     it("supports closure or literal params", function (){
@@ -55,6 +56,7 @@ describe("with transports", function (){
       const customTransport = function transport(){ }
       const customLogger = function logger(){ }
       const customReconnect = function reconnect(){ }
+      const customHeartbeatCallback = jest.fn()
 
       socket = new Socket("/socket", {
         timeout: 40000,
@@ -64,6 +66,7 @@ describe("with transports", function (){
         logger: customLogger,
         reconnectAfterMs: customReconnect,
         params: {one: "two"},
+        heartbeatCallback: customHeartbeatCallback
       })
 
       expect(socket.timeout).toBe(40000)
@@ -72,6 +75,7 @@ describe("with transports", function (){
       expect(socket.transport).toBe(customTransport)
       expect(socket.logger).toBe(customLogger)
       expect(socket.params()).toEqual({one: "two"})
+      expect(socket.heartbeatCallback).toBe(customHeartbeatCallback)
     })
 
     describe("with Websocket", function (){
@@ -352,6 +356,15 @@ describe("with transports", function (){
       const [foundChannel] = socket.channels
       expect(foundChannel).toBe(channel)
     })
+
+    it("gets all channels", () => {
+      expect(socket.channels.length).toBe(0)
+      const chan1 = channel = socket.channel("topic1")
+      const chan2 = channel = socket.channel("topic2")
+
+      expect(socket.channels.length).toBe(2)
+      expect(socket.channels).toStrictEqual([chan1, chan2])
+    })
   })
 
   describe("remove", function (){
@@ -477,6 +490,208 @@ describe("with transports", function (){
       socket.sendHeartbeat()
       expect(sendSpy).not.toHaveBeenCalledWith(data)
     })
+
+    it("handles heartbeat timeout and triggers reconnection", (done) => {
+      jest.useFakeTimers()
+      socket.conn.readyState = 1 // open
+
+      const timeoutSpy = jest.spyOn(socket, "heartbeatTimeout")
+      const heartbeatCallbackSpy = jest.spyOn(socket, "heartbeatCallback")
+      const logSpy = jest.fn()
+      const closeSpy = jest.fn()
+
+      socket.conn.close = closeSpy
+      socket.logger = logSpy
+
+      socket.sendHeartbeat()
+      jest.advanceTimersByTime(30010)
+      expect(timeoutSpy).toHaveBeenCalled()
+      expect(closeSpy).toHaveBeenCalledWith(1000, "heartbeat timeout")
+      expect(logSpy).toHaveBeenCalledWith(
+        "transport",
+        "heartbeat timeout. Attempting to re-establish connection",
+        undefined
+      )
+      expect(heartbeatCallbackSpy).toHaveBeenCalledWith("timeout")
+      expect(socket.pendingHeartbeatRef).toBe(null)
+
+      jest.useRealTimers()
+      done()
+    })
+  })
+
+  describe("heartbeatCallback", () => {
+    beforeEach(function (){
+      socket = new Socket("/socket")
+      socket.connect()
+      socket.conn.readyState = 1 // open
+    })
+
+    it("timeout", () => {
+      const spy = jest.fn()
+      socket.onHeartbeat(spy)
+      socket.sendHeartbeat()
+      socket.heartbeatTimeout()
+      expect(spy).toHaveBeenCalledWith("timeout")
+    })
+
+    it("sent", () => {
+      const spy = jest.fn()
+      socket.onHeartbeat(spy)
+      socket.sendHeartbeat()
+      expect(spy).toHaveBeenCalledWith("sent")
+    })
+
+    it("disconnected", () => {
+      socket.conn.readyState = 42 // closed
+      const spy = jest.fn()
+      socket.onHeartbeat(spy)
+      socket.sendHeartbeat()
+      expect(spy).toHaveBeenCalledWith("disconnected")
+    })
+
+    it("ok", () => {
+      const spy = jest.fn()
+      socket.onHeartbeat(spy)
+      socket.sendHeartbeat()
+      const ref = socket.pendingHeartbeatRef
+      const data = {ref, payload: {status: "ok"}}
+      socket.conn.onmessage({data: encode(data)})
+      expect(spy).toHaveBeenCalledWith("ok", expect.any(Number))
+    })
+
+    it("error", () => {
+      const spy = jest.fn()
+      socket.onHeartbeat(spy)
+      socket.sendHeartbeat()
+      const ref = socket.pendingHeartbeatRef
+      const data = {ref, payload: {status: "error"}}
+      socket.conn.onmessage({data: encode(data)})
+      expect(spy).toHaveBeenCalledWith("error", expect.any(Number))
+    })
+
+    it("calls multiple times", () => {
+      const spy = jest.fn()
+      socket.onHeartbeat(spy)
+      socket.sendHeartbeat()
+      const ref = socket.pendingHeartbeatRef
+      const data = {ref, payload: {status: "ok"}}
+      socket.conn.onmessage({data: encode(data)})
+
+      expect(spy).toHaveBeenCalledTimes(2)
+      expect(spy).toHaveBeenNthCalledWith(1, "sent")
+      expect(spy).toHaveBeenNthCalledWith(2, "ok", expect.any(Number))
+    })
+
+    it("latency", () => {
+      let latency
+
+      const spy = jest.fn((status, reportedLatency) => {
+        latency = reportedLatency
+      })
+      socket.onHeartbeat(spy)
+      socket.sendHeartbeat()
+      const ref = socket.pendingHeartbeatRef
+      const data = {ref, payload: {status: "ok"}}
+
+      const diff = 60000
+
+      socket.heartbeatSentAt = Date.now() - diff
+      socket.conn.onmessage({data: encode(data)})
+
+      expect(spy).toHaveBeenCalled()
+      expect(socket.pendingHeartbeatRef).toBe(null)
+      expect(socket.heartbeatSentAt).toBe(null)
+      expect(latency).toBeGreaterThanOrEqual(diff)
+      expect(latency).toBeLessThan(diff + 1000)
+    })
+
+    describe("handles errors gracefully", () => {
+      it("sendHeartbeat", () => {
+        const logSpy = jest.fn()
+        const cbSpy = jest.fn().mockImplementation(() => {
+          throw new Error("Callback error")
+        })
+        socket.onHeartbeat(cbSpy)
+        socket.logger = logSpy
+
+        expect(() => socket.sendHeartbeat()).not.toThrow()
+        expect(cbSpy).toHaveBeenCalledWith("sent")
+        expect(logSpy).toHaveBeenCalledWith("error", "error in heartbeat callback", expect.any(Error))
+      })
+
+      it("onConnMessage", () => {
+        const logSpy = jest.fn()
+        const cbSpy = jest.fn().mockImplementation(() => {
+          throw new Error("Callback error")
+        })
+        socket.logger = logSpy
+
+        socket.sendHeartbeat()
+        socket.onHeartbeat(cbSpy)
+        const ref = socket.pendingHeartbeatRef
+        const data = {ref, payload: {status: "ok"}}
+
+        expect(() => socket.conn.onmessage({data: encode(data)})).not.toThrow()
+
+        expect(cbSpy).toHaveBeenCalledWith("ok", expect.any(Number))
+        expect(logSpy).toHaveBeenCalledWith("error", "error in heartbeat callback", expect.any(Error))
+      })
+    })
+  })
+
+  describe("leaveOpenTopic", () => {
+    beforeEach(() => {
+      socket = new Socket("/socket")
+      socket.connect()
+    })
+
+    it("should leave duplicate open topic", () => {
+      const topic = "topic"
+      const channel = socket.channel(topic)
+
+      jest.spyOn(channel, "isJoined").mockReturnValue(true)
+      const leaveSpy = jest.spyOn(channel, "leave")
+      const logSpy = jest.fn()
+      socket.logger = logSpy
+
+      socket.leaveOpenTopic(topic)
+
+      expect(logSpy).toHaveBeenCalledWith("transport", `leaving duplicate topic "${topic}"`, undefined)
+      expect(leaveSpy).toHaveBeenCalled()
+    })
+
+    it("should leave duplicate joining topic", () => {
+      const topic = "topic"
+      const channel = socket.channel(topic)
+
+      jest.spyOn(channel, "isJoined").mockReturnValue(false)
+      jest.spyOn(channel, "isJoining").mockReturnValue(true)
+      const leaveSpy = jest.spyOn(channel, "leave")
+      const logSpy = jest.fn()
+      socket.logger = logSpy
+
+      socket.leaveOpenTopic(topic)
+
+      expect(logSpy).toHaveBeenCalledWith("transport", `leaving duplicate topic "${topic}"`, undefined)
+      expect(leaveSpy).toHaveBeenCalled()
+    })
+
+    it("should not leave topic that is not joined or joining", () => {
+      const topic = "topic"
+      const channel = socket.channel(topic)
+
+      jest.spyOn(channel, "isJoined").mockReturnValue(false)
+      jest.spyOn(channel, "isJoining").mockReturnValue(false)
+      const leaveSpy = jest.spyOn(channel, "leave")
+      const logSpy = jest.fn()
+      socket.logger = logSpy
+
+      socket.leaveOpenTopic(topic)
+
+      expect(logSpy).not.toHaveBeenCalled()
+      expect(leaveSpy).not.toHaveBeenCalled()
+    })
   })
 
   describe("flushSendBuffer", function (){
@@ -568,11 +783,11 @@ describe("with transports", function (){
       socket.connect()
     })
 
-    it("does not schedule reconnectTimer if normal close", function (){
+    it("schedules reconnectTimer if normal close", function (){
       const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
       const event = {code: 1000}
       socket.onConnClose(event)
-      expect(scheduleSpy).not.toHaveBeenCalled()
+      expect(scheduleSpy).toHaveBeenCalled()
     })
 
     it("schedules reconnectTimer timeout if abnormal close", function (){
@@ -795,6 +1010,21 @@ describe("with transports", function (){
       expect(otherSpy).toHaveBeenCalledTimes(0)
     })
 
+    it.each([
+      "ok",
+      "error"
+    ])("triggers onHeartbeat with %s", (msg) => {
+      const spy = jest.fn()
+      socket.onHeartbeat(spy)
+
+      const data = encode({ref: "3", event: "phx_reply", payload: {status: msg, response: {}}, topic: "phoenix"})
+
+      socket.pendingHeartbeatRef = "3"
+      socket.onConnMessage({data})
+
+      expect(spy).toHaveBeenCalledWith(msg, undefined)
+    })
+
     it("triggers onMessage callback", function (){
       const message = {"topic": "topic", "event": "event", "payload": "payload", "ref": "ref"}
       const spy = jest.fn()
@@ -808,6 +1038,105 @@ describe("with transports", function (){
         "ref": "ref",
         "join_ref": null
       })
+    })
+  })
+
+  describe("triggerStateCallbacks", () => {
+    beforeEach(() => {
+      socket = new Socket("/socket")
+    })
+
+    test("does not call other types of callbacks", () => {
+      const spyOpen = jest.fn()
+      const spyClose = jest.fn()
+      const spyError = jest.fn()
+      const spyMessage = jest.fn()
+      socket.onOpen(spyOpen)
+      socket.triggerStateCallbacks("open")
+
+      expect(spyOpen).toHaveBeenCalledTimes(1)
+      expect(spyClose).not.toHaveBeenCalled()
+      expect(spyError).not.toHaveBeenCalled()
+      expect(spyMessage).not.toHaveBeenCalled()
+    })
+
+    test("Catches error", () => {
+      const spy1 = jest.fn(() => {
+        throw new Error("foo")
+      })
+      socket.onOpen(spy1)
+
+      const spy2 = jest.fn()
+      socket.onOpen(spy2)
+
+      const spyLog = jest.fn()
+      socket.logger = spyLog
+
+      socket.triggerStateCallbacks("open")
+
+      expect(spyLog).toHaveBeenCalledWith("error", "error in open callback", expect.any(Error))
+      expect(spy2).toHaveBeenCalled()
+    })
+
+    describe.each([
+      {
+        name: "open",
+        args: []
+      },
+      {
+        name: "close",
+        args: [1]
+      },
+      {
+        name: "error",
+        args: [1, 2, 3]
+      },
+      {
+        name: "message",
+        args: [1]
+      }
+    ])("$name", ({name, args}) => {
+      test("gets called", () => {
+        const spy = jest.fn()
+        socket.stateChangeCallbacks[name].push((["spy", spy]))
+        socket.triggerStateCallbacks(name, ...args)
+        expect(spy).toHaveBeenCalledTimes(1)
+      })
+
+      test("gets called with correct amount of args", () => {
+        const spy = jest.fn()
+        socket.stateChangeCallbacks[name].push((["spy", spy]))
+        socket.triggerStateCallbacks(name, ...args)
+        expect(spy).toHaveBeenCalledWith(...args)
+      })
+
+      test("all callbacks get called", () => {
+        const spy1 = jest.fn()
+        socket.stateChangeCallbacks[name].push((["spy1", spy1]))
+        const spy2 = jest.fn()
+        socket.stateChangeCallbacks[name].push((["spy2", spy2]))
+        const spy3 = jest.fn()
+        socket.stateChangeCallbacks[name].push((["spy3", spy3]))
+
+        socket.triggerStateCallbacks(name, ...args)
+
+        expect(spy1).toHaveBeenCalledTimes(1)
+        expect(spy2).toHaveBeenCalledTimes(1)
+        expect(spy3).toHaveBeenCalledTimes(1)
+      })
+    })
+  })
+
+  describe("beforeReconnect", () => {
+    test("is called", () => {
+      const spy = jest.fn()
+      socket = new Socket("/socket", {
+        beforeReconnect: spy
+      })
+
+      expect(spy).not.toHaveBeenCalled()
+      socket.reconnectTimer.callback()
+      expect(spy).toHaveBeenCalled()
     })
   })
 

@@ -48,6 +48,7 @@ export default class Push {
     receive(status: string, callback: (response: any) => void): this;
     reset(): void;
     refEvent: string | null | undefined;
+    destroy(): void;
     /**
      * @private
      */

@@ -51,6 +51,8 @@
     "test.coverage": "jest --coverage",
     "test.watch": "jest --watch",
     "build.types": "tsc",
-    "docs": "documentation build assets/js/phoenix/index.js -f html -o doc/js"
+    "docs": "documentation build assets/js/phoenix/index.js -f html -o doc/js",
+    "lint": "eslint assets",
+    "lint:fix": "eslint --fix assets"
   }
 }

@@ -65,9 +65,12 @@ describe("with transport", function (){
     it("sets subprotocols when authToken is provided", function (){
       const authToken = "1234"
       const socket = new Socket("/socket", {authToken})
-      
+
       socket.connect()
-      expect(socket.conn.protocols).toEqual(["phoenix", "base64url.bearer.phx.MTIzNA"])
+      expect(socket.conn.protocols).toEqual([
+        "phoenix",
+        "base64url.bearer.phx.MTIzNA",
+      ])
     })
   })
 
@@ -75,7 +78,11 @@ describe("with transport", function (){
     it("can update the join params", function (){
       let counter = 0
       let params = () => ({value: counter})
-      socket = {timeout: 1234, onError: function (){}, onOpen: function (){}}
+      socket = {
+        timeout: 1234,
+        onError: function (){},
+        onOpen: function (){},
+      }
 
       channel = new Channel("topic", params, socket)
       const joinPush = channel.joinPush
@@ -288,7 +295,12 @@ describe("with transport", function (){
     const helpers = {
       receiveOk(){
         jest.advanceTimersByTime(joinPush.timeout / 2) // before timeout
-        return joinPush.channel.trigger("phx_reply", {status: "ok", response: response}, joinPush.ref, joinPush.ref)
+        return joinPush.channel.trigger(
+          "phx_reply",
+          {status: "ok", response: response},
+          joinPush.ref,
+          joinPush.ref,
+        )
         // return joinPush.trigger("ok", response)
       },
 
@@ -302,7 +314,7 @@ describe("with transport", function (){
       },
 
       getBindings(event){
-        return channel.bindings.filter(bind => bind.event === event)
+        return channel.bindings.filter((bind) => bind.event === event)
       },
     }
 
@@ -444,14 +456,19 @@ describe("with transport", function (){
       it("does not trigger other receive callbacks after timeout response", function (done){
         const spyOk = jest.fn()
         const spyError = jest.fn()
-        jest.spyOn(channel.rejoinTimer, "scheduleTimeout").mockReturnValue(true)
+        jest
+          .spyOn(channel.rejoinTimer, "scheduleTimeout")
+          .mockReturnValue(true)
 
         channel.test = true
-        joinPush.receive("ok", spyOk).receive("error", spyError).receive("timeout", () => {
-          expect(spyOk).not.toHaveBeenCalled()
-          expect(spyError).not.toHaveBeenCalled()
-          done()
-        })
+        joinPush
+          .receive("ok", spyOk)
+          .receive("error", spyError)
+          .receive("timeout", () => {
+            expect(spyOk).not.toHaveBeenCalled()
+            expect(spyError).not.toHaveBeenCalled()
+            done()
+          })
 
         helpers.receiveTimeout()
         helpers.receiveOk()
@@ -500,10 +517,13 @@ describe("with transport", function (){
         const spyError = jest.fn()
         const spyTimeout = jest.fn()
 
-        joinPush.receive("ok", spyOk).receive("error", () => {
-          spyError()
-          channel.leave()
-        }).receive("timeout", spyTimeout)
+        joinPush
+          .receive("ok", spyOk)
+          .receive("error", () => {
+            spyError()
+            channel.leave()
+          })
+          .receive("timeout", spyTimeout)
 
         helpers.receiveError()
         jest.advanceTimersByTime(channel.timeout * 2) // attempt timeout
@@ -524,7 +544,7 @@ describe("with transport", function (){
       it("sets receivedResp with error trigger after binding", function (done){
         expect(joinPush.receivedResp).toBeNull()
 
-        joinPush.receive("error", resp => {
+        joinPush.receive("error", (resp) => {
           expect(resp).toEqual(response)
           done()
         })
@@ -536,7 +556,7 @@ describe("with transport", function (){
         expect(joinPush.receivedResp).toBeNull()
 
         helpers.receiveError()
-        joinPush.receive("error", resp => {
+        joinPush.receive("error", (resp) => {
           expect(resp).toEqual(response)
           done()
         })
@@ -724,6 +744,44 @@ describe("with transport", function (){
       const payload = channel.onMessage("event", {one: "two"}, defaultRef)
 
       expect(payload).toEqual({one: "two"})
+    })
+  })
+
+  describe("filterBindings", () => {
+    it("does not filter any bindings by default", () => {
+      socket = new Socket("/socket")
+      channel = socket.channel("topic")
+      const spy = jest.fn()
+      channel.on("foo", spy)
+      channel.trigger("foo")
+      expect(spy).toHaveBeenCalledTimes(1)
+    })
+
+    it("filters bindings", () => {
+      socket = new Socket("/socket")
+      channel = socket.channel("topic")
+      const spy = jest.fn()
+      channel.on("foo", spy)
+      channel.filterBindings = () => false
+      channel.trigger("foo")
+      expect(spy).toHaveBeenCalledTimes(0)
+    })
+
+    it("filers only specified bindings", () => {
+      socket = new Socket("/socket")
+      channel = socket.channel("topic")
+
+      const spy1 = jest.fn()
+      channel.on("foo", spy1)
+
+      const spy2 = jest.fn()
+      const spy2Ref = channel.on("foo", spy2)
+      channel.filterBindings = (binding) => binding.ref != spy2Ref
+
+      channel.trigger("foo")
+
+      expect(spy1).toHaveBeenCalledTimes(1)
+      expect(spy2).toHaveBeenCalledTimes(0)
     })
   })
 
@@ -936,7 +994,9 @@ describe("with transport", function (){
       const timeoutSpy = jest.fn()
       channel.join().trigger("ok", {})
 
-      channel.push("event", {foo: "bar"}, channel.timeout * 2).receive("timeout", timeoutSpy)
+      channel
+        .push("event", {foo: "bar"}, channel.timeout * 2)
+        .receive("timeout", timeoutSpy)
 
       jest.advanceTimersByTime(channel.timeout)
       expect(timeoutSpy).not.toHaveBeenCalled()
@@ -961,7 +1021,9 @@ describe("with transport", function (){
     })
 
     it("throws if channel has not been joined", function (){
-      expect(() => channel.push("event", {})).toThrow(/^tried to push.*before joining/)
+      expect(() => channel.push("event", {})).toThrow(
+        /^tried to push.*before joining/,
+      )
     })
   })
 
@@ -1014,6 +1076,16 @@ describe("with transport", function (){
       channel.leave().trigger("ok", {})
 
       expect(channel.state).toBe("closed")
+    })
+
+    it("cleans up leavePush on 'ok' event", function (){
+      expect(channel.state).not.toBe("closed")
+
+      const leavePush = channel.leave().trigger("ok", {})
+
+      expect(channel.state).toBe("closed")
+
+      expect(leavePush).not.toBeDefined()
     })
 
     // TODO - the following tests are skipped until Channel.leave

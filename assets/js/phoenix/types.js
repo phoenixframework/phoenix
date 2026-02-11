@@ -19,6 +19,7 @@
  * @typedef {(reason: unknown) => void} ChannelOnErrorCallback
  * @typedef {({event: string, ref: number, callback: ChannelBindingCallback})} ChannelBinding
  * @typedef {(event: string, payload?: unknown, ref?: ?string, joinRef?: ?string) => unknown} ChannelOnMessage
+ * @typedef {(binding: ChannelBinding, payload: unknown, ref?: ?string) => boolean} ChannelFilterBindings
  */
 
 
@@ -87,6 +88,8 @@
  *   error: [string, SocketOnError][]
  *   message: [string, SocketOnMessage][]
  * })} SocketStateChangeCallbacks
+ * @typedef {'sent' | 'ok' | 'error' | 'timeout' | 'disconnected'} HeartbeatStatus
+ * @typedef {(status: HeartbeatStatus, latency?: number) => void} HeartbeatCallback
  *
  *
  *
@@ -112,7 +115,15 @@
  *
  * @property {number} [timeout] - The default timeout in milliseconds to trigger push timeouts.
  * Defaults `DEFAULT_TIMEOUT`
+ *
  * @property {number} [heartbeatIntervalMs] - The millisec interval to send a heartbeat message
+ *
+ * @property {boolean} [autoSendHeartbeat] - Whether to automatically send heartbeats after
+ * connection is established.
+ *
+ * Defaults to true.
+ *
+ * @property {HeartbeatCallback} [heartbeatCallback] - The optional function to handle heartbeat status and latency.
  *
  * @property {(tries: number) => number} [reconnectAfterMs] - The optional function that returns the
  * socket reconnect interval, in milliseconds.
@@ -166,6 +177,8 @@
  *       removeItem(keyName) { delete this.storage[keyName] }
  *       setItem(keyName, keyValue) { this.storage[keyName] = keyValue }
  *     }
+ *
+ * @property {() => Promise<void>} [beforeReconnect] - Callback ran before socket tries to reconnect.
  *
  */
 export {}
