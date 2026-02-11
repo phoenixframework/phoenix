@@ -7,7 +7,7 @@ export default class LongPoll {
     reqs: Set<any>;
     awaitingBatchAck: boolean;
     currentBatch: any[] | null;
-    currentBatchTimer: NodeJS.Timeout | null;
+    currentBatchTimer: number | null;
     batchBuffer: any[];
     onopen: () => void;
     onerror: () => void;
