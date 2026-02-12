@@ -63,7 +63,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~r/config :esbuild/
         assert file =~ "cd: Path.expand(\"../apps/phx_umb_web/assets\", __DIR__)"
         assert file =~ ~S[import_config "#{config_env()}.exs"]
-        assert file =~ "config :phoenix, :json_library, Jason"
+        assert file =~ "config :phoenix, :json_library, JSON"
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
         assert file =~ "generators: [context_app: :phx_umb]\n"
