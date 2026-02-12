@@ -272,6 +272,12 @@ defmodule Phoenix.Test.ChannelTest do
 
   ## handle_in
 
+  test "assert_push with guards" do
+    {:ok, _, socket} = join(socket(UserSocket), Channel, "foo:ok")
+    push(socket, "noreply", %{"req" => "foo"})
+    assert_push "noreply", %{"resp" => resp} when is_binary(resp)
+  end
+
   test "pushes and receives pushed messages" do
     {:ok, _, socket} = join(socket(UserSocket), Channel, "foo:ok")
     ref = push(socket, "noreply", %{"req" => "foo"})
@@ -344,6 +350,12 @@ defmodule Phoenix.Test.ChannelTest do
     assert_graceful_exit(pid)
   end
 
+  test "assert_broadcast with guards" do
+    socket = subscribe_and_join!(socket(UserSocket), Channel, "foo:ok")
+    push(socket, "broadcast", %{"foo" => "bar"})
+    assert_broadcast "broadcast", %{"foo" => resp} when is_binary(resp)
+  end
+
   test "pushes and broadcast messages" do
     socket = subscribe_and_join!(socket(UserSocket), Channel, "foo:ok")
     refute_broadcast "broadcast", _params
@@ -385,6 +397,13 @@ defmodule Phoenix.Test.ChannelTest do
 
     ref = push(socket, "reply", %{req: %{parameter: 1}})
     assert_reply ref, :ok, %{"resp" => %{"parameter" => 1}}
+  end
+
+  test "assert_reply with guards" do
+    {:ok, _, socket} = join(socket(UserSocket), Channel, "foo:ok")
+
+    ref = push(socket, "reply", %{req: %{parameter: 1}})
+    assert_reply ref, :ok, %{"resp" => resp} when is_map(resp)
   end
 
   test "pushes structs without modifying them" do
