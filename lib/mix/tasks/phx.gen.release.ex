@@ -107,7 +107,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
         {:eex, "rel/migrate.sh.eex", "rel/overlays/bin/migrate"},
         {:eex, "rel/migrate.bat.eex", "rel/overlays/bin/migrate.bat"},
-        {:eex, "release.ex", Mix.Phoenix.context_lib_path(app, "release.ex")}
+        {:eex, "release.ex.eex", Mix.Phoenix.context_lib_path(app, "release.ex")}
       ])
     end
 

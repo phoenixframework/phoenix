@@ -219,11 +219,11 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     test_live = Path.join([test_prefix, "live", web_path])
 
     [
-      {:eex, "show.ex", Path.join(web_live, "show.ex")},
-      {:eex, "index.ex", Path.join(web_live, "index.ex")},
-      {:eex, "form.ex", Path.join(web_live, "form.ex")},
-      {:eex, "live_test.exs", Path.join(test_live, "#{schema.singular}_live_test.exs")},
-      {:new_eex, "core_components.ex",
+      {:eex, "show.ex.eex", Path.join(web_live, "show.ex")},
+      {:eex, "index.ex.eex", Path.join(web_live, "index.ex")},
+      {:eex, "form.ex.eex", Path.join(web_live, "form.ex")},
+      {:eex, "live_test.exs.eex", Path.join(test_live, "#{schema.singular}_live_test.exs")},
+      {:new_eex, "core_components.ex.eex",
        Path.join([web_prefix, "components", "core_components.ex"])}
     ]
   end
