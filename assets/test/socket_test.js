@@ -39,6 +39,7 @@ describe("with transports", function (){
       expect(socket.longpollerTimeout).toBe(20000)
       expect(socket.heartbeatIntervalMs).toBe(30000)
       expect(socket.logger).toBeNull()
+      expect(socket.disableAutoDisconnectOnPageHide).toBe(false)
       expect(socket.binaryType).toBe("arraybuffer")
       expect(typeof socket.reconnectAfterMs).toBe("function")
     })
@@ -64,6 +65,7 @@ describe("with transports", function (){
         logger: customLogger,
         reconnectAfterMs: customReconnect,
         params: {one: "two"},
+        disableAutoDisconnectOnPageHide: true
       })
 
       expect(socket.timeout).toBe(40000)
@@ -72,6 +74,7 @@ describe("with transports", function (){
       expect(socket.transport).toBe(customTransport)
       expect(socket.logger).toBe(customLogger)
       expect(socket.params()).toEqual({one: "two"})
+      expect(socket.disableAutoDisconnectOnPageHide).toBe(true)
     })
 
     describe("with Websocket", function (){
