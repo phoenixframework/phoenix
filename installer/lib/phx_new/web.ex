@@ -6,54 +6,54 @@ defmodule Phx.New.Web do
   @pre "phx_umbrella/apps/app_name_web"
 
   template(:new, [
-    {:prod_config, :project, "#{@pre}/config/runtime.exs": "config/runtime.exs"},
+    {:prod_config, :project, "#{@pre}/config/runtime.exs.eex": "config/runtime.exs"},
     {:config, :project,
-     "#{@pre}/config/config.exs": "config/config.exs",
-     "#{@pre}/config/dev.exs": "config/dev.exs",
-     "#{@pre}/config/prod.exs": "config/prod.exs",
-     "#{@pre}/config/test.exs": "config/test.exs"},
+     "#{@pre}/config/config.exs.eex": "config/config.exs",
+     "#{@pre}/config/dev.exs.eex": "config/dev.exs",
+     "#{@pre}/config/prod.exs.eex": "config/prod.exs",
+     "#{@pre}/config/test.exs.eex": "config/test.exs"},
     {:keep, :web,
      "phx_web/controllers": "lib/:web_app/controllers",
      "phx_test/channels": "test/:web_app/channels",
      "phx_test/controllers": "test/:web_app/controllers"},
     {:eex, :web,
-     "#{@pre}/lib/app_name.ex": "lib/:web_app.ex",
-     "#{@pre}/lib/app_name/application.ex": "lib/:web_app/application.ex",
-     "phx_web/endpoint.ex": "lib/:web_app/endpoint.ex",
-     "phx_web/router.ex": "lib/:web_app/router.ex",
-     "phx_web/telemetry.ex": "lib/:web_app/telemetry.ex",
-     "phx_web/controllers/error_json.ex": "lib/:web_app/controllers/error_json.ex",
-     "#{@pre}/mix.exs": "mix.exs",
-     "#{@pre}/README.md": "README.md",
-     "#{@pre}/gitignore": ".gitignore",
-     "#{@pre}/test/test_helper.exs": "test/test_helper.exs",
-     "phx_test/support/conn_case.ex": "test/support/conn_case.ex",
-     "phx_test/controllers/error_json_test.exs": "test/:web_app/controllers/error_json_test.exs",
-     "#{@pre}/formatter.exs": ".formatter.exs"}
+     "#{@pre}/lib/app_name.ex.eex": "lib/:web_app.ex",
+     "#{@pre}/lib/app_name/application.ex.eex": "lib/:web_app/application.ex",
+     "phx_web/endpoint.ex.eex": "lib/:web_app/endpoint.ex",
+     "phx_web/router.ex.eex": "lib/:web_app/router.ex",
+     "phx_web/telemetry.ex.eex": "lib/:web_app/telemetry.ex",
+     "phx_web/controllers/error_json.ex.eex": "lib/:web_app/controllers/error_json.ex",
+     "#{@pre}/mix.exs.eex": "mix.exs",
+     "#{@pre}/README.md.eex": "README.md",
+     "#{@pre}/gitignore.eex": ".gitignore",
+     "#{@pre}/test/test_helper.exs.eex": "test/test_helper.exs",
+     "phx_test/support/conn_case.ex.eex": "test/support/conn_case.ex",
+     "phx_test/controllers/error_json_test.exs.eex": "test/:web_app/controllers/error_json_test.exs",
+     "#{@pre}/formatter.exs.eex": ".formatter.exs"}
   ])
 
   template(:gettext, [
     {:eex, :web,
-     "phx_gettext/gettext.ex": "lib/:web_app/gettext.ex",
-     "phx_gettext/en/LC_MESSAGES/errors.po": "priv/gettext/en/LC_MESSAGES/errors.po",
-     "phx_gettext/errors.pot": "priv/gettext/errors.pot"}
+     "phx_gettext/gettext.ex.eex": "lib/:web_app/gettext.ex",
+     "phx_gettext/en/LC_MESSAGES/errors.po.eex": "priv/gettext/en/LC_MESSAGES/errors.po",
+     "phx_gettext/errors.pot.eex": "priv/gettext/errors.pot"}
   ])
 
   template(:html, [
     {:eex, :web,
-     "phx_web/components/core_components.ex": "lib/:web_app/components/core_components.ex",
-     "phx_web/components/layouts.ex": "lib/:web_app/components/layouts.ex",
-     "phx_web/controllers/page_controller.ex": "lib/:web_app/controllers/page_controller.ex",
-     "phx_web/controllers/error_html.ex": "lib/:web_app/controllers/error_html.ex",
-     "phx_web/controllers/page_html.ex": "lib/:web_app/controllers/page_html.ex",
-     "phx_web/controllers/page_html/home.html.heex":
+     "phx_web/components/core_components.ex.eex": "lib/:web_app/components/core_components.ex",
+     "phx_web/components/layouts.ex.eex": "lib/:web_app/components/layouts.ex",
+     "phx_web/controllers/page_controller.ex.eex": "lib/:web_app/controllers/page_controller.ex",
+     "phx_web/controllers/error_html.ex.eex": "lib/:web_app/controllers/error_html.ex",
+     "phx_web/controllers/page_html.ex.eex": "lib/:web_app/controllers/page_html.ex",
+     "phx_web/controllers/page_html/home.html.heex.eex":
        "lib/:web_app/controllers/page_html/home.html.heex",
-     "phx_test/controllers/page_controller_test.exs":
+     "phx_test/controllers/page_controller_test.exs.eex":
        "test/:web_app/controllers/page_controller_test.exs",
-     "phx_test/controllers/error_html_test.exs": "test/:web_app/controllers/error_html_test.exs",
-     "phx_assets/topbar.js": "assets/vendor/topbar.js",
-     "phx_web/components/layouts/root.html.heex": "lib/:web_app/components/layouts/root.html.heex"},
-    {:eex, :web, "phx_assets/logo.svg": "priv/static/images/logo.svg"}
+     "phx_test/controllers/error_html_test.exs.eex": "test/:web_app/controllers/error_html_test.exs",
+     "phx_assets/topbar.js.eex": "assets/vendor/topbar.js",
+     "phx_web/components/layouts/root.html.heex.eex": "lib/:web_app/components/layouts/root.html.heex"},
+    {:eex, :web, "phx_assets/logo.svg.eex": "priv/static/images/logo.svg"}
   ])
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do

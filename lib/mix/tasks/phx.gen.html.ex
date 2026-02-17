@@ -197,16 +197,16 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     test_pre = Path.join([test_prefix, "controllers", web_path])
 
     [
-      {:eex, "controller.ex", Path.join([controller_pre, "#{singular}_controller.ex"])},
-      {:eex, "edit.html.heex", Path.join([controller_pre, "#{singular}_html", "edit.html.heex"])},
-      {:eex, "index.html.heex",
+      {:eex, "controller.ex.eex", Path.join([controller_pre, "#{singular}_controller.ex"])},
+      {:eex, "edit.html.heex.eex", Path.join([controller_pre, "#{singular}_html", "edit.html.heex"])},
+      {:eex, "index.html.heex.eex",
        Path.join([controller_pre, "#{singular}_html", "index.html.heex"])},
-      {:eex, "new.html.heex", Path.join([controller_pre, "#{singular}_html", "new.html.heex"])},
-      {:eex, "show.html.heex", Path.join([controller_pre, "#{singular}_html", "show.html.heex"])},
-      {:eex, "resource_form.html.heex",
+      {:eex, "new.html.heex.eex", Path.join([controller_pre, "#{singular}_html", "new.html.heex"])},
+      {:eex, "show.html.heex.eex", Path.join([controller_pre, "#{singular}_html", "show.html.heex"])},
+      {:eex, "resource_form.html.heex.eex",
        Path.join([controller_pre, "#{singular}_html", "#{singular}_form.html.heex"])},
-      {:eex, "html.ex", Path.join([controller_pre, "#{singular}_html.ex"])},
-      {:eex, "controller_test.exs", Path.join([test_pre, "#{singular}_controller_test.exs"])}
+      {:eex, "html.ex.eex", Path.join([controller_pre, "#{singular}_html.ex"])},
+      {:eex, "controller_test.exs.eex", Path.join([test_pre, "#{singular}_controller_test.exs"])}
     ]
   end
 
