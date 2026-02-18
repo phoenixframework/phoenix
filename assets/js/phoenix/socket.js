@@ -496,17 +496,16 @@ export default class Socket {
     if(!this.conn){
       return callback && callback()
     }
-    let connectClock = this.connectClock
 
-    this.waitForBufferDone(() => {
-      if(connectClock !== this.connectClock){ return }
-      if(this.conn){
-        if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
-      }
+    // If someone calls connect before we finish tearing down,
+    // we create a new connection, but we still want to finish tearing down the old one.
+    const connToClose = this.conn
 
-      this.waitForSocketClosed(() => {
-        if(connectClock !== this.connectClock){ return }
-        if(this.conn){
+    this.waitForBufferDone(connToClose, () => {
+      if(code){ connToClose.close(code, reason || "") } else { connToClose.close() }
+
+      this.waitForSocketClosed(connToClose, () => {
+        if(this.conn === connToClose){
           this.conn.onopen = function (){ } // noop
           this.conn.onerror = function (){ } // noop
           this.conn.onmessage = function (){ } // noop
@@ -519,25 +518,25 @@ export default class Socket {
     })
   }
 
-  waitForBufferDone(callback, tries = 1){
-    if(tries === 5 || !this.conn || !this.conn.bufferedAmount){
+  waitForBufferDone(conn, callback, tries = 1){
+    if(tries === 5 || !conn.bufferedAmount){
       callback()
       return
     }
 
     setTimeout(() => {
-      this.waitForBufferDone(callback, tries + 1)
+      this.waitForBufferDone(conn, callback, tries + 1)
     }, 150 * tries)
   }
 
-  waitForSocketClosed(callback, tries = 1){
-    if(tries === 5 || !this.conn || this.conn.readyState === SOCKET_STATES.closed){
+  waitForSocketClosed(conn, callback, tries = 1){
+    if(tries === 5 || conn.readyState === SOCKET_STATES.closed){
       callback()
       return
     }
 
     setTimeout(() => {
-      this.waitForSocketClosed(callback, tries + 1)
+      this.waitForSocketClosed(conn, callback, tries + 1)
     }, 150 * tries)
   }
 
