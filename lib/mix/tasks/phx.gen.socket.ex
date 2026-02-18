@@ -59,8 +59,8 @@ defmodule Mix.Tasks.Phx.Gen.Socket do
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Socket")
 
     Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.socket", binding, [
-      {:eex, "socket.ex", Path.join(web_prefix, "channels/#{binding[:path]}_socket.ex")},
-      {:eex, "socket.js", "assets/js/#{binding[:path]}_socket.js"}
+      {:eex, "socket.ex.eex", Path.join(web_prefix, "channels/#{binding[:path]}_socket.ex")},
+      {:eex, "socket.js.eex", "assets/js/#{binding[:path]}_socket.js"}
     ])
 
     Mix.shell().info("""
