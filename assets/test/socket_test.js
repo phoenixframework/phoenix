@@ -2,6 +2,7 @@ import {jest} from "@jest/globals"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
+import { transform } from "@babel/core"
 
 let socket
 
@@ -284,6 +285,67 @@ describe("with transports", function (){
       expect(() => {
         socket.disconnect()
       }).not.toThrow()
+    })
+
+    /**
+     * Race with a stub transport that only closes on explicit close() (and after a delay).
+     * Two teardowns can run (e.g. heartbeat timeout then explicit disconnect()). The first
+     * to finish sets this.conn = null and may schedule reconnect, so connect() creates connB.
+     * The late waitForSocketClosed callback must not overwrite this.conn with null when
+     * this.conn is already the reconnected conn (connB) — otherwise we leak connB (open without
+     * close). Expected: socket.conn must stay connB; the second connection must not be leaked.
+     */
+    it("race: with stub transport, socket.conn must stay connB and second conn must not be leaked (open without close)", function (){
+      const connections = []
+      const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
+      const mockWebSocket = function StubWebSocketNoAutoClose(_url){
+        const conn = {
+          readyState: SOCKET_STATES.open,
+          get bufferedAmount(){ return 1 },
+          binaryType: "arraybuffer",
+          timeout: 20000,
+          onopen: null,
+          onerror: null,
+          onmessage: null,
+          onclose: null,
+          close(_code, _reason){
+            this.readyState = SOCKET_STATES.closing
+            setTimeout(() => {
+              this.readyState = SOCKET_STATES.closed
+            }, 1000)
+          },
+          send(){},
+        }
+        connections.push(conn)
+        return conn
+      }
+
+      socket = new Socket("/socket", {
+        heartbeatIntervalMs: 30000,
+        heartbeatTimeoutMs: 30000,
+        reconnectAfterMs: () => 10,
+        transport: mockWebSocket
+      })
+      socket.connect()
+      socket.disconnect()
+      expect(socket.conn).toBeTruthy()
+
+      jest.useFakeTimers()
+      socket.conn.onopen()
+      jest.advanceTimersByTime(60000)
+      jest.advanceTimersByTime(1000)
+      socket.disconnect()
+      socket.connect()
+      jest.advanceTimersByTime(4000)
+
+      const openConns = connections.filter(c => c.readyState === SOCKET_STATES.open)
+      expect(openConns.length).toBe(1)
+
+      // Late teardown must not overwrite this.conn with null when it is already connB; otherwise
+      // connB is leaked (open without close). So socket.conn must stay the second connection.
+      expect(socket.conn).not.toBeNull()
+
+      jest.useRealTimers()
     })
   })
 
