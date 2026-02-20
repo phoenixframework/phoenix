@@ -115,8 +115,8 @@ defmodule Mix.Tasks.Phx.New do
       hello_web/    HelloWeb
   ```
 
-  You can read more about umbrella projects using the
-  official [Elixir guide](https://hexdocs.pm/elixir/dependencies-and-umbrella-projects.html#umbrella-projects)
+  You can read more about umbrella projects in the
+  [mix documentation](https://hexdocs.pm/mix/Mix.Project.html#module-umbrella-projects)
 
   ## `PHX_NEW_CACHE_DIR`
 
