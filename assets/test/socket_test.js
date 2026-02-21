@@ -2,6 +2,7 @@ import {jest} from "@jest/globals"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
+import {SOCKET_STATES} from "../js/phoenix/constants"
 
 let socket
 
@@ -284,6 +285,130 @@ describe("with transports", function (){
       expect(() => {
         socket.disconnect()
       }).not.toThrow()
+    })
+
+    it("properly tears down old connection when immediately reconnecting", function (){
+      const connections = []
+      const mockWebSocket = function StubWebSocketNoAutoClose(_url){
+        const conn = {
+          readyState: SOCKET_STATES.open,
+          get bufferedAmount(){ return 1 },
+          binaryType: "arraybuffer",
+          timeout: 20000,
+          onopen: null,
+          onerror: null,
+          onmessage: null,
+          onclose: null,
+          close(_code, _reason){
+            this.readyState = SOCKET_STATES.closing
+            setTimeout(() => {
+              this.readyState = SOCKET_STATES.closed
+            }, 1000)
+          },
+          send(){},
+        }
+        connections.push(conn)
+        return conn
+      }
+
+      jest.useFakeTimers()
+
+      socket = new Socket("/socket", {
+        heartbeatIntervalMs: 30000,
+        heartbeatTimeoutMs: 30000,
+        reconnectAfterMs: () => 10,
+        transport: mockWebSocket
+      })
+      socket.connect()
+      const originalConn = socket.conn
+
+      // Disconnect triggers teardown, which waits for bufferedAmount to be zero or 2250ms,
+      // then awaits SOCKET_STATES.closed before calling the callback.
+      const disconnected = jest.fn()
+      socket.disconnect(disconnected)
+
+      // For now, the conn is still set.
+      expect(socket.conn).toBeTruthy()
+
+      // Advance time by > 2250ms, which means we are waiting for socket to transition to closed
+      jest.advanceTimersByTime(3000)
+
+      // Now we call connect, while the teardown is still running
+      socket.connect()
+      // By now, waitForSocketClosed should be done, but now there's a new conn!
+      jest.advanceTimersByTime(3000)
+      expect(socket.conn).not.toBe(originalConn)
+
+      const openConns = connections.filter(c => c.readyState === SOCKET_STATES.open)
+      expect(openConns.length).toBe(1)
+
+      // Late teardown must not overwrite this.conn with null when it is already connB
+      expect(socket.conn).not.toBeNull()
+
+      // the original disconnected should have been called
+      expect(disconnected).toHaveBeenCalled()
+
+      jest.useRealTimers()
+    })
+
+    it("properly tears down old connection when disconnecting twice", function (){
+      const connections = []
+      const mockWebSocket = function StubWebSocketNoAutoClose(_url){
+        const conn = {
+          readyState: SOCKET_STATES.open,
+          get bufferedAmount(){ return 1 },
+          binaryType: "arraybuffer",
+          timeout: 20000,
+          onopen: null,
+          onerror: null,
+          onmessage: null,
+          onclose: null,
+          close(_code, _reason){
+            this.readyState = SOCKET_STATES.closing
+            setTimeout(() => {
+              this.readyState = SOCKET_STATES.closed
+            }, 1000)
+          },
+          send(){},
+        }
+        connections.push(conn)
+        return conn
+      }
+
+      jest.useFakeTimers()
+
+      socket = new Socket("/socket", {
+        heartbeatIntervalMs: 30000,
+        heartbeatTimeoutMs: 30000,
+        reconnectAfterMs: () => 10,
+        transport: mockWebSocket
+      })
+      socket.connect()
+
+      const disconnected = jest.fn()
+      socket.disconnect(disconnected)
+
+      // For now, the conn is still set.
+      expect(socket.conn).toBeTruthy()
+
+      // Advance time by > 2250ms, which means we are waiting for socket to transition to closed
+      jest.advanceTimersByTime(3000)
+
+      // Now we call disconnect again, while the teardown is still running
+      const disconnected2 = jest.fn()
+      socket.disconnect(disconnected2)
+
+      jest.advanceTimersByTime(10000)
+
+      const openConns = connections.filter(c => c.readyState === SOCKET_STATES.open)
+      expect(openConns.length).toBe(0)
+      expect(socket.conn).toBeNull()
+
+      // both disconnected functions should have been called
+      expect(disconnected).toHaveBeenCalled()
+      expect(disconnected2).toHaveBeenCalled()
+
+      jest.useRealTimers()
     })
   })
 
