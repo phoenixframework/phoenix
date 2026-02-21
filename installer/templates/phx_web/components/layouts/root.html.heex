@@ -9,7 +9,7 @@
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} /><%= if not @css do %>
     <link phx-track-static rel="stylesheet" href={~p"/assets/default.css"} /><% end %>
-    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    <script phx-track-static type="module" src={~p"/assets/js/app.js"}>
     </script><%= if @css do %>
     <script>
       (() => {
