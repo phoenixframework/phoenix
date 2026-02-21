@@ -1435,23 +1435,15 @@ var Phoenix = (() => {
       if (!this.conn) {
         return callback && callback();
       }
-      let connectClock = this.connectClock;
-      this.waitForBufferDone(() => {
-        if (connectClock !== this.connectClock) {
-          return;
+      const connToClose = this.conn;
+      this.waitForBufferDone(connToClose, () => {
+        if (code) {
+          connToClose.close(code, reason || "");
+        } else {
+          connToClose.close();
         }
-        if (this.conn) {
-          if (code) {
-            this.conn.close(code, reason || "");
-          } else {
-            this.conn.close();
-          }
-        }
-        this.waitForSocketClosed(() => {
-          if (connectClock !== this.connectClock) {
-            return;
-          }
-          if (this.conn) {
+        this.waitForSocketClosed(connToClose, () => {
+          if (this.conn === connToClose) {
             this.conn.onopen = function() {
             };
             this.conn.onerror = function() {
@@ -1466,22 +1458,22 @@ var Phoenix = (() => {
         });
       });
     }
-    waitForBufferDone(callback, tries = 1) {
-      if (tries === 5 || !this.conn || !this.conn.bufferedAmount) {
+    waitForBufferDone(conn, callback, tries = 1) {
+      if (tries === 5 || !conn.bufferedAmount) {
         callback();
         return;
       }
       setTimeout(() => {
-        this.waitForBufferDone(callback, tries + 1);
+        this.waitForBufferDone(conn, callback, tries + 1);
       }, 150 * tries);
     }
-    waitForSocketClosed(callback, tries = 1) {
-      if (tries === 5 || !this.conn || this.conn.readyState === SOCKET_STATES.closed) {
+    waitForSocketClosed(conn, callback, tries = 1) {
+      if (tries === 5 || conn.readyState === SOCKET_STATES.closed) {
         callback();
         return;
       }
       setTimeout(() => {
-        this.waitForSocketClosed(callback, tries + 1);
+        this.waitForSocketClosed(conn, callback, tries + 1);
       }, 150 * tries);
     }
     onConnClose(event) {
