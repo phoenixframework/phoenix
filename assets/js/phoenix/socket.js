@@ -54,6 +54,7 @@ import Timer from "./timer"
  *
  * Defaults `DEFAULT_TIMEOUT`
  * @param {number} [opts.heartbeatIntervalMs] - The millisec interval to send a heartbeat message
+ * @param {number} [opts.heartbeatTimeoutMs] - The default timeout in milliseconds to trigger heartbeat timeouts
  * @param {Function} [opts.reconnectAfterMs] - The optional function that returns the
  * socket reconnect interval, in milliseconds.
  *
@@ -165,6 +166,7 @@ export default class Socket {
       })
     }
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000
+    this.heartbeatTimeoutMs = opts.heartbeatTimeoutMs || this.heartbeatIntervalMs
     this.rejoinAfterMs = (tries) => {
       if(opts.rejoinAfterMs){
         return opts.rejoinAfterMs(tries)
@@ -659,11 +661,14 @@ export default class Socket {
     return this.ref.toString()
   }
 
+  /**
+   * Send heat beat message. If the response timeout, Attempting to re-establish connection
+   */
   sendHeartbeat(){
     if(this.pendingHeartbeatRef && !this.isConnected()){ return }
     this.pendingHeartbeatRef = this.makeRef()
     this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef})
-    this.heartbeatTimeoutTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs)
+    this.heartbeatTimeoutTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatTimeoutMs)
   }
 
   flushSendBuffer(){
