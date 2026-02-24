@@ -42,4 +42,20 @@ defmodule Phoenix.NamingTest do
     assert Naming.camelize("_foo_bar", :lower) == "fooBar"
     assert Naming.camelize("foo_bar_1", :lower) == "fooBar1"
   end
+
+  test "humanize/1 converts atoms and strings to humanized form" do
+    assert Naming.humanize(:username) == "Username"
+    assert Naming.humanize(:created_at) == "Created at"
+    assert Naming.humanize("user_id") == "User"
+    assert Naming.humanize("foo_bar") == "Foo bar"
+    assert Naming.humanize(:email_id) == "Email"
+  end
+
+  test "titleize/1 converts atoms and strings to titleized form" do
+    assert Naming.titleize(:username) == "Username"
+    assert Naming.titleize(:created_at) == "Created At"
+    assert Naming.titleize("user_id") == "User"
+    assert Naming.titleize("foo_bar") == "Foo Bar"
+    assert Naming.titleize(:email_id) == "Email"
+  end
 end
