@@ -841,6 +841,29 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
     end)
   end
 
+  test "generates migration with a custom migration module", config do
+    in_tmp_phx_project(config.test, fn ->
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      try do
+        Application.put_env(:ecto_sql, :migration_module, MyCustomApp.MigrationModule)
+
+        Gen.Auth.run(
+          ~w(Accounts User users --no-compile),
+          ecto_adapter: Ecto.Adapters.Postgres
+        )
+
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
+
+        assert_file(migration, fn file ->
+          assert file =~ "use MyCustomApp.MigrationModule"
+        end)
+      after
+        Application.delete_env(:ecto_sql, :migration_module)
+      end
+    end)
+  end
+
   test "supports --binary-id option", config do
     in_tmp_phx_project(config.test, fn ->
       send(self(), {:mix_shell_input, :yes?, false})
