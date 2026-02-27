@@ -37,8 +37,16 @@ config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Lo
 config :esbuild,
   version: "0.25.4",
   <%= @app_name %>: [
-    args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
+    args: ~w(
+      js/app.js
+      --bundle
+      --format=esm
+      --target=es2022
+      --outdir=../priv/static/assets/js
+      --external:/fonts/*
+      --external:/images/*
+      --alias:@=.
+    ),
     cd: Path.expand("..<%= if @in_umbrella, do: "/apps/#{@app_name}" %>/assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]<% end %><%= if @css do %>
