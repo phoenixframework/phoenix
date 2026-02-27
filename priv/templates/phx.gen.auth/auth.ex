@@ -55,7 +55,7 @@ defmodule <%= inspect auth_module %> do
 
     conn
     |> renew_session(nil)
-    |> delete_resp_cookie(@remember_me_cookie)
+    |> delete_resp_cookie(@remember_me_cookie, @remember_me_options)
     |> redirect(to: ~p"/")
   end
 
