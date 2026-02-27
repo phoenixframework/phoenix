@@ -31,7 +31,7 @@ This release introduces deprecation warnings for several features that have been
 
 ## 1.8.4 (2026-2-23)
 
-### JavaScritp Client Bug Fixes
+### JavaScript Client Bug Fixes
 - Fix bug reconnecting connections when close was gracefully initiated by server
 - Fix LongPoll transport name in sessionStorage and logs
 
