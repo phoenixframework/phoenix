@@ -19,6 +19,7 @@ import Channel from "./channel"
 import LongPoll from "./longpoll"
 import Serializer from "./serializer"
 import Timer from "./timer"
+import WebTransport from "./webtransport"
 
 /** Initializes the Socket *
  *
@@ -280,7 +281,8 @@ export default class Socket {
     }
     if(this.conn && !this.disconnecting){ return }
     if(this.longPollFallbackMs && this.transport !== LongPoll){
-      this.connectWithFallback(LongPoll, this.longPollFallbackMs)
+      let fallbackTransport = this.isWebTransport(this.transport) ? (global.WebSocket || LongPoll) : LongPoll
+      this.connectWithFallback(fallbackTransport, this.longPollFallbackMs)
     } else {
       this.transportConnect()
     }
@@ -383,6 +385,10 @@ export default class Socket {
     }
   }
 
+  isWebTransport(transport){
+    return transport === WebTransport || transport === global.WebTransport
+  }
+
   /**
    * @private
    */
@@ -414,14 +420,19 @@ export default class Socket {
     let primaryTransport = true
     let openRef, errorRef
     let fallbackTransportName = this.transportName(fallbackTransport)
+    let shouldMemorizeFallback = fallbackTransport === LongPoll
     let fallback = (reason) => {
       this.log("transport", `falling back to ${fallbackTransportName}...`, reason)
       this.off([openRef, errorRef])
       primaryTransport = false
       this.replaceTransport(fallbackTransport)
-      this.transportConnect()
+      if(this.longPollFallbackMs && fallbackTransport !== LongPoll){
+        this.connectWithFallback(LongPoll, fallbackThreshold)
+      } else {
+        this.transportConnect()
+      }
     }
-    if(this.getSession(`phx:fallback:${fallbackTransportName}`)){ return fallback("memorized") }
+    if(shouldMemorizeFallback && this.getSession(`phx:fallback:${fallbackTransportName}`)){ return fallback("memorized") }
 
     this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
 
@@ -438,9 +449,10 @@ export default class Socket {
     this.fallbackRef = this.onOpen(() => {
       established = true
       if(!primaryTransport){
-        let fallbackTransportName = this.transportName(fallbackTransport)
         // only memorize LP if we never connected to primary
-        if(!this.primaryPassedHealthCheck){ this.storeSession(`phx:fallback:${fallbackTransportName}`, "true") }
+        if(shouldMemorizeFallback && !this.primaryPassedHealthCheck){
+          this.storeSession(`phx:fallback:${fallbackTransportName}`, "true")
+        }
         return this.log("transport", `established ${fallbackTransportName} fallback`)
       }
       // if we've established primary, give the fallback a new period to attempt ping
