@@ -1,5 +1,5 @@
 defmodule <%= inspect schema.repo %>.Migrations.Create<%= Macro.camelize(schema.table) %>AuthTables do
-  use Ecto.Migration
+  use <%= inspect schema.migration_module %>
 
   def change do<%= if Enum.any?(migration.extensions) do %><%= for extension <- migration.extensions do %>
     <%= extension %><% end %>
