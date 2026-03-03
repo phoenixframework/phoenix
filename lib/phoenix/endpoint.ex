@@ -435,7 +435,7 @@ defmodule Phoenix.Endpoint do
   end
 
   defp pubsub() do
-    quote do
+    quote generated: true do
       def subscribe(topic, opts \\ []) when is_binary(topic) do
         Phoenix.PubSub.subscribe(pubsub_server!(), topic, opts)
       end
