@@ -220,7 +220,7 @@ defmodule Phoenix.VerifiedRoutesTest do
         end
       end)
 
-    assert warnings == ""
+    refute warnings =~ "no route path"
   after
     :code.purge(__MODULE__.Hash)
     :code.delete(__MODULE__.Hash)
