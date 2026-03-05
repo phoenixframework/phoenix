@@ -1,0 +1,42 @@
+# https://docs.npmjs.com/trusted-publishers
+name: NPM Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      # Ensure npm 11.5.1 or later is installed
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Determine npm tag
+        id: npm-tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          # Update this condition when bumping the major version!
+          if [[ $TAG == v1.7.* ]]; then
+            echo "tag=old-version" >> $GITHUB_OUTPUT
+          elif [[ $TAG == *-rc* ]]; then
+            echo "tag=rc" >> $GITHUB_OUTPUT
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to npm
+        run: npm publish --tag ${{ steps.npm-tag.outputs.tag }}
