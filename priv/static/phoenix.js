@@ -1069,7 +1069,7 @@ var Phoenix = (() => {
       this.establishedConnections = 0;
       this.defaultEncoder = serializer_default.encode.bind(serializer_default);
       this.defaultDecoder = serializer_default.decode.bind(serializer_default);
-      this.closeWasClean = false;
+      this.closeWasClean = true;
       this.disconnecting = false;
       this.binaryType = opts.binaryType || "arraybuffer";
       this.connectClock = 1;
