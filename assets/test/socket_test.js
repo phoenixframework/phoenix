@@ -104,6 +104,43 @@ describe("with transports", function (){
     })
   })
 
+  describe("visibilitychange", function (){
+    it("does not connect a socket that was never connected", function (){
+      socket = new Socket("/socket")
+      const teardownSpy = jest.spyOn(socket, "teardown")
+
+      Object.defineProperty(document, "visibilityState", {value: "hidden", writable: true})
+      window.dispatchEvent(new Event("visibilitychange"))
+
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+      window.dispatchEvent(new Event("visibilitychange"))
+
+      expect(teardownSpy).not.toHaveBeenCalled()
+    })
+
+    it("reconnects on visibility change after unclean close", function (){
+      socket = new Socket("/socket")
+      socket.closeWasClean = false
+      const teardownSpy = jest.spyOn(socket, "teardown")
+
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+      window.dispatchEvent(new Event("visibilitychange"))
+
+      expect(teardownSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not reconnect on visibility change after clean close", function (){
+      socket = new Socket("/socket")
+      socket.closeWasClean = true
+      const teardownSpy = jest.spyOn(socket, "teardown")
+
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+      window.dispatchEvent(new Event("visibilitychange"))
+
+      expect(teardownSpy).not.toHaveBeenCalled()
+    })
+  })
+
   describe("protocol", function (){
     beforeEach(function (){
       socket = new Socket("/socket")
