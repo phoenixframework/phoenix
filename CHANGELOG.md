@@ -29,7 +29,15 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience. This may also lead to errors on application boot if you were previously incorrectly setting compile time config at runtime.
 
-## 1.8.4 (2026-2-23)
+## 1.8.5 (2026-03-05)
+
+### JavaScript Client Bug Fixes
+- Fix socket connecting on visibility change when never established
+
+### Enhancements
+- Fix warnings on Elixir 1.20
+
+## 1.8.4 (2026-02-23)
 
 ### JavaScript Client Bug Fixes
 - Fix bug reconnecting connections when close was gracefully initiated by server
@@ -39,7 +47,7 @@ This release introduces deprecation warnings for several features that have been
 - Adds guards support in `assert_push`, `assert_broadcast`, and `assert_reply`
 - Enable purging in Phoenix code server for Elixir 1.20
 
-## 1.8.3 (2025-12-8)
+## 1.8.3 (2025-12-08)
 
 ### Enhancements
   - Add top-level phoenix config: `sort_verified_routes_query_params` to enable sorting query params in verified routes during tests
