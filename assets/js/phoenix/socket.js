@@ -122,6 +122,7 @@ export default class Socket {
     this.primaryPassedHealthCheck = false
     this.longPollFallbackMs = opts.longPollFallbackMs
     this.fallbackTimer = null
+    this.fallbackScheduled = false
     this.sessionStore = opts.sessionStorage || (global && global.sessionStorage)
     this.establishedConnections = 0
     this.defaultEncoder = Serializer.encode.bind(Serializer)
@@ -218,6 +219,7 @@ export default class Socket {
   replaceTransport(newTransport){
     this.connectClock++
     this.closeWasClean = true
+    this.fallbackScheduled = false
     clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
     if(this.conn){
@@ -261,6 +263,7 @@ export default class Socket {
     this.connectClock++
     this.disconnecting = true
     this.closeWasClean = true
+    this.fallbackScheduled = false
     clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
     this.teardown(() => {
@@ -423,16 +426,15 @@ export default class Socket {
       primaryTransport = false
       this.replaceTransport(fallbackTransport)
       this.transportConnect()
+      this.fallbackScheduled = false
     }
     if(this.getSession(`phx:fallback:${fallbackTransportName}`)){ return fallback("memorized") }
 
-    this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
-
     errorRef = this.onError(reason => {
       this.log("transport", "error", reason)
-      if(primaryTransport && !established){
-        clearTimeout(this.fallbackTimer)
-        fallback(reason)
+      if(this.transport === WebSocket && !established && !this.fallbackScheduled){
+        this.fallbackScheduled = true
+        this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
       }
     })
     if(this.fallbackRef){
@@ -448,10 +450,12 @@ export default class Socket {
       }
       // if we've established primary, give the fallback a new period to attempt ping
       clearTimeout(this.fallbackTimer)
+      this.fallbackScheduled = true
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
       this.ping(rtt => {
         this.log("transport", "connected to primary after", rtt)
         this.primaryPassedHealthCheck = true
+        this.fallbackScheduled = false
         clearTimeout(this.fallbackTimer)
       })
     })
