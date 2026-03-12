@@ -1,5 +1,65 @@
 ## Elixir guidelines
 
+- Boolean operators: `and` / `or` vs `&&` / `||`
+
+  Prefer using `&&` and `||` in most situations.
+
+  The operators `and` / `or` require the **left-hand side to be a boolean** (`true` or `false`). If the left side is not a boolean, Elixir raises an `ArgumentError`.
+
+  The operators `&&` / `||` accept **any value** and follow Elixir truthiness rules (`false` and `nil` are falsy, everything else is truthy). Because many Elixir expressions return non-boolean values, `&&` / `||` are usually the safer choice.
+
+  Rule of thumb:
+  - Use `&&` and `||` when the left side may return **any value** (`nil`, struct, number, etc).
+  - Use `and` / `or` only when **both sides are guaranteed to be boolean expressions**.
+
+  **Never do this (invalid)**:
+
+      user = Repo.get(User, id)
+      user and user.active
+
+  `user` may be a struct or `nil`, which will raise an error with `and`.
+
+  **Prefer this**:
+
+      user = Repo.get(User, id)
+      user && user.active
+
+  `&&` safely handles `nil` or other non-boolean values.
+
+  Boolean-only logic is still fine with `and`:
+
+      is_admin = user.role == :admin
+      is_active = user.active
+
+      is_admin and is_active
+
+  Both sides are boolean expressions, so `and` is acceptable.
+
+  When working with changesets or database results, expressions often return structs or `nil`, not booleans.
+
+  **Avoid this**:
+
+      changeset = Accounts.change_user(user)
+
+      changeset.valid? and Repo.insert(changeset)
+
+  `Repo.insert/1` returns `{:ok, struct}` or `{:error, changeset}`, not a boolean.
+
+  **Prefer this**:
+
+      changeset = Accounts.change_user(user)
+
+      changeset.valid? && Repo.insert(changeset)
+
+  Another common case:
+
+      user = Repo.get(User, id)
+      user && user.active
+
+  This safely handles the case where the user is not found (`nil`).
+
+  When in doubt, use `&&` and `||`. Only use `and` / `or` when you are certain both operands are booleans.
+
 - Elixir lists **do not support index based access via the access syntax**
 
   **Never do this (invalid)**:
