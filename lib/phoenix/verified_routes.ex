@@ -294,17 +294,13 @@ defmodule Phoenix.VerifiedRoutes do
   """
   @callback verified_route?(plug_opts(), [String.t()]) :: boolean()
 
-  @after_verify_supported Version.match?(System.version(), ">= 1.14.0")
-
   defmacro __before_compile__(_env) do
-    if @after_verify_supported do
-      quote do
-        @after_verify {__MODULE__, :__phoenix_verify_routes__}
+    quote do
+      @after_verify {__MODULE__, :__phoenix_verify_routes__}
 
-        @doc false
-        def __phoenix_verify_routes__(_module) do
-          unquote(__MODULE__).__verify__(@phoenix_verified_routes)
-        end
+      @doc false
+      def __phoenix_verify_routes__(_module) do
+        unquote(__MODULE__).__verify__(@phoenix_verified_routes)
       end
     end
   end
@@ -941,15 +937,9 @@ defmodule Phoenix.VerifiedRoutes do
     {route, static?, endpoint_ctx, route_ast, path_ast, static_ast}
   end
 
-  if @after_verify_supported do
-    defp warn_location(meta, %{line: line, file: file, function: function, module: module}) do
-      column = if column = meta[:column], do: column + 2
-      [line: line, function: function, module: module, file: file, column: column]
-    end
-  else
-    defp warn_location(_meta, env) do
-      Macro.Env.stacktrace(env)
-    end
+  defp warn_location(meta, %{line: line, file: file, function: function, module: module}) do
+    column = if column = meta[:column], do: column + 2
+    [line: line, function: function, module: module, file: file, column: column]
   end
 
   defp rewrite_path(route, endpoint, router, config) do
