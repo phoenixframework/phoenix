@@ -265,6 +265,10 @@ defmodule Phoenix.VerifiedRoutes do
                 "expected path_prefixes to be a list of zero-arity functions, got: #{inspect(other)}"
       end
 
+    if Module.get_attribute(mod, :phoenix_verified_config) do
+      raise "duplicate call to \"use Phoenix.VerifiedRoutes\" found, make sure it is used only once per module"
+    end
+
     Module.put_attribute(mod, :phoenix_verified_config, %{
       statics: statics,
       path_prefixes: path_prefixes
