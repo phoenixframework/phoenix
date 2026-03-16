@@ -113,7 +113,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   setup do
-    Logger.disable(self())
+    Logger.put_process_level(self(), :none)
     :ok
   end
 

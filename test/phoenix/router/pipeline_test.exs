@@ -83,7 +83,7 @@ defmodule Phoenix.Router.PipelineTest do
   use RouterHelper
 
   setup do
-    Logger.disable(self())
+    Logger.put_process_level(self(), :none)
     :ok
   end
 

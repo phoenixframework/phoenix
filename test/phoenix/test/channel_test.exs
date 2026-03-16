@@ -266,7 +266,7 @@ defmodule Phoenix.Test.ChannelTest do
 
   test "join/3 with crash" do
     Process.flag(:trap_exit, true)
-    Logger.disable(self())
+    Logger.put_process_level(self(), :none)
     assert {:error, %{reason: "join crashed"}} = join(socket(UserSocket), Channel, "foo:crash")
   end
 

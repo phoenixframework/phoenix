@@ -66,7 +66,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     channel "room:*", RoomChannel
 
     def connect(params, socket, connect_info) do
-      unless params["logging"] == "enabled", do: Logger.disable(self())
+      unless params["logging"] == "enabled", do: Logger.put_process_level(self(), :none)
       address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
       trace_context_headers = Enum.into(connect_info.trace_context_headers, %{})
       uri = Map.from_struct(connect_info.uri)
@@ -106,7 +106,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     end
 
     def connect(params, socket) do
-      unless params["logging"] == "enabled", do: Logger.disable(self())
+      unless params["logging"] == "enabled", do: Logger.put_process_level(self(), :none)
       {:ok, assign(socket, :user_id, params["user_id"])}
     end
 

@@ -112,7 +112,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     channel "room:*", RoomChannel
 
     def connect(params, socket, connect_info) do
-      unless params["logging"] == "enabled", do: Logger.disable(self())
+      unless params["logging"] == "enabled", do: Logger.put_process_level(self(), :none)
       address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
 
       connect_info =
@@ -151,7 +151,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     end
 
     def connect(params, socket) do
-      unless params["logging"] == "enabled", do: Logger.disable(self())
+      unless params["logging"] == "enabled", do: Logger.put_process_level(self(), :none)
       {:ok, assign(socket, :user_id, params["user_id"])}
     end
 
@@ -194,7 +194,7 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
           :user_agent,
           :sec_websocket_headers,
           session: @session_config,
-          signing_salt: "salt",
+          signing_salt: "salt"
         ]
       ]
 

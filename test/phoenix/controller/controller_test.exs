@@ -7,7 +7,7 @@ defmodule Phoenix.Controller.ControllerTest do
   alias Plug.Conn
 
   setup do
-    Logger.disable(self())
+    Logger.put_process_level(self(), :none)
     :ok
   end
 
