@@ -221,7 +221,7 @@ defmodule Phx.New.Generator do
       path = Project.join_path(project, :project, "config/config.exs")
 
       extra =
-        Phx.New.Umbrella.render(:new, "phx_umbrella/config/extra_config.exs", project.binding)
+        Phx.New.Umbrella.render(:new, "phx_umbrella/config/extra_config.exs.eex", project.binding)
 
       File.write(path, [File.read!(path), extra])
     end

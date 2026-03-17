@@ -6,15 +6,15 @@ defmodule Phx.New.Ecto do
   @pre "phx_umbrella/apps/app_name"
 
   template(:new, [
-    {:config, :project, "#{@pre}/config/config.exs": "config/config.exs"},
+    {:config, :project, "#{@pre}/config/config.exs.eex": "config/config.exs"},
     {:eex, :app,
-     "#{@pre}/lib/app_name/application.ex": "lib/:app/application.ex",
-     "#{@pre}/lib/app_name.ex": "lib/:app.ex",
-     "#{@pre}/test/test_helper.exs": "test/test_helper.exs",
-     "#{@pre}/README.md": "README.md",
-     "#{@pre}/mix.exs": "mix.exs",
-     "#{@pre}/gitignore": ".gitignore",
-     "#{@pre}/formatter.exs": ".formatter.exs"}
+     "#{@pre}/lib/app_name/application.ex.eex": "lib/:app/application.ex",
+     "#{@pre}/lib/app_name.ex.eex": "lib/:app.ex",
+     "#{@pre}/test/test_helper.exs.eex": "test/test_helper.exs",
+     "#{@pre}/README.md.eex": "README.md",
+     "#{@pre}/mix.exs.eex": "mix.exs",
+     "#{@pre}/gitignore.eex": ".gitignore",
+     "#{@pre}/formatter.exs.eex": ".formatter.exs"}
   ])
 
   def prepare_project(%Project{} = project) do

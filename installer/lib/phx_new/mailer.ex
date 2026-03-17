@@ -4,7 +4,7 @@ defmodule Phx.New.Mailer do
   alias Phx.New.{Project}
 
   template(:new, [
-    {:eex, :app, "phx_mailer/lib/app_name/mailer.ex": "lib/:app/mailer.ex"}
+    {:eex, :app, "phx_mailer/lib/app_name/mailer.ex.eex": "lib/:app/mailer.ex"}
   ])
 
   def prepare_project(%Project{} = project) do

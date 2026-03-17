@@ -39,7 +39,14 @@ defmodule Mix.Phoenix do
       source =
         Enum.find_value(roots, fn root ->
           source = Path.join(root, source_file_path)
-          if File.exists?(source), do: source
+          # for backwards compatibility, we also check for files with missing .eex extension
+          source_with_stripped_eex = String.replace_suffix(source, ".eex", "")
+
+          cond do
+            File.exists?(source) -> source
+            File.exists?(source_with_stripped_eex) -> source_with_stripped_eex
+            true -> nil
+          end
         end) || raise "could not find #{source_file_path} in any of the sources"
 
       case format do

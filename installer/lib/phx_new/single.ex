@@ -5,26 +5,26 @@ defmodule Phx.New.Single do
 
   template(:new, [
     {:config, :project,
-     "phx_single/config/config.exs": "config/config.exs",
-     "phx_single/config/dev.exs": "config/dev.exs",
-     "phx_single/config/prod.exs": "config/prod.exs",
-     "phx_single/config/runtime.exs": "config/runtime.exs",
-     "phx_single/config/test.exs": "config/test.exs"},
+     "phx_single/config/config.exs.eex": "config/config.exs",
+     "phx_single/config/dev.exs.eex": "config/dev.exs",
+     "phx_single/config/prod.exs.eex": "config/prod.exs",
+     "phx_single/config/runtime.exs.eex": "config/runtime.exs",
+     "phx_single/config/test.exs.eex": "config/test.exs"},
     {:eex, :web,
-     "phx_single/lib/app_name/application.ex": "lib/:app/application.ex",
-     "phx_single/lib/app_name.ex": "lib/:app.ex",
-     "phx_web/controllers/error_json.ex": "lib/:lib_web_name/controllers/error_json.ex",
-     "phx_web/endpoint.ex": "lib/:lib_web_name/endpoint.ex",
-     "phx_web/router.ex": "lib/:lib_web_name/router.ex",
-     "phx_web/telemetry.ex": "lib/:lib_web_name/telemetry.ex",
-     "phx_single/lib/app_name_web.ex": "lib/:lib_web_name.ex",
-     "phx_single/mix.exs": "mix.exs",
-     "phx_single/README.md": "README.md",
-     "phx_single/formatter.exs": ".formatter.exs",
-     "phx_single/gitignore": ".gitignore",
-     "phx_test/support/conn_case.ex": "test/support/conn_case.ex",
-     "phx_single/test/test_helper.exs": "test/test_helper.exs",
-     "phx_test/controllers/error_json_test.exs":
+     "phx_single/lib/app_name/application.ex.eex": "lib/:app/application.ex",
+     "phx_single/lib/app_name.ex.eex": "lib/:app.ex",
+     "phx_web/controllers/error_json.ex.eex": "lib/:lib_web_name/controllers/error_json.ex",
+     "phx_web/endpoint.ex.eex": "lib/:lib_web_name/endpoint.ex",
+     "phx_web/router.ex.eex": "lib/:lib_web_name/router.ex",
+     "phx_web/telemetry.ex.eex": "lib/:lib_web_name/telemetry.ex",
+     "phx_single/lib/app_name_web.ex.eex": "lib/:lib_web_name.ex",
+     "phx_single/mix.exs.eex": "mix.exs",
+     "phx_single/README.md.eex": "README.md",
+     "phx_single/formatter.exs.eex": ".formatter.exs",
+     "phx_single/gitignore.eex": ".gitignore",
+     "phx_test/support/conn_case.ex.eex": "test/support/conn_case.ex",
+     "phx_single/test/test_helper.exs.eex": "test/test_helper.exs",
+     "phx_test/controllers/error_json_test.exs.eex":
        "test/:lib_web_name/controllers/error_json_test.exs"},
     {:keep, :web,
      "phx_web/controllers": "lib/:lib_web_name/controllers",
@@ -33,51 +33,51 @@ defmodule Phx.New.Single do
 
   template(:gettext, [
     {:eex, :web,
-     "phx_gettext/gettext.ex": "lib/:lib_web_name/gettext.ex",
-     "phx_gettext/en/LC_MESSAGES/errors.po": "priv/gettext/en/LC_MESSAGES/errors.po",
-     "phx_gettext/errors.pot": "priv/gettext/errors.pot"}
+     "phx_gettext/gettext.ex.eex": "lib/:lib_web_name/gettext.ex",
+     "phx_gettext/en/LC_MESSAGES/errors.po.eex": "priv/gettext/en/LC_MESSAGES/errors.po",
+     "phx_gettext/errors.pot.eex": "priv/gettext/errors.pot"}
   ])
 
   template(:html, [
     {:eex, :web,
-     "phx_web/controllers/error_html.ex": "lib/:lib_web_name/controllers/error_html.ex",
-     "phx_test/controllers/error_html_test.exs":
+     "phx_web/controllers/error_html.ex.eex": "lib/:lib_web_name/controllers/error_html.ex",
+     "phx_test/controllers/error_html_test.exs.eex":
        "test/:lib_web_name/controllers/error_html_test.exs",
-     "phx_web/components/core_components.ex": "lib/:lib_web_name/components/core_components.ex",
-     "phx_web/controllers/page_controller.ex": "lib/:lib_web_name/controllers/page_controller.ex",
-     "phx_web/controllers/page_html.ex": "lib/:lib_web_name/controllers/page_html.ex",
-     "phx_web/controllers/page_html/home.html.heex":
+     "phx_web/components/core_components.ex.eex": "lib/:lib_web_name/components/core_components.ex",
+     "phx_web/controllers/page_controller.ex.eex": "lib/:lib_web_name/controllers/page_controller.ex",
+     "phx_web/controllers/page_html.ex.eex": "lib/:lib_web_name/controllers/page_html.ex",
+     "phx_web/controllers/page_html/home.html.heex.eex":
        "lib/:lib_web_name/controllers/page_html/home.html.heex",
-     "phx_test/controllers/page_controller_test.exs":
+     "phx_test/controllers/page_controller_test.exs.eex":
        "test/:lib_web_name/controllers/page_controller_test.exs",
-     "phx_web/components/layouts/root.html.heex":
+     "phx_web/components/layouts/root.html.heex.eex":
        "lib/:lib_web_name/components/layouts/root.html.heex",
-     "phx_web/components/layouts.ex": "lib/:lib_web_name/components/layouts.ex"},
-    {:eex, :web, "phx_assets/logo.svg": "priv/static/images/logo.svg"}
+     "phx_web/components/layouts.ex.eex": "lib/:lib_web_name/components/layouts.ex"},
+    {:eex, :web, "phx_assets/logo.svg.eex": "priv/static/images/logo.svg"}
   ])
 
   template(:ecto, [
     {:eex, :app,
-     "phx_ecto/repo.ex": "lib/:app/repo.ex",
-     "phx_ecto/formatter.exs": "priv/repo/migrations/.formatter.exs",
-     "phx_ecto/seeds.exs": "priv/repo/seeds.exs",
-     "phx_ecto/data_case.ex": "test/support/data_case.ex"},
+     "phx_ecto/repo.ex.eex": "lib/:app/repo.ex",
+     "phx_ecto/formatter.exs.eex": "priv/repo/migrations/.formatter.exs",
+     "phx_ecto/seeds.exs.eex": "priv/repo/seeds.exs",
+     "phx_ecto/data_case.ex.eex": "test/support/data_case.ex"},
     {:keep, :app, "phx_ecto/priv/repo/migrations": "priv/repo/migrations"}
   ])
 
   template(:css, [
     {:eex, :web,
-     "phx_assets/app.css": "assets/css/app.css",
-     "phx_assets/heroicons.js": "assets/vendor/heroicons.js",
-     "phx_assets/daisyui.js": "assets/vendor/daisyui.js",
-     "phx_assets/daisyui-theme.js": "assets/vendor/daisyui-theme.js"}
+     "phx_assets/app.css.eex": "assets/css/app.css",
+     "phx_assets/heroicons.js.eex": "assets/vendor/heroicons.js",
+     "phx_assets/daisyui.js.eex": "assets/vendor/daisyui.js",
+     "phx_assets/daisyui-theme.js.eex": "assets/vendor/daisyui-theme.js"}
   ])
 
   template(:js, [
     {:eex, :web,
-     "phx_assets/app.js": "assets/js/app.js",
-     "phx_assets/topbar.js": "assets/vendor/topbar.js",
-     "phx_assets/tsconfig.json": "assets/tsconfig.json"}
+     "phx_assets/app.js.eex": "assets/js/app.js",
+     "phx_assets/topbar.js.eex": "assets/vendor/topbar.js",
+     "phx_assets/tsconfig.json.eex": "assets/tsconfig.json"}
   ])
 
   template(:no_js, [
@@ -102,7 +102,7 @@ defmodule Phx.New.Single do
   ])
 
   template(:mailer, [
-    {:eex, :app, "phx_mailer/lib/app_name/mailer.ex": "lib/:app/mailer.ex"}
+    {:eex, :app, "phx_mailer/lib/app_name/mailer.ex.eex": "lib/:app/mailer.ex"}
   ])
 
   def prepare_project(%Project{app: app, base_path: base_path} = project) when not is_nil(app) do

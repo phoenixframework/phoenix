@@ -196,11 +196,11 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     test_pre = Path.join([test_prefix, "controllers", web_path])
 
     [
-      {:eex, "controller.ex", Path.join([controller_pre, "#{singular}_controller.ex"])},
-      {:eex, "json.ex", Path.join([controller_pre, "#{singular}_json.ex"])},
-      {:new_eex, "changeset_json.ex", Path.join([web, "controllers/changeset_json.ex"])},
-      {:eex, "controller_test.exs", Path.join([test_pre, "#{singular}_controller_test.exs"])},
-      {:new_eex, "fallback_controller.ex", Path.join([web, "controllers/fallback_controller.ex"])}
+      {:eex, "controller.ex.eex", Path.join([controller_pre, "#{singular}_controller.ex"])},
+      {:eex, "json.ex.eex", Path.join([controller_pre, "#{singular}_json.ex"])},
+      {:new_eex, "changeset_json.ex.eex", Path.join([web, "controllers/changeset_json.ex"])},
+      {:eex, "controller_test.exs.eex", Path.join([test_pre, "#{singular}_controller_test.exs"])},
+      {:new_eex, "fallback_controller.ex.eex", Path.join([web, "controllers/fallback_controller.ex"])}
     ]
   end
 

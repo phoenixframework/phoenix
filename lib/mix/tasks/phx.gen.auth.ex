@@ -490,14 +490,14 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     default_files =
       [
-        "migration.ex": [migrations_pre, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"],
-        "notifier.ex": [context.dir, "#{singular}_notifier.ex"],
-        "schema.ex": [context.dir, "#{singular}.ex"],
-        "schema_token.ex": [context.dir, "#{singular}_token.ex"],
-        "auth.ex": [web_pre, web_path, "#{singular}_auth.ex"],
-        "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
-        "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
-        "session_controller_test.exs": [
+        "migration.ex.eex": [migrations_pre, "#{timestamp()}_create_#{schema.table}_auth_tables.exs"],
+        "notifier.ex.eex": [context.dir, "#{singular}_notifier.ex"],
+        "schema.ex.eex": [context.dir, "#{singular}.ex"],
+        "schema_token.ex.eex": [context.dir, "#{singular}_token.ex"],
+        "auth.ex.eex": [web_pre, web_path, "#{singular}_auth.ex"],
+        "auth_test.exs.eex": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
+        "session_controller.ex.eex": [controller_pre, "#{singular}_session_controller.ex"],
+        "session_controller_test.exs.eex": [
           web_test_pre,
           "controllers",
           web_path,
@@ -505,7 +505,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         ]
       ] ++
         if scope_config.create_new? do
-          ["scope.ex": [context.dir, "scope.ex"]]
+          ["scope.ex.eex": [context.dir, "scope.ex"]]
         else
           []
         end
@@ -513,44 +513,44 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     case Keyword.fetch(context.opts, :live) do
       {:ok, true} ->
         live_files = [
-          "registration_live.ex": [
+          "registration_live.ex.eex": [
             web_pre,
             "live",
             web_path,
             "#{singular}_live",
             "registration.ex"
           ],
-          "registration_live_test.exs": [
+          "registration_live_test.exs.eex": [
             web_test_pre,
             "live",
             web_path,
             "#{singular}_live",
             "registration_test.exs"
           ],
-          "login_live.ex": [web_pre, "live", web_path, "#{singular}_live", "login.ex"],
-          "login_live_test.exs": [
+          "login_live.ex.eex": [web_pre, "live", web_path, "#{singular}_live", "login.ex"],
+          "login_live_test.exs.eex": [
             web_test_pre,
             "live",
             web_path,
             "#{singular}_live",
             "login_test.exs"
           ],
-          "settings_live.ex": [web_pre, "live", web_path, "#{singular}_live", "settings.ex"],
-          "settings_live_test.exs": [
+          "settings_live.ex.eex": [web_pre, "live", web_path, "#{singular}_live", "settings.ex"],
+          "settings_live_test.exs.eex": [
             web_test_pre,
             "live",
             web_path,
             "#{singular}_live",
             "settings_test.exs"
           ],
-          "confirmation_live.ex": [
+          "confirmation_live.ex.eex": [
             web_pre,
             "live",
             web_path,
             "#{singular}_live",
             "confirmation.ex"
           ],
-          "confirmation_live_test.exs": [
+          "confirmation_live_test.exs.eex": [
             web_test_pre,
             "live",
             web_path,
@@ -563,34 +563,34 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
       _ ->
         non_live_files = [
-          "registration_new.html.heex": [
+          "registration_new.html.heex.eex": [
             controller_pre,
             "#{singular}_registration_html",
             "new.html.heex"
           ],
-          "registration_controller.ex": [controller_pre, "#{singular}_registration_controller.ex"],
-          "registration_controller_test.exs": [
+          "registration_controller.ex.eex": [controller_pre, "#{singular}_registration_controller.ex"],
+          "registration_controller_test.exs.eex": [
             web_test_pre,
             "controllers",
             web_path,
             "#{singular}_registration_controller_test.exs"
           ],
-          "registration_html.ex": [controller_pre, "#{singular}_registration_html.ex"],
-          "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
-          "session_new.html.heex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
-          "session_confirm.html.heex": [
+          "registration_html.ex.eex": [controller_pre, "#{singular}_registration_html.ex"],
+          "session_html.ex.eex": [controller_pre, "#{singular}_session_html.ex"],
+          "session_new.html.heex.eex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
+          "session_confirm.html.heex.eex": [
             controller_pre,
             "#{singular}_session_html",
             "confirm.html.heex"
           ],
-          "settings_html.ex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
-          "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
-          "settings_edit.html.heex": [
+          "settings_html.ex.eex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
+          "settings_controller.ex.eex": [controller_pre, "#{singular}_settings_controller.ex"],
+          "settings_edit.html.heex.eex": [
             controller_pre,
             "#{singular}_settings_html",
             "edit.html.heex"
           ],
-          "settings_controller_test.exs": [
+          "settings_controller_test.exs.eex": [
             web_test_pre,
             "controllers",
             web_path,
@@ -620,7 +620,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     Gen.Context.ensure_context_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_functions.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_functions.ex.eex", binding)
     |> prepend_newline()
     |> inject_before_final_end(file)
   end
@@ -629,7 +629,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     Gen.Context.ensure_test_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/test_cases.exs", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/test_cases.exs.eex", binding)
     |> prepend_newline()
     |> inject_before_final_end(test_file)
   end
@@ -642,7 +642,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     Gen.Context.ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_fixtures_functions.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/context_fixtures_functions.ex.eex", binding)
     |> prepend_newline()
     |> inject_before_final_end(test_fixtures_file)
   end
@@ -651,7 +651,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     test_file = "test/support/conn_case.ex"
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/conn_case.exs", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/conn_case.exs.eex", binding)
     |> inject_before_final_end(test_file)
 
     context
@@ -662,7 +662,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     file_path = Path.join(web_prefix, "router.ex")
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/routes.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.auth/routes.ex.eex", binding)
     |> inject_before_final_end(file_path)
 
     context
@@ -919,7 +919,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       auth_content =
         """
         <!-- phoenix-gen-auth-start -->
-        #{Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.auth/AGENTS.md", binding)}
+        #{Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.auth/AGENTS.md.eex", binding)}
         <!-- phoenix-gen-auth-end -->
         """
 
