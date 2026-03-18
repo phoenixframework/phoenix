@@ -811,6 +811,78 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
+  test "new --interactive with defaults generates project" do
+    in_tmp("new interactive defaults", fn ->
+      send(self(), {:mix_shell_input, :prompt, "my_app"})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, "n"})
+      send(self(), {:mix_shell_input, :prompt, ""})
+
+      Mix.Tasks.Phx.New.run(["--interactive"])
+
+      assert_file("my_app/mix.exs", fn file ->
+        assert file =~ "app: :my_app"
+      end)
+    end)
+  end
+
+  test "new --interactive with custom config" do
+    in_tmp("new interactive custom", fn ->
+      send(self(), {:mix_shell_input, :prompt, "custom_app"})
+      send(self(), {:mix_shell_input, :prompt, "4"})
+      send(self(), {:mix_shell_input, :prompt, "y"})
+      send(self(), {:mix_shell_input, :prompt, "5"})
+      send(self(), {:mix_shell_input, :prompt, "n"})
+      send(self(), {:mix_shell_input, :prompt, "n"})
+      send(self(), {:mix_shell_input, :prompt, "n"})
+      send(self(), {:mix_shell_input, :prompt, "2"})
+      send(self(), {:mix_shell_input, :prompt, "n"})
+      send(self(), {:mix_shell_input, :prompt, "y"})
+
+      Mix.Tasks.Phx.New.run(["--interactive"])
+
+      assert_file("custom_app/mix.exs", fn file ->
+        assert file =~ "app: :custom_app"
+      end)
+    end)
+  end
+
+  test "new --interactive aborts when user declines" do
+    in_tmp("new interactive abort", fn ->
+      send(self(), {:mix_shell_input, :prompt, "my_app"})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, ""})
+      send(self(), {:mix_shell_input, :prompt, "n"})
+      send(self(), {:mix_shell_input, :prompt, "n"})
+
+      Mix.Tasks.Phx.New.run(["--interactive"])
+
+      refute File.exists?("my_app")
+    end)
+  end
+
+  # When user presses Ctrl+C or Ctrl+D
+  test "new --interactive aborts on eof" do
+    in_tmp("new interactive eof", fn ->
+      send(self(), {:mix_shell_input, :prompt, :eof})
+
+      Mix.Tasks.Phx.New.run(["--interactive"])
+
+      refute File.exists?("my_app")
+    end)
+  end
+
   test "new with reserved name" do
     assert_raise Mix.Error, ~r/Application name cannot be "server" as it is reserved/, fn ->
       Mix.Tasks.Phx.New.run(["server"])
