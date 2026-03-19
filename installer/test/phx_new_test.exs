@@ -821,7 +821,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       send(self(), {:mix_shell_input, :prompt, ""})
       send(self(), {:mix_shell_input, :prompt, ""})
       send(self(), {:mix_shell_input, :prompt, ""})
-      send(self(), {:mix_shell_input, :prompt, ""})
 
       Mix.Tasks.Phx.New.run(["--interactive"])
 
@@ -840,7 +839,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       send(self(), {:mix_shell_input, :prompt, "n"})
       send(self(), {:mix_shell_input, :prompt, "n"})
       send(self(), {:mix_shell_input, :prompt, "n"})
-      send(self(), {:mix_shell_input, :prompt, "2"})
       send(self(), {:mix_shell_input, :prompt, "y"})
 
       Mix.Tasks.Phx.New.run(["--interactive"])
@@ -854,7 +852,6 @@ defmodule Mix.Tasks.Phx.NewTest do
   test "new --interactive aborts when user declines" do
     in_tmp("new interactive abort", fn ->
       send(self(), {:mix_shell_input, :prompt, "my_app"})
-      send(self(), {:mix_shell_input, :prompt, ""})
       send(self(), {:mix_shell_input, :prompt, ""})
       send(self(), {:mix_shell_input, :prompt, ""})
       send(self(), {:mix_shell_input, :prompt, ""})

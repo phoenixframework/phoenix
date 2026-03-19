@@ -17,11 +17,6 @@ defmodule Phx.New.Interactive do
     {"api", "API (no HTML)"}
   ]
 
-  @adapters [
-    {"bandit", "Bandit (bandit)"},
-    {"cowboy", "Cowboy (plug_cowboy)"}
-  ]
-
   def run do
     catch_abort(fn ->
       info([:green, "\nInitialize your Phoenix project (press Ctrl+C to abort)\n", :reset])
@@ -40,7 +35,6 @@ defmodule Phx.New.Interactive do
       dashboard = yes?("Include LiveDashboard (monitoring)?")
       mailer = yes?("Include Swoosh (mailer)?")
       gettext = yes?("Include Gettext (i18n)?")
-      adapter = prompt_choice("Which HTTP adapter?", @adapters, "bandit")
 
       opts =
         [
@@ -51,8 +45,7 @@ defmodule Phx.New.Interactive do
           dashboard: dashboard,
           mailer: mailer,
           gettext: gettext,
-          assets: assets,
-          adapter: adapter
+          assets: assets
         ]
         |> maybe_put_database(database)
 
@@ -146,7 +139,6 @@ defmodule Phx.New.Interactive do
       info("  Includes:  #{Enum.join(includes, ", ")}")
     end
 
-    info("  Adapter:   #{opts[:adapter]}")
     info("")
   end
 
@@ -176,8 +168,7 @@ defmodule Phx.New.Interactive do
             {!opts[:dashboard], "--no-dashboard"},
             {!opts[:mailer], "--no-mailer"},
             {!opts[:gettext], "--no-gettext"},
-            {!opts[:assets], "--no-assets"},
-            {opts[:adapter] != "bandit", "--adapter #{opts[:adapter]}"}
+            {!opts[:assets], "--no-assets"}
           ],
           condition,
           do: flag
