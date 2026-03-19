@@ -37,9 +37,9 @@ defmodule Phx.New.Interactive do
         end
 
       %{html: html, live: live, assets: assets} = prompt_web()
-      dashboard = yes?("Include LiveDashboard?")
-      mailer = yes?("Include mailer (Swoosh)?")
-      gettext = yes?("Include gettext (i18n)?")
+      dashboard = yes?("Include LiveDashboard (monitoring)?")
+      mailer = yes?("Include Swoosh (mailer)?")
+      gettext = yes?("Include Gettext (i18n)?")
       adapter = prompt_choice("Which HTTP adapter?", @adapters, "bandit")
       umbrella = yes?("Generate as an umbrella project?")
 
