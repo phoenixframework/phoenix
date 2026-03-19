@@ -41,11 +41,9 @@ defmodule Phx.New.Interactive do
       mailer = yes?("Include Swoosh (mailer)?")
       gettext = yes?("Include Gettext (i18n)?")
       adapter = prompt_choice("Which HTTP adapter?", @adapters, "bandit")
-      umbrella = yes?("Generate as an umbrella project?")
 
       opts =
         [
-          umbrella: umbrella,
           ecto: not is_nil(database),
           binary_id: binary_id,
           html: html,
@@ -149,7 +147,6 @@ defmodule Phx.New.Interactive do
     end
 
     info("  Adapter:   #{opts[:adapter]}")
-    info("  Umbrella:  #{opts[:umbrella]}")
     info("")
   end
 
@@ -171,7 +168,6 @@ defmodule Phx.New.Interactive do
   defp print_equivalent_command(path, opts) do
     flags =
       for {condition, flag} <- [
-            {opts[:umbrella], "--umbrella"},
             {!opts[:ecto], "--no-ecto"},
             {opts[:ecto] && opts[:database] != "postgres", "--database #{opts[:database]}"},
             {opts[:binary_id], "--binary-id"},

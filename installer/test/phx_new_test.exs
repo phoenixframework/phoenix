@@ -821,7 +821,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       send(self(), {:mix_shell_input, :prompt, ""})
       send(self(), {:mix_shell_input, :prompt, ""})
       send(self(), {:mix_shell_input, :prompt, ""})
-      send(self(), {:mix_shell_input, :prompt, "n"})
       send(self(), {:mix_shell_input, :prompt, ""})
 
       Mix.Tasks.Phx.New.run(["--interactive"])
@@ -842,7 +841,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       send(self(), {:mix_shell_input, :prompt, "n"})
       send(self(), {:mix_shell_input, :prompt, "n"})
       send(self(), {:mix_shell_input, :prompt, "2"})
-      send(self(), {:mix_shell_input, :prompt, "n"})
       send(self(), {:mix_shell_input, :prompt, "y"})
 
       Mix.Tasks.Phx.New.run(["--interactive"])
@@ -863,7 +861,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       send(self(), {:mix_shell_input, :prompt, ""})
       send(self(), {:mix_shell_input, :prompt, ""})
       send(self(), {:mix_shell_input, :prompt, ""})
-      send(self(), {:mix_shell_input, :prompt, "n"})
       send(self(), {:mix_shell_input, :prompt, "n"})
 
       Mix.Tasks.Phx.New.run(["--interactive"])
