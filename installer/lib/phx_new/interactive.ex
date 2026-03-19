@@ -11,10 +11,8 @@ defmodule Phx.New.Interactive do
 
   @web_options [
     {"live", "LiveView"},
-    {"html", "HTML (no LiveView)"},
-    {"live_no_assets", "LiveView (no esbuild, no Tailwind)"},
-    {"html_no_assets", "HTML (no LiveView, no esbuild, no Tailwind)"},
-    {"api", "API (no HTML)"}
+    {"html", "HTML"},
+    {"api", "API-only"}
   ]
 
   def run do
@@ -80,13 +78,13 @@ defmodule Phx.New.Interactive do
 
   defp prompt_web do
     case prompt_choice("Web interface?", @web_options, "live") do
-      "live" -> %{html: true, live: true, assets: true}
-      "html" -> %{html: true, live: false, assets: true}
-      "live_no_assets" -> %{html: true, live: true, assets: false}
-      "html_no_assets" -> %{html: true, live: false, assets: false}
       "api" -> %{html: false, live: false, assets: false}
+      "html" -> %{html: true, live: false, assets: prompt_assets?()}
+      "live" -> %{html: true, live: true, assets: prompt_assets?()}
     end
   end
+
+  defp prompt_assets?, do: yes?("Include Esbuild + Tailwind?")
 
   defp prompt_choice(question, choices, default) do
     info("\n#{question}\n")
@@ -150,10 +148,10 @@ defmodule Phx.New.Interactive do
   defp web_summary(opts) do
     case {opts[:html], opts[:live], opts[:assets]} do
       {true, true, true} -> "LiveView"
-      {true, true, false} -> "LiveView (no esbuild, no Tailwind)"
-      {true, false, true} -> "HTML (no LiveView)"
-      {true, false, false} -> "HTML (no LiveView, no esbuild, no Tailwind)"
-      {false, _, _} -> "API"
+      {true, true, false} -> "LiveView (no Esbuild, no Tailwind)"
+      {true, false, true} -> "HTML"
+      {true, false, false} -> "HTML (no Esbuild, no Tailwind)"
+      {false, _, _} -> "API-only"
     end
   end
 
