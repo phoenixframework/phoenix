@@ -26,7 +26,7 @@ defmodule Phx.New.Interactive do
         if is_nil(database) do
           false
         else
-          yes?("Use binary_id as primary key type?")
+          yes?("Use binary_id as primary key type?", false)
         end
 
       %{html: html, live: live, assets: assets} = prompt_web()
@@ -194,16 +194,18 @@ defmodule Phx.New.Interactive do
 
   defp info(msg), do: Mix.shell().info(msg)
 
-  defp yes?(msg) do
-    case prompt("#{msg} [Yn]") |> String.downcase() do
-      "" -> true
+  defp yes?(msg, default \\ true) do
+    hint = if default, do: "[Yn]", else: "[yN]"
+
+    case prompt("#{msg} #{hint}") |> String.downcase() do
+      "" -> default
       "y" -> true
       "yes" -> true
       "n" -> false
       "no" -> false
       _ ->
         info([:red, "Please answer yes or no.\n", :reset])
-        yes?(msg)
+        yes?(msg, default)
     end
   end
 
