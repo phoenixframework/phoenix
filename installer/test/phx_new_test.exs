@@ -813,69 +813,107 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new --interactive with defaults generates project" do
     in_tmp("new interactive defaults", fn ->
+      # path
       send(self(), {:mix_shell_input, :prompt, "my_app"})
+      # database: postgres (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # binary_id: no (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # web: LiveView (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # assets: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # dashboard: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # mailer: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # gettext: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # confirm: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
 
-      Mix.Tasks.Phx.New.run(["--interactive"])
+      assert {:ok, "my_app", opts} = Phx.New.Interactive.run()
 
-      assert_file("my_app/mix.exs", fn file ->
-        assert file =~ "app: :my_app"
-      end)
+      assert %{
+               ecto: true,
+               binary_id: false,
+               html: true,
+               live: true,
+               dashboard: true,
+               mailer: true,
+               gettext: true,
+               assets: true,
+               database: "postgres"
+             } = Map.new(opts)
     end)
   end
 
   test "new --interactive with custom config" do
     in_tmp("new interactive custom", fn ->
+      # path
       send(self(), {:mix_shell_input, :prompt, "custom_app"})
+      # database: sqlite3 (option 4)
       send(self(), {:mix_shell_input, :prompt, "4"})
+      # binary_id: yes
       send(self(), {:mix_shell_input, :prompt, "y"})
+      # web: API-only (option 3, skips assets prompt)
       send(self(), {:mix_shell_input, :prompt, "3"})
+      # dashboard: no
       send(self(), {:mix_shell_input, :prompt, "n"})
+      # mailer: no
       send(self(), {:mix_shell_input, :prompt, "n"})
+      # gettext: no
       send(self(), {:mix_shell_input, :prompt, "n"})
+      # confirm: yes
       send(self(), {:mix_shell_input, :prompt, "y"})
 
-      Mix.Tasks.Phx.New.run(["--interactive"])
+      assert {:ok, "custom_app", opts} = Phx.New.Interactive.run()
 
-      assert_file("custom_app/mix.exs", fn file ->
-        assert file =~ "app: :custom_app"
-      end)
+      assert %{
+               ecto: true,
+               binary_id: true,
+               html: false,
+               live: false,
+               dashboard: false,
+               mailer: false,
+               gettext: false,
+               assets: false,
+               database: "sqlite3"
+             } = Map.new(opts)
     end)
   end
 
   test "new --interactive aborts when user declines" do
     in_tmp("new interactive abort", fn ->
+      # path
       send(self(), {:mix_shell_input, :prompt, "my_app"})
+      # database: postgres (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # binary_id: no (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # web: LiveView (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # assets: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # dashboard: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # mailer: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # gettext: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
+      # confirm: no (abort)
       send(self(), {:mix_shell_input, :prompt, "n"})
 
-      Mix.Tasks.Phx.New.run(["--interactive"])
-
-      refute File.exists?("my_app")
+      assert :abort = Phx.New.Interactive.run()
     end)
   end
 
-  # When user presses Ctrl+C or Ctrl+D
   test "new --interactive aborts on eof" do
     in_tmp("new interactive eof", fn ->
+      # User presses Ctrl+C or Ctrl+D
       send(self(), {:mix_shell_input, :prompt, :eof})
 
-      Mix.Tasks.Phx.New.run(["--interactive"])
-
-      refute File.exists?("my_app")
+      assert :abort = Phx.New.Interactive.run()
     end)
   end
 
