@@ -899,7 +899,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   def __encode_query__(dict, sort?) when is_list(dict) do
-    if Keyword.keyword?(dict) do
+    if dict == [] or match?([{_, _} | _], dict) do
       case Plug.Conn.Query.encode(dict, &to_param/1) do
         "" -> ""
         query_str -> maybe_sort_query(query_str, sort?)

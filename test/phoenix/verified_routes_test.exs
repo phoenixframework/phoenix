@@ -420,11 +420,11 @@ defmodule Phoenix.VerifiedRoutesTest do
 
   test "list value as query string parameter raises" do
     assert_raise ArgumentError, ~r/expected a keyword list or map/, fn ->
-      Phoenix.VerifiedRoutes.__encode_query__(["abc-123"])
+      ~p"/posts/top?#{["abc-123"]}"
     end
 
     assert_raise ArgumentError, ~r/expected a keyword list or map/, fn ->
-      Phoenix.VerifiedRoutes.__encode_query__([1, 2, 3])
+      ~p"/posts/top?#{[1, 2, 3]}"
     end
   end
 
