@@ -418,6 +418,16 @@ defmodule Phoenix.VerifiedRoutesTest do
     :code.delete(__MODULE__.InvalidQuery)
   end
 
+  test "list value as query string parameter raises" do
+    assert_raise ArgumentError, ~r/expected a keyword list or map/, fn ->
+      ~p"/posts/top?#{["abc-123"]}"
+    end
+
+    assert_raise ArgumentError, ~r/expected a keyword list or map/, fn ->
+      ~p"/posts/top?#{[1, 2, 3]}"
+    end
+  end
+
   test "~p with complex ids" do
     assert ~p|/posts/#{"==d--+"}| == "/posts/%3D%3Dd--%2B"
     assert ~p|/posts/top?#{[id: "==d--+"]}| == "/posts/top?id=%3D%3Dd--%2B"

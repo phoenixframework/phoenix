@@ -891,11 +891,23 @@ defmodule Phoenix.VerifiedRoutes do
   @doc false
   def __encode_query__(dict, sort? \\ false)
 
-  def __encode_query__(dict, sort?)
-      when is_list(dict) or (is_map(dict) and not is_struct(dict)) do
+  def __encode_query__(dict, sort?) when is_map(dict) and not is_struct(dict) do
     case Plug.Conn.Query.encode(dict, &to_param/1) do
       "" -> ""
       query_str -> maybe_sort_query(query_str, sort?)
+    end
+  end
+
+  def __encode_query__(dict, sort?) when is_list(dict) do
+    if dict == [] or match?([{_, _} | _], dict) do
+      case Plug.Conn.Query.encode(dict, &to_param/1) do
+        "" -> ""
+        query_str -> maybe_sort_query(query_str, sort?)
+      end
+    else
+      raise ArgumentError,
+            "expected a keyword list or map for query string encoding, got: #{inspect(dict)}. " <>
+              "Use the full query string syntax instead, such as ~p\"/path?#\{[key: #{inspect(dict)}]}\""
     end
   end
 
