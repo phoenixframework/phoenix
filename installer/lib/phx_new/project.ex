@@ -22,6 +22,16 @@ defmodule Phx.New.Project do
   def new(project_path, opts) do
     project_path = Path.expand(project_path)
     app = opts[:app] || Path.basename(project_path)
+
+    path_app = Path.basename(project_path)
+
+    if is_nil(opts[:app]) and path_app =~ ~r/:/ do
+      Mix.raise(
+        "The project path contains characters not valid in OTP application names. " <>
+          "Use --app to specify a valid name: mix phx.new #{path_app} --app my_app"
+      )
+    end
+
     app_mod = Module.concat([opts[:module] || Macro.camelize(app)])
 
     %Project{
