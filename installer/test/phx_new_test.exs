@@ -804,6 +804,17 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
+  test "new with colon in parent directory path" do
+    in_tmp("new with colon in path", fn ->
+      colon_dir = Path.join(File.cwd!(), "0:0")
+      File.mkdir_p!(colon_dir)
+      project_path = Path.join(colon_dir, "myapp")
+      Mix.Tasks.Phx.New.run([project_path, "--no-install"])
+
+      assert_file(Path.join(project_path, "mix.exs"), "app: :myapp")
+    end)
+  end
+
   test "new without args" do
     in_tmp("new without args", fn ->
       assert capture_io(fn -> Mix.Tasks.Phx.New.run([]) end) =~
