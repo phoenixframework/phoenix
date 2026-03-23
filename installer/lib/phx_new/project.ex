@@ -23,15 +23,6 @@ defmodule Phx.New.Project do
     project_path = Path.expand(project_path)
     app = opts[:app] || Path.basename(project_path)
 
-    path_app = Path.basename(project_path)
-
-    if is_nil(opts[:app]) and path_app =~ ~r/:/ do
-      Mix.raise(
-        "The project path contains characters not valid in OTP application names. " <>
-          "Use --app to specify a valid name: mix phx.new #{path_app} --app my_app"
-      )
-    end
-
     app_mod = Module.concat([opts[:module] || Macro.camelize(app)])
 
     %Project{
@@ -90,7 +81,10 @@ defmodule Phx.New.Project do
 
   defp expand_path_with_bindings(path, %Project{} = project) do
     Regex.replace(Regex.recompile!(~r/:[a-zA-Z0-9_]+/), path, fn ":" <> key, _ ->
-      project |> Map.fetch!(:"#{key}") |> to_string()
+      case Map.fetch(project, :"#{key}") do
+        {:ok, value} -> to_string(value)
+        :error -> ":#{key}"
+      end
     end)
   end
 end

@@ -821,21 +821,6 @@ defmodule Mix.Tasks.Phx.NewTest do
     end
   end
 
-  test "new with colon in path without --app flag raises error" do
-    assert_raise Mix.Error,
-                 ~r/The project path contains characters not valid in OTP application names/,
-                 fn ->
-                   Mix.Tasks.Phx.New.run(["my:app"])
-                 end
-  end
-
-  test "new with --app flag overrides invalid path app name" do
-    in_tmp("new with app flag override", fn ->
-      Mix.Tasks.Phx.New.run(["007_invalid", "--app", "valid_app"])
-      assert_file("007_invalid/mix.exs", ~r/app: :valid_app/)
-    end)
-  end
-
   test "new from inside docker machine (simulated)" do
     in_tmp("new without defaults", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--inside-docker-env"])
