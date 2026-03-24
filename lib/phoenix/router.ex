@@ -328,49 +328,49 @@ defmodule Phoenix.Router do
         if resource.singleton do
           Enum.each(resource.actions, fn
             :show ->
-              get path, ctrl, :show, opts
+              get(path, ctrl, :show, opts)
 
             :new ->
-              get path <> "/new", ctrl, :new, opts
+              get(path <> "/new", ctrl, :new, opts)
 
             :edit ->
-              get path <> "/edit", ctrl, :edit, opts
+              get(path <> "/edit", ctrl, :edit, opts)
 
             :create ->
-              post path, ctrl, :create, opts
+              post(path, ctrl, :create, opts)
 
             :delete ->
-              delete path, ctrl, :delete, opts
+              delete(path, ctrl, :delete, opts)
 
             :update ->
-              patch path, ctrl, :update, opts
-              put path, ctrl, :update, Keyword.put(opts, :as, nil)
+              patch(path, ctrl, :update, opts)
+              put(path, ctrl, :update, Keyword.put(opts, :as, nil))
           end)
         else
           param = resource.param
 
           Enum.each(resource.actions, fn
             :index ->
-              get path, ctrl, :index, opts
+              get(path, ctrl, :index, opts)
 
             :show ->
-              get path <> "/:" <> param, ctrl, :show, opts
+              get(path <> "/:" <> param, ctrl, :show, opts)
 
             :new ->
-              get path <> "/new", ctrl, :new, opts
+              get(path <> "/new", ctrl, :new, opts)
 
             :edit ->
-              get path <> "/:" <> param <> "/edit", ctrl, :edit, opts
+              get(path <> "/:" <> param <> "/edit", ctrl, :edit, opts)
 
             :create ->
-              post path, ctrl, :create, opts
+              post(path, ctrl, :create, opts)
 
             :delete ->
-              delete path <> "/:" <> param, ctrl, :delete, opts
+              delete(path <> "/:" <> param, ctrl, :delete, opts)
 
             :update ->
-              patch path <> "/:" <> param, ctrl, :update, opts
-              put path <> "/:" <> param, ctrl, :update, Keyword.put(opts, :as, nil)
+              patch(path <> "/:" <> param, ctrl, :update, opts)
+              put(path <> "/:" <> param, ctrl, :update, Keyword.put(opts, :as, nil))
           end)
         end
       end
@@ -1302,6 +1302,7 @@ defmodule Phoenix.Router do
             helper: route.helper,
             verb: route.verb,
             path: route.path,
+            hosts: route.hosts,
             label: label
           }
         ]

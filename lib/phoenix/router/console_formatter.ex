@@ -78,28 +78,38 @@ defmodule Phoenix.Router.ConsoleFormatter do
     sockets = (endpoint && endpoint.__sockets__()) || []
 
     widths =
-      Enum.reduce(routes, {0, 0, 0}, fn route, acc ->
+      Enum.reduce(routes, {0, 0, 0, 0}, fn route, acc ->
         %{verb: verb, path: path, helper: helper} = route
         verb = verb_name(verb)
-        {verb_len, path_len, route_name_len} = acc
+        {hosts_len, verb_len, path_len, route_name_len} = acc
         route_name = route_name(router, helper)
+        hosts_width = hosts_column_width(Map.get(route, :hosts, []))
 
-        {max(verb_len, String.length(verb)), max(path_len, String.length(path)),
-         max(route_name_len, String.length(route_name))}
+        {max(hosts_len, hosts_width), max(verb_len, String.length(verb)),
+         max(path_len, String.length(path)), max(route_name_len, String.length(route_name))}
       end)
 
     Enum.reduce(sockets, widths, fn {path, _mod, opts}, acc ->
-      {verb_len, path_len, route_name_len} = acc
+      {hosts_len, verb_len, path_len, route_name_len} = acc
 
       verb_length =
         socket_verbs(opts)
         |> Enum.map(&String.length/1)
         |> Enum.max(&>=/2, fn -> 0 end)
 
-      {max(verb_len, verb_length), max(path_len, String.length(path <> "/websocket")),
+      {hosts_len, max(verb_len, verb_length), max(path_len, String.length(path <> "/websocket")),
        route_name_len}
     end)
   end
+
+  defp hosts_column_width([]), do: 0
+
+  defp hosts_column_width(hosts) when is_list(hosts) do
+    host_str = Enum.join(hosts, ", ")
+    String.length("[#{host_str}]") + 2
+  end
+
+  defp hosts_column_width(_), do: 0
 
   defp format_route(route, router, column_widths) do
     %{
@@ -110,9 +120,11 @@ defmodule Phoenix.Router.ConsoleFormatter do
 
     verb = verb_name(verb)
     route_name = route_name(router, Map.get(route, :helper))
-    {verb_len, path_len, route_name_len} = column_widths
+    hosts = format_hosts(Map.get(route, :hosts, []))
+    {hosts_len, verb_len, path_len, route_name_len} = column_widths
 
-    String.pad_leading(route_name, route_name_len) <>
+    String.pad_trailing(hosts, hosts_len) <>
+      String.pad_leading(route_name, route_name_len) <>
       "  " <>
       String.pad_trailing(verb, verb_len) <>
       "  " <>
@@ -120,6 +132,15 @@ defmodule Phoenix.Router.ConsoleFormatter do
       "  " <>
       label <> "\n"
   end
+
+  defp format_hosts([]), do: ""
+
+  defp format_hosts(hosts) when is_list(hosts) do
+    host_str = Enum.join(hosts, ", ")
+    "[#{host_str}]"
+  end
+
+  defp format_hosts(_), do: ""
 
   defp route_name(_router, nil), do: ""
 
