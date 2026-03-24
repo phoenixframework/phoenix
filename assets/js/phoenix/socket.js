@@ -131,6 +131,7 @@ export default class Socket {
     // transportConnect sets it to false on open.
     this.closeWasClean = true
     this.disconnecting = false
+    this.intentionallyDisconnected = false
     this.binaryType = opts.binaryType || "arraybuffer"
     this.connectClock = 1
     this.pageHidden = false
@@ -160,8 +161,8 @@ export default class Socket {
           this.pageHidden = true
         } else {
           this.pageHidden = false
-          // reconnect immediately
-          if(!this.isConnected() && !this.closeWasClean){
+          // reconnect immediately if not intentionally disconnected
+          if(!this.isConnected() && !this.closeWasClean && !this.intentionallyDisconnected){
             this.teardown(() => this.connect())
           }
         }
@@ -260,6 +261,7 @@ export default class Socket {
   disconnect(callback, code, reason){
     this.connectClock++
     this.disconnecting = true
+    this.intentionallyDisconnected = true
     this.closeWasClean = true
     clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
@@ -277,6 +279,7 @@ export default class Socket {
    * `new Socket("/socket", {params: {user_id: userToken}})`.
    */
   connect(params){
+    this.intentionallyDisconnected = false
     if(params){
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = closure(params)
