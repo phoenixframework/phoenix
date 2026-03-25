@@ -1492,7 +1492,7 @@ var Phoenix = (() => {
      * @private
      */
     onConnError(error) {
-      if (this.hasLogger()) this.log("transport", error);
+      if (this.hasLogger()) this.log("transport", "error", error);
       let transportBefore = this.transport;
       let establishedBefore = this.establishedConnections;
       this.stateChangeCallbacks.error.forEach(([, callback]) => {
