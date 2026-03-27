@@ -217,9 +217,6 @@ defmodule Phx.New.Interactive do
       result when is_binary(result) ->
         result
         |> String.trim()
-        |> normalize_abort_input()
     end
   end
-
-  defp normalize_abort_input(input), do: input
 end
