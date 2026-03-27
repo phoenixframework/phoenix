@@ -22,6 +22,7 @@ export const CHANNEL_EVENTS = {
 
 export const TRANSPORTS = {
   longpoll: "longpoll",
+  webtransport: "webtransport",
   websocket: "websocket"
 }
 export const XHR_STATES = {
