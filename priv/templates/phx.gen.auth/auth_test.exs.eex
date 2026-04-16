@@ -200,6 +200,7 @@ defmodule <%= inspect auth_module %>Test do
         |> put_req_cookie(@remember_me_cookie, signed_token)
         |> <%= inspect schema.alias %>Auth.fetch_<%= scope_config.scope.assign_key %>_for_<%= schema.singular %>([])
 
+      refute <%= inspect context.alias %>.get_<%= schema.singular %>_by_session_token(token)
       assert conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>.id == <%= schema.singular %>.id
       assert conn.assigns.<%= scope_config.scope.assign_key %>.<%= schema.singular %>.authenticated_at == <%= schema.singular %>.authenticated_at
       assert new_token = get_session(conn, :<%= schema.singular %>_token)

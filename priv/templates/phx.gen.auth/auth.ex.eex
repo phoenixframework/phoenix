@@ -94,6 +94,8 @@ defmodule <%= inspect auth_module %> do
     token_age = <%= inspect datetime_module %>.diff(<%= datetime_now %>, token_inserted_at, :day)
 
     if token_age >= @session_reissue_age_in_days do
+      old_token = get_session(conn, :<%= schema.singular %>_token)
+      old_token && <%= inspect context.alias %>.delete_<%= schema.singular %>_session_token(old_token)
       create_or_extend_session(conn, <%= schema.singular %>, %{})
     else
       conn
