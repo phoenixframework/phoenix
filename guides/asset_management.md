@@ -143,7 +143,7 @@ let opts = {
   target: "es2022",
   outdir: "../priv/static/assets",
   external: ["*.css", "fonts/*", "images/*"],
-  nodePaths: ["../deps"],
+  nodePaths: ["../deps", `../_build/${process.env.MIX_ENV}`],
   loader: loader,
   plugins: plugins,
 };
