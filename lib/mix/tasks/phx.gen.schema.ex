@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   ## primary_key
 
   By default, the primary key in the table is called `id`. This option
-  allows to change the name of the primary key column. For example:
+  allows changing the name of the primary key column. For example:
 
       $ mix phx.gen.schema Blog.post posts --primary-key post_id
 

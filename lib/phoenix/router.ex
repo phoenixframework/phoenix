@@ -117,7 +117,7 @@ defmodule Phoenix.Router do
   >   which is heavily optimized by the Erlang VM
   >
   > * For each route you define, we also define metadata to implement `Phoenix.VerifiedRoutes`.
-  >   As we will soon learn, verified routes allows to us to reference any route
+  >   As we will soon learn, verified routes allow us to reference any route
   >   as if it is a plain looking string, except it is verified by the compiler
   >   to be valid (making it much harder to ship broken links, forms, mails, etc
   >   to production)
