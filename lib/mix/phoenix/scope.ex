@@ -34,7 +34,8 @@ defmodule Mix.Phoenix.Scope do
       | name: name,
         alias: alias,
         route_access_path: route_access_path,
-        schema_migration_type: scope.schema_migration_type || scope.schema_type
+        schema_migration_type:
+          scope.schema_migration_type || if(scope.schema_type != :id, do: scope.schema_type)
     }
   end
 

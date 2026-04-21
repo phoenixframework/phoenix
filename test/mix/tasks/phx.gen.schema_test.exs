@@ -584,7 +584,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
               assert file =~ "add :id, :binary_id, primary_key: true"
 
               assert file =~
-                       "add :org_id, references(:organizations, type: :id, on_delete: :delete_all)"
+                       "add :org_id, references(:organizations, on_delete: :delete_all)"
 
               assert file =~ "create index(:blog_posts, [:org_id])"
             end)
@@ -624,7 +624,42 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
             assert file =~ "add :id, :binary_id, primary_key: true"
 
             assert file =~
-                     "add :org_id, references(:organizations, type: :id, on_delete: :delete_all)"
+                     "add :org_id, references(:organizations, on_delete: :delete_all)"
+
+            assert file =~ "create index(:blog_posts, [:org_id])"
+          end)
+        end
+      )
+    end)
+  end
+
+  test "generates scoped schema with binary_id scope type", config do
+    in_tmp_project(config.test, fn ->
+      with_scope_env(
+        :phoenix,
+        [
+          org: [
+            default: true,
+            module: MyApp.Accounts.Scope,
+            assign_key: :current_scope,
+            access_path: [:user, :org_id],
+            schema_key: :org_id,
+            schema_type: :binary_id,
+            schema_table: :organizations
+          ]
+        ],
+        fn ->
+          Gen.Schema.run(~w(Blog.Post blog_posts title:string --scope org))
+
+          assert_file("lib/phoenix/blog/post.ex", fn file ->
+            assert file =~ "field :org_id, :binary_id"
+          end)
+
+          assert [migration] = Path.wildcard("priv/repo/migrations/*_create_blog_posts.exs")
+
+          assert_file(migration, fn file ->
+            assert file =~
+                     "add :org_id, references(:organizations, type: :binary_id, on_delete: :delete_all)"
 
             assert file =~ "create index(:blog_posts, [:org_id])"
           end)
