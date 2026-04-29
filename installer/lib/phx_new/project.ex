@@ -22,6 +22,7 @@ defmodule Phx.New.Project do
   def new(project_path, opts) do
     project_path = Path.expand(project_path)
     app = opts[:app] || Path.basename(project_path)
+
     app_mod = Module.concat([opts[:module] || Macro.camelize(app)])
 
     %Project{
@@ -79,7 +80,10 @@ defmodule Phx.New.Project do
 
   defp expand_path_with_bindings(path, %Project{} = project) do
     Regex.replace(Regex.recompile!(~r/:[a-zA-Z0-9_]+/), path, fn ":" <> key, _ ->
-      project |> Map.fetch!(:"#{key}") |> to_string()
+      case Map.fetch(project, :"#{key}") do
+        {:ok, value} -> to_string(value)
+        :error -> ":#{key}"
+      end
     end)
   end
 end

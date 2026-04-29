@@ -927,6 +927,18 @@ defmodule Phoenix.VerifiedRoutes do
   defp build_route(route_ast, sigil_p, env, endpoint_ctx, router) do
     config = Module.get_attribute(env.module, :phoenix_verified_config, [])
 
+    if config == [] do
+      raise ArgumentError, """
+      attempted to use Phoenix.VerifiedRoutes without calling `use Phoenix.VerifiedRoutes` first.
+
+      You must use `use Phoenix.VerifiedRoutes` with the appropriate options instead of importing it:
+
+          use Phoenix.VerifiedRoutes, endpoint: MyAppWeb.Endpoint, router: MyAppWeb.Router
+
+      See the documentation for more details on configuration options.
+      """
+    end
+
     router =
       case Macro.expand(router, env) do
         mod when is_atom(mod) ->
