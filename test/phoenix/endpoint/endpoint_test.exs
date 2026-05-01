@@ -388,4 +388,48 @@ defmodule Phoenix.Endpoint.EndpointTest do
       end
     end
   end
+
+  test "validates webtransport socket options" do
+    assert_raise ArgumentError, ~r/unknown keys \[:invalid\]/, fn ->
+      defmodule MyInvalidSocketEndpoint3 do
+        use Phoenix.Endpoint, otp_app: :phoenix
+
+        socket "/ws", UserSocket, webtransport: [invalid: true]
+      end
+    end
+
+    assert_raise ArgumentError, ~r/check_csrf: true requires connect_info/, fn ->
+      defmodule MyInvalidSocketEndpoint4 do
+        use Phoenix.Endpoint, otp_app: :phoenix
+
+        socket "/ws", UserSocket, webtransport: [check_csrf: true]
+      end
+    end
+
+    assert_raise ArgumentError, ~r/:connect_info keys are expected to be one of/, fn ->
+      defmodule MyInvalidSocketEndpoint5 do
+        use Phoenix.Endpoint, otp_app: :phoenix
+
+        socket "/ws", UserSocket, webtransport: [connect_info: [:unsupported_key]]
+      end
+    end
+  end
+
+  test "builds webtransport routes" do
+    defmodule MyWebTransportEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      socket "/ws/:user_id", UserSocket, websocket: false, longpoll: false, webtransport: true
+    end
+
+    [
+      {route, Phoenix.Transports.WebTransport.Handler,
+       {MyWebTransportEndpoint, UserSocket, config}}
+    ] =
+      MyWebTransportEndpoint.__webtransport_routes__()
+
+    assert route == "/ws/:user_id/webtransport"
+    assert config[:path] == "/webtransport"
+    assert config[:serializer] == [{Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}]
+  end
 end
