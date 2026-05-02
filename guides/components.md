@@ -10,7 +10,7 @@ The Phoenix endpoint pipeline takes a request, routes it to a controller, and ca
 >
 > * [`phoenix_html`](https://hexdocs.pm/phoenix_html) - defines the building blocks for writing HTML safely. In your project, you'll interact primarily with the `Phoenix.HTML` module, which is imported by default in all templates
 >
-> * [`phoenix_live_view`](https://hexdocs.pm/phoenix_live_view) - a library for rich, real-time user experiences with server-rendered HTML. While LiveView provides several abstraction for building collaborative and dynamic applications, it also defines the `HEEx` template language, function components, and JS commands, which brings powerful abstractions for all kinds of server-rendered HTML applications
+> * [`phoenix_live_view`](https://hexdocs.pm/phoenix_live_view) - a library for rich, real-time user experiences with server-rendered HTML. While LiveView provides several abstractions for building collaborative and dynamic applications, it also defines the `HEEx` template language, function components, and JS commands, which bring powerful abstractions for all kinds of server-rendered HTML applications
 
 In this chapter, we will recap how components are used and dig deeper to discover new use cases.
 
