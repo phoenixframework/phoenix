@@ -2,8 +2,11 @@ defmodule Phoenix.Transports.LongPoll do
   @moduledoc false
   @behaviour Plug
 
-  # 10MB
+  # The maximum is 10MB but read_body will cap the whole request at ~8MB,
+  # so this acts as a secondary protection mechanism.
   @max_base64_size 10_000_000
+  # TODO: enforce batch size on the server in the next release
+  # @max_poll_batch_size 100
   @connect_info_opts [:check_csrf]
 
   import Plug.Conn
@@ -78,30 +81,28 @@ defmodule Phoenix.Transports.LongPoll do
   defp publish(conn, server_ref, endpoint, opts) do
     case read_body(conn, []) do
       {:ok, body, conn} ->
-        # we need to match on both v1 and v2 protocol, as well as wrap for backwards compat
-        batch =
+        # We need to match on both v1 and v2 protocol, as well as wrap for backwards compat
+        status =
           case get_req_header(conn, "content-type") do
             ["application/x-ndjson"] ->
               body
-              |> String.split(["\n", "\r\n"])
-              |> Enum.map(fn
-                "[" <> _ = txt -> {txt, :text}
-                base64 -> {safe_decode64!(base64), :binary}
+              |> String.splitter(["\n", "\r\n"])
+              # |> Stream.take(@max_poll_batch_size)
+              |> Enum.find(fn part ->
+                msg =
+                  case part do
+                    "[" <> _ = txt -> {txt, :text}
+                    base64 -> {safe_decode64!(base64), :binary}
+                  end
+
+                transport_dispatch(endpoint, server_ref, msg, opts)
               end)
 
             _ ->
-              [{body, :text}]
+              transport_dispatch(endpoint, server_ref, {body, :text}, opts)
           end
 
-        {conn, status} =
-          Enum.reduce_while(batch, {conn, nil}, fn msg, {conn, _status} ->
-            case transport_dispatch(endpoint, server_ref, msg, opts) do
-              :ok -> {:cont, {conn, :ok}}
-              :request_timeout = timeout -> {:halt, {conn, timeout}}
-            end
-          end)
-
-        conn |> put_status(status) |> status_json()
+        conn |> put_status(status || :ok) |> status_json()
 
       _ ->
         raise Plug.BadRequestError
@@ -121,8 +122,8 @@ defmodule Phoenix.Transports.LongPoll do
     broadcast_from!(endpoint, server_ref, {:dispatch, client_ref(server_ref), body, ref})
 
     receive do
-      {:ok, ^ref} -> :ok
-      {:error, ^ref} -> :ok
+      {:ok, ^ref} -> nil
+      {:error, ^ref} -> nil
     after
       opts[:window_ms] -> :request_timeout
     end
