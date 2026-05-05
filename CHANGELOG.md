@@ -46,7 +46,12 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
-## 1.7.21
+## 1.7.22 (2026-05-05)
+
+### Security fixes
+  * [CVE-2026-32689](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-628h-q48j-jr6q): Fix Phoenix.Socket Longpoll transport memory exhaustion in nd-JSON body splitting
+
+## 1.7.21 (2025-03-27)
 
 ### Bug fixes
   * Fix socket sometimes not reconnecting after pagehide/pageshow ([#6103](https://github.com/phoenixframework/phoenix/issues/6103))
