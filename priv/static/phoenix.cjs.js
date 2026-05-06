@@ -711,7 +711,7 @@ var LongPoll = class {
     this.awaitingBatchAck = true;
     const next = offset + MAX_LONGPOLL_BATCH_SIZE;
     const batch = messages.slice(offset, next);
-    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.onerror("timeout"), (resp) => {
+    this.ajax("POST", "application/x-ndjson", batch.join("\n"), () => this.onerror("timeout"), (resp) => {
       if (!resp || resp.status !== 200) {
         this.awaitingBatchAck = false;
         this.onerror(resp && resp.status);
