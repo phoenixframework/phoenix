@@ -983,23 +983,42 @@ var Phoenix = (() => {
     // private
     binaryEncode(message) {
       let { join_ref, ref, event, topic, payload } = message;
-      let metaLength = this.META_LENGTH + join_ref.length + ref.length + topic.length + event.length;
+      let encoder = new TextEncoder();
+      let joinRefBytes = encoder.encode(join_ref);
+      let refBytes = encoder.encode(ref);
+      let topicBytes = encoder.encode(topic);
+      let eventBytes = encoder.encode(event);
+      this.assertFieldSize(joinRefBytes.byteLength, "join_ref");
+      this.assertFieldSize(refBytes.byteLength, "ref");
+      this.assertFieldSize(topicBytes.byteLength, "topic");
+      this.assertFieldSize(eventBytes.byteLength, "event");
+      let metaLength = this.META_LENGTH + joinRefBytes.byteLength + refBytes.byteLength + topicBytes.byteLength + eventBytes.byteLength;
       let header = new ArrayBuffer(this.HEADER_LENGTH + metaLength);
+      let headerBytes = new Uint8Array(header);
       let view = new DataView(header);
       let offset = 0;
       view.setUint8(offset++, this.KINDS.push);
-      view.setUint8(offset++, join_ref.length);
-      view.setUint8(offset++, ref.length);
-      view.setUint8(offset++, topic.length);
-      view.setUint8(offset++, event.length);
-      Array.from(join_ref, (char) => view.setUint8(offset++, char.charCodeAt(0)));
-      Array.from(ref, (char) => view.setUint8(offset++, char.charCodeAt(0)));
-      Array.from(topic, (char) => view.setUint8(offset++, char.charCodeAt(0)));
-      Array.from(event, (char) => view.setUint8(offset++, char.charCodeAt(0)));
+      view.setUint8(offset++, joinRefBytes.byteLength);
+      view.setUint8(offset++, refBytes.byteLength);
+      view.setUint8(offset++, topicBytes.byteLength);
+      view.setUint8(offset++, eventBytes.byteLength);
+      headerBytes.set(joinRefBytes, offset);
+      offset += joinRefBytes.byteLength;
+      headerBytes.set(refBytes, offset);
+      offset += refBytes.byteLength;
+      headerBytes.set(topicBytes, offset);
+      offset += topicBytes.byteLength;
+      headerBytes.set(eventBytes, offset);
+      offset += eventBytes.byteLength;
       var combined = new Uint8Array(header.byteLength + payload.byteLength);
-      combined.set(new Uint8Array(header), 0);
+      combined.set(headerBytes, 0);
       combined.set(new Uint8Array(payload), header.byteLength);
       return combined.buffer;
+    },
+    assertFieldSize(size, name) {
+      if (size > 255) {
+        throw new Error(`unable to convert ${name} to binary: must be less than or equal to 255 bytes, but is ${size} bytes`);
+      }
     },
     binaryDecode(buffer) {
       let view = new DataView(buffer);
