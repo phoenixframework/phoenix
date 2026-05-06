@@ -112,6 +112,22 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     end
   end
 
+  defmodule SlowSocket do
+    @behaviour Phoenix.Socket.Transport
+
+    def child_spec(_opts), do: :ignore
+    def connect(_), do: {:ok, %{}}
+    def init(state), do: {:ok, state}
+
+    def handle_in(_message, state) do
+      Process.sleep(:infinity)
+      {:ok, state}
+    end
+
+    def handle_info(_message, state), do: {:ok, state}
+    def terminate(_reason, _state), do: :ok
+  end
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
@@ -135,6 +151,13 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         pubsub_timeout_ms: 200,
         check_origin: ["//example.com"],
         connect_info: [:trace_context_headers, :x_headers, :peer_data, :uri]
+      ]
+
+    socket "/ws/slow", SlowSocket,
+      longpoll: [
+        window_ms: 100,
+        pubsub_timeout_ms: 200,
+        check_origin: ["//example.com"]
       ]
   end
 
@@ -368,7 +391,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         "tracestate" => "congo=t61rcWkgMz"
       }
 
-      session = join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, ctx_headers)
+      session =
+        join("/ws/connect_info", "room:lobby", @vsn, "1", @mode, %{}, %{}, ctx_headers)
 
       # pull messages
       resp = poll(:get, "/ws/connect_info", @vsn, session)
@@ -376,7 +400,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
       [_phx_reply, _user_entered, status_msg] = resp.body["messages"]
 
-      assert %{"connect_info" => %{"trace_context_headers" => ^ctx_headers}} = status_msg.payload
+      assert %{"connect_info" => %{"trace_context_headers" => ^ctx_headers}} =
+               status_msg.payload
     end
 
     test "#{@mode}: transport peer_data is extracted to the socket connect_info" do
@@ -422,7 +447,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
     test "#{@mode}: publishing events" do
       Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
-      session = join("/ws", "room:lobby", @vsn, "1", @mode)
+      join_ref = "1"
+      session = join("/ws", "room:lobby", @vsn, join_ref, @mode)
 
       # Publish successfully
       resp =
@@ -430,6 +456,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           "topic" => "room:lobby",
           "event" => "new_msg",
           "ref" => "1",
+          "join_ref" => join_ref,
           "payload" => %{"body" => "hi!"}
         })
 
@@ -470,7 +497,10 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         assert List.last(resp.body["messages"]) == %Message{
                  join_ref: nil,
                  event: "phx_reply",
-                 payload: %{"response" => %{"reason" => "unmatched topic"}, "status" => "error"},
+                 payload: %{
+                   "response" => %{"reason" => "unmatched topic"},
+                   "status" => "error"
+                 },
                  ref: "12300",
                  topic: "room:private-room"
                }
@@ -577,6 +607,28 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       resp = poll(:post, "/ws", @vsn, session)
       assert resp.body["status"] == 410
     end
+  end
+
+  test "publish responds with 408 when transport_dispatch times out" do
+    resp = poll(:get, "/ws/slow", "2.0.0", %{}, nil)
+    assert resp.body["status"] == 410
+    assert resp.status == 200
+
+    session = Map.take(resp.body, ["token"])
+
+    resp =
+      poll(:post, "/ws/slow", "2.0.0", session, [
+        %{
+          "topic" => "room:lobby",
+          "event" => "ping",
+          "ref" => "1",
+          "join_ref" => "1",
+          "payload" => %{}
+        }
+      ])
+
+    assert resp.status == 200
+    assert resp.body["status"] == 408
   end
 
   for {serializer, vsn, join_ref} <- [

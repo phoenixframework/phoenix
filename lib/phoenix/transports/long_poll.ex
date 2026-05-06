@@ -87,7 +87,7 @@ defmodule Phoenix.Transports.LongPoll do
               body
               |> String.splitter(["\n", "\r\n"])
               # |> Stream.take(@max_poll_batch_size)
-              |> Enum.find(fn part ->
+              |> Enum.find_value(fn part ->
                 msg =
                   case part do
                     "[" <> _ = txt -> {txt, :text}
