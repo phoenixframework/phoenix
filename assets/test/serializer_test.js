@@ -81,6 +81,48 @@ describe("binary", () => {
     })
   })
 
+  it("encodes non-ASCII metadata as UTF-8", (done) => {
+    let buffer = binPayload()
+    let topic = "room:café"
+    let event = "π"
+    let joinRef = "🚀"
+    let ref = "1"
+    let encoder = new TextEncoder()
+    let topicBytes = encoder.encode(topic)
+    let eventBytes = encoder.encode(event)
+    let joinRefBytes = encoder.encode(joinRef)
+    let refBytes = encoder.encode(ref)
+
+    Serializer.encode({join_ref: joinRef, ref: ref, topic: topic, event: event, payload: buffer}, (result) => {
+      let bytes = new Uint8Array(result)
+      expect(bytes[0]).toBe(0) // push kind
+      expect(bytes[1]).toBe(joinRefBytes.byteLength) // 4 bytes for "🚀"
+      expect(bytes[2]).toBe(refBytes.byteLength)
+      expect(bytes[3]).toBe(topicBytes.byteLength) // 10 bytes for "room:café"
+      expect(bytes[4]).toBe(eventBytes.byteLength) // 2 bytes for "π"
+
+      let offset = 5
+      expect(Array.from(bytes.slice(offset, offset + joinRefBytes.byteLength))).toEqual(Array.from(joinRefBytes))
+      offset += joinRefBytes.byteLength
+      expect(Array.from(bytes.slice(offset, offset + refBytes.byteLength))).toEqual(Array.from(refBytes))
+      offset += refBytes.byteLength
+      expect(Array.from(bytes.slice(offset, offset + topicBytes.byteLength))).toEqual(Array.from(topicBytes))
+      offset += topicBytes.byteLength
+      expect(Array.from(bytes.slice(offset, offset + eventBytes.byteLength))).toEqual(Array.from(eventBytes))
+      offset += eventBytes.byteLength
+      expect(bytes[offset]).toBe(1) // payload byte
+      done()
+    })
+  })
+
+  it("throws when a metadata field exceeds 255 UTF-8 bytes", () => {
+    let buffer = binPayload()
+    let big = "a".repeat(256)
+    expect(() => {
+      Serializer.encode({join_ref: "0", ref: "1", topic: big, event: "e", payload: buffer}, () => {})
+    }).toThrow(/topic/)
+  })
+
   it("decodes broadcast", (done) => {
     let bin = "\x02\x03\ntopsome-event\x01\x01"
     let buffer = new TextEncoder().encode(bin).buffer
