@@ -125,7 +125,7 @@ defmodule Phoenix.MixProject do
       },
       files: ~w(
           assets/js lib priv usage-rules CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs
-          installer/templates/phx_web/components/core_components.ex
+          installer/templates/phx_web/components/core_components.ex.eex
         )
     ]
   end
