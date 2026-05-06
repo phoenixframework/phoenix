@@ -45,6 +45,19 @@ This release introduces deprecation warnings for several features that have been
 ### Security fixes
 - [CVE-2026-32689](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-628h-q48j-jr6q): Fix Phoenix.Socket Longpoll transport memory exhaustion in nd-JSON body splitting
 
+### Enhancements
+- [phoenix] Raise if `use Phoenix.VerifiedRoutes` is called multiple times in the same module
+- [phoenix] Fix more deprecation and type checker warnings on Elixir 1.20
+- [phoenix] Raise when interpolating a list in `Phoenix.VerifiedRoutes` ([#6632](https://github.com/phoenixframework/phoenix/pull/6632))
+- [phoenix] Gracefully handle non-binary `vsn` socket parameter ([#6662](https://github.com/phoenixframework/phoenix/pull/6662))
+- [phx.gen.*] Use `.eex` filename suffix in generator files
+- [phx.new] Add interactive mode: `mix phx.new --interactive` ([#6630](https://github.com/phoenixframework/phoenix/pull/6630))
+- [phx.new] Add `phx-no-format` to generated `<.live_title>` tag ([#6667](https://github.com/phoenixframework/phoenix/pull/6667))
+
+### Bug fixes
+- [phx.gen.*] Fix generated migrations for myxql when using scopes ([#6635](https://github.com/phoenixframework/phoenix/pull/6635))
+- [phx.new] Fix crash when parent directory contains a colon ([#6633](https://github.com/phoenixframework/phoenix/pull/6633))
+
 ## 1.8.5 (2026-03-05)
 
 ### JavaScript Client Bug Fixes
