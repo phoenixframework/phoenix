@@ -80,10 +80,7 @@ defmodule Phx.New.Project do
 
   defp expand_path_with_bindings(path, %Project{} = project) do
     Regex.replace(Regex.recompile!(~r/:[a-zA-Z0-9_]+/), path, fn ":" <> key, _ ->
-      case Map.fetch(project, :"#{key}") do
-        {:ok, value} -> to_string(value)
-        :error -> ":#{key}"
-      end
+      project |> Map.fetch!(:"#{key}") |> to_string()
     end)
   end
 end
