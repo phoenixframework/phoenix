@@ -925,9 +925,9 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
   defp build_route(route_ast, sigil_p, env, endpoint_ctx, router) do
-    config = Module.get_attribute(env.module, :phoenix_verified_config, [])
+    config = Module.get_attribute(env.module, :phoenix_verified_config)
 
-    if config == [] do
+    if is_nil(config) do
       raise ArgumentError, """
       attempted to use Phoenix.VerifiedRoutes without calling `use Phoenix.VerifiedRoutes` first.
 

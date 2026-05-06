@@ -22,7 +22,6 @@ defmodule Phx.New.Project do
   def new(project_path, opts) do
     project_path = Path.expand(project_path)
     app = opts[:app] || Path.basename(project_path)
-
     app_mod = Module.concat([opts[:module] || Macro.camelize(app)])
 
     %Project{
