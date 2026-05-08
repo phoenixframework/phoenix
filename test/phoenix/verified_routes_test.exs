@@ -224,14 +224,16 @@ defmodule Phoenix.VerifiedRoutesTest do
   end
 
   test "~p raises when use Phoenix.VerifiedRoutes" do
-    assert_raise "you must `use Phoenix.VerifiedRoutes` before using the ~p sigil", fn ->
-      defmodule BadVerifiedRoutes do
-        import Phoenix.VerifiedRoutes
-        @endpoint StaticPath
-        @router Router
-        def test, do: ~p"/"
-      end
-    end
+    assert_raise RuntimeError,
+                 "you must `use Phoenix.VerifiedRoutes` before using the ~p sigil",
+                 fn ->
+                   defmodule BadVerifiedRoutes do
+                     import Phoenix.VerifiedRoutes
+                     @endpoint StaticPath
+                     @router Router
+                     def test, do: ~p"/"
+                   end
+                 end
   end
 
   test ":path_prefixes" do
