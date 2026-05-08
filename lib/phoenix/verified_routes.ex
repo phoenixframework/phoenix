@@ -925,7 +925,9 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
   defp build_route(route_ast, sigil_p, env, endpoint_ctx, router) do
-    config = Module.get_attribute(env.module, :phoenix_verified_config, [])
+    config =
+      Module.get_attribute(env.module, :phoenix_verified_config) ||
+        raise("you must `use Phoenix.Router` before using the ~p sigil")
 
     router =
       case Macro.expand(router, env) do

@@ -221,9 +221,17 @@ defmodule Phoenix.VerifiedRoutesTest do
       end)
 
     refute warnings =~ "no route path"
-  after
-    :code.purge(__MODULE__.Hash)
-    :code.delete(__MODULE__.Hash)
+  end
+
+  test "~p raises when use Phoenix.VerifiedRoutes" do
+    assert_raise "you must `use Phoenix.Router` before using the ~p sigil", fn ->
+      defmodule BadVerifiedRoutes do
+        import Phoenix.VerifiedRoutes
+        @endpoint StaticPath
+        @router Router
+        def test, do: ~p"/"
+      end
+    end
   end
 
   test ":path_prefixes" do
