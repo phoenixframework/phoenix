@@ -306,14 +306,11 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert_raise ArgumentError,
                  ~r|attempted to use Phoenix.VerifiedRoutes without calling|,
                  fn ->
-                   defmodule ImportedVerifiedRoutes do
+                   defmodule BadImportedVerifiedRoutes do
                      import Phoenix.VerifiedRoutes
                      def test, do: ~p"/posts/1"
                    end
                  end
-  after
-    :code.purge(__MODULE__.ImportedVerifiedRoutes)
-    :code.delete(__MODULE__.ImportedVerifiedRoutes)
   end
 
   test "path arities" do
