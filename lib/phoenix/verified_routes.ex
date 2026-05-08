@@ -925,19 +925,7 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
   defp build_route(route_ast, sigil_p, env, endpoint_ctx, router) do
-    config = Module.get_attribute(env.module, :phoenix_verified_config)
-
-    if is_nil(config) do
-      raise ArgumentError, """
-      attempted to use Phoenix.VerifiedRoutes without calling `use Phoenix.VerifiedRoutes` first.
-
-      You must use `use Phoenix.VerifiedRoutes` with the appropriate options instead of importing it:
-
-          use Phoenix.VerifiedRoutes, endpoint: MyAppWeb.Endpoint, router: MyAppWeb.Router
-
-      See the documentation for more details on configuration options.
-      """
-    end
+    config = verified_config!(env)
 
     router =
       case Macro.expand(router, env) do
@@ -1038,6 +1026,8 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp attr!(env, :endpoint) do
+    verified_config!(env)
+
     Module.get_attribute(env.module, :endpoint) ||
       raise """
       expected @endpoint to be set. For dynamic endpoint resolution, use path/2 instead.
@@ -1049,7 +1039,27 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp attr!(env, name) do
+    verified_config!(env)
+
     Module.get_attribute(env.module, name) || raise "expected @#{name} module attribute to be set"
+  end
+
+  defp verified_config!(env) do
+    case Module.get_attribute(env.module, :phoenix_verified_config) do
+      nil ->
+        raise ArgumentError, """
+        attempted to use Phoenix.VerifiedRoutes without calling `use Phoenix.VerifiedRoutes` first.
+
+        You must use `use Phoenix.VerifiedRoutes` with the appropriate options instead of importing it:
+
+            use Phoenix.VerifiedRoutes, endpoint: MyAppWeb.Endpoint, router: MyAppWeb.Router
+
+        See the documentation for more details on configuration options.
+        """
+
+      config ->
+        config
+    end
   end
 
   defp static_path?(path, statics) do
