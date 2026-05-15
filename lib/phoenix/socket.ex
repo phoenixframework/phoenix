@@ -556,7 +556,14 @@ defmodule Phoenix.Socket do
   end
 
   def __info__(%Broadcast{event: "disconnect"}, state) do
-    {:stop, {:shutdown, :disconnected}, state}
+    # Close code 1001 ("Going Away") signals the client that the connection
+    # is intentionally closed but a reconnect is expected — phoenix.js gates
+    # `reconnectTimer.scheduleTimeout()` on `closeCode !== 1000`, so without
+    # an explicit code here the default mapping of `{:shutdown, :disconnected}`
+    # (1000 in bandit ≥1.10.4) prevents the LiveSocket from reconnecting
+    # after a `phx.gen.auth`-style "log out everywhere" disconnect.
+    # See mtrudel/bandit#582.
+    {:stop, {:shutdown, :disconnected}, 1001, state}
   end
 
   def __info__(:socket_drain, state) do
