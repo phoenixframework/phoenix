@@ -6,9 +6,11 @@
     <meta name="csrf-token" content={get_csrf_token()} />
     <.live_title default="<%= @app_module %>" suffix=" · Phoenix Framework" phx-no-format>{assigns[:page_title]}</.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} /><%= if not @css do %>
-    <link phx-track-static rel="stylesheet" href={~p"/assets/default.css"} /><% end %>
+    <link phx-track-static rel="stylesheet" href={~p"/assets/default.css"} /><% end %><%= if @volt do %>
+    <script defer phx-track-static type="module" src={Volt.entry_path(<%= @endpoint_module %><%= if @in_umbrella do %>, profile: :<%= @web_app_name %><% end %>)}>
+    </script><% else %>
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
-    </script><%= if @css do %>
+    </script><% end %><%= if @css do %>
     <script>
       (() => {
         const setTheme = (theme) => {

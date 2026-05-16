@@ -14,7 +14,7 @@
 //
 //     import "some-package"
 //
-// If you have dependencies that try to import CSS, esbuild will generate a separate `app.css` file.
+// If you have dependencies that try to import CSS, <%= if @volt, do: "Volt", else: "esbuild" %> will generate a separate `app.css` file.
 // To load it, simply add a second `<link>` to your `root.html.heex` file.
 <%= if @html do %>
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
@@ -52,7 +52,7 @@ import "phoenix_html"
 //     1. stream server logs to the browser console
 //     2. click on elements to jump to their definitions in your code editor
 //
-<%= @live_comment %>if (process.env.NODE_ENV === "development") {
+<%= @live_comment %>if (<%= if @volt, do: "import.meta.env.DEV", else: "process.env.NODE_ENV === \"development\"" %>) {
 <%= @live_comment %>  window.addEventListener("phx:live_reload:attached", ({detail: reloader}) => {
 <%= @live_comment %>    // Enable server log streaming to client.
 <%= @live_comment %>    // Disable with reloader.disableServerLogs()

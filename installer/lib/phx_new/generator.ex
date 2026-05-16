@@ -244,8 +244,9 @@ defmodule Phx.New.Generator do
     dashboard = Keyword.get(opts, :dashboard, true)
     gettext = Keyword.get(opts, :gettext, true)
     assets = Keyword.get(opts, :assets, true)
-    esbuild = Keyword.get(opts, :esbuild, assets)
-    tailwind = Keyword.get(opts, :tailwind, assets)
+    volt = assets and Keyword.get(opts, :volt, false)
+    esbuild = not volt and Keyword.get(opts, :esbuild, assets)
+    tailwind = not volt and Keyword.get(opts, :tailwind, assets)
     mailer = Keyword.get(opts, :mailer, true)
     dev = Keyword.get(opts, :dev, false)
     from_elixir_install = Keyword.get(opts, :from_elixir_install, false)
@@ -282,6 +283,26 @@ defmodule Phx.New.Generator do
         :error -> adapter_config
       end
 
+    asset_builders =
+      if volt,
+        do: [:volt],
+        else: Enum.filter([tailwind && :tailwind, esbuild && :esbuild], & &1)
+
+    {assets_setup, assets_build, assets_deploy} =
+      if volt do
+        volt_profile = if project.in_umbrella?, do: " #{project.web_app}", else: ""
+
+        {[],
+         ["compile", "volt.build#{volt_profile} --tailwind"],
+         ["volt.build#{volt_profile} --tailwind", "phx.digest"]}
+      else
+        {
+          Enum.map(asset_builders, &"#{&1}.install --if-missing"),
+          ["compile" | Enum.map(asset_builders, &"#{&1} #{project.web_app}")],
+          Enum.map(asset_builders, &"#{&1} #{project.web_app} --minify") ++ ["phx.digest"]
+        }
+      end
+
     binding = [
       app_name: project.app,
       app_module: inspect(project.app_mod),
@@ -301,9 +322,13 @@ defmodule Phx.New.Generator do
       signing_salt: random_string(8),
       lv_signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
-      asset_builders: Enum.filter([tailwind && :tailwind, esbuild && :esbuild], & &1),
-      javascript: esbuild,
-      css: tailwind,
+      asset_builders: asset_builders,
+      assets_setup: assets_setup,
+      assets_build: assets_build,
+      assets_deploy: assets_deploy,
+      javascript: volt or esbuild,
+      css: volt or tailwind,
+      volt: volt,
       mailer: mailer,
       ecto: ecto,
       html: html,

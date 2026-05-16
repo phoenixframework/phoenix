@@ -64,6 +64,24 @@ defmodule Mix.Tasks.Phx.New.WebTest do
     end
   end
 
+  test "new with --volt" do
+    in_tmp_umbrella_project "new with volt", fn ->
+      Mix.Tasks.Phx.New.Web.run([@app_name, "--volt"])
+
+      assert_file "#{@app_name}/mix.exs", fn file ->
+        assert file =~ ~s|{:volt, "~> 0.11.0"}|
+      end
+
+      assert_file "../config/config.exs", fn file ->
+        assert file =~ "config :volt, :#{@app_name}"
+      end
+
+      assert_file "../config/dev.exs", fn file ->
+        assert file =~ ~s|volt: {Mix.Tasks.Volt.Dev, :run, [~w(#{@app_name} --tailwind)]}|
+      end
+    end
+  end
+
   test "app_name is included in tailwind config" do
     in_tmp_umbrella_project "new with defaults", fn ->
       Mix.Tasks.Phx.New.Web.run(["testweb"])
