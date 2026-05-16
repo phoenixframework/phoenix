@@ -15,6 +15,12 @@ defmodule Phx.New.Interactive do
     {"api", "API-only"}
   ]
 
+  @asset_options [
+    {"esbuild", "Esbuild + Tailwind"},
+    {"volt", "Volt"},
+    {"none", "None"}
+  ]
+
   def run do
     catch_abort(fn ->
       info([:green, "\nInitialize your Phoenix project (press Ctrl+C to abort)\n", :reset])
@@ -29,7 +35,7 @@ defmodule Phx.New.Interactive do
           yes?("Use binary_id as primary key type?", false)
         end
 
-      %{html: html, live: live, assets: assets} = prompt_web()
+      %{html: html, live: live, assets: assets, volt: volt} = prompt_web()
       dashboard = yes?("Include LiveDashboard (monitoring)?")
       mailer = yes?("Include Swoosh (mailer)?")
       gettext = yes?("Include Gettext (i18n)?")
@@ -43,7 +49,8 @@ defmodule Phx.New.Interactive do
           dashboard: dashboard,
           mailer: mailer,
           gettext: gettext,
-          assets: assets
+          assets: assets,
+          volt: volt
         ]
         |> maybe_put_database(database)
 
@@ -78,13 +85,19 @@ defmodule Phx.New.Interactive do
 
   defp prompt_web do
     case prompt_choice("Web interface?", @web_options, "live") do
-      "api" -> %{html: false, live: false, assets: false}
-      "html" -> %{html: true, live: false, assets: prompt_assets?()}
-      "live" -> %{html: true, live: true, assets: prompt_assets?()}
+      "api" -> %{html: false, live: false, assets: false, volt: false}
+      "html" -> Map.merge(%{html: true, live: false}, prompt_assets())
+      "live" -> Map.merge(%{html: true, live: true}, prompt_assets())
     end
   end
 
-  defp prompt_assets?, do: yes?("Include Esbuild + Tailwind?")
+  defp prompt_assets do
+    case prompt_choice("Assets?", @asset_options, "esbuild") do
+      "esbuild" -> %{assets: true, volt: false}
+      "volt" -> %{assets: true, volt: true}
+      "none" -> %{assets: false, volt: false}
+    end
+  end
 
   defp prompt_choice(question, choices, default) do
     info("\n#{question}\n")
@@ -146,12 +159,14 @@ defmodule Phx.New.Interactive do
   end
 
   defp web_summary(opts) do
-    case {opts[:html], opts[:live], opts[:assets]} do
-      {true, true, true} -> "LiveView"
-      {true, true, false} -> "LiveView (no Esbuild, no Tailwind)"
-      {true, false, true} -> "HTML"
-      {true, false, false} -> "HTML (no Esbuild, no Tailwind)"
-      {false, _, _} -> "API-only"
+    case {opts[:html], opts[:live], opts[:assets], opts[:volt]} do
+      {true, true, true, true} -> "LiveView (Volt)"
+      {true, true, true, _} -> "LiveView"
+      {true, true, false, _} -> "LiveView (no Esbuild, no Tailwind)"
+      {true, false, true, true} -> "HTML (Volt)"
+      {true, false, true, _} -> "HTML"
+      {true, false, false, _} -> "HTML (no Esbuild, no Tailwind)"
+      {false, _, _, _} -> "API-only"
     end
   end
 
@@ -166,7 +181,8 @@ defmodule Phx.New.Interactive do
             {!opts[:dashboard], "--no-dashboard"},
             {!opts[:mailer], "--no-mailer"},
             {!opts[:gettext], "--no-gettext"},
-            {!opts[:assets], "--no-assets"}
+            {!opts[:assets], "--no-assets"},
+            {opts[:volt], "--volt"}
           ],
           condition,
           do: flag

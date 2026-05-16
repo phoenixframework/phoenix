@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Phx.New do
       Please check the adapter docs for more information
       and requirements. Defaults to "bandit".
 
-    * `--no-assets` - equivalent to `--no-esbuild` and `--no-tailwind`
+    * `--no-assets` - equivalent to `--no-esbuild`, `--no-tailwind`, and disables Volt
 
     * `--no-dashboard` - do not include Phoenix.LiveDashboard
 
@@ -62,6 +62,8 @@ defmodule Mix.Tasks.Phx.New do
       The generated markup will still include Tailwind CSS classes, those
       are left-in as reference for the subsequent styling of your layout
       and components
+
+    * `--volt` - use Volt instead of esbuild and tailwind for assets
 
     * `--binary-id` - use `binary_id` as primary key type in Ecto schemas
 
@@ -158,6 +160,7 @@ defmodule Mix.Tasks.Phx.New do
     assets: :boolean,
     esbuild: :boolean,
     tailwind: :boolean,
+    volt: :boolean,
     ecto: :boolean,
     app: :string,
     module: :string,
@@ -266,6 +269,7 @@ defmodule Mix.Tasks.Phx.New do
 
   defp validate_project(%Project{opts: opts} = project, path) do
     check_app_name!(project.app, !!opts[:app])
+    check_volt_options!(opts)
     check_directory_existence!(Map.fetch!(project, path))
     check_module_name_validity!(project.root_mod)
     check_module_name_availability!(project.root_mod)
@@ -297,17 +301,20 @@ defmodule Mix.Tasks.Phx.New do
 
       if mix_step == [] do
         builders = Keyword.fetch!(project.binding, :asset_builders)
+        installable_builders = Enum.reject(builders, &(&1 == :volt))
 
-        if builders != [] do
+        if installable_builders != [] do
           Mix.shell().info([:green, "* running ", :reset, "mix assets.setup"])
 
           # First compile only builders so we can install in parallel
           # TODO: Once we require Erlang/OTP 28, jason may no longer be required
-          cmd(project, "mix deps.compile jason #{Enum.join(builders, " ")}", log: false)
+          cmd(project, "mix deps.compile jason #{Enum.join(installable_builders, " ")}",
+            log: false
+          )
         end
 
         tasks =
-          Enum.map(builders, fn builder ->
+          Enum.map(installable_builders, fn builder ->
             cmd = "mix do loadpaths --no-compile --no-listeners + #{builder}.install"
             Task.async(fn -> cmd(project, cmd, log: false, cd: project.web_path) end)
           end)
@@ -339,6 +346,13 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp maybe_cd(path, func), do: path && File.cd!(path, func)
+
+  defp check_volt_options!(opts) do
+    if opts[:assets] != false && opts[:volt] &&
+         (opts[:esbuild] == false || opts[:tailwind] == false) do
+      Mix.raise("--volt cannot be combined with --no-esbuild or --no-tailwind")
+    end
+  end
 
   defp install_mix(project, install?) do
     if install? do

@@ -15,7 +15,23 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
     layout: false
   ],
   pubsub_server: <%= @app_module %>.PubSub,
-  live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @javascript do %>
+  live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @volt do %>
+
+# Configure Volt
+config :volt, :<%= @web_app_name %>,
+  entry: "assets/js/app.js",
+  outdir: "priv/static/assets",
+  target: :es2022,
+  hash: false,
+  sourcemap: :hidden,
+  resolve_dirs: [Path.expand("../deps", __DIR__), Mix.Project.build_path()],
+  tailwind: [
+    css: "assets/css/app.css",
+    sources: [
+      %{base: "lib/", pattern: "**/*.{ex,heex,eex}"},
+      %{base: "assets/", pattern: "**/*.{js,ts,jsx,tsx}"}
+    ]
+  ]<% else %><%= if @javascript do %>
 
 # Configure esbuild (the version is required)
 config :esbuild,
@@ -36,4 +52,4 @@ config :tailwind,
       --output=priv/static/assets/css/app.css
     ),
     cd: Path.expand("../apps/<%= @web_app_name %>", __DIR__)
-  ]<% end %>
+  ]<% end %><% end %>

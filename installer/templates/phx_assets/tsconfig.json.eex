@@ -1,8 +1,8 @@
 // This file is needed on most editors to enable the intelligent autocompletion
 // of LiveView's JavaScript API methods. You can safely delete it if you don't need it.
 //
-// Note: This file assumes a basic esbuild setup without node_modules.
-// We include a generic paths alias to deps to mimic how esbuild resolves
+// Note: This file assumes a basic <%= if @volt, do: "Volt", else: "esbuild" %> setup without node_modules.
+// We include a generic paths alias to deps to mimic how <%= if @volt, do: "Volt", else: "esbuild" %> resolves
 // the Phoenix and LiveView JavaScript assets.
 // If you have a package.json in your project, you should remove the
 // paths configuration and instead add the phoenix dependencies to the
