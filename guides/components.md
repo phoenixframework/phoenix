@@ -81,7 +81,7 @@ Next we need to update `show.html.heex`:
 
 When we reload `http://localhost:4000/hello/Frank`, we should see the same content as before! The `show.html.heex` is now invoking two different function components:
 
-  * `<Layouts.app` - the syntax for invoking function componente defined in a separate module and it follows the same rules as calling any other function in Elixir
+  * `<Layouts.app` - the syntax for invoking function components defined in a separate module and it follows the same rules as calling any other function in Elixir
 
   * `<.greet` - when the function component is defined in the same module as the template, we can skip the module name, and invoke the component using its name prefixed with a dot
 
