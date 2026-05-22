@@ -145,7 +145,7 @@ defmodule Mix.PhoenixTest do
       )
 
   defp tmp_path! do
-    Path.join([System.tmp_dir!(), "phx_copy_from_test_#{:erlang.unique_integer([:positive])}"])
+    Path.join([System.tmp_dir!(), "phx_copy_from_test_#{System.unique_integer([:positive])}"])
   end
 
   test "live_form_value/1" do
