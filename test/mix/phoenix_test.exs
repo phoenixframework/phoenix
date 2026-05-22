@@ -3,6 +3,47 @@ defmodule Mix.PhoenixTest do
 
   doctest Mix.Phoenix, import: true
 
+  test "copy_from/4 uses file with .eex extension when it exists" do
+    tmp_dir = tmp_path!()
+    on_exit(fn -> File.rm_rf!(tmp_dir) end)
+
+    templates_dir = Path.join(tmp_dir, "templates")
+    File.mkdir_p!(templates_dir)
+    File.write!(Path.join(templates_dir, "hello.ex.eex"), "<%= greeting %>")
+    File.write!(Path.join(templates_dir, "hello.ex"), "old")
+
+    File.cd!(tmp_dir, fn ->
+      Mix.Phoenix.copy_from(
+        ["."],
+        "templates",
+        [greeting: "hi"],
+        [{:eex, "hello.ex.eex", "output.ex"}]
+      )
+
+      assert File.read!("output.ex") == "hi"
+    end)
+  end
+
+  test "copy_from/4 falls back to file without .eex extension for backward compatibility" do
+    tmp_dir = tmp_path!()
+    on_exit(fn -> File.rm_rf!(tmp_dir) end)
+
+    templates_dir = Path.join(tmp_dir, "templates")
+    File.mkdir_p!(templates_dir)
+    File.write!(Path.join(templates_dir, "hello.ex"), "<%= greeting %>")
+
+    File.cd!(tmp_dir, fn ->
+      Mix.Phoenix.copy_from(
+        ["."],
+        "templates",
+        [greeting: "hi"],
+        [{:eex, "hello.ex.eex", "output.ex"}]
+      )
+
+      assert File.read!("output.ex") == "hi"
+    end)
+  end
+
   test "base/0 returns the module base based on the Mix application" do
     assert Mix.Phoenix.base() == "Phoenix"
     Application.put_env(:phoenix, :namespace, Phoenix.Sample.App)
@@ -102,6 +143,10 @@ defmodule Mix.PhoenixTest do
         %{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}},
         -@one_day_in_seconds
       )
+
+  defp tmp_path! do
+    Path.join([System.tmp_dir!(), "phx_copy_from_test_#{:erlang.unique_integer([:positive])}"])
+  end
 
   test "live_form_value/1" do
     assert Mix.Phoenix.Schema.live_form_value(~D[2020-10-09]) == "2020-10-09"
