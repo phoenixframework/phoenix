@@ -12,16 +12,14 @@ defmodule Mix.PhoenixTest do
     File.write!(Path.join(templates_dir, "hello.ex.eex"), "<%= greeting %>")
     File.write!(Path.join(templates_dir, "hello.ex"), "old")
 
-    File.cd!(tmp_dir, fn ->
-      Mix.Phoenix.copy_from(
-        ["."],
-        "templates",
-        [greeting: "hi"],
-        [{:eex, "hello.ex.eex", "output.ex"}]
-      )
+    Mix.Phoenix.copy_from(
+      [tmp_dir],
+      "templates",
+      [greeting: "hi"],
+      [{:eex, "hello.ex.eex", Path.join(tmp_dir, "output.ex")}]
+    )
 
-      assert File.read!("output.ex") == "hi"
-    end)
+    assert File.read!(Path.join(tmp_dir, "output.ex")) == "hi"
   end
 
   test "copy_from/4 falls back to file without .eex extension for backward compatibility" do
@@ -32,16 +30,14 @@ defmodule Mix.PhoenixTest do
     File.mkdir_p!(templates_dir)
     File.write!(Path.join(templates_dir, "hello.ex"), "<%= greeting %>")
 
-    File.cd!(tmp_dir, fn ->
-      Mix.Phoenix.copy_from(
-        ["."],
-        "templates",
-        [greeting: "hi"],
-        [{:eex, "hello.ex.eex", "output.ex"}]
-      )
+    Mix.Phoenix.copy_from(
+      [tmp_dir],
+      "templates",
+      [greeting: "hi"],
+      [{:eex, "hello.ex.eex", Path.join(tmp_dir, "output.ex")}]
+    )
 
-      assert File.read!("output.ex") == "hi"
-    end)
+    assert File.read!(Path.join(tmp_dir, "output.ex")) == "hi"
   end
 
   defp tmp_path! do
