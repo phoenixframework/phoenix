@@ -137,4 +137,20 @@ defmodule Phoenix.SocketTest do
       assert DrainerSpecSocket.drainer_spec(drainer: false, endpoint: Endpoint) == :ignore
     end
   end
+
+  describe "__info__/2" do
+    alias Phoenix.Socket.Broadcast
+
+    test "disconnect broadcast emits close code 1001 so phoenix.js reconnects" do
+      # phoenix.js gates reconnects on `closeCode !== 1000`.
+      # Servers might interpret `{:shutdown, :disconnected}`
+      # as code 1000, so we pass 1001 explicitly to force a retry.
+      # See https://github.com/mtrudel/bandit/issues/582.
+      state = make_ref()
+      msg = %Broadcast{topic: "t", event: "disconnect", payload: %{}}
+
+      assert {:stop, {:shutdown, :disconnected}, 1001, ^state} =
+               Phoenix.Socket.__info__(msg, state)
+    end
+  end
 end
