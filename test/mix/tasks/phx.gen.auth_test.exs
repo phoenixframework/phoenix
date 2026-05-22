@@ -1442,7 +1442,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
   test "allows templates to be overridden", config do
     in_tmp_phx_project(config.test, fn ->
       File.mkdir_p!("priv/templates/phx.gen.auth")
-      File.write!("priv/templates/phx.gen.auth/auth.ex", "#it works!")
+      File.write!("priv/templates/phx.gen.auth/auth.ex.eex", "#it works!")
 
       send(self(), {:mix_shell_input, :yes?, false})
 
@@ -1455,6 +1455,27 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
 
       assert_file("lib/my_app_web/admin_auth.ex", fn file ->
         assert file =~ ~S|it works!|
+      end)
+    end)
+  end
+
+  test "allows templates to be overridden (backwards compatibility)", config do
+    in_tmp_phx_project(config.test, fn ->
+      File.mkdir_p!("priv/templates/phx.gen.auth")
+      # verify that projects using the old filenames without .eex extension still work
+      File.write!("priv/templates/phx.gen.auth/auth.ex", "#it works with compat!")
+
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      Gen.Auth.run(
+        ~w(Accounts Admin admins --no-compile),
+        ecto_adapter: Ecto.Adapters.Postgres
+      )
+
+      assert_received {:mix_shell, :yes?, [@liveview_option_message]}
+
+      assert_file("lib/my_app_web/admin_auth.ex", fn file ->
+        assert file =~ ~S|it works with compat!|
       end)
     end)
   end
