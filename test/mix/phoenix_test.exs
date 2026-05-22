@@ -44,6 +44,10 @@ defmodule Mix.PhoenixTest do
     end)
   end
 
+  defp tmp_path! do
+    Path.join([System.tmp_dir!(), "phx_copy_from_test_#{System.unique_integer([:positive])}"])
+  end
+
   test "base/0 returns the module base based on the Mix application" do
     assert Mix.Phoenix.base() == "Phoenix"
     Application.put_env(:phoenix, :namespace, Phoenix.Sample.App)
@@ -143,10 +147,6 @@ defmodule Mix.PhoenixTest do
         %{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}},
         -@one_day_in_seconds
       )
-
-  defp tmp_path! do
-    Path.join([System.tmp_dir!(), "phx_copy_from_test_#{System.unique_integer([:positive])}"])
-  end
 
   test "live_form_value/1" do
     assert Mix.Phoenix.Schema.live_form_value(~D[2020-10-09]) == "2020-10-09"
