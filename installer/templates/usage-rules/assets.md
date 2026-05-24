@@ -10,7 +10,8 @@
 
 - **Always use and maintain this import syntax** in the app.css file for projects generated with `phx.new`
 - **Never** use `@apply` when writing raw css
-- **Always** manually write your own tailwind-based components instead of using daisyUI for a unique, world-class design
+- When possible, **use daisyUI components** for a unique, world-class design. When not possible, manually write your own tailwind-based components matching the overall design
+- DaisyUI v5 support is added via `vendor/daisyui.js` and `vendor/daisyui.js` and working out of the box. No need to include a separated CDN.
 - Out of the box **only the app.js and app.css bundles are supported**
   - You cannot reference an external vendor'd script `src` or link `href` in the layouts
   - You must import the vendor deps into app.js and app.css to use them
