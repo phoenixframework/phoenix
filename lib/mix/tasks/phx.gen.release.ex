@@ -241,7 +241,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   @debian "trixie"
   defp elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
     url =
-      "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"
+      "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-"
 
     fetch_body!(url)
     |> Phoenix.json_library().decode!()
