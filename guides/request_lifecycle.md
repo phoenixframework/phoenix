@@ -155,7 +155,7 @@ Next, we need to add files to the `lib/hello_web/controllers/hello_html` directo
 </section>
 ```
 
-Phoenix will see the template file and compile it into an `index(assigns)` function, similar as before. There is no runtime or performance difference between the two styles.
+Phoenix will see the template file and compile it into an `index(assigns)` function, similar to the previous example. There is no runtime or performance difference between the two styles.
 
 Also note the controller name (`HelloController`) and the view name (`HelloHTML`) and their respective files, `hello_controller.ex` and `hello_html.ex` all follow the same naming convention, and are named after each other. You could name the directory anything you want, as long as you update the `embed_templates` setting accordingly, but it's best to follow conventions.
 
@@ -186,7 +186,7 @@ Even though our `index.html.heex` file consists of only a single `section` tag, 
 {@inner_content}
 ```
 
-This line injects our template into the layout before the HTML is sent off to the browser. The root layout, as the name implies, is a barebone layout with mostly the `<head>` tag and a structure that is shared across **all of your pages**. Richer features, such as sidebar, menus, etc. are part of your application layout, which we will explore in a couple sections below.
+This line injects the rendered template into the layout before the final HTML is sent to the browser. The root layout, as the name implies, is a barebone layout with mostly the `<head>` tag and a structure that is shared across **all of your pages**. Richer features, such as sidebar, menus, etc. are part of your application layout, which we will explore in a couple sections below.
 
 ## From endpoint to views
 
@@ -211,7 +211,7 @@ defmodule HelloWeb.Endpoint do
 end
 ```
 
-Each of these plugs have a specific responsibility that we will learn later. The last plug is precisely the `HelloWeb.Router` module. This allows the endpoint to delegate all further request processing to the router. As we now know, its main responsibility is to map verb/path pairs to controllers. The controller then tells a view to render a template.
+Each of these plugs have a specific responsibility that we will learn later. The last plug is precisely the `HelloWeb.Router` module. This allows the endpoint to delegate all further request processing to the router. As we now know, its main responsibility is to map verb/path pairs to controllers.The controller then tells a view to render a template.
 
 At this moment, you may be thinking this can be a lot of steps to simply render a page. However, as our application grows in complexity, we will see that each layer serves a distinct purpose:
 
