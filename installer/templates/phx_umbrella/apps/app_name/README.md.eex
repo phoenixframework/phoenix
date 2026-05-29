@@ -1,3 +1,11 @@
 # <%= @app_module %>
 
-**TODO: Add description**
+This application is part of the <%= @app_name %> umbrella.
+To start your Phoenix server:
+
+  * Run `mix setup` to install and setup dependencies
+  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+
+You can also run your tests with `mix test`.
+
+For more information, see the [Phoenix guides](https://hexdocs.pm/phoenix/overview.html).
