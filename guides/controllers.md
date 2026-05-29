@@ -108,7 +108,7 @@ If we again visit [`/hello/Frank`] in the browser, we should see a block of JSON
 {"id": "Frank"}
 ```
 
-The [`json/2`] function is useful for writing APIs and there is also the [`html/2`] function for rendering HTML, but most of the times we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
+The [`json/2`] function is useful for writing APIs and there is also the [`html/2`] function for rendering HTML, but most of the time we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
 
 Let's rollback our `show` action to what we originally wrote in the [request life-cycle guide](request_lifecycle.html):
 
