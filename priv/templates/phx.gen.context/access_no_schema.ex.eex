@@ -11,7 +11,7 @@
 
   """
   def list_<%= schema.plural %> do
-    raise "TODO"
+    raise "The list_<%= schema.plural %>/0 function is not implemented. Please define your business logic in <%= inspect context.module %>."
   end
 
   @doc """
@@ -25,7 +25,7 @@
       %<%= inspect schema.alias %>{}
 
   """
-  def get_<%= schema.singular %>!(<%= primary_key %>), do: raise "TODO"
+  def get_<%= schema.singular %>!(<%= primary_key %>), do: raise "The get_<%= schema.singular %>!/1 function is not implemented. Please define your business logic in <%= inspect context.module %>."
 
   @doc """
   Creates a <%= schema.singular %>.
@@ -40,7 +40,7 @@
 
   """
   def create_<%= schema.singular %>(attrs) do
-    raise "TODO"
+    raise "The create_<%= schema.singular %>/1 function is not implemented. Please define your business logic in <%= inspect context.module %>."
   end
 
   @doc """
@@ -56,7 +56,7 @@
 
   """
   def update_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
-    raise "TODO"
+    raise "The update_<%= schema.singular %>/2 function is not implemented. Please define your business logic in <%= inspect context.module %>."
   end
 
   @doc """
@@ -72,7 +72,7 @@
 
   """
   def delete_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
-    raise "TODO"
+    raise "The delete_<%= schema.singular %>/1 function is not implemented. Please define your business logic in <%= inspect context.module %>."
   end
 
   @doc """
@@ -85,5 +85,5 @@
 
   """
   def change_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>, _attrs \\ %{}) do
-    raise "TODO"
+    raise "The change_<%= schema.singular %>/2 function is not implemented. Please define your business logic in <%= inspect context.module %>."
   end

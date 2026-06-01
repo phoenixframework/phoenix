@@ -477,7 +477,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def update_post"
         assert file =~ "def delete_post"
         assert file =~ "def change_post"
-        assert file =~ "raise \"TODO\""
+        assert file =~ "raise \"The list_posts/0 function is not implemented. Please define your business logic in Phoenix.Blog.\""
       end)
 
       assert_file("test/phoenix/blog_test.exs", fn file ->
