@@ -116,7 +116,7 @@ defmodule Mix.Tasks.Phx.New do
   ```
 
   You can read more about umbrella projects in the
-  [mix documentation](https://hexdocs.pm/mix/Mix.Project.html#module-umbrella-projects)
+  [mix documentation](https://mix.hexdocs.pm/Mix.Project.html#module-umbrella-projects)
 
   ## `PHX_NEW_CACHE_DIR`
 

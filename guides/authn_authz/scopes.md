@@ -196,7 +196,7 @@ In this example, the scope is called `user` and it is the `default` scope that i
 
 * `module` - the module that defines the struct for this scope.
 
-* `assign_key` - the key where the scope struct is assigned to the [socket](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Socket.html#t:t/0) or [conn](https://hexdocs.pm/plug/Plug.Conn.html).
+* `assign_key` - the key where the scope struct is assigned to the [socket](https://phoenix-live-view.hexdocs.pm/Phoenix.LiveView.Socket.html#t:t/0) or [conn](https://plug.hexdocs.pm/Plug.Conn.html).
 
 * `access_path` - a list of keys that define the path to the identifying field in the scope struct. The generators generate code like `where: schema_key == ^scope.user.id`.
 
@@ -214,7 +214,7 @@ In this example, the scope is called `user` and it is the `default` scope that i
 
 * `test_data_fixture` - a module that is automatically imported into the context test file. It must have a `NAME_scope_fixture/0` function that returns a unique scope struct for context tests, in this case `user_scope_fixture/0`.
 
-* `test_setup_helper` - the name of a function that is registered as [`setup` callback](https://hexdocs.pm/ex_unit/ExUnit.Callbacks.html#setup/1) in LiveView / Controller tests. The function is expected to be imported in the test file. Usually, this is ensured by putting it into the `MyAppWeb.ConnCase` module.
+* `test_setup_helper` - the name of a function that is registered as [`setup` callback](https://ex-unit.hexdocs.pm/ExUnit.Callbacks.html#setup/1) in LiveView / Controller tests. The function is expected to be imported in the test file. Usually, this is ensured by putting it into the `MyAppWeb.ConnCase` module.
 
 While the `mix phx.gen.auth` automatically generates a scope, scopes can also be defined manually. This can be useful, for example, to retrofit an existing application with scopes or to define scopes that are not tied to a user.
 

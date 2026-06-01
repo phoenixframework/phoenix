@@ -31,7 +31,7 @@ Without the `otp_app:` key, we need to provide absolute paths to the files where
 Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 ```
 
-The options under the `https:` key are passed to the Plug adapter, typically `Bandit`, which in turn uses `Plug.SSL` to select the TLS socket options. Please refer to the documentation for [Plug.SSL.configure/1](https://hexdocs.pm/plug/Plug.SSL.html#configure/1) for more information on the available options and their defaults. The [Plug HTTPS Guide](https://hexdocs.pm/plug/https.html) and the [Erlang/OTP ssl](https://www.erlang.org/doc/man/ssl.html) documentation also provide valuable information.
+The options under the `https:` key are passed to the Plug adapter, typically `Bandit`, which in turn uses `Plug.SSL` to select the TLS socket options. Please refer to the documentation for [Plug.SSL.configure/1](https://plug.hexdocs.pm/Plug.SSL.html#configure/1) for more information on the available options and their defaults. The [Plug HTTPS Guide](https://plug.hexdocs.pm/https.html) and the [Erlang/OTP ssl](https://www.erlang.org/doc/man/ssl.html) documentation also provide valuable information.
 
 ## SSL in Development
 
@@ -80,7 +80,7 @@ config :my_app, MyAppWeb.Endpoint,
 
 It is important to note that `force_ssl:` is a *compile* time config, so it normally is set in `prod.exs`, it will not work when set from `runtime.exs`.
 
-For more information on the implications of offloading TLS to an external element, in particular relating to secure cookies, refer to the [Plug HTTPS Guide](https://hexdocs.pm/plug/https.html#offloading-tls). Keep in mind that the options passed to `Plug.SSL` in that document should be set using the `force_ssl:` endpoint option in a Phoenix application.
+For more information on the implications of offloading TLS to an external element, in particular relating to secure cookies, refer to the [Plug HTTPS Guide](https://plug.hexdocs.pm/https.html#offloading-tls). Keep in mind that the options passed to `Plug.SSL` in that document should be set using the `force_ssl:` endpoint option in a Phoenix application.
 
 ## HSTS
 
@@ -106,4 +106,4 @@ For other browsers, please consult the documentation for HSTS.
 
 Alternatively, setting the `:expires` option on `force_ssl` to `0` should expire the entry and disable HSTS.
 
-For more information on HSTS options, see [Plug.SSL](https://hexdocs.pm/plug/Plug.SSL.html).
+For more information on HSTS options, see [Plug.SSL](https://plug.hexdocs.pm/Plug.SSL.html).

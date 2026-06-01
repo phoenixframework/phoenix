@@ -74,7 +74,7 @@ defmodule Phoenix.Logger do
       * Disable logging: This event cannot be disabled
 
   To see an example of how Phoenix LiveDashboard uses these events to create
-  metrics, visit <https://hexdocs.pm/phoenix_live_dashboard/metrics.html>.
+  metrics, visit <https://phoenix-live-dashboard.hexdocs.pm/metrics.html>.
 
   ## Parameter filtering
 

@@ -226,7 +226,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert mailer_notice =~ ~s(defmodule MyApp.Mailer do)
       assert mailer_notice =~ ~s(use Swoosh.Mailer, otp_app: :my_app)
       assert mailer_notice =~ ~s(def deps do)
-      assert mailer_notice =~ ~s(https://hexdocs.pm/swoosh)
+      assert mailer_notice =~ ~s(https://swoosh.hexdocs.pm)
     end)
   end
 
@@ -366,7 +366,7 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
       assert mailer_notice =~ ~s(defmodule MyApp.Mailer do)
       assert mailer_notice =~ ~s(use Swoosh.Mailer, otp_app: :my_app)
       assert mailer_notice =~ ~s(def deps do)
-      assert mailer_notice =~ ~s(https://hexdocs.pm/swoosh)
+      assert mailer_notice =~ ~s(https://swoosh.hexdocs.pm)
     end)
   end
 

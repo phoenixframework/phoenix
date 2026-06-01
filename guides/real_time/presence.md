@@ -35,7 +35,7 @@ in lib/hello/application.ex:
     ]
 
 You're all set! See the Phoenix.Presence docs for more details:
-https://hexdocs.pm/phoenix/Phoenix.Presence.html
+https://phoenix.hexdocs.pm/Phoenix.Presence.html
 ```
 
 If we open up the `lib/hello_web/channels/presence.ex` file, we will see the following line:
@@ -132,7 +132,7 @@ With token authentication, you should access `socket.assigns.user_id`, set in `U
 
 ## Usage With LiveView
 
-Whilst Phoenix does ship with a JavaScript API for dealing with presence, it is also possible to extend the `HelloWeb.Presence` module to support [LiveView](https://hexdocs.pm/phoenix_live_view).
+Whilst Phoenix does ship with a JavaScript API for dealing with presence, it is also possible to extend the `HelloWeb.Presence` module to support [LiveView](https://phoenix-live-view.hexdocs.pm).
 
 One thing to keep in mind when dealing with LiveView, is that each LiveView is a stateful process, so if we keep the presence state in the LiveView, each LiveView process will contain the full list of online users in memory. Instead, we can keep track of the online users within the `Presence` process, and pass separate events to the LiveView, which can use a stream to update the online list.
 

@@ -687,7 +687,7 @@ defmodule Phoenix.Router do
       `:debug`. Route dispatching contains information about how the route is handled (which controller
       action is called, what parameters are available and which pipelines are used) and is separate from
       the plug level logging. To alter the plug log level, please see
-      https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-dynamic-log-level.
+      https://phoenix.hexdocs.pm/Phoenix.Logger.html#module-dynamic-log-level.
     * `:private` - a map of private data to merge into the connection
       when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
@@ -1064,7 +1064,7 @@ defmodule Phoenix.Router do
       `:debug`. Route dispatching contains information about how the route is handled (which controller
       action is called, what parameters are available and which pipelines are used) and is separate from
       the plug level logging. To alter the plug log level, please see
-      https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-dynamic-log-level.
+      https://phoenix.hexdocs.pm/Phoenix.Logger.html#module-dynamic-log-level.
 
   """
   defmacro scope(options, do: context) do

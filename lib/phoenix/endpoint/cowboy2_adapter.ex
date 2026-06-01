@@ -7,16 +7,16 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
   This adapter uses the following endpoint configuration:
 
     * `:http` - the configuration for the HTTP server. It accepts all options
-      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
+      as defined by [`Plug.Cowboy`](https://plug-cowboy.hexdocs.pm/). Defaults
       to `false`
 
     * `:https` - the configuration for the HTTPS server. It accepts all options
-      as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
+      as defined by [`Plug.Cowboy`](https://plug-cowboy.hexdocs.pm/). Defaults
       to `false`
 
     * `:drainer` - a drainer process that triggers when your application is
       shutting down to wait for any on-going request to finish. It accepts all
-      options as defined by [`Plug.Cowboy.Drainer`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
+      options as defined by [`Plug.Cowboy.Drainer`](https://plug-cowboy.hexdocs.pm/Plug.Cowboy.Drainer.html).
       Defaults to `[]`, which will start a drainer process for each configured endpoint,
       but can be disabled by setting it to `false`.
 

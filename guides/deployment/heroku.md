@@ -4,7 +4,7 @@ Our main goal for this guide is to get a Phoenix application running on Heroku.
 
 ## What we'll need
 
-The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://hexdocs.pm/phoenix/up_and_running.html).
+The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://phoenix.hexdocs.pm/up_and_running.html).
 
 ## Limitations
 
@@ -14,12 +14,12 @@ Heroku is a great platform and Elixir performs well on it. However, you may run 
   - Heroku [limits the number of simultaneous connections](https://devcenter.heroku.com/articles/http-routing#request-concurrency) as well as the [duration of each connection](https://devcenter.heroku.com/articles/limits#http-timeouts). It is common to use Elixir for real-time apps which need lots of concurrent, persistent connections, and Phoenix is capable of [handling over 2 million connections on a single server](https://www.phoenixframework.org/blog/the-road-to-2-million-websocket-connections).
 
 - Distributed clustering is not possible.
-  - Heroku [firewalls dynos off from one another](https://devcenter.heroku.com/articles/dynos#networking). This means things like [distributed Phoenix channels](https://dockyard.com/blog/2016/01/28/running-elixir-and-phoenix-projects-on-a-cluster-of-nodes) and [distributed tasks](https://hexdocs.pm/elixir/distributed-tasks.html) will need to rely on something like Redis instead of Elixir's built-in distribution.
+  - Heroku [firewalls dynos off from one another](https://devcenter.heroku.com/articles/dynos#networking). This means things like [distributed Phoenix channels](https://dockyard.com/blog/2016/01/28/running-elixir-and-phoenix-projects-on-a-cluster-of-nodes) and [distributed tasks](https://elixir.hexdocs.pm/distributed-tasks.html) will need to rely on something like Redis instead of Elixir's built-in distribution.
 
-- In-memory state such as those in [Agents](https://hexdocs.pm/elixir/agents.html), [GenServers](https://hexdocs.pm/elixir/genservers.html), and [ETS](https://hexdocs.pm/elixir/erlang-term-storage.html) will be lost every 24 hours.
+- In-memory state such as those in [Agents](https://elixir.hexdocs.pm/agents.html), [GenServers](https://elixir.hexdocs.pm/genservers.html), and [ETS](https://elixir.hexdocs.pm/erlang-term-storage.html) will be lost every 24 hours.
   - Heroku [restarts dynos](https://devcenter.heroku.com/articles/dynos#restarting) every 24 hours regardless of whether the node is healthy.
 
-- [The built-in observer](https://hexdocs.pm/elixir/debugging.html#observer) can't be used with Heroku.
+- [The built-in observer](https://elixir.hexdocs.pm/debugging.html#observer) can't be used with Heroku.
   - Heroku does allow for connection into your dyno, but you won't be able to use the observer to watch the state of your dyno.
 
 If you are just getting started, or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
@@ -185,7 +185,7 @@ config :hello, Hello.Repo,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 ```
 
-Finally, if you plan on using websockets, then we will need to decrease the timeout for the websocket transport in `lib/hello_web/endpoint.ex`. If you do not plan on using websockets, then leaving it set to false is fine. You can find further explanation of the options available at the [documentation](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#socket/3-websocket-configuration).
+Finally, if you plan on using websockets, then we will need to decrease the timeout for the websocket transport in `lib/hello_web/endpoint.ex`. If you do not plan on using websockets, then leaving it set to false is fine. You can find further explanation of the options available at the [documentation](https://phoenix.hexdocs.pm/Phoenix.Endpoint.html#socket/3-websocket-configuration).
 
 ```elixir
 defmodule HelloWeb.Endpoint do

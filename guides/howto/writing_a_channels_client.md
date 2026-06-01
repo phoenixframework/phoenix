@@ -1,6 +1,6 @@
 # Writing a Channels Client
 
-Client libraries for Phoenix Channels already exist in [several languages](https://hexdocs.pm/phoenix/channels.html#client-libraries), but if you want to write your own, this guide should get you started.
+Client libraries for Phoenix Channels already exist in [several languages](https://phoenix.hexdocs.pm/channels.html#client-libraries), but if you want to write your own, this guide should get you started.
 It may also be useful as a guide for manual testing with a WebSocket client.
 
 ## Overview
