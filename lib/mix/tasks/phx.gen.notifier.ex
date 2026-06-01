@@ -205,7 +205,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
           import Config
           config #{inspect(context.context_app)}, #{inspect(mailer_module)}, adapter: Swoosh.Adapters.Local
 
-      Check https://hexdocs.pm/swoosh for more details.
+      Check https://swoosh.hexdocs.pm for more details.
       """)
     end
 

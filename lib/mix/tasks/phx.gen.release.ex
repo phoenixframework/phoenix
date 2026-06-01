@@ -127,7 +127,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     Your application is ready to be deployed in a release!
 
-    See https://hexdocs.pm/mix/Mix.Tasks.Release.html for more information about Elixir releases.
+    See https://mix.hexdocs.pm/Mix.Tasks.Release.html for more information about Elixir releases.
     #{if opts.docker, do: docker_instructions()}
     Here are some useful release commands you can run in any release environment:
 
@@ -212,7 +212,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     a Docker image, ready for deployment on platforms that support Docker.
 
     For more information about deploying with Docker see
-    https://hexdocs.pm/phoenix/releases.html#containers
+    https://phoenix.hexdocs.pm/releases.html#containers
     """
   end
 

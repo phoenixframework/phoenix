@@ -267,7 +267,7 @@ end
 
 Then we would need to provide a `home.xml.eex` template that creates XML and a `PageXML` view that embeds the template, and that would be it.
 
-Note: The `home.xml.eex` template uses the `.eex` extension. `.eex` templates are rendered by [`EEx`](https://hexdocs.pm/eex/main/EEx.html).
+Note: The `home.xml.eex` template uses the `.eex` extension. `.eex` templates are rendered by [`EEx`](https://eex.hexdocs.pm/main/EEx.html).
 
 For a list of valid content mime-types, please see the `MIME` library.
 

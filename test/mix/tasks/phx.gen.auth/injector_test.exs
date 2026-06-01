@@ -659,7 +659,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
             <section class="container">
               <nav>
                 <ul>
-                  <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+                  <li><a href="https://phoenix.hexdocs.pm/overview.html">Get Started</a></li>
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
                     <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
                   <% end %>
@@ -685,7 +685,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                      <section class="container">
                        <nav>
                          <ul>
-                           <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+                           <li><a href="https://phoenix.hexdocs.pm/overview.html">Get Started</a></li>
                            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>
                            <% end %>
@@ -733,7 +733,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
             <section class="container">\r
               <nav>\r
                 <ul>\r
-                  <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
+                  <li><a href="https://phoenix.hexdocs.pm/overview.html">Get Started</a></li>\r
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
                     <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
                   <% end %>\r
@@ -759,7 +759,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth.InjectorTest do
                      <section class="container">\r
                        <nav>\r
                          <ul>\r
-                           <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>\r
+                           <li><a href="https://phoenix.hexdocs.pm/overview.html">Get Started</a></li>\r
                            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>\r
                              <li><.link href={Routes.live_dashboard_path(@conn, :home)}>LiveDashboard</.link></li>\r
                            <% end %>\r

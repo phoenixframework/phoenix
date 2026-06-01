@@ -35,7 +35,7 @@ This release introduces deprecation warnings for several features that have been
 - Fix invalid status when longpoll request times out
 
 ### Enhancements
-- Mask `token` parameter [in logs](https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-parameter-filtering) by default (in addition to "password")
+- Mask `token` parameter [in logs](https://phoenix.hexdocs.pm/Phoenix.Logger.html#module-parameter-filtering) by default (in addition to "password")
 
 ### JavaScript Client Bug Fixes
 - Fix encoding of non-ASCII metadata in binary channel messages
@@ -117,7 +117,7 @@ This release introduces deprecation warnings for several features that have been
 ### Enhancements
   - [phx.gen.live|html|json] - Make context argument optional. Defaults to the plural name.
   - [phx.new] Add `mix precommit` alias
-  - [phx.new] Add `AGENTS.md` generation compatible with [`usage_rules`](https://hexdocs.pm/usage_rules/)
+  - [phx.new] Add `AGENTS.md` generation compatible with [`usage_rules`](https://usage-rules.hexdocs.pm/)
   - [phx.new] Add `usage_rules` folder to installer, allowing to sync generic Phoenix rules into new projects
   - [phx.new] Use LiveView 1.1 release in generated code
   - [phx.new] Ensure theme selector and flash closing works without LiveView

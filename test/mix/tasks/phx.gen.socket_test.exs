@@ -76,7 +76,7 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
         assert file =~ ~S|// And connect to the path in "lib/phoenix/endpoint.ex".|
 
         assert file =~
-                 ~S|Read the [`Using Token Authentication`](https://hexdocs.pm/phoenix/channels.html#using-token-authentication)|
+                 ~S|Read the [`Using Token Authentication`](https://phoenix.hexdocs.pm/channels.html#using-token-authentication)|
 
         assert file =~ ~S|let channel = socket.channel("room:42", {})|
         assert file =~ ~S|channel.join()|
@@ -106,7 +106,7 @@ defmodule Mix.Tasks.Phx.Gen.SocketTest do
         assert file =~ ~S|let socket = new Socket("/socket", {authToken: window.userToken})|
 
         assert file =~
-                 ~S|Read the [`Using Token Authentication`](https://hexdocs.pm/phoenix/channels.html#using-token-authentication)|
+                 ~S|Read the [`Using Token Authentication`](https://phoenix.hexdocs.pm/channels.html#using-token-authentication)|
 
         assert file =~ ~S|let channel = socket.channel("room:42", {})|
         assert file =~ ~S|channel.join()|

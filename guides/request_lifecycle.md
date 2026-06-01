@@ -133,7 +133,7 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We defined a function that receives `assigns` as arguments and used [the `~H` sigil](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2) to specify the content we want to render. Inside the `~H` sigil, we used a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site Scripting with no extra work on your part. We say that any function that receives `assigns` and returns templates to be a **function component**.
+We defined a function that receives `assigns` as arguments and used [the `~H` sigil](https://phoenix-live-view.hexdocs.pm/Phoenix.Component.html#sigil_H/2) to specify the content we want to render. Inside the `~H` sigil, we used a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site Scripting with no extra work on your part. We say that any function that receives `assigns` and returns templates to be a **function component**.
 
 A template file works in the same way. Let's give it a try by defining a template in its own file. First, delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
 
@@ -267,7 +267,7 @@ def show(conn, %{"messenger" => messenger} = params) do
 end
 ```
 
-It's good to remember that the keys of the `params` map will always be strings, and that the equals sign does not represent assignment, but is instead a [pattern match](https://hexdocs.pm/elixir/pattern-matching.html) assertion.
+It's good to remember that the keys of the `params` map will always be strings, and that the equals sign does not represent assignment, but is instead a [pattern match](https://elixir.hexdocs.pm/pattern-matching.html) assertion.
 
 ### Another new template
 

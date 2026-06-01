@@ -36,9 +36,9 @@ $ mix phx.new hello
 >
 > - [Ecto](ecto.html) for communicating with a data store, such as PostgreSQL, MySQL, and others. You can skip this with `--no-ecto`.
 >
-> - [Phoenix.HTML](https://hexdocs.pm/phoenix_html/Phoenix.HTML.html), [TailwindCSS](https://tailwindcss.com), and [Esbuild](https://esbuild.github.io) for HTML applications. You can skip them with the `--no-html` and `--no-assets` flags.
+> - [Phoenix.HTML](https://phoenix-html.hexdocs.pm/Phoenix.HTML.html), [TailwindCSS](https://tailwindcss.com), and [Esbuild](https://esbuild.github.io) for HTML applications. You can skip them with the `--no-html` and `--no-assets` flags.
 >
-> - [Phoenix.LiveView](https://hexdocs.pm/phoenix_live_view/) for building realtime and interactive web applications. You can skip this with `--no-live`.
+> - [Phoenix.LiveView](https://phoenix-live-view.hexdocs.pm/) for building realtime and interactive web applications. You can skip this with `--no-live`.
 >
 > Run `mix help phx.new` to learn all options.
 

@@ -107,7 +107,7 @@ Furthermore, future Phoenix generator invocations will automatically pass this d
 
 ### Password hashing
 
-The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2` for Windows systems. Both systems use the [Comeonin interface](https://hexdocs.pm/comeonin/).
+The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2` for Windows systems. Both systems use the [Comeonin interface](https://comeonin.hexdocs.pm/).
 
 The password hashing mechanism can be overridden with the `--hashing-lib` option. The following values are supported:
 
@@ -125,7 +125,7 @@ There are similar `:on_mount` hooks for LiveView based authentication.
 
 The generated code is not integrated with any system to send SMSes or emails for confirming accounts, resetting passwords, etc. Instead, it simply logs a message to the terminal. It is your responsibility to integrate with the proper system after generation.
 
-Note that if you generated your Phoenix project with `mix phx.new`, your project is configured to use [Swoosh](https://hexdocs.pm/swoosh/Swoosh.html) mailer by default. To view notifier emails during development with Swoosh, navigate to `/dev/mailbox`.
+Note that if you generated your Phoenix project with `mix phx.new`, your project is configured to use [Swoosh](https://swoosh.hexdocs.pm/Swoosh.html) mailer by default. To view notifier emails during development with Swoosh, navigate to `/dev/mailbox`.
 
 ### Concurrent tests
 

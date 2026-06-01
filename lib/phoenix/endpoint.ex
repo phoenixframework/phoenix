@@ -215,7 +215,7 @@ defmodule Phoenix.Endpoint do
     * `:log_access_url` - log the access url once the server boots
 
   Note that you can also store your own configurations in the Phoenix.Endpoint.
-  For example, [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view) expects
+  For example, [Phoenix LiveView](https://phoenix-live-view.hexdocs.pm) expects
   its own configuration under the `:live_view` key. In such cases, you should
   consult the documentation of the respective projects.
 
@@ -232,13 +232,13 @@ defmodule Phoenix.Endpoint do
   top-level options:
 
     * `:http` - the configuration for the HTTP server. It accepts all options
-      as defined by either [`Bandit`](https://hexdocs.pm/bandit/Bandit.html#t:options/0)
-      or [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/) depending on your
+      as defined by either [`Bandit`](https://bandit.hexdocs.pm/Bandit.html#t:options/0)
+      or [`Plug.Cowboy`](https://plug-cowboy.hexdocs.pm/) depending on your
       choice of adapter. Defaults to `false`
 
     * `:https` - the configuration for the HTTPS server. It accepts all options
-      as defined by either [`Bandit`](https://hexdocs.pm/bandit/Bandit.html#t:options/0)
-      or [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/) depending on your
+      as defined by either [`Bandit`](https://bandit.hexdocs.pm/Bandit.html#t:options/0)
+      or [`Plug.Cowboy`](https://plug-cowboy.hexdocs.pm/) depending on your
       choice of adapter. Defaults to `false`
 
   In addition, the connection draining can be configured for the Cowboy webserver via the following

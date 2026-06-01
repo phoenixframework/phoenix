@@ -6,7 +6,7 @@ Fly.io maintains their own guide for Elixir/Phoenix here: [Fly.io/docs/elixir/ge
 
 ## What we'll need
 
-The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://hexdocs.pm/phoenix/up_and_running.html).
+The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](https://phoenix.hexdocs.pm/up_and_running.html).
 
 You can just:
 

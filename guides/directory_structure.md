@@ -58,7 +58,7 @@ children = [
 
 If it is your first time with Phoenix, you don't need to worry about the details right now. For now, suffice it to say our application starts a database repository, a PubSub system for sharing messages across processes and nodes, and the application endpoint, which effectively serves HTTP requests. These services are started in the order they are defined and, whenever shutting down your application, they are stopped in the reverse order.
 
-You can learn more about applications in [Elixir's official docs for Application](https://hexdocs.pm/elixir/Application.html).
+You can learn more about applications in [Elixir's official docs for Application](https://elixir.hexdocs.pm/Application.html).
 
 The `lib/hello/mailer.ex` file holds the `Hello.Mailer` module, which defines the main interface to deliver e-mails:
 
@@ -112,7 +112,7 @@ Besides the directories mentioned, `lib/hello_web` has four files at its root. `
 
 Through _Telemetry_, Phoenix is able to collect metrics and send monitoring events of your application. The `lib/hello_web/telemetry.ex` file defines the supervisor responsible for managing the telemetry processes. You can find more information on this topic in the [Telemetry guide](telemetry.html).
 
-Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization through [Gettext](https://hexdocs.pm/gettext/Gettext.html). If you are not worried about internationalization, you can safely skip this file and its contents.
+Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization through [Gettext](https://gettext.hexdocs.pm/Gettext.html). If you are not worried about internationalization, you can safely skip this file and its contents.
 
 ## The assets directory
 
