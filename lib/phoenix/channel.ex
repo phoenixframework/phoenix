@@ -58,7 +58,7 @@ defmodule Phoenix.Channel do
   `broadcast!/3` or reply directly to a client event for request/response style
   messaging.
 
-  General message payloads are received as maps:
+  General message payloads may have any serializable type, and are often maps:
 
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         ...
