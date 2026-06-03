@@ -24,6 +24,11 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
   pubsub_server: <%= @app_module %>.PubSub,
   live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @mailer do %>
 
+# Configure LiveView
+config :phoenix_live_view,
+  # the attribute set on all root tags. Used for Phoenix.LiveView.ColocatedCSS.
+  root_tag_attribute: "phx-r"
+
 # Configure the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
@@ -45,13 +50,14 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "4.1.12",
+  version: "4.3.0",
   <%= @app_name %>: [
     args: ~w(
       --input=assets/css/app.css
       --output=priv/static/assets/css/app.css
     ),
     cd: Path.expand("..<%= if @in_umbrella, do: "/apps/#{@app_name}" %>", __DIR__),
+    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]<% end %>
 
 # Configure Elixir's Logger

@@ -8,3 +8,8 @@
 # configurations or dependencies per app, it is best to
 # move said applications out of the umbrella.
 import Config
+
+# Configure LiveView
+config :phoenix_live_view,
+  # the attribute set on all root tags. Used for Phoenix.LiveView.ColocatedCSS.
+  root_tag_attribute: "phx-r"
