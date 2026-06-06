@@ -521,6 +521,57 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
+  test "new with --volt" do
+    in_tmp("new with volt", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--volt"])
+
+      assert_file("phx_blog/mix.exs", fn file ->
+        assert file =~ ~s|{:volt, "~> 0.11.0"}|
+        assert file =~ ~s|"assets.setup": []|
+        assert file =~ ~s|"assets.build": ["compile", "volt.build --tailwind"]|
+        assert file =~ ~s|"assets.deploy": ["volt.build --tailwind", "phx.digest"]|
+        refute file =~ ~s|{:esbuild,|
+        refute file =~ ~s|{:tailwind,|
+      end)
+
+      assert_file("phx_blog/config/config.exs", fn file ->
+        assert file =~ "config :volt"
+        assert file =~ ~s|entry: "assets/js/app.js"|
+        assert file =~ "target: :es2022"
+        assert file =~ "hash: false"
+        assert file =~ ~s|css: "assets/css/app.css"|
+        refute file =~ "config :esbuild"
+        refute file =~ "config :tailwind"
+      end)
+
+      assert_file("phx_blog/config/dev.exs", fn file ->
+        assert file =~ ~s|volt: {Mix.Tasks.Volt.Dev, :run, [~w(--tailwind)]}|
+        assert file =~ "config :volt, :server"
+        refute file =~ "Esbuild"
+        refute file =~ "Tailwind"
+      end)
+
+      assert_file("phx_blog/lib/phx_blog_web/endpoint.ex", fn file ->
+        assert file =~ ~s|plug Volt.DevServer, root: "assets"|
+      end)
+
+      assert_file("phx_blog/lib/phx_blog_web/components/layouts/root.html.heex", fn file ->
+        assert file =~ ~s|type="module" src={Volt.entry_path(PhxBlogWeb.Endpoint)}|
+        refute file =~ ~s|src={~p"/assets/js/app.js"}|
+      end)
+
+      assert_file("phx_blog/assets/js/app.js", fn file ->
+        assert file =~ "if (import.meta.env.DEV)"
+        refute file =~ "process.env.NODE_ENV"
+      end)
+
+      assert_file("phx_blog/.formatter.exs", fn file ->
+        assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter, Volt.Formatter]"
+        assert file =~ ~s|"assets/**/*.{js,ts,jsx,tsx}"|
+      end)
+    end)
+  end
+
   test "new with --no-assets" do
     in_tmp("new no_assets", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--no-assets"])
@@ -802,6 +853,10 @@ defmodule Mix.Tasks.Phx.NewTest do
     assert_raise OptionParser.ParseError, fn ->
       Mix.Tasks.Phx.New.run(["valid", "-database", "mysql"])
     end
+
+    assert_raise Mix.Error, ~r/--volt cannot be combined/, fn ->
+      Mix.Tasks.Phx.New.run(["valid", "--volt", "--no-tailwind"])
+    end
   end
 
   test "new with colon in parent directory path" do
@@ -832,7 +887,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       send(self(), {:mix_shell_input, :prompt, ""})
       # web: LiveView (default)
       send(self(), {:mix_shell_input, :prompt, ""})
-      # assets: yes (default)
+      # assets: Esbuild + Tailwind (default)
       send(self(), {:mix_shell_input, :prompt, ""})
       # dashboard: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})
@@ -855,6 +910,36 @@ defmodule Mix.Tasks.Phx.NewTest do
                gettext: true,
                assets: true,
                database: "postgres"
+             } = Map.new(opts)
+    end)
+  end
+
+  test "new --interactive with Volt" do
+    in_tmp("new interactive volt", fn ->
+      # path
+      send(self(), {:mix_shell_input, :prompt, "volt_app"})
+      # database: postgres (default)
+      send(self(), {:mix_shell_input, :prompt, ""})
+      # binary_id: no (default)
+      send(self(), {:mix_shell_input, :prompt, ""})
+      # web: LiveView (default)
+      send(self(), {:mix_shell_input, :prompt, ""})
+      # assets: Volt (option 2)
+      send(self(), {:mix_shell_input, :prompt, "2"})
+      # dashboard: yes (default)
+      send(self(), {:mix_shell_input, :prompt, ""})
+      # mailer: yes (default)
+      send(self(), {:mix_shell_input, :prompt, ""})
+      # gettext: yes (default)
+      send(self(), {:mix_shell_input, :prompt, ""})
+      # confirm: yes (default)
+      send(self(), {:mix_shell_input, :prompt, ""})
+
+      assert {:ok, "volt_app", opts} = Phx.New.Interactive.run()
+
+      assert %{
+               assets: true,
+               volt: true
              } = Map.new(opts)
     end)
   end
@@ -904,7 +989,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       send(self(), {:mix_shell_input, :prompt, ""})
       # web: LiveView (default)
       send(self(), {:mix_shell_input, :prompt, ""})
-      # assets: yes (default)
+      # assets: Esbuild + Tailwind (default)
       send(self(), {:mix_shell_input, :prompt, ""})
       # dashboard: yes (default)
       send(self(), {:mix_shell_input, :prompt, ""})

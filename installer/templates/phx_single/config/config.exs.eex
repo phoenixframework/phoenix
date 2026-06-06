@@ -31,7 +31,23 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local<% end %><%= if @javascript do %>
+config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local<% end %><%= if @volt do %>
+
+# Configure Volt
+config :volt,
+  entry: "assets/js/app.js",
+  outdir: "priv/static/assets",
+  target: :es2022,
+  hash: false,
+  sourcemap: :hidden,
+  resolve_dirs: [Path.expand("../deps", __DIR__), Mix.Project.build_path()],
+  tailwind: [
+    css: "assets/css/app.css",
+    sources: [
+      %{base: "lib/", pattern: "**/*.{ex,heex,eex}"},
+      %{base: "assets/", pattern: "**/*.{js,ts,jsx,tsx}"}
+    ]
+  ]<% else %><%= if @javascript do %>
 
 # Configure esbuild (the version is required)
 config :esbuild,
@@ -52,7 +68,7 @@ config :tailwind,
       --output=priv/static/assets/css/app.css
     ),
     cd: Path.expand("..<%= if @in_umbrella, do: "/apps/#{@app_name}" %>", __DIR__),
-  ]<% end %>
+  ]<% end %><% end %>
 
 # Configure Elixir's Logger
 config :logger, :default_formatter,

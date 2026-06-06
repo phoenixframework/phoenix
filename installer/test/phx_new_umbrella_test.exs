@@ -501,6 +501,57 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end)
   end
 
+  test "new with --volt" do
+    in_tmp("new with volt", fn ->
+      Mix.Tasks.Phx.New.run([@app, "--umbrella", "--volt"])
+
+      assert_file(web_path(@app, "mix.exs"), fn file ->
+        assert file =~ ~s|{:volt, "~> 0.11.0"}|
+        assert file =~ ~s|"assets.setup": []|
+        assert file =~ ~s|"assets.build": ["compile", "volt.build #{@app}_web --tailwind"]|
+        assert file =~ ~s|"assets.deploy": ["volt.build #{@app}_web --tailwind", "phx.digest"]|
+        refute file =~ ~s|{:esbuild,|
+        refute file =~ ~s|{:tailwind,|
+      end)
+
+      assert_file(root_path(@app, "config/config.exs"), fn file ->
+        assert file =~ "config :volt, :#{@app}_web"
+        assert file =~ ~s|entry: "assets/js/app.js"|
+        assert file =~ "hash: false"
+        assert file =~ ~s|css: "assets/css/app.css"|
+        assert file =~ ~s|%{base: "lib/", pattern: "**/*.{ex,heex,eex}"}|
+        refute file =~ "config :esbuild"
+        refute file =~ "config :tailwind"
+      end)
+
+      assert_file(root_path(@app, "config/dev.exs"), fn file ->
+        assert file =~ ~s|volt: {Mix.Tasks.Volt.Dev, :run, [~w(#{@app}_web --tailwind)]}|
+        refute file =~ "config :volt, :server"
+        refute file =~ "Esbuild"
+        refute file =~ "Tailwind"
+      end)
+
+      assert_file(web_path(@app, "lib/#{@app}_web/endpoint.ex"), fn file ->
+        assert file =~ ~s|plug Volt.DevServer, root: "assets", profile: :#{@app}_web|
+      end)
+
+      assert_file(web_path(@app, "lib/#{@app}_web/components/layouts/root.html.heex"), fn file ->
+        assert file =~ ~s|type="module" src={Volt.entry_path(PhxUmbWeb.Endpoint, profile: :#{@app}_web)}|
+        refute file =~ ~s|src={~p"/assets/js/app.js"}|
+      end)
+
+      assert_file(web_path(@app, "assets/js/app.js"), fn file ->
+        assert file =~ "if (import.meta.env.DEV)"
+        refute file =~ "process.env.NODE_ENV"
+      end)
+
+      assert_file(web_path(@app, ".formatter.exs"), fn file ->
+        assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter, Volt.Formatter]"
+        assert file =~ ~s|"assets/**/*.{js,ts,jsx,tsx}"|
+      end)
+    end)
+  end
+
   test "new with --no-assets" do
     in_tmp("new with no_assets", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-assets"])
