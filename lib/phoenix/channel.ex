@@ -350,6 +350,12 @@ defmodule Phoenix.Channel do
 
   Payloads are serialized before sending with the configured serializer.
 
+  > #### Security Note {: .warning}
+  >
+  > The `payload` contains untrusted data from the client. You must authorize
+  > and validate this data before using it. See the ["Security"
+  > guide](security.html) for more information.
+
   ## Example
 
       def join("room:lobby", payload, socket) do
@@ -370,6 +376,13 @@ defmodule Phoenix.Channel do
   Handle incoming `event`s.
 
   Payloads are serialized before sending with the configured serializer.
+
+  > #### Security Note {: .warning}
+  >
+  > The event `payload` contains untrusted data from the client. You must
+  > authorize and validate this data before using it to fetch or modify
+  > resources. See the ["Security" guide](security.html) for more
+  > information.
 
   ## Example
 
