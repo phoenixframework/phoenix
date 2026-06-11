@@ -1,8 +1,12 @@
 # LiveView
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
-
-> **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
+> * Gone through the [request life-cycle guide](request_lifecycle.html)
 
 We've already seen how the typical request lifecycle in Phoenix works: a request is matched in the router, a controller handles the request and turns to a view to return a response in the correct format. But what if we want to build interactive pages? In a typical server rendered application, changing the content of the page either needs a form submission rendering the new page, or moving application logic to the client (JavaScript frameworks like jQuery, React, Vue, etc.) and building an API interface for the client to talk to.
 

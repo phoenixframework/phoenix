@@ -1,8 +1,12 @@
 # JSON and APIs
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
-
-> **Requirement**: This guide expects that you have gone through the [Controllers guide](controllers.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
+> * Gone through the [controllers guide](controllers.html)
 
 You can also use the Phoenix Framework to build [Web APIs](https://en.wikipedia.org/wiki/Web_API). By default Phoenix supports JSON but you can bring any other rendering format you desire.
 

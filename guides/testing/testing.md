@@ -1,6 +1,11 @@
 # Introduction to Testing
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
 
 Testing has become integral to the software development process, and the ability to easily write meaningful tests is an indispensable feature for any modern web framework. Phoenix takes this seriously, providing support files to make all the major components of the framework easy to test. It also generates test modules with real-world examples alongside any generated modules to help get us going.
 

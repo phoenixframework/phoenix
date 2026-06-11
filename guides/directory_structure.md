@@ -1,6 +1,11 @@
 # Directory structure
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
 
 When we use `mix phx.new` to generate a new Phoenix application, it builds a top-level directory structure like this:
 
