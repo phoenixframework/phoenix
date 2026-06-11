@@ -213,8 +213,7 @@ defmodule Phoenix.Socket do
 
   To deny connection, return `:error` or `{:error, term}`. To control the
   response the client receives in that case, [define an error handler in the
-  websocket
-  configuration](https://phoenix.hexdocs.pm/Phoenix.Endpoint.html#socket/3-websocket-configuration).
+  websocket configuration](`Phoenix.Endpoint.socket/3#websocket-configuration`).
 
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.

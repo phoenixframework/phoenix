@@ -5,7 +5,7 @@ defmodule Phoenix.Channel do
   Channels provide a means for bidirectional communication from clients that
   integrate with the `Phoenix.PubSub` layer for soft-realtime functionality.
 
-  For a conceptual overview, see the [Channels guide](channels.html).
+  For a conceptual overview, see the [Channels guide](channels.md).
 
   ## Topics & Callbacks
 
@@ -354,7 +354,7 @@ defmodule Phoenix.Channel do
   >
   > The `payload` contains untrusted data from the client. You must authorize
   > and validate this data before using it. See the ["Security"
-  > guide](security.html) for more information.
+  > guide](security.md) for more information.
 
   ## Example
 
@@ -381,8 +381,7 @@ defmodule Phoenix.Channel do
   >
   > The event `payload` contains untrusted data from the client. You must
   > authorize and validate this data before using it to fetch or modify
-  > resources. See the ["Security" guide](security.html) for more
-  > information.
+  > resources. See the ["Security" guide](security.md) for more information.
 
   ## Example
 
