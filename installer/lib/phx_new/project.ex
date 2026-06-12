@@ -66,6 +66,10 @@ defmodule Phx.New.Project do
     Keyword.fetch!(binding, :mailer)
   end
 
+  def mongo?(%Project{opts: opts}) do
+    Keyword.get(opts, :database) == "mongodb"
+  end
+
   def verbose?(%Project{opts: opts}) do
     Keyword.get(opts, :verbose, false)
   end
