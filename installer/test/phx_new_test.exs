@@ -141,6 +141,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # assets
       assert_file("phx_blog/priv/static/images/logo.svg")
+      assert_file("phx_blog/priv/static/robots.txt", ~r"Disallow: /live/longpoll")
 
       assert_file("phx_blog/.gitignore", fn file ->
         assert file =~ "/priv/static/assets/"
