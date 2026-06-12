@@ -63,6 +63,13 @@ defmodule Phoenix.Integration.MixProject do
        app: false,
        compile: false,
        depth: 1},
+      {:daisyui,
+       github: "saadeghi/daisyui",
+       tag: "v5.5.20",
+       sparse: "packages/bundle",
+       app: false,
+       compile: false,
+       depth: 1},
       {:req, "~> 0.5"}
     ]
   end
