@@ -24,8 +24,8 @@ defmodule Phoenix.MixProject do
       deps: deps(),
       package: package(),
       consolidate_protocols: Mix.env() != :test,
-      xref: [
-        exclude: [
+      elixirc_options: [
+        no_warn_undefined: [
           {IEx, :started?, 0},
           Ecto.Type,
           :ranch,
