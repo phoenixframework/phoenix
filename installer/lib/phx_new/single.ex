@@ -105,6 +105,10 @@ defmodule Phx.New.Single do
     {:eex, :app, "phx_mailer/lib/app_name/mailer.ex.eex": "lib/:app/mailer.ex"}
   ])
 
+  template(:docker_compose, [
+    {:eex, :project, "phx_single/docker-compose.yml.eex": "docker-compose.yml"}
+  ])
+
   def prepare_project(%Project{app: app, base_path: base_path} = project) when not is_nil(app) do
     if in_umbrella?(base_path) do
       %{project | in_umbrella?: true, project_path: Path.dirname(Path.dirname(base_path))}
@@ -147,6 +151,7 @@ defmodule Phx.New.Single do
     if Project.html?(project), do: gen_html(project)
     if Project.mailer?(project), do: gen_mailer(project)
     if Project.gettext?(project), do: gen_gettext(project)
+    if Project.mongo?(project), do: gen_docker_compose(project)
 
     gen_assets(project)
     project
@@ -185,5 +190,9 @@ defmodule Phx.New.Single do
 
   def gen_mailer(%Project{} = project) do
     copy_from(project, __MODULE__, :mailer)
+  end
+
+  def gen_docker_compose(%Project{} = project) do
+    copy_from(project, __MODULE__, :docker_compose)
   end
 end
