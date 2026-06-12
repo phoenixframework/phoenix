@@ -1,8 +1,12 @@
 # Plug
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
-
-> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
+> * Gone through the [request life-cycle guide](request_lifecycle.html)
 
 Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and center. We interact with plugs at every step of the request life-cycle, and the core Phoenix components like endpoints, routers, and controllers are all just plugs internally. Let's jump in and find out just what makes Plug so special.
 
