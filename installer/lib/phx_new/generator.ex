@@ -406,6 +406,10 @@ defmodule Phx.New.Generator do
     {:ecto_sqlite3, Ecto.Adapters.SQLite3, fs_db_config(app, module)}
   end
 
+  defp get_ecto_adapter("mongodb", app, module) do
+    {:mongodb_ecto, Mongo.Ecto, mongo_db_config(app, module)}
+  end
+
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
@@ -452,6 +456,38 @@ defmodule Phx.New.Generator do
       database: database_path,
       pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
       """
+    ]
+  end
+
+  defp mongo_db_config(app, module) do
+    [
+      dev: [
+        mongo_url: "mongodb://localhost:27017/#{app}_dev",
+        pool_size: 10,
+        stacktrace: true,
+        show_sensitive_data_on_connection_error: true
+      ],
+      test: [
+        mongo_url:
+          {:literal,
+           ~s|"mongodb://localhost:27017/#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
+        pool_size: 5
+      ],
+      test_setup_all: "",
+      test_setup: "Mongo.Ecto.truncate(#{inspect(module)}.Repo)",
+      prod_variables: """
+      database_url =
+        System.get_env("DATABASE_URL") ||
+          raise \"""
+          environment variable DATABASE_URL is missing.
+          For example: mongodb://user:pass@host/database
+          \"""
+      """,
+      prod_config: """
+      mongo_url: database_url,
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+      """,
+      binary_id: true
     ]
   end
 
