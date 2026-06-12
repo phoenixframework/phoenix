@@ -53,6 +53,13 @@ defmodule <%= @web_namespace %>.MixProject do
        sparse: "optimized",
        app: false,
        compile: false,
+       depth: 1},
+      {:daisyui,
+       github: "saadeghi/daisyui",
+       tag: "v5.5.20",
+       sparse: "packages/bundle",
+       app: false,
+       compile: false,
        depth: 1},<% end %>
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>

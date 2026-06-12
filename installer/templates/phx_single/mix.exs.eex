@@ -61,6 +61,13 @@ defmodule <%= @app_module %>.MixProject do
        sparse: "optimized",
        app: false,
        compile: false,
+       depth: 1},
+      {:daisyui,
+       github: "saadeghi/daisyui",
+       tag: "v5.5.20",
+       sparse: "packages/bundle",
+       app: false,
+       compile: false,
        depth: 1},<% end %><%= if @mailer do %>
       {:swoosh, "~> 1.16"},
       {:req, "~> 0.5"},<% end %>
