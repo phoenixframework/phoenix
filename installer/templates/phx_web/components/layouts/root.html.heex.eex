@@ -28,8 +28,7 @@
           setTheme(localStorage.getItem("phx:theme") || "system");
         }
         window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
-        <%= if not @live do %>
-        document.addEventListener("DOMContentLoaded", () => {
+        <%= if not @live do %>document.addEventListener("DOMContentLoaded", () => {
           document
             .querySelectorAll("button[data-phx-theme]")
             .forEach((el) => {
@@ -37,8 +36,7 @@
                 setTheme(el.dataset.phxTheme)
               })
             })
-        })<% else %>
-        window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));<% end %>
+        })<% else %>window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));<% end %>
 
         matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
           if (document.documentElement.getAttribute("data-theme-source") === "system") {
