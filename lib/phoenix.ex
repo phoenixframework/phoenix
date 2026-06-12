@@ -2,7 +2,7 @@ defmodule Phoenix do
   @moduledoc """
   This is the documentation for the Phoenix project.
 
-  To get started, see our [overview guides](overview.html).
+  To get started, see our [overview guides](overview.md).
   """
   use Application
 
