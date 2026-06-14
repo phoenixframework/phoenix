@@ -158,6 +158,37 @@ defmodule Phoenix.Router.PipelineTest do
     end
   end
 
+  test "pipe_through after route or scope raises" do
+    assert_raise ArgumentError, ~r{pipe_through must be placed before any routes or scopes in the current scope}, fn ->
+      defmodule PipeThroughAfterRouteRouter do
+        use Phoenix.Router, otp_app: :phoenix
+
+        pipeline :browser do
+        end
+
+        scope "/" do
+          get "/foo", Phoenix.Router.PipelineTest.SampleController, :index
+          pipe_through :browser
+        end
+      end
+    end
+
+    assert_raise ArgumentError, ~r{pipe_through must be placed before any routes or scopes in the current scope}, fn ->
+      defmodule PipeThroughAfterScopeRouter do
+        use Phoenix.Router, otp_app: :phoenix
+
+        pipeline :browser do
+        end
+
+        scope "/" do
+          scope "/foo" do
+          end
+          pipe_through :browser
+        end
+      end
+    end
+  end
+
   test "pipeline raises on conflict" do
     assert_raise ArgumentError, ~r{there is an import from Kernel with the same name}, fn ->
       defmodule ConflictingPipeline do

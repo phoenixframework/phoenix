@@ -14,7 +14,8 @@ defmodule Phoenix.Router.Scope do
             private: %{},
             assigns: %{},
             log: :debug,
-            trailing_slash?: false
+            trailing_slash?: false,
+            route_defined?: false
 
   @doc """
   Initializes the scope.
@@ -60,6 +61,8 @@ defmodule Phoenix.Router.Scope do
       else
         metadata
       end
+
+    put_top(module, %{top | route_defined?: true})
 
     Phoenix.Router.Route.build(
       line,
@@ -120,7 +123,12 @@ defmodule Phoenix.Router.Scope do
   """
   def pipe_through(module, new_pipes) do
     new_pipes = List.wrap(new_pipes)
-    %{pipes: pipes} = top = get_top(module)
+    %{pipes: pipes, route_defined?: route_defined?} = top = get_top(module)
+
+    if route_defined? do
+      raise ArgumentError,
+            "pipe_through must be placed before any routes or scopes in the current scope"
+    end
 
     if pipe = Enum.find(new_pipes, &(&1 in pipes)) do
       raise ArgumentError,
@@ -160,7 +168,8 @@ defmodule Phoenix.Router.Scope do
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
 
-    update_stack(module, fn stack -> [top | stack] end)
+    put_top(module, %{top | route_defined?: true})
+    update_stack(module, fn stack -> [%{top | route_defined?: true} | stack] end)
 
     put_top(module, %Scope{
       path: top.path ++ path,
