@@ -312,12 +312,12 @@ defmodule Phoenix.Presence do
   devices, could return:
 
       iex> MyPresence.get_by_key("room:1", "user1")
-      [%{name: "User 1", metas: [%{device: "Desktop"}, %{device: "Mobile"}]}]
+      %{name: "User 1", metas: [%{device: "Desktop"}, %{device: "Mobile"}]}
 
   Like `c:list/1`, the presence metadata is passed to the `fetch`
   callback of your presence module to fetch any additional information.
   """
-  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: [presence]
+  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: map() | []
 
   @doc """
   Extend presence information with additional data.
