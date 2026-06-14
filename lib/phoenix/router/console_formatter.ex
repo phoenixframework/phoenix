@@ -38,10 +38,13 @@ defmodule Phoenix.Router.ConsoleFormatter do
 
   defp format_websocket({path, module, opts}, widths) do
     if opts[:websocket] != false do
-      {verb_len, path_len, route_name_len} = widths
+      {verb_len, path_len, route_name_len, host_len} = widths
+
+      host_str = if host_len > 0, do: String.pad_trailing("", host_len) <> "  ", else: ""
 
       String.duplicate(" ", route_name_len) <>
         "  " <>
+        host_str <>
         String.pad_trailing(@socket_verb, verb_len) <>
         "  " <>
         String.pad_trailing(path <> "/websocket", path_len) <>
@@ -58,10 +61,13 @@ defmodule Phoenix.Router.ConsoleFormatter do
   defp format_longpoll({path, module, opts}, widths) do
     if opts[:longpoll] != false do
       for method <- @longpoll_verbs, into: "" do
-        {verb_len, path_len, route_name_len} = widths
+        {verb_len, path_len, route_name_len, host_len} = widths
+
+        host_str = if host_len > 0, do: String.pad_trailing("", host_len) <> "  ", else: ""
 
         String.duplicate(" ", route_name_len) <>
           "  " <>
+          host_str <>
           String.pad_trailing(method, verb_len) <>
           "  " <>
           String.pad_trailing(path <> "/longpoll", path_len) <>
@@ -78,18 +84,21 @@ defmodule Phoenix.Router.ConsoleFormatter do
     sockets = (endpoint && endpoint.__sockets__()) || []
 
     widths =
-      Enum.reduce(routes, {0, 0, 0}, fn route, acc ->
+      Enum.reduce(routes, {0, 0, 0, 0}, fn route, acc ->
         %{verb: verb, path: path, helper: helper} = route
+        hosts = Map.get(route, :hosts, [])
         verb = verb_name(verb)
-        {verb_len, path_len, route_name_len} = acc
+        {verb_len, path_len, route_name_len, host_len} = acc
         route_name = route_name(router, helper)
+        host_string = host_string(hosts)
 
         {max(verb_len, String.length(verb)), max(path_len, String.length(path)),
-         max(route_name_len, String.length(route_name))}
+         max(route_name_len, String.length(route_name)),
+         max(host_len, String.length(host_string))}
       end)
 
     Enum.reduce(sockets, widths, fn {path, _mod, opts}, acc ->
-      {verb_len, path_len, route_name_len} = acc
+      {verb_len, path_len, route_name_len, host_len} = acc
 
       verb_length =
         socket_verbs(opts)
@@ -97,7 +106,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
         |> Enum.max(&>=/2, fn -> 0 end)
 
       {max(verb_len, verb_length), max(path_len, String.length(path <> "/websocket")),
-       route_name_len}
+       route_name_len, host_len}
     end)
   end
 
@@ -108,18 +117,30 @@ defmodule Phoenix.Router.ConsoleFormatter do
       label: label
     } = route
 
+    hosts = Map.get(route, :hosts, [])
     verb = verb_name(verb)
     route_name = route_name(router, Map.get(route, :helper))
-    {verb_len, path_len, route_name_len} = column_widths
+    {verb_len, path_len, route_name_len, host_len} = column_widths
+
+    host_str =
+      if host_len > 0 do
+        String.pad_trailing(host_string(hosts), host_len) <> "  "
+      else
+        ""
+      end
 
     String.pad_leading(route_name, route_name_len) <>
       "  " <>
+      host_str <>
       String.pad_trailing(verb, verb_len) <>
       "  " <>
       String.pad_trailing(path, path_len) <>
       "  " <>
       label <> "\n"
   end
+
+  defp host_string([]), do: ""
+  defp host_string(hosts), do: "[" <> Enum.join(hosts, ", ") <> "]"
 
   defp route_name(_router, nil), do: ""
 
