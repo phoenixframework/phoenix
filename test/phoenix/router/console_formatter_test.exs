@@ -72,6 +72,28 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
            """
   end
 
+  defmodule RouterTestHosts do
+    use Phoenix.Router
+
+    scope host: "api.example.com" do
+      get "/", RouteFormatter.PageController, :index, as: :api_page
+    end
+
+    scope host: "admin.example.com" do
+      get "/", RouteFormatter.PageController, :index, as: :admin_page
+    end
+
+    get "/", RouteFormatter.PageController, :index, as: :page
+  end
+
+  test "format with host constraints" do
+    assert draw(RouterTestHosts) == """
+             api_page_path  [api.example.com]    GET  /  RouteFormatter.PageController :index
+           admin_page_path  [admin.example.com]  GET  /  RouteFormatter.PageController :index
+                 page_path                       GET  /  RouteFormatter.PageController :index
+           """
+  end
+
   describe "endpoint sockets" do
     test "format with sockets" do
       assert draw(RouterTestSingleRoutes, FormatterEndpoint) == """
