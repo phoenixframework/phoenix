@@ -63,8 +63,10 @@ defmodule Phoenix.Router.RoutingTest do
       pipe_through :noop
       get "/plug", SomePlug, []
       get "/users/:id/raise", UserController, :raise
-      pipe_through :halt
-      get "/info", UserController, :raise
+      scope "/" do
+        pipe_through :halt
+        get "/info", UserController, :raise
+      end
     end
 
     get "/no_log", SomePlug, [], log: false
