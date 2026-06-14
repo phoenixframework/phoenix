@@ -661,7 +661,14 @@ defmodule Phoenix.Router do
   end
 
   defp build_pipes(name, pipe_through) do
-    plugs = pipe_through |> Enum.reverse() |> Enum.map(&{&1, [], true})
+    plugs =
+      pipe_through
+      |> Enum.reverse()
+      |> Enum.map(fn
+        {plug, opts} -> {plug, opts, true}
+        plug -> {plug, [], true}
+      end)
+
     opts = [init_mode: Phoenix.plug_init_mode(), log_on_halt: :debug]
     {conn, body} = Plug.Builder.compile(__ENV__, plugs, opts)
 

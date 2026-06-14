@@ -63,6 +63,19 @@ defmodule Phoenix.Router.PipelineTest.Router do
     get "/", SampleController, :index
   end
 
+  defmodule GreetingPlug do
+    def init(opts), do: opts
+    def call(conn, opts) do
+      greeting = Keyword.get(opts, :greeting, "hello")
+      conn |> Plug.Conn.assign(:greeting, greeting)
+    end
+  end
+
+  scope "/greeting" do
+    pipe_through [{GreetingPlug, greeting: "Hola!"}]
+    get "/", SampleController, :index
+  end
+
   defp stop(conn, _) do
     conn |> send_resp(200, "stop") |> halt
   end
@@ -112,6 +125,11 @@ defmodule Phoenix.Router.PipelineTest do
     assert conn.halted
     assert conn.status == 200
     assert conn.resp_body == "stop"
+  end
+
+  test "supports module plug with options" do
+    conn = call(Router, :get, "/greeting")
+    assert conn.assigns[:greeting] == "Hola!"
   end
 
   test "wraps failures on call" do
