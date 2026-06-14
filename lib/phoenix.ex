@@ -45,7 +45,13 @@ defmodule Phoenix do
 
   """
   def json_library do
-    Application.get_env(:phoenix, :json_library, Jason)
+    Application.get_env(:phoenix, :json_library) || default_json_library()
+  end
+
+  if Code.ensure_loaded?(JSON) do
+    defp default_json_library, do: JSON
+  else
+    defp default_json_library, do: Jason
   end
 
   @doc """
@@ -63,14 +69,22 @@ defmodule Phoenix do
   end
 
   defp warn_on_missing_json_library do
-    configured_lib = Application.get_env(:phoenix, :json_library)
+    lib = json_library()
 
-    if configured_lib && not Code.ensure_loaded?(configured_lib) do
-      IO.warn("""
-      found #{inspect(configured_lib)} in your application configuration
-      for Phoenix JSON encoding, but module #{inspect(configured_lib)} is not available.
-      Ensure #{inspect(configured_lib)} is listed as a dependency in mix.exs.
-      """)
+    if not Code.ensure_loaded?(lib) do
+      if configured_lib = Application.get_env(:phoenix, :json_library) do
+        IO.warn("""
+        found #{inspect(configured_lib)} in your application configuration
+        for Phoenix JSON encoding, but module #{inspect(configured_lib)} is not available.
+        Ensure #{inspect(configured_lib)} is listed as a dependency in mix.exs.
+        """)
+      else
+        IO.warn("""
+        Phoenix requires a JSON library. By default Phoenix uses #{inspect(lib)},
+        but module #{inspect(lib)} is not available.
+        Ensure #{inspect(lib)} is listed as a dependency in mix.exs.
+        """)
+      end
     end
   end
 end
