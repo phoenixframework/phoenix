@@ -28,7 +28,7 @@ If you want to import JavaScript dependencies, you have at least three options t
 
    To ensure that `npm install` is being run when checking out your project, or when building a release, add a `"cmd --cd assets npm ci"` step in `mix.exs` to the `assets.deploy` and  `assets.build` steps:
 
-```elixir   
+```elixir
       "assets.build": ["cmd --cd assets npm ci", "tailwind your_app", "esbuild your_app"],
       "assets.deploy": [
         "cmd --cd assets npm ci",
@@ -84,17 +84,20 @@ error: Could not resolve "/images/bg.png" (mark it as external to exclude it fro
 Given the images are already managed by Phoenix, you need to mark all resources from `/images` (and also `/fonts`) as external, as the error message says. This is what Phoenix does by default for new apps since v1.6.1+. In your `config/config.exs`, you will find:
 
 ```elixir
-args: ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/*),
+    args:
+      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
 ```
 
 If you need to reference other directories, you need to update the arguments above accordingly. Note running `mix phx.digest` will create digested files for all of the assets in `priv/static`, so your images and fonts are still cache-busted.
 
 ### Ensuring fonts and images from third-party libraries are loaded
 
-If you import a Node package that depends on additional fonts or images, you might find them to fail to load. This is because they are referenced in the JS or CSS but by default Esbuild will not touch or process referenced files. You can add arguments to esbuild in `config/config.exs` to ensure that the referenced resources are copied to the output folder. The following example would copy all referenced font files to the output folder and prefix the paths with `/assets/`:
+If you import a Node package that depends on additional fonts or images, you might find them to fail to load. This is because they are referenced in the JS or CSS but by default Esbuild will not touch or process referenced files. You can add arguments to esbuild in `config/config.exs` to ensure that the referenced resources are copied to the output folder. The following example would copy all referenced font files to the output folder:
 
 ```elixir
-args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/* --public-path=/assets/ --loader:.woff=copy  --loader:.ttf=copy --loader:.eot=copy --loader:.woff2=copy),
+    args:
+      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.
+      --loader:.woff=copy --loader:.ttf=copy --loader:.eot=copy --loader:.woff2=copy),
 ```
 For more information, see [the esbuild documentation](https://esbuild.github.io/content-types/#copy).
 
