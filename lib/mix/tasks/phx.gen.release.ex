@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
   FROM node:20 as node
   COPY assets assets
-  RUN cd assets && npm install
+  RUN cd assets && npm ci
 
   FROM ${BUILDER_IMAGE} as builder
 
@@ -66,7 +66,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   ```dockerfile
   FROM node:20 as node
   COPY assets assets
-  RUN cd assets && npm install && node build.js --deploy
+  RUN cd assets && npm ci && node build.js --deploy
   ```
 
   Note that you may need to adjust the `assets.deploy` task to not invoke Node.js again.
