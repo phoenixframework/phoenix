@@ -69,7 +69,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - elixir: "1.15.8"
+          - elixir: "1.17.3"
             otp: "25.3.2.21"
 
           - elixir: "1.19.5"
@@ -154,7 +154,7 @@ jobs:
       matrix:
         include:
           # look for latest alpine image here: https://bob.hex.pm/docker
-          - elixir: "1.15.8"
+          - elixir: "1.17.3"
             otp: "25.3.2.21"
             suffix: "alpine-3.22.4"
 
