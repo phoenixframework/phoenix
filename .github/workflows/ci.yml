@@ -141,11 +141,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: npm install and test
-        run: |
-          cd assets
-          npm install
-          npm test
+      - name: Install locked npm dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
 
   integration-test-elixir:
     runs-on: ubuntu-latest
