@@ -68,6 +68,8 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~
                  ~r/^  http: \[port: String.to_integer\(System.get_env\("PORT", "4000"\)\)\]$/m
 
+        assert file =~ "lib/phx_blog_web/router\\.ex$"
+        assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*\\.(ex|heex)$"
         assert file =~ ~r/^\s+ip: {0, 0, 0, 0, 0, 0, 0, 0}$/m
       end)
 
@@ -150,8 +152,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file("phx_blog/config/dev.exs", fn file ->
         assert file =~ "esbuild: {Esbuild,"
-        assert file =~ "lib/phx_blog_web/router\\.ex$"
-        assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*\\.(ex|heex)$"
+        refute file =~ "live_reload"
         assert file =~ "http: [ip: {127, 0, 0, 1}]"
       end)
 
