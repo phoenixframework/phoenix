@@ -72,8 +72,7 @@ mix archive.build
 To build Phoenix.js:
 
 ```bash
-cd assets
-npm install
+mix assets.build
 ```
 
 ## Important links
