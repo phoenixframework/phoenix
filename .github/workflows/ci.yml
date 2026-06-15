@@ -16,6 +16,7 @@ jobs:
         include:
           - elixir: "1.15.8"
             otp: "25.3.2.21"
+            installer: true
 
           - elixir: "1.18.4"
             otp: "27.3.4.13"
