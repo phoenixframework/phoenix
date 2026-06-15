@@ -23,7 +23,6 @@ jobs:
           - elixir: "1.19.5"
             otp: "28.5.0.2"
             lint: true
-            installer: true
 
     runs-on: ubuntu-24.04
 
@@ -60,12 +59,57 @@ jobs:
       - name: Run tests
         run: mix test
 
-      - name: Run installer test
-        run: |
-          cd installer
-          mix deps.get
-          mix test
-        if: ${{ matrix.installer }}
+  installer_test:
+    name: installer test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+
+    env:
+      MIX_ENV: test
+      PHX_CI: true
+
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.15.8"
+            otp: "25.3.2.21"
+
+          - elixir: "1.19.5"
+            otp: "28.5.0.2"
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93 # v1.24.0
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Restore deps and _build cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            deps
+            _build
+          key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+
+      - name: Install installer dependencies
+        run: mix deps.get
+        working-directory: installer
+
+      - name: Run installer unit tests
+        run: mix test
+        working-directory: installer
+
+      - name: Install root dependencies
+        run: mix deps.get --only test
+
+      - name: Run mix_phx_new generator integration tests
+        run: mix test --only mix_phx_new
 
   npm_test:
     name: npm test
