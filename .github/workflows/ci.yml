@@ -15,13 +15,13 @@ jobs:
       matrix:
         include:
           - elixir: "1.15.8"
-            otp: "25.3.2.9"
+            otp: "25.3.2.21"
 
           - elixir: "1.18.4"
-            otp: "27.3"
+            otp: "27.3.4.13"
 
           - elixir: "1.19.5"
-            otp: "28.3.3"
+            otp: "28.5.0.2"
             lint: true
             installer: true
 
@@ -109,14 +109,14 @@ jobs:
     strategy:
       matrix:
         include:
-          # look for correct alpine image here: https://hub.docker.com/r/hexpm/elixir/tags
+          # look for latest alpine image here: https://bob.hex.pm/docker
           - elixir: "1.15.8"
-            otp: "25.3.2.9"
-            suffix: "alpine-3.20.3"
+            otp: "25.3.2.21"
+            suffix: "alpine-3.22.4"
 
           - elixir: "1.19.5"
             otp: "28.3.3"
-            suffix: "alpine-3.20.9"
+            suffix: "alpine-3.23.4"
 
     container:
       image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-${{ matrix.suffix }}
