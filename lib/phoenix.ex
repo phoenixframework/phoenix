@@ -43,8 +43,7 @@ defmodule Phoenix do
 
       config :phoenix, :json_library, AlternativeJsonLibrary
 
-  The json_library() configuration option requires the configured
-  module to export three functions:
+  The configured module is required to export three functions:
 
   - **`decode!/1`** — decodes a JSON binary, raising on invalid input
   - **`encode!/1`** — encodes a term to a JSON binary, raising on encoding errors
@@ -52,11 +51,9 @@ defmodule Phoenix do
   encoding errors.
 
   These correspond to the single-argument, raising variants of
-  the functions provided by Elixir's built-in
-  [JSON](https://elixir.hexdocs.pm/1.20.1/JSON.html) module. A conforming
-  json_library() module need not implement any other functions
-  (e.g., a non-raising decode/1, or an iodata-producing decode function) to
-  satisfy this interface.
+  the functions provided by Elixir's built-in `JSON` module. A conforming
+  `:json_library` module does not need to implement any other functions
+  `JSON` has, that are not defined above.
   """
   def json_library do
     Application.get_env(:phoenix, :json_library, Jason)
