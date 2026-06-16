@@ -43,6 +43,17 @@ defmodule Phoenix do
 
       config :phoenix, :json_library, AlternativeJsonLibrary
 
+  The configured module is required to provide three functions:
+
+  - **`decode!/1`** — decodes a JSON binary, raising on invalid input
+  - **`encode!/1`** — encodes a term to a JSON binary, raising on encoding errors
+  - **`encode_to_iodata!/1`** — encodes a term to JSON as iodata, raising on
+  encoding errors.
+
+  These correspond to the single-argument, raising variants of
+  the functions provided by Elixir's built-in `JSON` module. A conforming
+  `:json_library` module does not need to implement any other functions
+  `JSON` has, that are not defined above.
   """
   def json_library do
     Application.get_env(:phoenix, :json_library, Jason)
