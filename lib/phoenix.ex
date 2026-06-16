@@ -43,7 +43,7 @@ defmodule Phoenix do
 
       config :phoenix, :json_library, AlternativeJsonLibrary
 
-  The configured module is required to export three functions:
+  The configured module is required to provide three functions:
 
   - **`decode!/1`** — decodes a JSON binary, raising on invalid input
   - **`encode!/1`** — encodes a term to a JSON binary, raising on encoding errors
