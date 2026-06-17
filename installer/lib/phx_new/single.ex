@@ -68,9 +68,7 @@ defmodule Phx.New.Single do
   template(:css, [
     {:eex, :web,
      "phx_assets/app.css.eex": "assets/css/app.css",
-     "phx_assets/heroicons.js.eex": "assets/vendor/heroicons.js",
-     "phx_assets/daisyui.js.eex": "assets/vendor/daisyui.js",
-     "phx_assets/daisyui-theme.js.eex": "assets/vendor/daisyui-theme.js"}
+     "phx_assets/heroicons.js.eex": "assets/vendor/heroicons.js"}
   ])
 
   template(:js, [
