@@ -84,7 +84,7 @@ defmodule Phoenix.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
       {:phoenix_template, "~> 1.0"},
-      {:websock_adapter, "~> 0.6.0"},
+      {:websock_adapter, "~> 0.5"},
 
       # TODO Drop phoenix_view as an optional dependency in Phoenix v2.0
       {:phoenix_view, "~> 2.0", optional: true},
