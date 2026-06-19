@@ -9,7 +9,24 @@ import Config
 
 config :<%= @web_app_name %>, <%= @endpoint_module %>,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
-
+<%= if @html do %>
+if config_env() == :dev do
+  # Reload browser tabs when matching files change.
+  config :<%= @web_app_name %>, <%= @endpoint_module %>,
+    live_reload: [
+      web_console_logger: true,
+      patterns: [
+        # Static assets, except user uploads
+        ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$"<%= @config_regex_E %>,<%= if @gettext do %>
+        # Gettext translations
+        ~r"priv/gettext/.*\.po$"<%= @config_regex_E %>,<% end %>
+        # Router, Controllers, LiveViews and LiveComponents
+        ~r"lib/<%= @web_app_name %>/router\.ex$"<%= @config_regex_E %>,
+        ~r"lib/<%= @web_app_name %>/(controllers|live|components)/.*\.(ex|heex)$"<%= @config_regex_E %>
+      ]
+    ]
+end
+<% end %>
 if config_env() == :prod do
   config :<%= @app_name %>, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 end
