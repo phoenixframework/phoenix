@@ -282,7 +282,7 @@ defmodule Phoenix.Router do
 
   alias Phoenix.Router.{Resource, Scope, Route, Helpers}
 
-  @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
+  @http_methods [:get, :query, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
   defmacro __using__(opts) do
