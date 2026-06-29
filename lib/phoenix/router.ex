@@ -505,14 +505,13 @@ defmodule Phoenix.Router do
       |> Enum.map_reduce({[], %{}}, &build_match_verb/2)
 
     routes_per_path =
-      routes_with_exprs
-      |> Enum.group_by(&elem(&1, 1).path, &elem(&1, 0))
+      Enum.group_by(routes_with_exprs, &elem(&1, 1).path, &elem(&1, 0))
 
     verifies =
       routes_with_exprs
       |> Enum.map(&elem(&1, 1).path)
       |> Enum.uniq()
-      |> Enum.map(&build_verify(&1, routes_per_path))
+      |> Enum.map(&build_verify(&1, routes_per_path, env))
 
     verify_catch_all =
       quote generated: true do
@@ -563,11 +562,11 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp build_verify(path, routes_per_path) do
+  defp build_verify(path, routes_per_path, env) do
     routes = Map.get(routes_per_path, path)
     warn_on_verify? = Enum.all?(routes, & &1.warn_on_verify?)
 
-    case Enum.find(routes, &(&1.kind == :forward)) do
+    case find_forward_and_check_status(routes, nil, nil, env) do
       %{metadata: %{forward: forward}, plug: plug, plug_opts: plug_opts} ->
         quote generated: true do
           def __forward__(unquote(plug)) do
@@ -587,6 +586,43 @@ defmodule Phoenix.Router do
           end
         end
     end
+  end
+
+  defp find_forward_and_check_status(
+         [%{kind: kind, verb: verb} = route | routes],
+         forward,
+         star_route,
+         env
+       ) do
+    forward =
+      if kind == :forward and is_nil(forward) do
+        route
+      else
+        forward
+      end
+
+    star_route =
+      cond do
+        star_route ->
+          IO.warn(
+            "found route matching on #{inspect(route.path)} after match(:*, #{inspect(star_route.path)})",
+            Macro.Env.stacktrace(%{env | line: route.line})
+          )
+
+          star_route
+
+        verb == :* ->
+          route
+
+        true ->
+          nil
+      end
+
+    find_forward_and_check_status(routes, forward, star_route, env)
+  end
+
+  defp find_forward_and_check_status([], forward, _star_route, _env) do
+    forward
   end
 
   defp build_match_verb({:*, routes_exprs}, acc) do
@@ -716,28 +752,37 @@ defmodule Phoenix.Router do
   Useful for defining routes not included in the built-in macros.
 
   The catch-all verb, `:*`, may also be used to match all HTTP methods.
+  However, keep in mind that routes with the catch-all verb are always
+  matched last. Therefore it is recommended that all `match :*` routes
+  are defined at the end of the file.
 
   ## Options
 
     * `:as` - configures the named helper. If `nil`, does not generate
       a helper. Has no effect when using verified routes exclusively
+
     * `:alias` - configure if the scope alias should be applied to the route.
-      Defaults to true, disables scoping if false.
+      Defaults to true, disables scoping if false
+
     * `:log` - the level to log the route dispatching under, may be set to false. Defaults to
       `:debug`. Route dispatching contains information about how the route is handled (which controller
       action is called, what parameters are available and which pipelines are used) and is separate from
       the plug level logging. To alter the plug log level, please see
-      https://phoenix.hexdocs.pm/Phoenix.Logger.html#module-dynamic-log-level.
+      https://phoenix.hexdocs.pm/Phoenix.Logger.html#module-dynamic-log-level
+
     * `:private` - a map of private data to merge into the connection
       when a route matches
+
     * `:assigns` - a map of data to merge into the connection when a route matches
+
     * `:metadata` - a map of metadata used by the telemetry events and returned by
       `route_info/4`. The `:mfa` field is used by telemetry to print logs and by the
-      router to emit compile time checks. Custom fields may be added.
-    * `:warn_on_verify` - the boolean for whether matches to this route trigger
-      an unmatched route warning for `Phoenix.VerifiedRoutes`. It is useful to ignore
-      an otherwise catch-all route definition from being matched when verifying routes.
-      Defaults `false`.
+      router to emit compile time checks. Custom fields may be added
+
+    * `:warn_on_verify` - the boolean for whether matches to this route in verified
+      routes should emit a warning, rather than being accepted as verified. It is useful
+      to ignore an otherwise catch-all route definition from being matched when verifying
+      routes. Defaults `false`
 
   ## Examples
 

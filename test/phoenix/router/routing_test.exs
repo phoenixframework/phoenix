@@ -57,7 +57,6 @@ defmodule Phoenix.Router.RoutingTest do
     options "/options", UserController, :options
     connect "/connect", UserController, :connect
     match :move, "/move", UserController, :move
-    match :*, "/any", UserController, :any
 
     scope log: :info do
       pipe_through :noop
@@ -224,18 +223,6 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.resp_body == "users move"
   end
 
-  test "any verb matches" do
-    conn = call(Router, :get, "/any")
-    assert conn.method == "GET"
-    assert conn.status == 200
-    assert conn.resp_body == "users any"
-
-    conn = call(Router, :put, "/any")
-    assert conn.method == "PUT"
-    assert conn.status == 200
-    assert conn.resp_body == "users any"
-  end
-
   test "different verbs with similar paths" do
     conn = call(Router, :post, "/users/fallback")
     assert conn.status == 200
@@ -246,6 +233,20 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "123"
     assert conn.path_params["id"] == "123"
+  end
+
+  describe "warnings" do
+    test "warns on duplicate route after :*" do
+      assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
+               defmodule MatchOverlap do
+                 use Phoenix.Router
+                 import ExUnit.Assertions, except: [trace: 3]
+
+                 match :*, "/foo/:bar", UserController, :index
+                 get "/foo/:baz", UserController, :index
+               end
+             end) =~ "found route matching on \"/foo/:baz\" after match(:*, \"/foo/:bar\")"
+    end
   end
 
   describe "logging" do
