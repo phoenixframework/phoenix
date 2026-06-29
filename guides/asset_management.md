@@ -84,8 +84,16 @@ error: Could not resolve "/images/bg.png" (mark it as external to exclude it fro
 Given the images are already managed by Phoenix, you need to mark all resources from `/images` (and also `/fonts`) as external, as the error message says. This is what Phoenix does by default for new apps since v1.6.1+. In your `config/config.exs`, you will find:
 
 ```elixir
-    args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
+    args: ~w(
+      js/app.js
+      --bundle
+      --format=esm
+      --target=es2022
+      --outdir=../priv/static/assets/js
+      --external:/fonts/*
+      --external:/images/*
+      --alias:@=.
+    ),
 ```
 
 If you need to reference other directories, you need to update the arguments above accordingly. Note running `mix phx.digest` will create digested files for all of the assets in `priv/static`, so your images and fonts are still cache-busted.
@@ -95,9 +103,20 @@ If you need to reference other directories, you need to update the arguments abo
 If you import a Node package that depends on additional fonts or images, you might find them to fail to load. This is because they are referenced in the JS or CSS but by default Esbuild will not touch or process referenced files. You can add arguments to esbuild in `config/config.exs` to ensure that the referenced resources are copied to the output folder. The following example would copy all referenced font files to the output folder:
 
 ```elixir
-    args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.
-      --loader:.woff=copy --loader:.ttf=copy --loader:.eot=copy --loader:.woff2=copy),
+    args: ~w(
+      js/app.js
+      --bundle
+      --format=esm
+      --target=es2022
+      --outdir=../priv/static/assets/js
+      --external:/fonts/*
+      --external:/images/*
+      --alias:@=.
+      --loader:.woff=copy
+      --loader:.ttf=copy
+      --loader:.eot=copy
+      --loader:.woff2=copy
+    ),
 ```
 For more information, see [the esbuild documentation](https://esbuild.github.io/content-types/#copy).
 
