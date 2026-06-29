@@ -197,11 +197,13 @@ import LongPoll from "./longpoll"
 import Presence from "./presence"
 import Serializer from "./serializer"
 import Socket from "./socket"
+import WebTransport from "./webtransport"
 
 export {
   Channel,
   LongPoll,
   Presence,
   Serializer,
-  Socket
+  Socket,
+  WebTransport
 }

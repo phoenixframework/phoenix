@@ -654,6 +654,13 @@ defmodule Phoenix.Endpoint do
         end
       end
 
+    webtransport_routes =
+      for {path, socket, socket_opts} <- sockets,
+          route = webtransport_route(module, path, socket, socket_opts),
+          route != nil do
+        route
+      end
+
     quote do
       defoverridable call: 2
 
@@ -691,6 +698,9 @@ defmodule Phoenix.Endpoint do
 
       @doc false
       def __sockets__, do: unquote(Macro.escape(sockets))
+
+      @doc false
+      def __webtransport_routes__, do: unquote(Macro.escape(webtransport_routes))
 
       @doc false
       def socket_dispatch(%{path_info: path} = conn, _opts), do: do_socket_dispatch(path, conn)
@@ -769,6 +779,33 @@ defmodule Phoenix.Endpoint do
   defp put_auth_token(true, enabled), do: [auth_token: enabled]
   defp put_auth_token(opts, enabled), do: Keyword.put(opts, :auth_token, enabled)
 
+  defp webtransport_route(endpoint, path, socket, opts) do
+    common_config = [
+      :path,
+      :serializer,
+      :transport_log,
+      :check_origin,
+      :check_csrf,
+      :code_reloader,
+      :connect_info,
+      :auth_token,
+      :log
+    ]
+
+    webtransport =
+      opts
+      |> Keyword.get(:webtransport, false)
+      |> maybe_validate_keys(common_config ++ [:max_frame_size, :max_pending_bytes])
+
+    if webtransport do
+      webtransport = put_auth_token(webtransport, opts[:auth_token])
+      config = Phoenix.Socket.Transport.load_config(webtransport, Phoenix.Transports.WebTransport)
+      Phoenix.Transports.WebTransport.validate_config!(config)
+      route_path = join_socket_route(path, Keyword.fetch!(config, :path))
+      {route_path, Phoenix.Transports.WebTransport.Handler, {endpoint, socket, config}}
+    end
+  end
+
   defp socket_path(path, config) do
     end_path_fragment = Keyword.fetch!(config, :path)
 
@@ -801,6 +838,15 @@ defmodule Phoenix.Endpoint do
   defp maybe_validate_keys(opts, keys) when is_list(opts), do: Keyword.validate!(opts, keys)
   defp maybe_validate_keys(other, _), do: other
 
+  defp join_socket_route(path, transport_path) do
+    path = String.trim_trailing(path, "/")
+
+    transport_path =
+      if String.starts_with?(transport_path, "/"), do: transport_path, else: "/" <> transport_path
+
+    path <> transport_path
+  end
+
   ## API
 
   @doc """
@@ -825,6 +871,9 @@ defmodule Phoenix.Endpoint do
       of options. See ["Common configuration"](#socket/3-common-configuration)
       and ["Longpoll configuration"](#socket/3-longpoll-configuration)
       for the whole list
+
+    * `:webtransport` - controls the webtransport configuration.
+      Defaults to `false`. May be true or a keyword list of options.
 
     * `:drainer` - a keyword list or a custom MFA function returning a keyword list, for example:
 
