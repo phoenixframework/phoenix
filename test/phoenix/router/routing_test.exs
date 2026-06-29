@@ -243,8 +243,11 @@ defmodule Phoenix.Router.RoutingTest do
                  import ExUnit.Assertions, except: [trace: 3]
 
                  match :*, "/foo/:bar", UserController, :index
-                 get "/foo/:baz", UserController, :index
+                 get "/foo/:baz", UserController, :show
                end
+
+               conn = call(MatchOverlap, :get, "foo/example")
+               assert conn.resp_body == "users show"
              end) =~ "found route matching on \"/foo/:baz\" after match(:*, \"/foo/:bar\")"
     end
   end
