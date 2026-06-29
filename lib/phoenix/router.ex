@@ -457,7 +457,7 @@ defmodule Phoenix.Router do
         %{method: method, path_info: path_info, host: host} = conn = prepare(conn)
         decoded = Enum.map(path_info, &URI.decode/1)
 
-        case __match_route__(decoded, method, host) do
+        case __match_route__(method, decoded, host) do
           {metadata, prepare, pipeline, plug_opts} ->
             Phoenix.Router.__call__(conn, metadata, prepare, pipeline, plug_opts)
 
@@ -494,8 +494,15 @@ defmodule Phoenix.Router do
         Helpers.define(env, routes_with_exprs)
       end
 
+    # Group routes by verb making sure the ones that match all are handled last
     {matches, {pipelines, _}} =
-      Enum.map_reduce(routes_with_exprs, {[], %{}}, &build_match/2)
+      routes_with_exprs
+      |> Enum.group_by(&elem(&1, 0).verb)
+      |> Map.pop(:*, [])
+      |> then(fn {match_routes_exprs, map} ->
+        Map.to_list(map) ++ [{:*, match_routes_exprs}]
+      end)
+      |> Enum.map_reduce({[], %{}}, &build_match_verb/2)
 
     routes_per_path =
       routes_with_exprs
@@ -511,14 +518,6 @@ defmodule Phoenix.Router do
       quote generated: true do
         @doc false
         def __verify_route__(_path_info) do
-          :error
-        end
-      end
-
-    match_catch_all =
-      quote generated: true do
-        @doc false
-        def __match_route__(_path_info, _verb, _host) do
           :error
         end
       end
@@ -560,7 +559,6 @@ defmodule Phoenix.Router do
       unquote(verifies)
       unquote(verify_catch_all)
       unquote(matches)
-      unquote(match_catch_all)
       unquote(forward_catch_all)
     end
   end
@@ -591,13 +589,55 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp build_match({route, expr}, {acc_pipes, known_pipes}) do
+  defp build_match_verb({:*, routes_exprs}, acc) do
+    name = :__match_route_catch_all__
+    {clauses, acc} = Enum.map_reduce(routes_exprs, acc, &build_match_path(name, &1, &2))
+
+    dispatch =
+      quote generated: true do
+        unquote({:__block__, [], clauses})
+
+        defp __match_route_catch_all__(_path, _host) do
+          :error
+        end
+
+        @doc false
+        def __match_route__(_, path, host) do
+          __match_route_catch_all__(path, host)
+        end
+      end
+
+    {dispatch, acc}
+  end
+
+  defp build_match_verb({verb, routes_exprs}, acc) do
+    pattern = verb |> to_string() |> String.upcase()
+    name = :"__match_route_#{verb}__"
+
+    {clauses, acc} = Enum.map_reduce(routes_exprs, acc, &build_match_path(name, &1, &2))
+
+    dispatch =
+      quote generated: true do
+        unquote({:__block__, [], clauses})
+
+        defp unquote(name)(path, host) do
+          __match_route_catch_all__(path, host)
+        end
+
+        def __match_route__(unquote(pattern), path, host) do
+          unquote(name)(path, host)
+        end
+      end
+
+    {dispatch, acc}
+  end
+
+  defp build_match_path(name, {route, expr}, {acc_pipes, known_pipes}) do
     {pipe_name, acc_pipes, known_pipes} = build_match_pipes(route, acc_pipes, known_pipes)
 
     %{
       prepare: prepare,
       dispatch: dispatch,
-      verb_match: verb_match,
       path_params: path_params,
       hosts: hosts,
       path: path
@@ -606,7 +646,7 @@ defmodule Phoenix.Router do
     clauses =
       for host <- hosts do
         quote line: route.line do
-          def __match_route__(unquote(path), unquote(verb_match), unquote(host)) do
+          defp unquote(name)(unquote(path), unquote(host)) do
             {unquote(build_metadata(route, path_params)),
              fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} ->
                unquote(prepare)
@@ -1266,7 +1306,7 @@ defmodule Phoenix.Router do
 
   def route_info(router, method, split_path, host) when is_list(split_path) do
     with {metadata, _prepare, _pipeline, {_plug, _opts}} <-
-           router.__match_route__(split_path, method, host) do
+           router.__match_route__(method, split_path, host) do
       Map.delete(metadata, :conn)
     end
   end
