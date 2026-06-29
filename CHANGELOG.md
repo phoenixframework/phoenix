@@ -9,7 +9,7 @@
       match :*, "/foo"
       get "/foo"
 
-  The second route would never be matched but it will now be as part of this pull request. However, note that `get "/foo"` should not exist in the first place: it should be either removed or moved first. We recommend checking for any `match :*` in your router and moving them to the end of the file.
+  The second route would never be matched but it will now be as part of this change. However, note that `get "/foo"` should not exist in the first place: it should be either removed or moved first. We recommend checking for any `match :*` in your router and moving them to the end of the file.
 
 ## v1.8
 
