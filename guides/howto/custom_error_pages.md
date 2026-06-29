@@ -97,7 +97,7 @@ Phoenix generates an `ErrorHTML` for us, but it doesn't give us a `lib/hello_web
       <section class="container">
         <nav>
           <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+            <li><a href="https://phoenix.hexdocs.pm/overview.html">Get Started</a></li>
           </ul>
         </nav>
         <a href="https://phoenixframework.org/" class="phx-logo">

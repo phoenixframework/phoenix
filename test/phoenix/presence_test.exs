@@ -34,7 +34,8 @@ defmodule Phoenix.PresenceTest do
       Phoenix.Presence.init({
         __MODULE__,
         __MODULE__.TaskSupervisor,
-        PresPub
+        PresPub,
+        Phoenix.Channel.Server
       })
     end
 
@@ -43,13 +44,27 @@ defmodule Phoenix.PresenceTest do
     end
   end
 
+  defmodule CustomDispatcher do
+    def dispatch(entries, from, message) do
+      for {pid, _} <- entries, pid != from, do: send(pid, {:custom_dispatcher, message})
+
+      :ok
+    end
+  end
+
+  defmodule CustomDispatcherPresence do
+    use Phoenix.Presence, otp_app: :phoenix, dispatcher: CustomDispatcher
+  end
+
   Application.put_env(:phoenix, MyPresence, pubsub_server: PresPub)
   Application.put_env(:phoenix, MetasPresence, pubsub_server: PresPub)
+  Application.put_env(:phoenix, CustomDispatcherPresence, pubsub_server: PresPub)
 
   setup_all do
     start_supervised!({Phoenix.PubSub, name: PresPub, pool_size: 1})
     start_supervised!(MyPresence)
     start_supervised!(MetasPresence)
+    start_supervised!(CustomDispatcherPresence)
     {:ok, pubsub: PresPub}
   end
 
@@ -172,6 +187,40 @@ defmodule Phoenix.PresenceTest do
     }
 
     assert MyPresence.list(topic) == %{}
+  end
+
+  test "handle_diff with custom dispatcher", %{topic: topic} = config do
+    pid = spawn(fn -> :timer.sleep(:infinity) end)
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
+    start_supervised!({DefaultPresence, pubsub_server: config.pubsub})
+    CustomDispatcherPresence.track(pid, topic, "u1", %{name: "u1"})
+
+    assert_receive {:custom_dispatcher,
+                    %Broadcast{
+                      topic: ^topic,
+                      event: "presence_diff",
+                      payload: %{
+                        joins: %{"u1" => %{metas: [%{name: "u1", phx_ref: u1_ref}]}},
+                        leaves: %{}
+                      }
+                    }}
+
+    assert %{"u1" => %{metas: [%{name: "u1", phx_ref: ^u1_ref}]}} =
+             CustomDispatcherPresence.list(topic)
+
+    Process.exit(pid, :kill)
+
+    assert_receive {:custom_dispatcher,
+                    %Broadcast{
+                      topic: ^topic,
+                      event: "presence_diff",
+                      payload: %{
+                        joins: %{},
+                        leaves: %{"u1" => %{metas: [%{name: "u1", phx_ref: ^u1_ref}]}}
+                      }
+                    }}
+
+    assert CustomDispatcherPresence.list(topic) == %{}
   end
 
   test "untrack with pid", %{topic: topic} = config do

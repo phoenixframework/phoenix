@@ -1,10 +1,13 @@
 # Testing Contexts
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
-
-> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
-
-> **Requirement**: This guide expects that you have gone through the [Contexts guides](contexts.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
+> * Gone through the [Introduction to Testing guide](testing.html)
+> * Gone through the [contexts guides](contexts.html)
 
 At the end of the Introduction to Testing guide, we generated an HTML resource for posts using the following command:
 
@@ -124,7 +127,7 @@ Furthermore, the SQL Sandbox allows multiple tests to run concurrently, even if 
 use Hello.DataCase, async: true
 ```
 
-There are some considerations you need to have in mind when running asynchronous tests with the sandbox, so please refer to the [`Ecto.Adapters.SQL.Sandbox`](https://hexdocs.pm/ecto_sql/Ecto.Adapters.SQL.Sandbox.html) for more information.
+There are some considerations you need to have in mind when running asynchronous tests with the sandbox, so please refer to the [`Ecto.Adapters.SQL.Sandbox`](https://ecto-sql.hexdocs.pm/Ecto.Adapters.SQL.Sandbox.html) for more information.
 
 Finally, at the end of the `DataCase` module we can find a function named `errors_on` with some examples of how to use it. This function is used for testing any validation we may want to add to our schemas. Let's give it a try by adding our own validations and then testing them.
 

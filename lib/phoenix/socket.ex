@@ -196,7 +196,6 @@ defmodule Phoenix.Socket do
   """
 
   require Logger
-  require Phoenix.Endpoint
   alias Phoenix.Socket
   alias Phoenix.Socket.{Broadcast, Message, Reply}
 
@@ -214,8 +213,7 @@ defmodule Phoenix.Socket do
 
   To deny connection, return `:error` or `{:error, term}`. To control the
   response the client receives in that case, [define an error handler in the
-  websocket
-  configuration](https://hexdocs.pm/phoenix/Phoenix.Endpoint.html#socket/3-websocket-configuration).
+  websocket configuration](`Phoenix.Endpoint.socket/3#websocket-configuration`).
 
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.
@@ -346,18 +344,27 @@ defmodule Phoenix.Socket do
 
   @doc """
   Adds key/value pairs to socket assigns.
+  Accepts a keyword list, a map, or a single-argument function.
 
-  A keyword list or a map of assigns must be given as argument to be merged into existing assigns.
+  When a keyword list or map is provided, it will be merged into the existing assigns.
+
+  If a function is given, it takes the current assigns as an argument and its return
+  value will be merged into the current assigns.
 
   ## Examples
 
       iex> assign(socket, name: "Elixir", logo: "💧")
       iex> assign(socket, %{name: "Elixir"})
+      iex> assign(socket, fn %{name: name, logo: logo} -> %{title: Enum.join([name, logo], " | ")} end)
 
   """
   def assign(%Socket{} = socket, keyword_or_map)
       when is_map(keyword_or_map) or is_list(keyword_or_map) do
     %{socket | assigns: Map.merge(socket.assigns, Map.new(keyword_or_map))}
+  end
+
+  def assign(%Socket{} = socket, fun) when is_function(fun, 1) do
+    assign(socket, fun.(socket.assigns))
   end
 
   @doc """
@@ -548,7 +555,11 @@ defmodule Phoenix.Socket do
   end
 
   def __info__(%Broadcast{event: "disconnect"}, state) do
-    {:stop, {:shutdown, :disconnected}, state}
+    # Close code 1001 ("Going Away") signals the client that the connection
+    # is intentionally closed but a reconnect is expected — phoenix.js gates
+    # reconnects behind a closeCode !== 1000 check.
+    # See https://github.com/mtrudel/bandit/issues/582.
+    {:stop, {:shutdown, :disconnected}, 1001, state}
   end
 
   def __info__(:socket_drain, state) do
@@ -587,7 +598,7 @@ defmodule Phoenix.Socket do
     :ok
   end
 
-  defp negotiate_serializer(serializers, vsn) when is_list(serializers) do
+  defp negotiate_serializer(serializers, vsn) when is_list(serializers) and is_binary(vsn) do
     case Version.parse(vsn) do
       {:ok, vsn} ->
         serializers
@@ -609,6 +620,11 @@ defmodule Phoenix.Socket do
         Logger.warning("Client sent invalid transport version \"#{vsn}\"")
         :error
     end
+  end
+
+  defp negotiate_serializer(_serializer, vsn) do
+    Logger.warning("Client sent invalid transport version \"#{vsn}\"")
+    :error
   end
 
   defp user_connect(handler, endpoint, transport, serializer, params, connect_info) do
@@ -757,9 +773,19 @@ defmodule Phoenix.Socket do
     end
   end
 
-  defp handle_in({pid, _ref, _status}, message, state, socket) do
-    send(pid, message)
-    {:ok, {state, socket}}
+  defp handle_in({pid, _ref, _status}, msg, state, socket) do
+    %{topic: topic, join_ref: join_ref} = msg
+
+    case state.channels_inverse do
+      # we need to match on nil to handle v1 protocol
+      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+        send(pid, msg)
+        {:ok, {state, socket}}
+
+      # the client has sent a stale message to a previous join_ref, ignore
+      %{^pid => {^topic, _old_join_ref}} ->
+        {:ok, {state, socket}}
+    end
   end
 
   defp handle_in(

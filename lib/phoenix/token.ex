@@ -98,8 +98,6 @@ defmodule Phoenix.Token do
   password resets, e-mail confirmation and more.
   """
 
-  require Logger
-
   @type context ::
           Plug.Conn.t()
           | %{required(:endpoint) => atom, optional(atom()) => any()}

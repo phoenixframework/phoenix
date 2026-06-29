@@ -3,7 +3,6 @@ defmodule Phoenix.Controller do
   alias Plug.Conn.AlreadySentError
 
   require Logger
-  require Phoenix.Endpoint
 
   @unsent [:unset, :set, :set_chunked, :set_file]
 
@@ -131,10 +130,9 @@ defmodule Phoenix.Controller do
       respectively rendering each format.
 
   The `:formats` option is required. You may set it to an empty list
-  if you don't expect to render any format upfront. If `:formats` is not
-  set, the default view is set to `MyAppWeb.UserView` for backwards
-  compatibility. This behaviour can be explicitly retained by passing a
-  suffix to the `:formats` option:
+  if you don't expect to render any format upfront. To retain the
+  behaviour of older Phoenix versions, you can explicitly pass the
+  "View" suffix to the `:formats` option:
 
       use Phoenix.Controller, formats: [html: "View", json: "View"]
 
@@ -925,7 +923,7 @@ defmodule Phoenix.Controller do
   you can pass an atom instead (without the extension):
 
       def show(conn, _params) do
-        render(conn, :show.html, message: "Hello")
+        render(conn, :show, message: "Hello")
       end
 
   If the formats are not known at compile-time, you can call `put_view/2`
@@ -1890,6 +1888,31 @@ defmodule Phoenix.Controller do
   def current_url(%Plug.Conn{} = conn, %{} = params) do
     Phoenix.VerifiedRoutes.unverified_url(conn, current_path(conn, params))
   end
+
+  @doc """
+  Assigns multiple key-value pairs to the connection.
+  Accepts a keyword list, a map, or a single-argument function.
+
+  This function accepts a map or keyword list of assigns and merges them into
+  the connection's assigns. It is equivalent to calling `Plug.Conn.assign/3`
+  multiple times.
+
+  If a function is given, it takes the current assigns as an argument and its return
+  value will be merged into the current assigns.
+
+  ## Examples
+
+      assign(conn, name: "Alice", role: :admin)
+      assign(conn, %{name: "Alice", role: :admin})
+      assign(conn, fn %{name: name, logo: logo} -> %{title: Enum.join([name, logo], " | ")} end)
+  """
+  def assign(conn, keyword_or_map_or_fun)
+
+  def assign(conn, fun) when is_function(fun, 1) do
+    assign(conn, fun.(conn.assigns))
+  end
+
+  defdelegate assign(conn, assigns), to: Plug.Conn, as: :merge_assigns
 
   @doc false
   def __plugs__(controller_module, opts) do

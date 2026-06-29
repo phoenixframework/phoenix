@@ -1,6 +1,11 @@
 # Directory structure
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
 
 When we use `mix phx.new` to generate a new Phoenix application, it builds a top-level directory structure like this:
 
@@ -20,7 +25,7 @@ When we use `mix phx.new` to generate a new Phoenix application, it builds a top
 
 We will go over those directories one by one:
 
-  * `_build` - a directory created by the `mix` command line tool that ships as part of Elixir that holds all compilation artifacts. As we have seen in "[Up and Running](up_and_running.html)", `mix` is the main interface to your application. We use Mix to compile our code, create databases, run our server, and more. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to rebuild your application from scratch.
+  * `_build` - a directory that holds all compilation artifacts, created by the `mix` command line tool (shipped as part of Elixir). As we have seen in "[Up and Running](up_and_running.html)", `mix` is the main interface to your application. We use Mix to compile our code, create databases, run our server, and more. This directory must not be checked into version control and it can be removed at any time. Removing it will force Mix to rebuild your application from scratch.
 
   * `assets` - a directory that keeps source code for your front-end assets, typically JavaScript and CSS. These sources are automatically bundled by the `esbuild` tool. Static files like images and fonts go in `priv/static`.
 
@@ -58,7 +63,7 @@ children = [
 
 If it is your first time with Phoenix, you don't need to worry about the details right now. For now, suffice it to say our application starts a database repository, a PubSub system for sharing messages across processes and nodes, and the application endpoint, which effectively serves HTTP requests. These services are started in the order they are defined and, whenever shutting down your application, they are stopped in the reverse order.
 
-You can learn more about applications in [Elixir's official docs for Application](https://hexdocs.pm/elixir/Application.html).
+You can learn more about applications in [Elixir's official docs for Application](https://elixir.hexdocs.pm/Application.html).
 
 The `lib/hello/mailer.ex` file holds the `Hello.Mailer` module, which defines the main interface to deliver e-mails:
 
@@ -112,7 +117,7 @@ Besides the directories mentioned, `lib/hello_web` has four files at its root. `
 
 Through _Telemetry_, Phoenix is able to collect metrics and send monitoring events of your application. The `lib/hello_web/telemetry.ex` file defines the supervisor responsible for managing the telemetry processes. You can find more information on this topic in the [Telemetry guide](telemetry.html).
 
-Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization through [Gettext](https://hexdocs.pm/gettext/Gettext.html). If you are not worried about internationalization, you can safely skip this file and its contents.
+Finally, there is a `lib/hello_web/gettext.ex` file which provides internationalization through [Gettext](https://gettext.hexdocs.pm/Gettext.html). If you are not worried about internationalization, you can safely skip this file and its contents.
 
 ## The assets directory
 

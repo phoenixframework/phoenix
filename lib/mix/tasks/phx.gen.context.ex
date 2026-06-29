@@ -198,7 +198,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     unless Context.pre_existing?(context) do
       Mix.Generator.create_file(
         file,
-        Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding)
+        Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex.eex", binding)
       )
     end
   end
@@ -223,7 +223,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     unless Context.pre_existing_tests?(context) do
       Mix.Generator.create_file(
         test_file,
-        Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding)
+        Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs.eex", binding)
       )
     end
   end
@@ -233,9 +233,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
     file =
       if context.schema.scope do
-        "test_cases_scope.exs"
+        "test_cases_scope.exs.eex"
       else
-        "test_cases.exs"
+        "test_cases.exs.eex"
       end
 
     paths
@@ -252,7 +252,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     unless Context.pre_existing_test_fixtures?(context) do
       Mix.Generator.create_file(
         test_fixtures_file,
-        Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex", binding)
+        Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex.eex", binding)
       )
     end
   end
@@ -265,7 +265,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex.eex", binding)
     |> Mix.Phoenix.prepend_newline()
     |> inject_eex_before_final_end(test_fixtures_file, binding)
 
@@ -338,16 +338,16 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   defp schema_access_template(%Context{schema: schema}) do
     cond do
       schema.generate? && schema.scope ->
-        "schema_access_scope.ex"
+        "schema_access_scope.ex.eex"
 
       schema.generate? ->
-        "schema_access.ex"
+        "schema_access.ex.eex"
 
       schema.scope ->
-        "access_no_schema_scope.ex"
+        "access_no_schema_scope.ex.eex"
 
       true ->
-        "access_no_schema.ex"
+        "access_no_schema.ex.eex"
     end
   end
 

@@ -1,6 +1,11 @@
 # Ecto
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
 
 Most web applications today need some form of data validation and persistence. In the Elixir ecosystem, we have `Ecto` to enable this. Before we jump into building database-backed web features, we're going to focus on the finer details of Ecto to give a solid base to build our web features on top of. Let's get started!
 
@@ -16,7 +21,7 @@ Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by def
 
 Ecto also provides support for other databases and it has many learning resources available. Please check out [Ecto's README](https://github.com/elixir-ecto/ecto) for general information.
 
-This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For using other databases, see the [Using other databases](#using-other-databases) section.
+This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. The introductory guides cover how to get your first application up and running. For using other databases, see the [Swapping Databases](swapping_databases.html) how-to guide.
 
 ## Using `phx.gen.schema`
 
@@ -104,8 +109,8 @@ name           | character varying(255)         |
 email          | character varying(255)         |
 bio            | character varying(255)         |
 number_of_pets | integer                        |
-inserted_at    | timestamp(0) without time zone | not null 
-updated_at     | timestamp(0) without time zone | not null 
+inserted_at    | timestamp(0) without time zone | not null
+updated_at     | timestamp(0) without time zone | not null
 Indexes:
 "users_pkey" PRIMARY KEY, btree (id)
 ```
@@ -387,7 +392,7 @@ iex> changeset.errors[:email]
 {"has invalid format", [validation: :format]}
 ```
 
-There are many more validations and transformations we can perform in a changeset. Please see the [Ecto Changeset documentation](https://hexdocs.pm/ecto/Ecto.Changeset.html) for more information.
+There are many more validations and transformations we can perform in a changeset. Please see the [Ecto Changeset documentation](https://ecto.hexdocs.pm/Ecto.Changeset.html) for more information.
 
 ## Data persistence
 
@@ -499,11 +504,11 @@ SELECT u0."id", u0."email" FROM "users" AS u0 []
 ]
 ```
 
-That little query packed a big punch. It both fetched all user emails from the database and efficiently built a map of the results in one go. You should browse the [Ecto.Query documentation](https://hexdocs.pm/ecto/Ecto.Query.html#content) to see the breadth of supported query features.
+That little query packed a big punch. It both fetched all user emails from the database and efficiently built a map of the results in one go. You should browse the [Ecto.Query documentation](https://ecto.hexdocs.pm/Ecto.Query.html#content) to see the breadth of supported query features.
 
 In addition to inserts, we can also perform updates and deletes with [`Repo.update/2`] and [`Repo.delete/2`] to update or delete a single schema. Ecto also supports bulk persistence with the [`Repo.insert_all/3`], [`Repo.update_all/3`], and [`Repo.delete_all/2`] functions.
 
-There is quite a bit more that Ecto can do and we've only barely scratched the surface. With a solid Ecto foundation in place, we're now ready to continue building our app and integrate the web-facing application with our backend persistence. Along the way, we'll expand our Ecto knowledge and learn how to properly isolate our web interface from the underlying details of our system. Please take a look at the [Ecto documentation](https://hexdocs.pm/ecto/) for the rest of the story.
+There is quite a bit more that Ecto can do and we've only barely scratched the surface. With a solid Ecto foundation in place, we're now ready to continue building our app and integrate the web-facing application with our backend persistence. Along the way, we'll expand our Ecto knowledge and learn how to properly isolate our web interface from the underlying details of our system. Please take a look at the [Ecto documentation](https://ecto.hexdocs.pm/) for the rest of the story.
 
 In our [Data modelling guides](contexts.html), we'll find out how to wrap up our Ecto access and business logic behind modules that group related functionality. We'll see how Phoenix helps us design maintainable applications, and we'll find out about other neat Ecto features along the way.
 
@@ -632,7 +637,7 @@ end
 ```
 
 For more information on how to modify your database schema please refer to the
-[Ecto's migration DSL docs](https://hexdocs.pm/ecto_sql/Ecto.Migration.html).
+[Ecto's migration DSL docs](https://ecto-sql.hexdocs.pm/Ecto.Migration.html).
 For example, to alter an existing schema see the documentation on Ecto’s
 [`alter/2`](`Ecto.Migration.alter/2`) function.
 

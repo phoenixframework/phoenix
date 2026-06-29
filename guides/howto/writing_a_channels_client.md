@@ -1,6 +1,6 @@
 # Writing a Channels Client
 
-Client libraries for Phoenix Channels already exist in [several languages](https://hexdocs.pm/phoenix/channels.html#client-libraries), but if you want to write your own, this guide should get you started.
+Client libraries for Phoenix Channels already exist in [several languages](https://phoenix.hexdocs.pm/channels.html#client-libraries), but if you want to write your own, this guide should get you started.
 It may also be useful as a guide for manual testing with a WebSocket client.
 
 ## Overview
@@ -38,7 +38,7 @@ The general format for messages a client sends to a Phoenix Channel is as follow
 - The `message_reference` is chosen by the client and should be a unique value. The server includes it in its reply so that the client knows which message the reply is for.
 - The `topic_name` must be a known topic for the socket endpoint, and a client must join that topic before sending any messages on it.
 - The `event_name` must match the first argument of a `handle_in` function on the server channel module.
-- The `payload` should be a map and is passed as the second argument to that `handle_in` function.
+- The `payload` should be a serializable value (typically JSON-serializable, depends on the Socket configuration) and is passed as the second argument to that `handle_in` function.
 
 There are three events that are understood by every Phoenix application.
 

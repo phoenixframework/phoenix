@@ -1,8 +1,12 @@
 # LiveView
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
-
-> **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
+> * Gone through the [request life-cycle guide](request_lifecycle.html)
 
 We've already seen how the typical request lifecycle in Phoenix works: a request is matched in the router, a controller handles the request and turns to a view to return a response in the correct format. But what if we want to build interactive pages? In a typical server rendered application, changing the content of the page either needs a form submission rendering the new page, or moving application logic to the client (JavaScript frameworks like jQuery, React, Vue, etc.) and building an API interface for the client to talk to.
 
@@ -118,10 +122,10 @@ Changes to the socket (via `assign/3` or `update/3`) trigger re-renders. All sta
 
 LiveViews have several important lifecycle stages:
 
-- [`mount`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:mount/3) - initializes the LiveView with parameters, session data, and socket
-- [`handle_params`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:handle_params/3) - responds to URL changes and updates LiveView state accordingly
-- [`handle_event`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:handle_event/3) - responds to user interactions coming from the client
-- [`handle_info`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:handle_info/2) - responds to regular process messages
+- [`mount`](https://phoenix-live-view.hexdocs.pm/Phoenix.LiveView.html#c:mount/3) - initializes the LiveView with parameters, session data, and socket
+- [`handle_params`](https://phoenix-live-view.hexdocs.pm/Phoenix.LiveView.html#c:handle_params/3) - responds to URL changes and updates LiveView state accordingly
+- [`handle_event`](https://phoenix-live-view.hexdocs.pm/Phoenix.LiveView.html#c:handle_event/3) - responds to user interactions coming from the client
+- [`handle_info`](https://phoenix-live-view.hexdocs.pm/Phoenix.LiveView.html#c:handle_info/2) - responds to regular process messages
 
 ### DOM Bindings
 
@@ -145,4 +149,4 @@ $ mix phx.gen.live Blog Post posts title:string body:text
 
 This generates a complete LiveView CRUD implementation, similar to `mix phx.gen.html`.
 
-To learn more about LiveView, please refer to the [Phoenix LiveView documentation](https://hexdocs.pm/phoenix_live_view).
+To learn more about LiveView, please refer to the [Phoenix LiveView documentation](https://phoenix-live-view.hexdocs.pm).

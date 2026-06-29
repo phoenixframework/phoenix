@@ -15,7 +15,10 @@ To jump-start our catalog context, we'll use `mix phx.gen.html` which creates a 
 ```console
 $ mix phx.gen.html Catalog Product products title:string \
 description:string price:decimal views:integer
+```
+After executing the command, you should see output similar to the following:
 
+```console
 * creating lib/hello_web/controllers/product_controller.ex
 * creating lib/hello_web/controllers/product_html/edit.html.heex
 * creating lib/hello_web/controllers/product_html/index.html.heex

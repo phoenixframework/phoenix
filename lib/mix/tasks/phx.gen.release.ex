@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
   FROM node:20 as node
   COPY assets assets
-  RUN cd assets && npm install
+  RUN cd assets && npm ci
 
   FROM ${BUILDER_IMAGE} as builder
 
@@ -66,7 +66,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   ```dockerfile
   FROM node:20 as node
   COPY assets assets
-  RUN cd assets && npm install && node build.js --deploy
+  RUN cd assets && npm ci && node build.js --deploy
   ```
 
   Note that you may need to adjust the `assets.deploy` task to not invoke Node.js again.
@@ -107,7 +107,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
         {:eex, "rel/migrate.sh.eex", "rel/overlays/bin/migrate"},
         {:eex, "rel/migrate.bat.eex", "rel/overlays/bin/migrate.bat"},
-        {:eex, "release.ex", Mix.Phoenix.context_lib_path(app, "release.ex")}
+        {:eex, "release.ex.eex", Mix.Phoenix.context_lib_path(app, "release.ex")}
       ])
     end
 
@@ -127,7 +127,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
     Your application is ready to be deployed in a release!
 
-    See https://hexdocs.pm/mix/Mix.Tasks.Release.html for more information about Elixir releases.
+    See https://mix.hexdocs.pm/Mix.Tasks.Release.html for more information about Elixir releases.
     #{if opts.docker, do: docker_instructions()}
     Here are some useful release commands you can run in any release environment:
 
@@ -185,7 +185,9 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
   defp parse_args(args) do
     args
-    |> OptionParser.parse(strict: [ecto: :boolean, docker: :boolean, elixir: :string, otp: :string])
+    |> OptionParser.parse(
+      strict: [ecto: :boolean, docker: :boolean, elixir: :string, otp: :string]
+    )
     |> elem(0)
     |> Keyword.put_new_lazy(:ecto, &ecto_sql_installed?/0)
     |> Keyword.put_new_lazy(:socket_db_adaptor_installed, &socket_db_adaptor_installed?/0)
@@ -210,7 +212,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     a Docker image, ready for deployment on platforms that support Docker.
 
     For more information about deploying with Docker see
-    https://hexdocs.pm/phoenix/releases.html#containers
+    https://phoenix.hexdocs.pm/releases.html#containers
     """
   end
 
@@ -236,7 +238,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> map_size() > 0
   end
 
-  @debian "bookworm"
+  @debian "trixie"
   defp elixir_and_debian_vsn(elixir_vsn, otp_vsn) do
     url =
       "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?name=#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"
@@ -254,13 +256,14 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   end
 
   defp gen_docker(binding, opts) do
-    wanted_elixir_vsn = opts[:elixir] ||
-      case Version.parse!(System.version()) do
-        %{major: major, minor: minor, pre: ["dev"]} -> "#{major}.#{minor - 1}.0"
-        _ -> System.version()
-      end
+    wanted_elixir_vsn =
+      opts[:elixir] ||
+        case Version.parse!(System.version()) do
+          %{major: major, minor: minor, pre: ["dev"]} -> "#{major}.#{minor - 1}.0"
+          _ -> System.version()
+        end
 
-    otp_vsn =  opts[:otp] || otp_vsn()
+    otp_vsn = opts[:otp] || otp_vsn()
 
     vsns =
       case elixir_and_debian_vsn(wanted_elixir_vsn, otp_vsn) do
@@ -344,10 +347,15 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       ]
     ]
 
-    case :httpc.request(:get, {url, []}, http_options, body_format: :binary) do
-      {:ok, {{_, 200, _}, _headers, body}} -> body
-      other -> raise "couldn't fetch #{url}: #{inspect(other)}"
-    end
+    http_client =
+      Process.get({__MODULE__, :http_client}, fn url ->
+        case :httpc.request(:get, {url, []}, http_options, body_format: :binary) do
+          {:ok, {{_, 200, _}, _headers, body}} -> body
+          other -> raise "couldn't fetch #{url}: #{inspect(other)}"
+        end
+      end)
+
+    http_client.(url)
   end
 
   defp protocol_versions do

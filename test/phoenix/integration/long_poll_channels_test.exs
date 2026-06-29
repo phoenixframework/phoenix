@@ -66,7 +66,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     channel "room:*", RoomChannel
 
     def connect(params, socket, connect_info) do
-      unless params["logging"] == "enabled", do: Logger.disable(self())
+      unless params["logging"] == "enabled", do: Logger.put_process_level(self(), :none)
       address = Tuple.to_list(connect_info.peer_data.address) |> Enum.join(".")
       trace_context_headers = Enum.into(connect_info.trace_context_headers, %{})
       uri = Map.from_struct(connect_info.uri)
@@ -106,13 +106,29 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     end
 
     def connect(params, socket) do
-      unless params["logging"] == "enabled", do: Logger.disable(self())
+      unless params["logging"] == "enabled", do: Logger.put_process_level(self(), :none)
       {:ok, assign(socket, :user_id, params["user_id"])}
     end
 
     def id(socket) do
       if id = socket.assigns.user_id, do: "user_sockets:#{id}"
     end
+  end
+
+  defmodule SlowSocket do
+    @behaviour Phoenix.Socket.Transport
+
+    def child_spec(_opts), do: :ignore
+    def connect(_), do: {:ok, %{}}
+    def init(state), do: {:ok, state}
+
+    def handle_in(_message, state) do
+      Process.sleep(:infinity)
+      {:ok, state}
+    end
+
+    def handle_info(_message, state), do: {:ok, state}
+    def terminate(_reason, _state), do: :ok
   end
 
   defmodule Endpoint do
@@ -138,6 +154,13 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         pubsub_timeout_ms: 200,
         check_origin: ["//example.com"],
         connect_info: [:trace_context_headers, :x_headers, :peer_data, :uri]
+      ]
+
+    socket "/ws/slow", SlowSocket,
+      longpoll: [
+        window_ms: 100,
+        pubsub_timeout_ms: 200,
+        check_origin: ["//example.com"]
       ]
   end
 
@@ -436,7 +459,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
         test "#{@mode}: publishing events" do
           Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
-          session = join("/ws", "room:lobby", @vsn, "1", @mode)
+          join_ref = "1"
+          session = join("/ws", "room:lobby", @vsn, join_ref, @mode)
 
           # Publish successfully
           resp =
@@ -444,6 +468,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
               "topic" => "room:lobby",
               "event" => "new_msg",
               "ref" => "1",
+              "join_ref" => join_ref,
               "payload" => %{"body" => "hi!"}
             })
 
@@ -594,6 +619,28 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           resp = poll(:post, "/ws", @vsn, session)
           assert resp.body["status"] == 410
         end
+      end
+
+      test "publish responds with 408 when transport_dispatch times out" do
+        resp = poll(:get, "/ws/slow", "2.0.0", %{}, nil)
+        assert resp.body["status"] == 410
+        assert resp.status == 200
+
+        session = Map.take(resp.body, ["token"])
+
+        resp =
+          poll(:post, "/ws/slow", "2.0.0", session, [
+            %{
+              "topic" => "room:lobby",
+              "event" => "ping",
+              "ref" => "1",
+              "join_ref" => "1",
+              "payload" => %{}
+            }
+          ])
+
+        assert resp.status == 200
+        assert resp.body["status"] == 408
       end
     end
 

@@ -6,19 +6,19 @@
 
 > Peace of mind from prototype to production.
 
-[![Build Status](https://github.com/phoenixframework/phoenix/workflows/CI/badge.svg)](https://github.com/phoenixframework/phoenix/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/phoenix.svg)](https://hex.pm/packages/phoenix) [![Documentation](https://img.shields.io/badge/documentation-gray)](https://hexdocs.pm/phoenix)
+[![Build Status](https://github.com/phoenixframework/phoenix/workflows/CI/badge.svg)](https://github.com/phoenixframework/phoenix/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/phoenix.svg)](https://hex.pm/packages/phoenix) [![Documentation](https://img.shields.io/badge/documentation-gray)](https://phoenix.hexdocs.pm)
 
 ## Getting started
 
 See the official site at <https://www.phoenixframework.org/>.
 
-Install the latest version of Phoenix by following the instructions at <https://hexdocs.pm/phoenix/installation.html#phoenix>.
+Install the latest version of Phoenix by following the instructions at <https://phoenix.hexdocs.pm/installation.html#phoenix>.
 
 ## Documentation
 
-API documentation is available at <https://hexdocs.pm/phoenix>.
+API documentation is available at <https://phoenix.hexdocs.pm>.
 
-Phoenix.js documentation is available at <https://hexdocs.pm/phoenix/js>.
+Phoenix.js documentation is available at <https://phoenix.hexdocs.pm/js>.
 
 ## Contributing
 
@@ -51,7 +51,6 @@ To create projects outside of the `installer/` directory, add the latest archive
 To build the documentation:
 
 ```bash
-npm install
 MIX_ENV=docs mix docs
 ```
 
@@ -73,8 +72,7 @@ mix archive.build
 To build Phoenix.js:
 
 ```bash
-cd assets
-npm install
+mix assets.build
 ```
 
 ## Important links

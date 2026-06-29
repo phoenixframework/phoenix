@@ -22,4 +22,4 @@ phoenix-*.ez
 
 .DS_Store
 
-/priv/templates/phx.gen.live/core_components.ex
+/priv/templates/phx.gen.live/core_components.ex.eex

@@ -36,9 +36,9 @@ $ mix phx.new hello
 >
 > - [Ecto](ecto.html) for communicating with a data store, such as PostgreSQL, MySQL, and others. You can skip this with `--no-ecto`.
 >
-> - [Phoenix.HTML](https://hexdocs.pm/phoenix_html/Phoenix.HTML.html), [TailwindCSS](https://tailwindcss.com), and [Esbuild](https://esbuild.github.io) for HTML applications. You can skip them with the `--no-html` and `--no-assets` flags.
+> - [Phoenix.HTML](https://phoenix-html.hexdocs.pm/Phoenix.HTML.html), [TailwindCSS](https://tailwindcss.com), and [Esbuild](https://esbuild.github.io) for HTML applications. You can skip them with the `--no-html` and `--no-assets` flags.
 >
-> - [Phoenix.LiveView](https://hexdocs.pm/phoenix_live_view/) for building realtime and interactive web applications. You can skip this with `--no-live`.
+> - [Phoenix.LiveView](https://phoenix-live-view.hexdocs.pm/) for building realtime and interactive web applications. You can skip this with `--no-live`.
 >
 > Run `mix help phx.new` to learn all options.
 
@@ -137,7 +137,11 @@ You can also run your app inside IEx (Interactive Elixir) as:
 
 By default, Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
 
-![Phoenix Welcome Page](assets/images/welcome-to-phoenix.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/welcome-to-phoenix-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/images/welcome-to-phoenix.png" />
+  <img src="assets/images/welcome-to-phoenix.png" alt="Phoenix Welcome Page" />
+</picture>
 
 If your screen looks like the image above, congratulations! You now have a working Phoenix application. In case you can't see the page above, try accessing it via [http://127.0.0.1:4000](http://127.0.0.1:4000) and later make sure your OS has defined "localhost" as "127.0.0.1".
 

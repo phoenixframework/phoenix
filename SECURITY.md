@@ -7,10 +7,10 @@ available for the last 4 minor branches:
 
 Phoenix version | Support
 :-------------- | :-----------------------------
-1.7             | Bug fixes and security patches
+1.8             | Bug fixes and security patches
+1.7             | Security patches only
 1.6             | Security patches only
 1.5             | Security patches only
-1.4             | Security patches only
 
 ## Announcements
 

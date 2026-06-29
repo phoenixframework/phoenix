@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
   Generates a self-signed certificate for HTTPS testing.
 
       $ mix phx.gen.cert
-      $ mix phx.gen.cert my-app my-app.local my-app.internal.example.com
+      $ mix phx.gen.cert my-app.localhost my-app.internal.example.com
 
   Creates a private key and a self-signed certificate in PEM format. These
   files can be referenced in the `certfile` and `keyfile` parameters of an
@@ -122,8 +122,10 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
     configuration in config/dev.exs:
 
       config #{inspect(app)}, #{inspect(Mix.Phoenix.web_module(base))}.Endpoint,
-        http: [port: String.to_integer(System.get_env("PORT") || "4000")],
+        ...,
         https: [
+          # Change to `ip: {0, 0, 0, 0}` to allow access from other machines
+          ip: {127, 0, 0, 1},
           port: 4001,
           cipher_suite: :strong,
           certfile: "#{certfile}",

@@ -115,8 +115,8 @@ defmodule Mix.Tasks.Phx.New do
       hello_web/    HelloWeb
   ```
 
-  You can read more about umbrella projects using the
-  official [Elixir guide](https://hexdocs.pm/elixir/dependencies-and-umbrella-projects.html#umbrella-projects)
+  You can read more about umbrella projects in the
+  [mix documentation](https://mix.hexdocs.pm/Mix.Project.html#module-umbrella-projects)
 
   ## `PHX_NEW_CACHE_DIR`
 
@@ -147,13 +147,14 @@ defmodule Mix.Tasks.Phx.New do
   any existing files where conflicts exist.
   """
   use Mix.Task
-  alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
+  alias Phx.New.{Generator, Interactive, Project, Single, Umbrella, Web, Ecto}
 
   @version Mix.Project.config()[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application"
 
   @switches [
     dev: :boolean,
+    interactive: :boolean,
     assets: :boolean,
     esbuild: :boolean,
     tailwind: :boolean,
@@ -199,7 +200,23 @@ defmodule Mix.Tasks.Phx.New do
     result =
       case {opts, argv} do
         {_opts, []} ->
-          Mix.Tasks.Help.run(["phx.new"])
+          if opts[:interactive] do
+            case Interactive.run() do
+              {:ok, base_path, interactive_opts} ->
+                merged_opts = Keyword.merge(opts, interactive_opts)
+
+                if merged_opts[:umbrella] do
+                  generate(base_path, Umbrella, :project_path, merged_opts)
+                else
+                  generate(base_path, Single, :base_path, merged_opts)
+                end
+
+              :abort ->
+                :ok
+            end
+          else
+            Mix.Tasks.Help.run(["phx.new"])
+          end
 
         {opts, [base_path | _]} ->
           if opts[:umbrella] do
@@ -465,10 +482,10 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version(), "~> 1.15") do
+    unless Version.match?(System.version(), "~> 1.17") do
       Mix.raise(
-        "Phoenix v#{@version} requires at least Elixir v1.15\n " <>
-          "You have #{System.version()}. Please update accordingly"
+        "Phoenix v#{@version} installer requires Elixir v1.17 or later, " <>
+          "but you are running v#{System.version()}"
       )
     end
   end

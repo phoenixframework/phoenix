@@ -1,10 +1,13 @@
 # Testing Channels
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
-
-> **Requirement**: This guide expects that you have gone through the [Introduction to Testing guide](testing.html).
-
-> **Requirement**: This guide expects that you have gone through the [Channels guide](channels.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
+> * Gone through the [Introduction to Testing guide](testing.html)
+> * Gone through the [channels guide](channels.html)
 
 In the Channels guide, we saw that a "Channel" is a layered system with different components. Given this, there would be cases when writing unit tests for our Channel functions may not be enough. We may want to verify that its different moving parts are working together as we expect. This integration testing would assure us that we correctly defined our channel route, the channel module, and its callbacks; and that the lower-level layers such as the PubSub and Transport are configured correctly and are working as intended.
 
@@ -156,4 +159,4 @@ Since the `handle_out/3` event is only triggered when we call `broadcast/3` from
 
 The line `broadcast_from!(socket, "broadcast", %{"some" => "data"})` will trigger the `handle_out/3` callback which pushes the same event and payload back to the client. To test this, we do `assert_push "broadcast", %{"some" => "data"}`.
 
-That's it. Now you are ready to develop and fully test real-time applications. To learn more about other functionality provided when testing channels, check out the documentation for [`Phoenix.ChannelTest`](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html).
+That's it. Now you are ready to develop and fully test real-time applications. To learn more about other functionality provided when testing channels, check out the documentation for [`Phoenix.ChannelTest`](https://phoenix.hexdocs.pm/Phoenix.ChannelTest.html).

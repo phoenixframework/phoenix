@@ -43,7 +43,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
         ]
 
     files = [
-      {:eex, "presence.ex", Path.join(web_prefix, "channels/#{binding[:path]}.ex")}
+      {:eex, "presence.ex.eex", Path.join(web_prefix, "channels/#{binding[:path]}.ex")}
     ]
 
     Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.presence", binding, files)
@@ -59,7 +59,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
         ]
 
     You're all set! See the Phoenix.Presence docs for more details:
-    https://hexdocs.pm/phoenix/Phoenix.Presence.html
+    https://phoenix.hexdocs.pm/Phoenix.Presence.html
     """)
   end
 

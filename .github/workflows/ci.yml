@@ -14,31 +14,30 @@ jobs:
     strategy:
       matrix:
         include:
-          - elixir: 1.15.8
-            otp: 25.3.2.9
+          - elixir: "1.15.8"
+            otp: "25.3.2.21"
 
-          - elixir: 1.18.4
-            otp: 27.3
+          - elixir: "1.18.4"
+            otp: "27.3.4.13"
 
-          - elixir: 1.18.4
-            otp: 28.0.1
+          - elixir: "1.19.5"
+            otp: "28.5.0.2"
             lint: true
-            installer: true
 
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Elixir
-        uses: erlef/setup-beam@e6d7c94229049569db56a7ad5a540c051a010af9 # v1.20.4
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93 # v1.24.0
         with:
           elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
 
       - name: Restore deps and _build cache
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             deps
@@ -60,22 +59,67 @@ jobs:
       - name: Run tests
         run: mix test
 
-      - name: Run installer test
-        run: |
-          cd installer
-          mix deps.get
-          mix test
-        if: ${{ matrix.installer }}
+  installer_test:
+    name: installer test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+
+    env:
+      MIX_ENV: test
+      PHX_CI: true
+
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.17.3"
+            otp: "25.3.2.21"
+
+          - elixir: "1.19.5"
+            otp: "28.5.0.2"
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93 # v1.24.0
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Restore deps and _build cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            deps
+            _build
+          key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+
+      - name: Install installer dependencies
+        run: mix deps.get
+        working-directory: installer
+
+      - name: Run installer unit tests
+        run: mix test
+        working-directory: installer
+
+      - name: Install root dependencies
+        run: mix deps.get --only test
+
+      - name: Run mix_phx_new generator integration tests
+        run: mix test --only mix_phx_new
 
   npm_test:
     name: npm test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Restore deps and _build cache
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             deps
@@ -85,23 +129,23 @@ jobs:
             deps-${{ runner.os }}-npm
 
       - name: Set up Node.js 20.x
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 20.x
 
       - name: Restore npm cache
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: npm install and test
-        run: |
-          cd assets
-          npm install
-          npm test
+      - name: Install locked npm dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
 
   integration-test-elixir:
     runs-on: ubuntu-latest
@@ -109,14 +153,14 @@ jobs:
     strategy:
       matrix:
         include:
-          # look for correct alpine image here: https://hub.docker.com/r/hexpm/elixir/tags
-          - elixir: 1.15.8
-            otp: 25.3.2.9
-            suffix: "alpine-3.20.3"
+          # look for latest alpine image here: https://bob.hex.pm/docker
+          - elixir: "1.17.3"
+            otp: "25.3.2.21"
+            suffix: "alpine-3.22.4"
 
-          - elixir: 1.17.3
-            otp: 27.1.2
-            suffix: "alpine-3.20.3"
+          - elixir: "1.19.5"
+            otp: "28.3.3"
+            suffix: "alpine-3.23.4"
 
     container:
       image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-${{ matrix.suffix }}
@@ -144,6 +188,6 @@ jobs:
         ports:
           - 1433:1433
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Run test script
         run: ./integration_test/test.sh

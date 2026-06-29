@@ -24,7 +24,7 @@ defmodule Phoenix.Router.ResourceTest do
   end
 
   setup do
-    Logger.disable(self())
+    Logger.put_process_level(self(), :none)
     :ok
   end
 

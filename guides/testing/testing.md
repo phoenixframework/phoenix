@@ -1,10 +1,15 @@
 # Introduction to Testing
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
 
 Testing has become integral to the software development process, and the ability to easily write meaningful tests is an indispensable feature for any modern web framework. Phoenix takes this seriously, providing support files to make all the major components of the framework easy to test. It also generates test modules with real-world examples alongside any generated modules to help get us going.
 
-Elixir ships with a built-in testing framework called [ExUnit](https://hexdocs.pm/ex_unit). ExUnit strives to be clear and explicit, keeping magic to a minimum. Phoenix uses ExUnit for all of its testing, and we will use it here as well.
+Elixir ships with a built-in testing framework called [ExUnit](https://ex-unit.hexdocs.pm). ExUnit strives to be clear and explicit, keeping magic to a minimum. Phoenix uses ExUnit for all of its testing, and we will use it here as well.
 
 ## Running tests
 
@@ -114,7 +119,7 @@ Now that we have made this module a case template, we can define callbacks that 
 
 Next, it wires up `:verified_routes` to allow us to use `~p` based paths in our test just like we do in the rest of our application to easily generate paths and URLs in our tests.
 
-Finally, we import [`Plug.Conn`](https://hexdocs.pm/plug/Plug.Conn.html), so all of the connection helpers available in controllers are also available in tests, and then imports [`Phoenix.ConnTest`](https://hexdocs.pm/phoenix/Phoenix.ConnTest.html). You can consult these modules to learn all functionality available.
+Finally, we import [`Plug.Conn`](https://plug.hexdocs.pm/Plug.Conn.html), so all of the connection helpers available in controllers are also available in tests, and then imports [`Phoenix.ConnTest`](https://phoenix.hexdocs.pm/Phoenix.ConnTest.html). You can consult these modules to learn all functionality available.
 
 Then our case template defines a `setup` block. The `setup` block will be called before test. Most of the setup block is on setting up the SQL Sandbox, which we will talk about later. In the last line of the `setup` block, we will find this:
 
@@ -485,7 +490,7 @@ That's all you need to do and ExUnit and Phoenix will take care of all rest, inc
 
 ## Going further
 
-While ExUnit is a simple test framework, it provides a really flexible and robust test runner through the `mix test` command. We recommend you to run `mix help test` or [read the docs online](https://hexdocs.pm/mix/Mix.Tasks.Test.html)
+While ExUnit is a simple test framework, it provides a really flexible and robust test runner through the `mix test` command. We recommend you to run `mix help test` or [read the docs online](https://mix.hexdocs.pm/Mix.Tasks.Test.html)
 
 We've seen what Phoenix gives us with a newly generated app. Furthermore, whenever you generate a new resource, Phoenix will generate all appropriate tests for that resource too. For example, you can create a complete scaffold with schema, context, controllers, and views by running the following command at the root of your application:
 

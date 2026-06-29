@@ -143,7 +143,7 @@ defmodule Mix.Tasks.Phx.Gen.NotifierTest do
       assert notice =~ ~s(defmodule Phoenix.Mailer do)
       assert notice =~ ~s(use Swoosh.Mailer, otp_app: :phoenix)
       assert notice =~ ~s(def deps do)
-      assert notice =~ ~s(https://hexdocs.pm/swoosh)
+      assert notice =~ ~s(https://swoosh.hexdocs.pm)
 
       context_with_mailer = %{context | base_module: MyTestApp}
 

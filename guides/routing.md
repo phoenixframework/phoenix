@@ -1,8 +1,12 @@
 # Routing
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
-
-> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
+> * Gone through the [request life-cycle guide](request_lifecycle.html)
 
 Routers are the main hubs of Phoenix applications. They match HTTP requests to controller actions, wire up real-time channel handlers, and define a series of pipeline transformations scoped to a set of routes.
 
@@ -184,8 +188,8 @@ Notice how the first call to an existing route, `~p"/comments"` gave no warning,
 Phoenix projects are set up out of the box to allow use of verified routes throughout your web layer, including tests. For example in your templates you can render `~p` links:
 
 ```heex
-<.link href={~p"/"}>Welcome Page!</.link>
-<.link href={~p"/comments"}>View Comments</.link>
+<a href={~p"/"}>Welcome Page!</a>
+<a href={~p"/comments"}>View Comments</a>
 ```
 
 Or in a controller, issue a redirect:

@@ -7,12 +7,28 @@ For now, categories will contain only textual information. Our first order of bu
 > Sometimes it may be tricky to determine if two resources belong to the same context or not. In those cases, prefer distinct contexts per resource and refactor later if necessary. Otherwise you can easily end up with large contexts of loosely related entities. Also keep in mind that the fact two resources are related does not necessarily mean they belong to the same context, otherwise you would quickly end up with one large context, as the majority of resources in an application are connected to each other. To sum it up: if you are unsure, you should prefer separate modules (contexts).
 
 ```console
-$ mix phx.gen.context Catalog Category categories \
+mix phx.gen.context Catalog Category categories \
 title:string:unique --no-scope
+```
 
+You will see the following output in your terminal: 
+
+```console
 You are generating into an existing context.
+
+The Hello.Catalog context currently has 7 functions and 1 file in its directory.
+
+  * It's OK to have multiple resources in the same context as long as they are closely related. 
+
 ...
-Would you like to proceed? [Yn] y
+
+Would you like to proceed? [Yn]
+```
+
+Type `y` followed by the `Return` key.
+You should see output similar to:
+
+```console
 * creating lib/hello/catalog/category.ex
 * creating priv/repo/migrations/20250203192325_create_categories.exs
 * injecting lib/hello/catalog.ex
@@ -27,8 +43,12 @@ Remember to update your repository by running migrations:
 This time around, we used `mix phx.gen.context`, which is just like `mix phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing products, we can integrate the new category features into our existing web form and product show page. We can see we now have a new `Category` schema alongside our product schema at `lib/hello/catalog/category.ex`, and Phoenix told us it was *injecting* new functions in our existing Catalog context for the category functionality. The injected functions will look very familiar to our product functions, with new functions like `create_category`, `list_categories`, and so on. Before we migrate up, we need to do a second bit of code generation. Our category schema is great for representing an individual category in the system, but we need to support a many-to-many relationship between products and categories. Fortunately, ecto allows us to do this simply with a join table, so let's generate that now with the `ecto.gen.migration` command:
 
 ```console
-$ mix ecto.gen.migration create_product_categories
+mix ecto.gen.migration create_product_categories
+```
 
+You will see output confirming the migration file was created:
+
+```console
 * creating priv/repo/migrations/20250203192958_create_product_categories.exs
 ```
 
@@ -57,8 +77,12 @@ Next, we created indexes for our foreign keys, one of which is a unique index to
 With our migrations in place, we can migrate up.
 
 ```console
-$ mix ecto.migrate
+mix ecto.migrate
+```
 
+You will see the following output confirming migration success:
+
+```
 18:20:36.489 [info] == Running 20250222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
 
 18:20:36.493 [info] create table categories
@@ -89,8 +113,12 @@ end
 We simply enumerate over a list of category titles and use the generated `create_category/1` function of our catalog context to persist the new records. We can run the seeds with `mix run`:
 
 ```console
-$ mix run priv/repo/seeds.exs
+mix run priv/repo/seeds.exs
+```
 
+The output in the terminal confirms the `seeds.exs` executed successfully: 
+
+```console
 [debug] QUERY OK db=3.1ms decode=1.1ms queue=0.7ms idle=2.2ms
 INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["Home Improvement", ~N[2025-02-03 19:39:53], ~N[2025-02-03 19:39:53]]
 [debug] QUERY OK db=1.2ms queue=1.3ms idle=12.3ms

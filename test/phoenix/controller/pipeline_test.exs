@@ -33,14 +33,14 @@ defmodule Phoenix.Controller.PipelineTest do
     end
 
     def no_match(_conn, %{"no" => "match"}) do
-      raise "Shouldn't have matched"
+      raise "shouldn't have matched"
     end
 
     def non_top_level_function_clause_error(conn, params) do
       send_resp(conn, :ok, trigger_func_clause_error(params))
     end
 
-    defp trigger_func_clause_error(%{"no" => "match"}), do: :nomatch
+    defp trigger_func_clause_error(%{"no" => "match"}), do: "shouldn't ever match"
 
     defp do_halt(conn, _), do: halt(conn)
 
@@ -108,7 +108,7 @@ defmodule Phoenix.Controller.PipelineTest do
   def call(_conn, :bad_fallback), do: :bad_fallback
 
   setup do
-    Logger.disable(self())
+    Logger.put_process_level(self(), :none)
     :ok
   end
 

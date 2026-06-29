@@ -557,12 +557,15 @@ defmodule Phoenix.ChannelTest do
       assert_push "some_event", expected_payload
       # The code above does not assert the payload matches the described map.
 
+  Guards can also be given to the payload pattern:
+
+      assert_push "some_event", %{"counter" => c} when c > 0
   """
   defmacro assert_push(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
+    pattern = extract_pattern_and_apply_guard(event, payload, Phoenix.Socket.Message)
+
     quote do
-      assert_receive %Phoenix.Socket.Message{
-                        event: unquote(event),
-                        payload: unquote(payload)}, unquote(timeout)
+      assert_receive unquote(pattern), unquote(timeout)
     end
   end
 
@@ -579,6 +582,7 @@ defmodule Phoenix.ChannelTest do
   will certainly slow down your test suite.
   """
   defmacro refute_push(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :refute_receive_timeout)) do
+
     quote do
       refute_receive %Phoenix.Socket.Message{
                         event: unquote(event),
@@ -600,14 +604,27 @@ defmodule Phoenix.ChannelTest do
 
   The timeout is in milliseconds and defaults to the `:assert_receive_timeout`
   set on the `:ex_unit` application (which defaults to 100ms).
+
+  Guards can also be given to the payload pattern:
+
+      ref = push(channel, "some_event")
+      assert_reply ref, :ok, %{"counter" => c} when c > 0
   """
   defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
-    quote do
-      ref = unquote(ref)
-      assert_receive %Phoenix.Socket.Reply{
+    {payload, guard} = extract_guard(payload)
+
+    pattern = quote do
+      %Phoenix.Socket.Reply{
                         ref: ^ref,
                         status: unquote(status),
-                        payload: unquote(payload)}, unquote(timeout)
+                        payload: unquote(payload)}
+    end
+
+    struct_pattern = apply_guard(pattern, guard)
+
+    quote do
+      ref = unquote(ref)
+      assert_receive unquote(struct_pattern), unquote(timeout)
     end
   end
 
@@ -650,11 +667,16 @@ defmodule Phoenix.ChannelTest do
 
   The timeout is in milliseconds and defaults to the `:assert_receive_timeout`
   set on the `:ex_unit` application (which defaults to 100ms).
+
+  Guards can also be given to the payload pattern:
+
+      assert_broadcast "some_event", %{"counter" => c} when c > 0
   """
   defmacro assert_broadcast(event, payload, timeout \\ Application.fetch_env!(:ex_unit, :assert_receive_timeout)) do
+    pattern = extract_pattern_and_apply_guard(event, payload, Phoenix.Socket.Broadcast)
+
     quote do
-      assert_receive %Phoenix.Socket.Broadcast{event: unquote(event),
-                                               payload: unquote(payload)}, unquote(timeout)
+      assert_receive unquote(pattern), unquote(timeout)
     end
   end
 
@@ -693,6 +715,22 @@ defmodule Phoenix.ChannelTest do
       {channel, opts} when is_atom(channel) -> {channel, opts}
       _ -> raise "no channel found for topic #{inspect topic} in #{inspect socket.handler}"
     end
+  end
+
+  defp extract_guard({:when, _, [payload, guard]}), do: {payload, guard}
+  defp extract_guard(payload), do: {payload, nil}
+
+  defp apply_guard(pattern, nil), do: pattern
+  defp apply_guard(pattern, guard), do: {:when, [], [pattern, guard]}
+
+  defp extract_pattern_and_apply_guard(event, payload, struct_module) do
+    {payload, guard} = extract_guard(payload)
+
+    pattern_struct = quote do
+      %{__struct__: unquote(struct_module), event: unquote(event), payload: unquote(payload)}
+    end
+
+    apply_guard(pattern_struct, guard)
   end
 
   @doc false

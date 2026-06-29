@@ -27,11 +27,11 @@ Since v1.5, new Phoenix applications are generated with a
 Telemetry supervisor. This module is responsible for
 managing the lifecycle of your Telemetry processes. It also
 defines a `metrics/0` function, which returns a list of
-[`Telemetry.Metrics`](https://hexdocs.pm/telemetry_metrics)
+[`Telemetry.Metrics`](https://telemetry-metrics.hexdocs.pm)
 that you define for your application.
 
 By default, the supervisor also starts
-[`:telemetry_poller`](https://hexdocs.pm/telemetry_poller).
+[`:telemetry_poller`](https://telemetry-poller.hexdocs.pm).
 By simply adding `:telemetry_poller` as a dependency, you
 can receive VM-related events on a specified interval.
 
@@ -111,7 +111,7 @@ children = [
 ## Telemetry Events
 
 Many Elixir libraries (including Phoenix) are already using
-the [`:telemetry`](https://hexdocs.pm/telemetry) package as a
+the [`:telemetry`](https://telemetry.hexdocs.pm) package as a
 way to give users more insight into the behavior of their
 applications, by emitting events at key moments in the
 application lifecycle.
@@ -160,7 +160,7 @@ A full list of all Phoenix telemetry events can be found in `Phoenix.Logger`
 > ― `Telemetry.Metrics`
 
 The Telemetry.Metrics package provides a common interface
-for defining metrics. It exposes a set of [five metric type functions](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-metrics) that are responsible for structuring a given Telemetry event as a particular measurement.
+for defining metrics. It exposes a set of [five metric type functions](https://telemetry-metrics.hexdocs.pm/Telemetry.Metrics.html#module-metrics) that are responsible for structuring a given Telemetry event as a particular measurement.
 
 The package does not perform any aggregation of the measurements itself. Instead, it provides a reporter with the Telemetry event-as-measurement definition and the reporter uses that definition to perform aggregations and report them.
 
@@ -238,7 +238,7 @@ Telemetry.Metrics.distribution("my_app.repo.query.queue_time",
 
 > You can learn more about Ecto Telemetry in the "Telemetry
 Events" section of the
-[`Ecto.Repo`](https://hexdocs.pm/ecto/Ecto.Repo.html) module
+[`Ecto.Repo`](https://ecto.hexdocs.pm/Ecto.Repo.html) module
 documentation.
 
 So far we have seen some of the Telemetry events common to
@@ -267,7 +267,7 @@ Then the reporter will attach a listener for the `"phoenix.endpoint.stop.duratio
 
 For developers interested in real-time visualizations for
 their Telemetry metrics, you may be interested in installing
-[`LiveDashboard`](https://hexdocs.pm/phoenix_live_dashboard).
+[`LiveDashboard`](https://phoenix-live-dashboard.hexdocs.pm).
 LiveDashboard acts as a Telemetry.Metrics reporter to render
 your data as beautiful, real-time charts on the dashboard.
 
@@ -453,7 +453,7 @@ event.
 
 You might want to periodically measure key-value pairs within
 your application. Fortunately the
-[`:telemetry_poller`](https://hexdocs.pm/telemetry_poller)
+[`:telemetry_poller`](https://telemetry-poller.hexdocs.pm)
 package provides a mechanism for custom measurements,
 which is useful for retrieving process information or for
 performing custom measurements periodically.
@@ -517,20 +517,20 @@ libraries currently emitting `:telemetry` events.
 Library authors are actively encouraged to send a PR adding
 their own (in alphabetical order, please):
 
-* [Absinthe](https://hexdocs.pm/absinthe) - [Events](https://hexdocs.pm/absinthe/telemetry.html)
-* [Ash Framework](https://hexdocs.pm/ash) - [Events](https://hexdocs.pm/ash/monitoring.html)
-* [Broadway](https://hexdocs.pm/broadway) - [Events](https://hexdocs.pm/broadway/Broadway.html#module-telemetry)
-* [Ecto](https://hexdocs.pm/ecto) - [Events](https://hexdocs.pm/ecto/Ecto.Repo.html#module-telemetry-events)
-* [Oban](https://hexdocs.pm/oban) - [Events](https://hexdocs.pm/oban/Oban.Telemetry.html)
-* [Phoenix](https://hexdocs.pm/phoenix) - [Events](https://hexdocs.pm/phoenix/Phoenix.Logger.html#module-instrumentation)
-* [Plug](https://hexdocs.pm/plug) - [Events](https://hexdocs.pm/plug/Plug.Telemetry.html)
-* [Tesla](https://hexdocs.pm/tesla) - [Events](https://hexdocs.pm/tesla/Tesla.Middleware.Telemetry.html)
+* [Absinthe](https://absinthe.hexdocs.pm) - [Events](https://absinthe.hexdocs.pm/telemetry.html)
+* [Ash Framework](https://ash.hexdocs.pm) - [Events](https://ash.hexdocs.pm/monitoring.html)
+* [Broadway](https://broadway.hexdocs.pm) - [Events](https://broadway.hexdocs.pm/Broadway.html#module-telemetry)
+* [Ecto](https://ecto.hexdocs.pm) - [Events](https://ecto.hexdocs.pm/Ecto.Repo.html#module-telemetry-events)
+* [Oban](https://oban.hexdocs.pm) - [Events](https://oban.hexdocs.pm/Oban.Telemetry.html)
+* [Phoenix](https://phoenix.hexdocs.pm) - [Events](https://phoenix.hexdocs.pm/Phoenix.Logger.html#module-instrumentation)
+* [Plug](https://plug.hexdocs.pm) - [Events](https://plug.hexdocs.pm/Plug.Telemetry.html)
+* [Tesla](https://tesla.hexdocs.pm) - [Events](https://tesla.hexdocs.pm/Tesla.Middleware.Telemetry.html)
 
 ## Custom Events
 
 If you need custom metrics and instrumentation in your
 application, you can utilize the `:telemetry` package
-(<https://hexdocs.pm/telemetry>) just like your favorite
+(<https://telemetry.hexdocs.pm>) just like your favorite
 frameworks and libraries.
 
 Here is an example of a simple GenServer that emits telemetry

@@ -7,7 +7,7 @@ defmodule Phoenix.Controller.ControllerTest do
   alias Plug.Conn
 
   setup do
-    Logger.disable(self())
+    Logger.put_process_level(self(), :none)
     :ok
   end
 
@@ -930,7 +930,8 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   defp sent_conn do
-    conn(:get, "/") |> send_resp(:ok, "")
+    # The type system is too smart and will notice the response is sent and calls with fail
+    Process.get(:unused, conn(:get, "/") |> send_resp(:ok, ""))
   end
 
   describe "path and url generation" do
@@ -992,6 +993,26 @@ defmodule Phoenix.Controller.ControllerTest do
 
       conn = build_conn_for_path("/foo?one=1&two=2")
       assert current_url(conn, %{three: 3}) == "https://www.example.com/foo?three=3"
+    end
+  end
+
+  describe "assign/2" do
+    test "merges assigns" do
+      conn = conn(:get, "/")
+
+      refute conn.assigns[:foo]
+
+      conn = assign(conn, %{foo: :bar})
+      assert conn.assigns.foo == :bar
+
+      conn = assign(conn, bar: :baz)
+      assert conn.assigns.foo == :bar
+      assert conn.assigns.bar == :baz
+
+      conn = assign(conn, fn %{foo: :bar} -> [baz: :quux] end)
+      assert conn.assigns.foo == :bar
+      assert conn.assigns.bar == :baz
+      assert conn.assigns.baz == :quux
     end
   end
 end

@@ -83,11 +83,11 @@ describe("LongPoll", () => {
       const authToken = "my-auth-token"
       const encodedToken = btoa(authToken)
       const protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${encodedToken}`]
-      
+
       const longpoll = new LongPoll("http://localhost/socket/longpoll", protocols)
       longpoll.timeout = 1000
       longpoll.poll()
-      
+
       // Verify Ajax.request was called with the correct headers
       expect(Ajax.request).toHaveBeenCalledWith(
         "GET",
@@ -104,7 +104,7 @@ describe("LongPoll", () => {
       const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
       longpoll.timeout = 1000
       longpoll.poll()
-      
+
       // Verify Ajax.request was called without auth token header
       expect(Ajax.request).toHaveBeenCalledWith(
         "GET",
@@ -115,6 +115,27 @@ describe("LongPoll", () => {
         expect.any(Function),
         expect.any(Function)
       )
+    })
+
+    it("should treat 410 as error when token already exists", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      longpoll.timeout = 1000
+      longpoll.token = "existing-token"
+
+      const mockOnerror = jest.fn()
+      const mockCloseAndRetry = jest.fn()
+      longpoll.onerror = mockOnerror
+      longpoll.closeAndRetry = mockCloseAndRetry
+
+      Ajax.request.mockImplementation((method, url, headers, body, timeout, ontimeout, callback) => {
+        callback({status: 410, token: "new-token", messages: []})
+        return {abort: jest.fn()}
+      })
+
+      longpoll.poll()
+
+      expect(mockOnerror).toHaveBeenCalledWith(410)
+      expect(mockCloseAndRetry).toHaveBeenCalledWith(3410, "session_gone", false)
     })
   })
 
@@ -136,6 +157,101 @@ describe("LongPoll", () => {
         expect.any(Function),
         expect.any(Function)
       )
+    })
+
+    it("coalesces rapid send() calls and buffers sends made during an in-flight batch", () => {
+      jest.useFakeTimers()
+      try {
+        const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+        longpoll.timeout = 1000
+        // suppress the initial poll() that the constructor schedules via setTimeout(0)
+        longpoll.poll = jest.fn()
+
+        const calls = []
+        Ajax.request.mockImplementation((method, url, headers, body, timeout, ontimeout, callback) => {
+          calls.push({method, body, callback})
+          return {abort: jest.fn()}
+        })
+
+        // Three sends in the same tick should collapse into one currentBatch
+        longpoll.send("a")
+        longpoll.send("b")
+        longpoll.send("c")
+
+        expect(calls).toHaveLength(0)
+        expect(longpoll.currentBatch).toEqual(["a", "b", "c"])
+
+        // Flush the setTimeout(0) — currentBatch becomes one POST
+        jest.runOnlyPendingTimers()
+
+        expect(calls).toHaveLength(1)
+        expect(calls[0].method).toBe("POST")
+        expect(calls[0].body).toBe("a\nb\nc")
+        expect(longpoll.currentBatch).toBeNull()
+        expect(longpoll.awaitingBatchAck).toBe(true)
+
+        // Sends during in-flight ack go to batchBuffer, not a new request
+        longpoll.send("d")
+        longpoll.send("e")
+        expect(calls).toHaveLength(1)
+        expect(longpoll.batchBuffer).toEqual(["d", "e"])
+
+        // Ack the first batch — the buffered sends should be flushed as the next POST
+        calls[0].callback({status: 200})
+
+        expect(calls).toHaveLength(2)
+        expect(calls[1].body).toBe("d\ne")
+        expect(longpoll.batchBuffer).toEqual([])
+        expect(longpoll.awaitingBatchAck).toBe(true)
+
+        // Ack the buffered batch — nothing left to send
+        calls[1].callback({status: 200})
+        expect(calls).toHaveLength(2)
+        expect(longpoll.awaitingBatchAck).toBe(false)
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
+    it("splits 150 rapid send() calls into two requests in order", () => {
+      jest.useFakeTimers()
+      try {
+        const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+        longpoll.timeout = 1000
+        longpoll.poll = jest.fn()
+
+        const calls = []
+        Ajax.request.mockImplementation((method, url, headers, body, timeout, ontimeout, callback) => {
+          calls.push({body, callback})
+          return {abort: jest.fn()}
+        })
+
+        for(let i = 0; i < 150; i++){ longpoll.send(`m${i}`) }
+
+        // Flush the setTimeout(0) so batchSend runs on the full 150-entry batch
+        jest.runOnlyPendingTimers()
+
+        expect(calls).toHaveLength(1)
+        const firstLines = calls[0].body.split("\n")
+        expect(firstLines).toHaveLength(100)
+        expect(firstLines[0]).toBe("m0")
+        expect(firstLines[99]).toBe("m99")
+
+        // Ack the first chunk — batchSend should recurse with the remaining 50
+        calls[0].callback({status: 200})
+
+        expect(calls).toHaveLength(2)
+        const secondLines = calls[1].body.split("\n")
+        expect(secondLines).toHaveLength(50)
+        expect(secondLines[0]).toBe("m100")
+        expect(secondLines[49]).toBe("m149")
+
+        calls[1].callback({status: 200})
+        expect(calls).toHaveLength(2)
+        expect(longpoll.awaitingBatchAck).toBe(false)
+      } finally {
+        jest.useRealTimers()
+      }
     })
   })
 })
@@ -239,7 +355,7 @@ describe("Ajax.request", () => {
     expect(global.XMLHttpRequest).toHaveBeenCalled()
   })
 
-  it("should use fetch when XMLHttpRequest is not availble", () => {
+  it("should use fetch when XMLHttpRequest is not available", () => {
     global.XMLHttpRequest = undefined // Simulate it being unavailable
     Ajax.request("GET", "/test-endpoint", {}, null, 0, null, (response) => {
       expect(response).toEqual({success: true})

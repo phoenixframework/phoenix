@@ -85,7 +85,7 @@ defmodule Mix.Phoenix.Schema do
     table = opts[:table] || schema_plural
     scope = Mix.Phoenix.Scope.scope_from_opts(ctx_app, opts[:scope], opts[:no_scope])
     {cli_attrs, uniques, redacts} = extract_attr_flags(cli_attrs)
-    {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
+    {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs), scope)
     types = types(attrs)
     web_namespace = opts[:web] && Phoenix.Naming.camelize(opts[:web])
     web_path = web_namespace && Phoenix.Naming.underscore(web_namespace)
@@ -450,7 +450,7 @@ defmodule Mix.Phoenix.Schema do
     )
   end
 
-  defp partition_attrs_and_assocs(schema_module, attrs) do
+  defp partition_attrs_and_assocs(schema_module, attrs, scope) do
     {assocs, attrs} =
       Enum.split_with(attrs, fn
         {_, {:references, _}} ->
@@ -470,6 +470,8 @@ defmodule Mix.Phoenix.Schema do
 
     assocs =
       Enum.map(assocs, fn {key_id, {:references, source}} ->
+        validate_scope_and_reference_conflict!(scope, key_id)
+
         key = String.replace(Atom.to_string(key_id), "_id", "")
         base = schema_module |> Module.split() |> Enum.drop(-1)
         module = Module.concat(base ++ [Phoenix.Naming.camelize(key)])
@@ -478,6 +480,17 @@ defmodule Mix.Phoenix.Schema do
 
     {assocs, attrs}
   end
+
+  defp validate_scope_and_reference_conflict!(
+         %Mix.Phoenix.Scope{schema_key: reference_key},
+         reference_key
+       ) do
+    Mix.raise("""
+    Reference #{inspect(reference_key)} has the same name as the scope schema key, either skip the reference or pass it with the --no-scope flag.
+    """)
+  end
+
+  defp validate_scope_and_reference_conflict!(_scope, _source), do: :ok
 
   defp schema_defaults(attrs) do
     Enum.into(attrs, %{}, fn

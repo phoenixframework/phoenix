@@ -7,7 +7,7 @@ defmodule Phoenix.VerifiedRoutes do
   For example, the following path and URL usages:
 
       ~H"""
-      <.link href={~p"/sessions/new"} method="post">Log in</.link>
+      <a href={~p"/sessions/new"}>Log in</a>
       """
 
       redirect(to: url(~p"/posts/#{post}"))
@@ -41,6 +41,10 @@ defmodule Phoenix.VerifiedRoutes do
 
   Like path segments, query strings params are proper URL encoded and may be interpolated
   directly into the ~p string.
+
+  To ease url comparisons during tests (e.g. when using `assert_redirect/3`) query params
+  will be sorted. This is controlled by the `phoenix: [sort_verified_routes_query_params: true]`
+  configuration option.
 
   ## What about named routes?
 
@@ -171,7 +175,7 @@ defmodule Phoenix.VerifiedRoutes do
       defmodule UnlocalizedRoutes do
         use Phoenix.VerifiedRoutes,
           router: AppWeb.Router,
-          endpoint: AppWeb.Endpoint,
+          endpoint: AppWeb.Endpoint
 
         # Since :path_prefixes was not declared,
         # the code below won't prepend the locale and still be verified
@@ -261,6 +265,10 @@ defmodule Phoenix.VerifiedRoutes do
                 "expected path_prefixes to be a list of zero-arity functions, got: #{inspect(other)}"
       end
 
+    if Module.get_attribute(mod, :phoenix_verified_config) do
+      raise "duplicate call to \"use Phoenix.VerifiedRoutes\" found, make sure it is used only once per module"
+    end
+
     Module.put_attribute(mod, :phoenix_verified_config, %{
       statics: statics,
       path_prefixes: path_prefixes
@@ -290,17 +298,13 @@ defmodule Phoenix.VerifiedRoutes do
   """
   @callback verified_route?(plug_opts(), [String.t()]) :: boolean()
 
-  @after_verify_supported Version.match?(System.version(), ">= 1.14.0")
-
   defmacro __before_compile__(_env) do
-    if @after_verify_supported do
-      quote do
-        @after_verify {__MODULE__, :__phoenix_verify_routes__}
+    quote do
+      @after_verify {__MODULE__, :__phoenix_verify_routes__}
 
-        @doc false
-        def __phoenix_verify_routes__(_module) do
-          unquote(__MODULE__).__verify__(@phoenix_verified_routes)
-        end
+      @doc false
+      def __phoenix_verify_routes__(_module) do
+        unquote(__MODULE__).__verify__(@phoenix_verified_routes)
       end
     end
   end
@@ -325,6 +329,7 @@ defmodule Phoenix.VerifiedRoutes do
     |> Enum.at(0)
     |> String.split("/")
     |> Enum.filter(fn segment -> segment != "" end)
+    |> Enum.map(&URI.decode/1)
   end
 
   defp expand_alias({:__aliases__, _, _} = alias, env),
@@ -821,7 +826,11 @@ defmodule Phoenix.VerifiedRoutes do
             "interpolated query string params must be separated by &, got: #{Macro.to_string(route)}"
     end
 
-    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m3, [arg]}, bin]}
+    sort_params? = Application.get_env(:phoenix, :sort_verified_routes_query_params, false)
+
+    rewrite =
+      {:"::", m1, [{{:., m2, [__MODULE__, :__encode_query__]}, m3, [arg, sort_params?]}, bin]}
+
     verify_query(rest, route, [rewrite | acc])
   end
 
@@ -880,14 +889,34 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @doc false
-  def __encode_query__(dict) when is_list(dict) or (is_map(dict) and not is_struct(dict)) do
+  def __encode_query__(dict, sort? \\ false)
+
+  def __encode_query__(dict, sort?) when is_map(dict) and not is_struct(dict) do
     case Plug.Conn.Query.encode(dict, &to_param/1) do
       "" -> ""
-      query_str -> query_str
+      query_str -> maybe_sort_query(query_str, sort?)
     end
   end
 
-  def __encode_query__(val), do: val |> to_param() |> URI.encode_www_form()
+  def __encode_query__(dict, sort?) when is_list(dict) do
+    if dict == [] or match?([{_, _} | _], dict) do
+      case Plug.Conn.Query.encode(dict, &to_param/1) do
+        "" -> ""
+        query_str -> maybe_sort_query(query_str, sort?)
+      end
+    else
+      raise ArgumentError,
+            "expected a keyword list or map for query string encoding, got: #{inspect(dict)}. " <>
+              "Use the full query string syntax instead, such as ~p\"/path?#\{[key: #{inspect(dict)}]}\""
+    end
+  end
+
+  def __encode_query__(val, _sort?), do: val |> to_param() |> URI.encode_www_form()
+
+  defp maybe_sort_query(query_str, false), do: query_str
+
+  defp maybe_sort_query(query, true),
+    do: query |> String.split("&") |> Enum.sort() |> Enum.join("&")
 
   defp to_param(int) when is_integer(int), do: Integer.to_string(int)
   defp to_param(bin) when is_binary(bin), do: bin
@@ -896,7 +925,9 @@ defmodule Phoenix.VerifiedRoutes do
   defp to_param(data), do: Phoenix.Param.to_param(data)
 
   defp build_route(route_ast, sigil_p, env, endpoint_ctx, router) do
-    config = Module.get_attribute(env.module, :phoenix_verified_config, [])
+    config =
+      Module.get_attribute(env.module, :phoenix_verified_config) ||
+        raise("you must `use Phoenix.VerifiedRoutes` before using the ~p sigil")
 
     router =
       case Macro.expand(router, env) do
@@ -924,21 +955,22 @@ defmodule Phoenix.VerifiedRoutes do
     {route, static?, endpoint_ctx, route_ast, path_ast, static_ast}
   end
 
-  if @after_verify_supported do
-    defp warn_location(meta, %{line: line, file: file, function: function, module: module}) do
-      column = if column = meta[:column], do: column + 2
-      [line: line, function: function, module: module, file: file, column: column]
-    end
-  else
-    defp warn_location(_meta, env) do
-      Macro.Env.stacktrace(env)
-    end
+  defp warn_location(meta, %{line: line, file: file, function: function, module: module}) do
+    column = if column = meta[:column], do: column + 2
+    [line: line, function: function, module: module, file: file, column: column]
   end
 
   defp rewrite_path(route, endpoint, router, config) do
     {:<<>>, meta, segments} = route
     {path_rewrite, query_rewrite} = verify_segment(segments, route)
-    path_rewrite = compile_prefixes(config.path_prefixes, meta) ++ path_rewrite
+
+    path_rewrite =
+      if config.path_prefixes != [] and
+           static_path?(path_rewrite |> Enum.slice(0, 1) |> materialize_path(), config.statics) do
+        path_rewrite
+      else
+        compile_prefixes(config.path_prefixes, meta) ++ path_rewrite
+      end
 
     rewrite_route =
       if query_rewrite == [] do
@@ -956,8 +988,7 @@ defmodule Phoenix.VerifiedRoutes do
         end
       end
 
-    test_path = Enum.map_join(path_rewrite, &if(is_binary(&1), do: &1, else: "1"))
-
+    test_path = materialize_path(path_rewrite)
     static? = static_path?(test_path, config.statics)
 
     path_ast =
@@ -971,6 +1002,10 @@ defmodule Phoenix.VerifiedRoutes do
       end
 
     {static?, meta, test_path, path_ast, static_ast}
+  end
+
+  defp materialize_path(path) do
+    Enum.map_join(path, &if(is_binary(&1), do: &1, else: "1"))
   end
 
   defp compile_prefixes(path_prefixes, meta) do

@@ -8,7 +8,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.8.1"
+  @version "1.9.0-dev"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -24,8 +24,8 @@ defmodule Phoenix.MixProject do
       deps: deps(),
       package: package(),
       consolidate_protocols: Mix.env() != :test,
-      xref: [
-        exclude: [
+      elixirc_options: [
+        no_warn_undefined: [
           {IEx, :started?, 0},
           Ecto.Type,
           :ranch,
@@ -38,7 +38,7 @@ defmodule Phoenix.MixProject do
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       name: "Phoenix",
-      docs: docs(),
+      docs: &docs/0,
       aliases: aliases(),
       source_url: @scm_url,
       homepage_url: "https://www.phoenixframework.org",
@@ -69,7 +69,7 @@ defmodule Phoenix.MixProject do
       env: [
         logger: true,
         stacktrace_depth: nil,
-        filter_parameters: ["password"],
+        filter_parameters: ["password", "token"],
         serve_endpoints: false,
         gzippable_exts: ~w(.js .map .css .txt .text .html .json .svg .eot .ttf),
         static_compressors: [Phoenix.Digester.Gzip]
@@ -84,7 +84,7 @@ defmodule Phoenix.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
       {:phoenix_template, "~> 1.0"},
-      {:websock_adapter, "~> 0.5.3"},
+      {:websock_adapter, "~> 0.5"},
 
       # TODO Drop phoenix_view as an optional dependency in Phoenix v2.0
       {:phoenix_view, "~> 2.0", optional: true},
@@ -98,7 +98,7 @@ defmodule Phoenix.MixProject do
       {:ex_doc, "~> 0.38", only: :docs},
       {:ecto, "~> 3.0", only: :docs},
       {:ecto_sql, "~> 3.10", only: :docs},
-      {:gettext, "~> 0.26", only: :docs},
+      {:gettext, "~> 1.0", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 1.0", only: :docs},
       {:makeup_elixir, "~> 1.0.1 or ~> 1.1", only: :docs},
@@ -121,17 +121,36 @@ defmodule Phoenix.MixProject do
       licenses: ["MIT"],
       links: %{
         "GitHub" => @scm_url,
-        "Changelog" => "https://hexdocs.pm/phoenix/changelog.html"
+        "Changelog" => "https://phoenix.hexdocs.pm/changelog.html"
       },
       files: ~w(
           assets/js lib priv usage-rules CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs
-          installer/templates/phx_web/components/core_components.ex
+          installer/templates/phx_web/components/core_components.ex.eex
         )
     ]
   end
 
   defp docs do
     [
+      search: [
+        %{
+          name: "Latest",
+          help:
+            "Search latest versions of Plug, Phoenix, Phoenix.{HTML, LiveView, PubSub, Template}",
+          packages: [
+            :plug,
+            :phoenix,
+            :phoenix_html,
+            :phoenix_live_view,
+            :phoenix_pubsub,
+            :phoenix_template
+          ]
+        },
+        %{
+          name: "Current version",
+          help: "Search only this project"
+        }
+      ],
       source_ref: "v#{@version}",
       main: "overview",
       logo: "logo.png",
@@ -267,7 +286,8 @@ defmodule Phoenix.MixProject do
 
   defp generate_js_docs(_) do
     Mix.Task.run("app.start")
-    System.cmd("npm", ["run", "docs"])
+    {_, 0} = System.cmd("npm", ["ci"], into: IO.stream())
+    {_, 0} = System.cmd("npm", ["run", "docs"], into: IO.stream())
   end
 
   defp raise_on_archive_build(_) do
@@ -279,10 +299,10 @@ defmodule Phoenix.MixProject do
 
   defp copy_core_components(_) do
     source =
-      Path.join(__DIR__, "installer/templates/phx_web/components/core_components.ex")
+      Path.join(__DIR__, "installer/templates/phx_web/components/core_components.ex.eex")
 
     destination_dir = Path.join([__DIR__, "priv", "templates", "phx.gen.live"])
-    destination = Path.join(destination_dir, "core_components.ex")
+    destination = Path.join(destination_dir, "core_components.ex.eex")
     File.cp!(source, destination)
   end
 end

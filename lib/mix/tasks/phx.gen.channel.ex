@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
       if File.exists?(case_path) do
         []
       else
-        [{:eex, "channel_case.ex", case_path}]
+        [{:eex, "channel_case.ex.eex", case_path}]
       end
 
     Mix.Phoenix.copy_from(
@@ -56,8 +56,8 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
       "priv/templates/phx.gen.channel",
       binding,
       [
-        {:eex, "channel.ex", Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
-        {:eex, "channel_test.exs", test_path}
+        {:eex, "channel.ex.eex", Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
+        {:eex, "channel_test.exs.eex", test_path}
       ] ++ maybe_case
     )
 

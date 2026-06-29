@@ -72,10 +72,9 @@ defmodule Phx.New.Project do
 
   def join_path(%Project{} = project, location, path)
       when location in [:project, :app, :web] do
-    project
-    |> Map.fetch!(:"#{location}_path")
-    |> Path.join(path)
-    |> expand_path_with_bindings(project)
+    base = Map.fetch!(project, :"#{location}_path")
+    expanded = expand_path_with_bindings(path, project)
+    Path.join(base, expanded)
   end
 
   defp expand_path_with_bindings(path, %Project{} = project) do

@@ -14,7 +14,6 @@ defmodule Phoenix.Endpoint.RenderErrors do
 
   import Plug.Conn
 
-  require Phoenix.Endpoint
   require Logger
 
   alias Phoenix.Router.NoRouteError

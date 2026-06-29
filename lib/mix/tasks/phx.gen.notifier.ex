@@ -166,8 +166,8 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
 
   defp files_to_be_generated(%Context{} = context) do
     [
-      {:eex, "notifier.ex", context.file},
-      {:eex, "notifier_test.exs", context.test_file}
+      {:eex, "notifier.ex.eex", context.file},
+      {:eex, "notifier_test.exs.eex", context.test_file}
     ]
   end
 
@@ -205,7 +205,7 @@ defmodule Mix.Tasks.Phx.Gen.Notifier do
           import Config
           config #{inspect(context.context_app)}, #{inspect(mailer_module)}, adapter: Swoosh.Adapters.Local
 
-      Check https://hexdocs.pm/swoosh for more details.
+      Check https://swoosh.hexdocs.pm for more details.
       """)
     end
 

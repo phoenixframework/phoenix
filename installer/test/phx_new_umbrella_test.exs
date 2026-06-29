@@ -72,8 +72,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(@app, "config/dev.exs"), fn file ->
         assert file =~ ~r[esbuild: {Esbuild]
-        assert file =~ "lib/#{@app}_web/router\\.ex$"
-        assert file =~ "lib/#{@app}_web/(controllers|live|components)/.*\\.(ex|heex)$"
+        refute file =~ "live_reload"
         assert file =~ "config :#{@app}_web, dev_routes: true"
       end)
 
@@ -81,7 +80,14 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "port: 80"
       end)
 
-      assert_file(root_path(@app, "config/runtime.exs"), ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/)
+      assert_file(root_path(@app, "config/runtime.exs"), fn file ->
+        assert file =~
+                 ~r/^\s+config :phx_umb_web, PhxUmbWeb.Endpoint,\n\s+http: \[port: String\.to_integer\(System\.get_env\("PORT", "4000"\)\)\]$/m
+
+        assert file =~ "lib/#{@app}_web/router\\.ex$"
+        assert file =~ "lib/#{@app}_web/(controllers|live|components)/.*\\.(ex|heex)$"
+        assert file =~ ~r/^\s+ip: {0, 0, 0, 0, 0, 0, 0, 0}$/m
+      end)
 
       assert_file(root_path(@app, ".formatter.exs"), fn file ->
         assert file =~ "plugins: [Phoenix.LiveView.HTMLFormatter]"

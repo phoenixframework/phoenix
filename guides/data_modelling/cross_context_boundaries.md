@@ -19,12 +19,21 @@ Most of the cart functionality is tied to a specific user. Therefore, in order t
 
 ```console
 mix phx.gen.auth Accounts User users
+```
 
+You will see output similar to the following: 
+
+```console
 An authentication system can be created in two different ways:
 - Using Phoenix.LiveView (default)
 - Using Phoenix.Controller only
-Do you want to create a LiveView based authentication system? [Yn] n
+Do you want to create a LiveView based authentication system? [Yn]
+```
 
+Type `n` followed by `Return` key,
+you will see output similar to:
+
+```console
 ...
 * creating lib/hello/accounts/scope.ex
 ...
@@ -461,26 +470,28 @@ We created a view to render our `show.html` template and aliased our `ShoppingCa
 Next we can create the template at `lib/hello_web/controllers/cart_html/show.html.heex`:
 
 ```heex
-<.header>
-  My Cart
-  <:subtitle :if={@cart.items == []}>Your cart is empty</:subtitle>
-</.header>
+<Layouts.app flash={@flash}>
+  <.header>
+    My Cart
+    <:subtitle :if={@cart.items == []}>Your cart is empty</:subtitle>
+  </.header>
 
-<div :if={@cart.items !== []}>
-  <.form :let={f} for={@changeset} action={~p"/cart"}>
-    <.inputs_for :let={%{data: item} = item_form} field={f[:items]}>
-      <.input field={item_form[:quantity]} type="number" label={item.product.title} />
-      {currency_to_str(ShoppingCart.total_item_price(item))}
-    </.inputs_for>
-    <.button>Update cart</.button>
-  </.form>
-  <b>Total</b>: {currency_to_str(ShoppingCart.total_cart_price(@cart))}
-</div>
+  <div :if={@cart.items !== []}>
+    <.form :let={f} for={@changeset} action={~p"/cart"}>
+      <.inputs_for :let={%{data: item} = item_form} field={f[:items]}>
+        <.input field={item_form[:quantity]} type="number" label={item.product.title} />
+        {currency_to_str(ShoppingCart.total_item_price(item))}
+      </.inputs_for>
+      <.button>Update cart</.button>
+    </.form>
+    <b>Total</b>: {currency_to_str(ShoppingCart.total_cart_price(@cart))}
+  </div>
 
-<.button navigate={~p"/products"}>Back to products</.button>
+  <.button navigate={~p"/products"}>Back to products</.button>
+</Layouts.app>
 ```
 
-We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
+We started by showing the empty cart message if our preloaded `cart.items` is empty. If we have items, we use the `form` component provided by our `HelloWeb.CoreComponents` to take our cart changeset that we assigned in the `CartController.show/2` action and create a form which maps to our cart controller `update/2` action. Within the form, we use the [`inputs_for`](https://phoenix-live-view.hexdocs.pm/Phoenix.Component.html#inputs_for/1) component to render inputs for the nested cart items. This will allow us to map item inputs back together when the form is submitted. Next, we display a number input for the item quantity and label it with the product title. We finish the item form by converting the item price to string. We haven't written the `ShoppingCart.total_item_price/1` function yet, but again we employed the idea of clear, descriptive public interfaces for our contexts. After rendering inputs for all the cart items, we show an "update cart" submit button, along with the total price of the entire cart. This is accomplished with another new `ShoppingCart.total_cart_price/1` function which we'll implement in a moment. Finally, we added a `back` component to go back to our products page.
 
 We're almost ready to try out our cart page, but first we need to implement our new currency calculation functions. Open up your shopping cart context at `lib/hello/shopping_cart.ex` and add these new functions:
 
@@ -538,26 +549,26 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
       cart
       |> Cart.changeset(attrs, scope)
       |> Ecto.Changeset.cast_assoc(:items, with: &CartItem.changeset/2)
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:cart, changeset)
-    |> Ecto.Multi.delete_all(:discarded_items, fn %{cart: cart} ->
-      from(i in CartItem, where: i.cart_id == ^cart.id and i.quantity == 0)
+  
+    Repo.transact(fn ->
+      with {:ok, cart} <- Repo.update(changeset),
+           {_count, _cart_items} = Repo.delete_all(from(i in CartItem, where: i.cart_id == ^cart.id and i.quantity == 0)) do
+        {:ok, cart}
+      end
     end)
-    |> Repo.transact()
     |> case do
-      {:ok, %{cart: cart}} ->
-        broadcast(scope, {:updated, cart})
+      {:ok, cart} ->
+        broadcast_cart(scope, {:updated, cart})
         {:ok, cart}
 
-      {:error, :cart, changeset, _changes_so_far} ->
-        {:error, changeset}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 ```
 
-We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
+We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](https://phoenix-live-view.hexdocs.pm/Phoenix.Component.html#inputs_for/1) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart.
 
-For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transact/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
+Once the `changeset` is ready, we wrap everything in `Repo.transact/2` so the operations run safely as one. Inside the transaction, we update the cart using `Repo.update/1`. If the update succeeds, we follow up with a cleanup step using `Repo.delete_all/2` to remove any cart items with zero quantity. Running both steps in the same transaction prevents partial updates and keeps the cart data accurate. Finally, we broadcast the updated cart so that any connected LiveViews can instantly show the changes.
 
 Let's head back to the browser and try it out. Add a few products to your cart, update the quantities, and watch the values changes along with the price calculations. Setting any quantity to 0 will also remove the item. You can also try logging out and registering a new user to see how the carts are scoped to the current user. Pretty neat!

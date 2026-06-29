@@ -1,6 +1,11 @@
 # Request life-cycle
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
 
 The goal of this guide is to talk about Phoenix's request life-cycle. This guide will take a practical approach where we will learn by doing: we will add two new pages to our Phoenix project and comment on how the pieces fit together along the way.
 
@@ -117,9 +122,9 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-To add templates to this view, we can define them as function components in the module or in separate files.
+To add templates to this view, we can define them as functions in the module or in separate files.
 
-Let's start by defining a function component:
+Let's start by defining a function:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -133,11 +138,9 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-We defined a function that receives `assigns` as arguments and used [the `~H` sigil](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#sigil_H/2) to specify the content we want to render. Inside the `~H` sigil, we used a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site Scripting with no extra work on your part.
+We defined a function that receives `assigns` as arguments and used [the `~H` sigil](https://phoenix-live-view.hexdocs.pm/Phoenix.Component.html#sigil_H/2) to specify the content we want to render. Inside the `~H` sigil, we used a templating language called HEEx, which stands for "HTML+EEx". `EEx` is a library for embedding Elixir that ships as part of Elixir itself. "HTML+EEx" is a Phoenix extension of EEx that is HTML aware, with support for HTML validation, components, and automatic escaping of values. The latter protects you from security vulnerabilities like Cross-Site Scripting with no extra work on your part. We say that any function that receives `assigns` and returns templates to be a **function component**.
 
-A template file works in the same way. Function components are great for smaller templates and separate files are a good choice when you have a lot of markup or your functions start to feel unmanageable.
-
-Let's give it a try by defining a template in its own file. First, delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
+A template file works in the same way. Let's give it a try by defining a template in its own file. First, delete our `def index(assigns)` function from above and replace it with an `embed_templates` declaration:
 
 ```elixir
 defmodule HelloWeb.HelloHTML do
@@ -147,24 +150,9 @@ defmodule HelloWeb.HelloHTML do
 end
 ```
 
-Here we are telling `Phoenix.Component` to embed all `.heex` templates found in the sibling `hello_html` directory into our module as function definitions.
+Here we are saying we want to embed all `.heex` templates found in the sibling `hello_html` directory into our module as function components.
 
-Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory.
-
-Note the controller name (`HelloController`), the view name (`HelloHTML`), and the template directory (`hello_html`) all follow the same naming convention and are named after each other. They are also collocated together in the directory tree:
-
-> **Note**: We can rename the `hello_html` directory to whatever we want and put it in a subdirectory of `lib/hello_web/controllers`, as long as we update the `embed_templates` setting accordingly. However, it's best to keep the same naming convention to prevent any confusion.
-
-```console
-lib/hello_web
-├── controllers
-│   ├── hello_controller.ex
-│   ├── hello_html.ex
-│   ├── hello_html
-|       ├── index.html.heex
-```
-
-A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, let's create an `index.html.heex` file at `lib/hello_web/controllers/hello_html/index.html.heex`:
+Next, we need to add files to the `lib/hello_web/controllers/hello_html` directory. A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. In our case, let's create an `index.html.heex` file at `lib/hello_web/controllers/hello_html/index.html.heex`:
 
 ```heex
 <section>
@@ -174,31 +162,40 @@ A template file has the following structure: `NAME.FORMAT.TEMPLATING_LANGUAGE`. 
 
 Phoenix will see the template file and compile it into an `index(assigns)` function, similar as before. There is no runtime or performance difference between the two styles.
 
+Also note the controller name (`HelloController`) and the view name (`HelloHTML`) and their respective files, `hello_controller.ex` and `hello_html.ex` all follow the same naming convention, and are named after each other. You could name the directory anything you want, as long as you update the `embed_templates` setting accordingly, but it's best to follow conventions.
+
+```console
+lib/hello_web
+├── controllers
+│   ├── hello_controller.ex
+│   ├── hello_html.ex
+│   ├── hello_html
+|       ├── index.html.heex   (NEW FILE!)
+```
+
 Now that we've got the route, controller, view, and template, we should be able to point our browser at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix!
 
-![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/hello-from-phoenix-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/images/hello-from-phoenix.png" />
+  <img src="assets/images/hello-from-phoenix.png" alt="Phoenix Greets Us" />
+</picture>
 
 In case you stopped the server along the way, the task to restart it is `mix phx.server`. If you didn't stop it, everything should update on the fly: Phoenix has hot code reloading!
 
-> A note on hot code reloading: some editors with their automatic linters may prevent hot code reloading from working. If it's not working for you, please see the discussion in [this issue](https://github.com/phoenixframework/phoenix/issues/1165).
-
 ## Layouts
 
-
-
-Also, even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into a separate layout: `lib/hello_web/components/layouts/root.html.heex`, which contains the basic HTML skeleton of the page. If you open this file, you'll see a line that looks like this at the bottom:
+Even though our `index.html.heex` file consists of only a single `section` tag, the page we get is a full HTML document. Our index template is actually rendered into a separate layout: `lib/hello_web/components/layouts/root.html.heex`, which contains the basic HTML skeleton of the page. If you open this file, you'll see a line that looks like this at the bottom:
 
 ```heex
 {@inner_content}
 ```
 
-This line injects our template into the layout before the HTML is sent off to the browser. We will talk more about layouts in the Controllers guide.
-
-The rest of the page structure is included in the `app` component that is defined in the `lib/hello_web/components/layouts.ex` module.
+This line injects our template into the layout before the HTML is sent off to the browser. The root layout, as the name implies, is a barebone layout with mostly the `<head>` tag and a structure that is shared across **all of your pages**. Richer features, such as sidebar, menus, etc. are part of your application layout, which we will explore in a couple sections below.
 
 ## From endpoint to views
 
-As we built our first page, we could start to understand how the request life-cycle is put together. Now let's take a more holistic look at it.
+Having built our first page, we're beginning to understand how the request life-cycle is put together. Now let's take a more holistic look at it.
 
 All HTTP requests start in our application endpoint. You can find it as a module named `HelloWeb.Endpoint` in `lib/hello_web/endpoint.ex`. Once you open up the endpoint file, you will see that, similar to the router, the endpoint has many calls to `plug`. `Plug` is a library and a specification for stitching web applications together. It is an essential part of how Phoenix handles requests and we will discuss it in detail in the [Plug guide](plug.html) coming next.
 
@@ -275,7 +272,7 @@ def show(conn, %{"messenger" => messenger} = params) do
 end
 ```
 
-It's good to remember that the keys of the `params` map will always be strings, and that the equals sign does not represent assignment, but is instead a [pattern match](https://hexdocs.pm/elixir/pattern-matching.html) assertion.
+It's good to remember that the keys of the `params` map will always be strings, and that the equals sign does not represent assignment, but is instead a [pattern match](https://elixir.hexdocs.pm/pattern-matching.html) assertion.
 
 ### Another new template
 
@@ -291,16 +288,20 @@ For the last piece of this puzzle, we'll need a new template. Since it is for th
 
 If you point your browser to [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
 
-![Frank Greets Us from Phoenix](assets/images/hello-world-from-frank.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/images/hello-world-from-frank-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/images/hello-world-from-frank.png" />
+  <img src="assets/images/hello-world-from-frank.png" alt="Frank Greets Us from Phoenix" />
+</picture>
 
-Let's break what the template does into parts. This template has the `.heex` extension. HTML templates in Phoenix are written in HEEx, which stands for (HTML + Embedded Elixir). There are three features from HEEx we are using in the template above:
-
-  * Function components, as in `<Layouts.app>` - they are the essential building block for any kind of markup-based template rendering you'll perform in Phoenix. This particular component will abstract our app layout, such as menu and sidebar, and then render the contents inside
-
-  * Content interpolation, such as `{@messenger}` - any Elixir code that goes between `{...}` will be executed, and the resulting value will replace the tag in the HTML output
+Let's break what the template does into parts. This template has the `.heex` extension which stands for HTML + Embedded Elixir. There are three features from HEEx we are using in the template above:
 
   * Assigns, such as `@messenger` and `@flash` - values we pass to the view from the controller are collectively called our "assigns". We could access our messenger value via `assigns.messenger` and `assigns.flash`, but Phoenix gives us the much cleaner `@` syntax for use in templates.
 
-Also note how these three features compose: we are passing the `@flash` assign as an Elixir value to the `<Layouts.app>` component. As we will learn later, flash messages are used to display temporary messages to the user, such as success or error messages.
+  * Content interpolation, such as `{@messenger}` - any Elixir code that goes between `{...}` will be executed, and the resulting value will replace the tag in the HTML output
+
+  * Function component tags, as in `<Layouts.app>` - the reason templates are called function components is because we can compose them! In this case, there is an `HelloWeb.Layouts.app` function, that defines our application layout, which we invoke with our custom content
+
+Also note how these three features compose: we are passing the `@flash` assign as an Elixir value to the `<Layouts.app>` component. As we will learn later, flash messages are used to display temporary messages to the user, such as success or error messages. We will learn more about them in the [Components and HEEx templates](components.html) guide.
 
 We are done! Feel free to play around a bit. Whatever you put after `/hello/` will appear on the page as your messenger.

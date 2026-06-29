@@ -16,6 +16,7 @@ var phxWindow = typeof window !== "undefined" ? window : null;
 var global = globalSelf || phxWindow || globalThis;
 var DEFAULT_VSN = "2.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
+var MAX_LONGPOLL_BATCH_SIZE = 100;
 var DEFAULT_TIMEOUT = 1e4;
 var WS_CLOSE_NORMAL = 1e3;
 var CHANNEL_STATES = {
@@ -224,14 +225,12 @@ var Channel = class {
     });
     this.onClose(() => {
       this.rejoinTimer.reset();
-      if (this.socket.hasLogger())
-        this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`);
+      if (this.socket.hasLogger()) this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`);
       this.state = CHANNEL_STATES.closed;
       this.socket.remove(this);
     });
     this.onError((reason) => {
-      if (this.socket.hasLogger())
-        this.socket.log("channel", `error ${this.topic}`, reason);
+      if (this.socket.hasLogger()) this.socket.log("channel", `error ${this.topic}`, reason);
       if (this.isJoining()) {
         this.joinPush.reset();
       }
@@ -241,8 +240,7 @@ var Channel = class {
       }
     });
     this.joinPush.receive("timeout", () => {
-      if (this.socket.hasLogger())
-        this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout);
+      if (this.socket.hasLogger()) this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout);
       let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), this.timeout);
       leavePush.send();
       this.state = CHANNEL_STATES.errored;
@@ -388,8 +386,7 @@ var Channel = class {
     this.joinPush.cancelTimeout();
     this.state = CHANNEL_STATES.leaving;
     let onClose = () => {
-      if (this.socket.hasLogger())
-        this.socket.log("channel", `leave ${this.topic}`);
+      if (this.socket.hasLogger()) this.socket.log("channel", `leave ${this.topic}`);
       this.trigger(CHANNEL_EVENTS.close, "leave");
     };
     let leavePush = new Push(this, CHANNEL_EVENTS.leave, closure({}), timeout);
@@ -423,8 +420,7 @@ var Channel = class {
       return false;
     }
     if (joinRef && joinRef !== this.joinRef()) {
-      if (this.socket.hasLogger())
-        this.socket.log("channel", "dropping outdated message", { topic, event, payload, joinRef });
+      if (this.socket.hasLogger()) this.socket.log("channel", "dropping outdated message", { topic, event, payload, joinRef });
       return false;
     } else {
       return true;
@@ -665,6 +661,11 @@ var LongPoll = class {
     this.ajax("GET", headers, null, () => this.ontimeout(), (resp) => {
       if (resp) {
         var { status, token, messages } = resp;
+        if (status === 410 && this.token !== null) {
+          this.onerror(410);
+          this.closeAndRetry(3410, "session_gone", false);
+          return;
+        }
         this.token = token;
       } else {
         status = 0;
@@ -717,16 +718,22 @@ var LongPoll = class {
       }, 0);
     }
   }
-  batchSend(messages) {
+  batchSend(messages, offset = 0) {
     this.awaitingBatchAck = true;
-    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, messages.join("\n"), () => this.onerror("timeout"), (resp) => {
-      this.awaitingBatchAck = false;
+    const next = offset + MAX_LONGPOLL_BATCH_SIZE;
+    const batch = messages.slice(offset, next);
+    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.onerror("timeout"), (resp) => {
       if (!resp || resp.status !== 200) {
+        this.awaitingBatchAck = false;
         this.onerror(resp && resp.status);
         this.closeAndRetry(1011, "internal server error", false);
+      } else if (next < messages.length) {
+        this.batchSend(messages, next);
       } else if (this.batchBuffer.length > 0) {
         this.batchSend(this.batchBuffer);
         this.batchBuffer = [];
+      } else {
+        this.awaitingBatchAck = false;
       }
     });
   }
@@ -762,7 +769,7 @@ var LongPoll = class {
 };
 
 // js/phoenix/presence.js
-var Presence = class {
+var Presence = class _Presence {
   constructor(channel, opts = {}) {
     let events = opts.events || { state: "presence_state", diff: "presence_diff" };
     this.state = {};
@@ -780,9 +787,9 @@ var Presence = class {
     this.channel.on(events.state, (newState) => {
       let { onJoin, onLeave, onSync } = this.caller;
       this.joinRef = this.channel.joinRef();
-      this.state = Presence.syncState(this.state, newState, onJoin, onLeave);
+      this.state = _Presence.syncState(this.state, newState, onJoin, onLeave);
       this.pendingDiffs.forEach((diff) => {
-        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave);
+        this.state = _Presence.syncDiff(this.state, diff, onJoin, onLeave);
       });
       this.pendingDiffs = [];
       onSync();
@@ -792,7 +799,7 @@ var Presence = class {
       if (this.inPendingSyncState()) {
         this.pendingDiffs.push(diff);
       } else {
-        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave);
+        this.state = _Presence.syncDiff(this.state, diff, onJoin, onLeave);
         onSync();
       }
     });
@@ -807,7 +814,7 @@ var Presence = class {
     this.caller.onSync = callback;
   }
   list(by) {
-    return Presence.list(this.state, by);
+    return _Presence.list(this.state, by);
   }
   inPendingSyncState() {
     return !this.joinRef || this.joinRef !== this.channel.joinRef();
@@ -947,23 +954,42 @@ var serializer_default = {
   // private
   binaryEncode(message) {
     let { join_ref, ref, event, topic, payload } = message;
-    let metaLength = this.META_LENGTH + join_ref.length + ref.length + topic.length + event.length;
+    let encoder = new TextEncoder();
+    let joinRefBytes = encoder.encode(join_ref);
+    let refBytes = encoder.encode(ref);
+    let topicBytes = encoder.encode(topic);
+    let eventBytes = encoder.encode(event);
+    this.assertFieldSize(joinRefBytes.byteLength, "join_ref");
+    this.assertFieldSize(refBytes.byteLength, "ref");
+    this.assertFieldSize(topicBytes.byteLength, "topic");
+    this.assertFieldSize(eventBytes.byteLength, "event");
+    let metaLength = this.META_LENGTH + joinRefBytes.byteLength + refBytes.byteLength + topicBytes.byteLength + eventBytes.byteLength;
     let header = new ArrayBuffer(this.HEADER_LENGTH + metaLength);
+    let headerBytes = new Uint8Array(header);
     let view = new DataView(header);
     let offset = 0;
     view.setUint8(offset++, this.KINDS.push);
-    view.setUint8(offset++, join_ref.length);
-    view.setUint8(offset++, ref.length);
-    view.setUint8(offset++, topic.length);
-    view.setUint8(offset++, event.length);
-    Array.from(join_ref, (char) => view.setUint8(offset++, char.charCodeAt(0)));
-    Array.from(ref, (char) => view.setUint8(offset++, char.charCodeAt(0)));
-    Array.from(topic, (char) => view.setUint8(offset++, char.charCodeAt(0)));
-    Array.from(event, (char) => view.setUint8(offset++, char.charCodeAt(0)));
+    view.setUint8(offset++, joinRefBytes.byteLength);
+    view.setUint8(offset++, refBytes.byteLength);
+    view.setUint8(offset++, topicBytes.byteLength);
+    view.setUint8(offset++, eventBytes.byteLength);
+    headerBytes.set(joinRefBytes, offset);
+    offset += joinRefBytes.byteLength;
+    headerBytes.set(refBytes, offset);
+    offset += refBytes.byteLength;
+    headerBytes.set(topicBytes, offset);
+    offset += topicBytes.byteLength;
+    headerBytes.set(eventBytes, offset);
+    offset += eventBytes.byteLength;
     var combined = new Uint8Array(header.byteLength + payload.byteLength);
-    combined.set(new Uint8Array(header), 0);
+    combined.set(headerBytes, 0);
     combined.set(new Uint8Array(payload), header.byteLength);
     return combined.buffer;
+  },
+  assertFieldSize(size, name) {
+    if (size > 255) {
+      throw new Error(`unable to convert ${name} to binary: must be less than or equal to 255 bytes, but is ${size} bytes`);
+    }
   },
   binaryDecode(buffer) {
     let view = new DataView(buffer);
@@ -1030,6 +1056,7 @@ var Socket = class {
     this.channels = [];
     this.sendBuffer = [];
     this.ref = 0;
+    this.fallbackRef = null;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
     this.transport = opts.transport || global.WebSocket || LongPoll;
     this.primaryPassedHealthCheck = false;
@@ -1039,10 +1066,11 @@ var Socket = class {
     this.establishedConnections = 0;
     this.defaultEncoder = serializer_default.encode.bind(serializer_default);
     this.defaultDecoder = serializer_default.decode.bind(serializer_default);
-    this.closeWasClean = false;
+    this.closeWasClean = true;
     this.disconnecting = false;
     this.binaryType = opts.binaryType || "arraybuffer";
     this.connectClock = 1;
+    this.pageHidden = false;
     if (this.transport !== LongPoll) {
       this.encode = opts.encode || this.defaultEncoder;
       this.decode = opts.decode || this.defaultDecoder;
@@ -1062,6 +1090,16 @@ var Socket = class {
         if (awaitingConnectionOnPageShow === this.connectClock) {
           awaitingConnectionOnPageShow = null;
           this.connect();
+        }
+      });
+      phxWindow.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") {
+          this.pageHidden = true;
+        } else {
+          this.pageHidden = false;
+          if (!this.isConnected() && !this.closeWasClean) {
+            this.teardown(() => this.connect());
+          }
         }
       });
     }
@@ -1094,6 +1132,11 @@ var Socket = class {
     this.heartbeatTimer = null;
     this.pendingHeartbeatRef = null;
     this.reconnectTimer = new Timer(() => {
+      if (this.pageHidden) {
+        this.log("Not reconnecting as page is hidden!");
+        this.teardown();
+        return;
+      }
       this.teardown(() => this.connect());
     }, this.reconnectAfterMs);
     this.authToken = opts.authToken;
@@ -1268,6 +1311,19 @@ var Socket = class {
   }
   /**
    * @private
+   *
+   * @param {Function}
+   */
+  transportName(transport) {
+    switch (transport) {
+      case LongPoll:
+        return "LongPoll";
+      default:
+        return transport.name;
+    }
+  }
+  /**
+   * @private
    */
   transportConnect() {
     this.connectClock++;
@@ -1295,14 +1351,15 @@ var Socket = class {
     let established = false;
     let primaryTransport = true;
     let openRef, errorRef;
+    let fallbackTransportName = this.transportName(fallbackTransport);
     let fallback = (reason) => {
-      this.log("transport", `falling back to ${fallbackTransport.name}...`, reason);
+      this.log("transport", `falling back to ${fallbackTransportName}...`, reason);
       this.off([openRef, errorRef]);
       primaryTransport = false;
       this.replaceTransport(fallbackTransport);
       this.transportConnect();
     };
-    if (this.getSession(`phx:fallback:${fallbackTransport.name}`)) {
+    if (this.getSession(`phx:fallback:${fallbackTransportName}`)) {
       return fallback("memorized");
     }
     this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
@@ -1313,13 +1370,17 @@ var Socket = class {
         fallback(reason);
       }
     });
-    this.onOpen(() => {
+    if (this.fallbackRef) {
+      this.off([this.fallbackRef]);
+    }
+    this.fallbackRef = this.onOpen(() => {
       established = true;
       if (!primaryTransport) {
+        let fallbackTransportName2 = this.transportName(fallbackTransport);
         if (!this.primaryPassedHealthCheck) {
-          this.storeSession(`phx:fallback:${fallbackTransport.name}`, "true");
+          this.storeSession(`phx:fallback:${fallbackTransportName2}`, "true");
         }
-        return this.log("transport", `established ${fallbackTransport.name} fallback`);
+        return this.log("transport", `established ${fallbackTransportName2} fallback`);
       }
       clearTimeout(this.fallbackTimer);
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
@@ -1336,8 +1397,7 @@ var Socket = class {
     clearTimeout(this.heartbeatTimeoutTimer);
   }
   onConnOpen() {
-    if (this.hasLogger())
-      this.log("transport", `${this.transport.name} connected to ${this.endPointURL()}`);
+    if (this.hasLogger()) this.log("transport", `${this.transportName(this.transport)} connected to ${this.endPointURL()}`);
     this.closeWasClean = false;
     this.disconnecting = false;
     this.establishedConnections++;
@@ -1372,23 +1432,15 @@ var Socket = class {
     if (!this.conn) {
       return callback && callback();
     }
-    let connectClock = this.connectClock;
-    this.waitForBufferDone(() => {
-      if (connectClock !== this.connectClock) {
-        return;
+    const connToClose = this.conn;
+    this.waitForBufferDone(connToClose, () => {
+      if (code) {
+        connToClose.close(code, reason || "");
+      } else {
+        connToClose.close();
       }
-      if (this.conn) {
-        if (code) {
-          this.conn.close(code, reason || "");
-        } else {
-          this.conn.close();
-        }
-      }
-      this.waitForSocketClosed(() => {
-        if (connectClock !== this.connectClock) {
-          return;
-        }
-        if (this.conn) {
+      this.waitForSocketClosed(connToClose, () => {
+        if (this.conn === connToClose) {
           this.conn.onopen = function() {
           };
           this.conn.onerror = function() {
@@ -1403,28 +1455,29 @@ var Socket = class {
       });
     });
   }
-  waitForBufferDone(callback, tries = 1) {
-    if (tries === 5 || !this.conn || !this.conn.bufferedAmount) {
+  waitForBufferDone(conn, callback, tries = 1) {
+    if (tries === 5 || !conn.bufferedAmount) {
       callback();
       return;
     }
     setTimeout(() => {
-      this.waitForBufferDone(callback, tries + 1);
+      this.waitForBufferDone(conn, callback, tries + 1);
     }, 150 * tries);
   }
-  waitForSocketClosed(callback, tries = 1) {
-    if (tries === 5 || !this.conn || this.conn.readyState === SOCKET_STATES.closed) {
+  waitForSocketClosed(conn, callback, tries = 1) {
+    if (tries === 5 || conn.readyState === SOCKET_STATES.closed) {
       callback();
       return;
     }
     setTimeout(() => {
-      this.waitForSocketClosed(callback, tries + 1);
+      this.waitForSocketClosed(conn, callback, tries + 1);
     }, 150 * tries);
   }
   onConnClose(event) {
+    if (this.conn) this.conn.onclose = () => {
+    };
     let closeCode = event && event.code;
-    if (this.hasLogger())
-      this.log("transport", "close", event);
+    if (this.hasLogger()) this.log("transport", "close", event);
     this.triggerChanError();
     this.clearHeartbeats();
     if (!this.closeWasClean && closeCode !== 1e3) {
@@ -1436,8 +1489,7 @@ var Socket = class {
    * @private
    */
   onConnError(error) {
-    if (this.hasLogger())
-      this.log("transport", error);
+    if (this.hasLogger()) this.log("transport", "error", error);
     let transportBefore = this.transport;
     let establishedBefore = this.establishedConnections;
     this.stateChangeCallbacks.error.forEach(([, callback]) => {
@@ -1561,8 +1613,7 @@ var Socket = class {
         this.pendingHeartbeatRef = null;
         this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs);
       }
-      if (this.hasLogger())
-        this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload);
+      if (this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload);
       for (let i = 0; i < this.channels.length; i++) {
         const channel = this.channels[i];
         if (!channel.isMember(topic, event, payload, join_ref)) {
@@ -1579,8 +1630,7 @@ var Socket = class {
   leaveOpenTopic(topic) {
     let dupChannel = this.channels.find((c) => c.topic === topic && (c.isJoined() || c.isJoining()));
     if (dupChannel) {
-      if (this.hasLogger())
-        this.log("transport", `leaving duplicate topic "${topic}"`);
+      if (this.hasLogger()) this.log("transport", `leaving duplicate topic "${topic}"`);
       dupChannel.leave();
     }
   }

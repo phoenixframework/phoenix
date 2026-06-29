@@ -1,8 +1,12 @@
 # Controllers
 
-> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
-
-> **Requirement**: This guide expects that you have gone through the [request life-cycle guide](request_lifecycle.html).
+> ### Requirement {: .tip}
+>
+> This guide expects that you have:
+>
+> * Gone through the [introductory guides](installation.html)
+> * Got a Phoenix application [up and running](up_and_running.html)
+> * Gone through the [request life-cycle guide](request_lifecycle.html)
 
 Phoenix controllers act as intermediary modules. Their functions — called actions — are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before invoking the view layer to render a template or returning a JSON response.
 
@@ -108,7 +112,7 @@ If we again visit [`/hello/Frank`] in the browser, we should see a block of JSON
 {"id": "Frank"}
 ```
 
-The [`json/2`] function is useful for writing APIs and there is also the [`html/2`] function for rendering HTML, but most of the times we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
+The [`json/2`] function is useful for writing APIs and there is also the [`html/2`] function for rendering HTML, but most of the time we use Phoenix views to build our responses. For this, Phoenix includes the [`render/3`] function. It is specially important for HTML responses, as Phoenix Views provide performance and security benefits.
 
 Let's rollback our `show` action to what we originally wrote in the [request life-cycle guide](request_lifecycle.html):
 
@@ -158,8 +162,6 @@ Or you can pass the assigns directly to `render` instead:
 ```
 
 Generally speaking, once all assigns are configured, we invoke the view layer. The view layer (`HelloWeb.HelloHTML`) then renders `show.html` alongside the layout and a response is sent back to the browser.
-
-[Components and HEEx templates](components.html) have their own guide, so we won't spend much time on them here. What we will look at is how to render different formats from inside a controller action.
 
 ## New rendering formats
 
@@ -256,7 +258,7 @@ Using `Plug` functions in this way, we can craft just the response we need.
 
 Analogous to the `_format` query string param, we can render any sort of format we want by modifying the HTTP Content-Type Header and providing the appropriate template.
 
-If we wanted to render an XML version of our `home` action, we might implement the action like this in `lib/hello_web/page_controller.ex`.
+If we wanted to render an XML version of our `home` action, we might implement the action like this in `lib/hello_web/controllers/page_controller.ex`.
 
 ```elixir
 def home(conn, _params) do
@@ -269,7 +271,7 @@ end
 
 Then we would need to provide a `home.xml.eex` template that creates XML and a `PageXML` view that embeds the template, and that would be it.
 
-Note: The `home.xml.eex` template uses the `.eex` extension. `.eex` templates are rendered by [`EEx`](https://hexdocs.pm/eex/main/EEx.html).
+Note: The `home.xml.eex` template uses the `.eex` extension. `.eex` templates are rendered by [`EEx`](https://eex.hexdocs.pm/main/EEx.html).
 
 For a list of valid content mime-types, please see the `MIME` library.
 

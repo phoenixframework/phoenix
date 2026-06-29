@@ -37,7 +37,7 @@
 
       <div id="tasks" phx-update="stream">
         <div class="hidden only:block">No tasks yet</div>
-        <div :for={{id, task} <- @stream.tasks} id={id}>
+        <div :for={{id, task} <- @streams.tasks} id={id}>
           {task.name}
         </div>
       </div>
