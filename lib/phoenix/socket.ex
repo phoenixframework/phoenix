@@ -739,6 +739,64 @@ defmodule Phoenix.Socket do
     end
   end
 
+  defp handle_in(
+         nil,
+         %{
+           event: "phx_adopt",
+           payload: %{"token" => token},
+           topic: topic,
+           ref: ref,
+           join_ref: join_ref
+         } = message,
+         state,
+         socket
+       ) do
+    case socket.handler.__channel__(topic) do
+      {channel, opts} ->
+        with {:ok, %{pid: pid}} <- validate_adoption_token(socket.endpoint, token),
+             true <- Process.alive?(pid),
+             message = Map.put(message, :payload, message.payload["join_payload"]),
+             {:ok, reply, ^pid} <-
+               Phoenix.Channel.Server.adopt(socket, channel, pid, message, opts) do
+          reply = %Reply{
+            join_ref: join_ref,
+            ref: ref,
+            topic: topic,
+            status: :ok,
+            payload: reply
+          }
+
+          state = put_channel(state, pid, topic, join_ref)
+          {:reply, :ok, encode_reply(socket, reply), {state, socket}}
+        else
+          {:error, reply} ->
+            reply = %Reply{
+              join_ref: join_ref,
+              ref: ref,
+              topic: topic,
+              status: :error,
+              payload: reply
+            }
+
+            {:reply, :error, encode_reply(socket, reply), {state, socket}}
+
+          _ ->
+            reply = %Reply{
+              ref: ref,
+              topic: topic,
+              status: :error,
+              payload: %{reason: "invalid adoption"}
+            }
+
+            {:reply, :error, encode_reply(socket, reply), {state, socket}}
+        end
+
+      _ ->
+        Logger.warning("Ignoring unmatched topic \"#{topic}\" in #{inspect(socket.handler)}")
+        {:reply, :error, encode_ignore(socket, message), {state, socket}}
+    end
+  end
+
   defp handle_in({pid, _ref, status}, %{event: "phx_join", topic: topic} = message, state, socket) do
     receive do
       {:socket_close, ^pid, _reason} -> :ok
@@ -888,5 +946,14 @@ defmodule Phoenix.Socket do
   defp update_channel_status(state, pid, topic, status) do
     new_channels = Map.update!(state.channels, topic, fn {^pid, ref, _} -> {pid, ref, status} end)
     %{state | channels: new_channels}
+  end
+
+  @doc false
+  def sign_adoption_token(endpoint, pid) do
+    Phoenix.Token.sign(endpoint, "phoenix-channel-adoption", %{pid: pid})
+  end
+
+  defp validate_adoption_token(endpoint, token) do
+    Phoenix.Token.verify(endpoint, "phoenix-channel-adoption", token, max_age: 60)
   end
 end
