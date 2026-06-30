@@ -615,10 +615,10 @@ defmodule Phoenix.Router do
     validate_group_by_verb!(routes_exprs, env)
 
     routes_exprs
-    |> Enum.group_by(&elem(&1, 0).verb)
-    |> Map.pop(:*, [])
+    |> Enum.group_by(&(elem(&1, 0).verb |> to_string() |> String.upcase(:ascii)))
+    |> Map.pop("*", [])
     |> then(fn {match_routes_exprs, map} ->
-      Map.to_list(map) ++ [{:*, match_routes_exprs}]
+      Map.to_list(map) ++ [{"*", match_routes_exprs}]
     end)
     |> Enum.map_reduce({[], %{}}, &build_match_verb/2)
   end
@@ -681,7 +681,7 @@ defmodule Phoenix.Router do
     """
   end
 
-  defp build_match_verb({:*, routes_exprs}, acc) do
+  defp build_match_verb({"*", routes_exprs}, acc) do
     name = :__match_route_catch_all__
 
     {clauses, acc} =
@@ -705,7 +705,6 @@ defmodule Phoenix.Router do
   end
 
   defp build_match_verb({verb, routes_exprs}, acc) do
-    pattern = verb |> to_string() |> String.upcase()
     name = :"__match_route_#{verb}__"
 
     {clauses, acc} =
@@ -719,7 +718,7 @@ defmodule Phoenix.Router do
           __match_route_catch_all__(path, host)
         end
 
-        def __match_route__(unquote(pattern), path, host) do
+        def __match_route__(unquote(verb), path, host) do
           unquote(name)(path, host)
         end
       end
