@@ -122,28 +122,32 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
   end
 
   defp inject_before_dev_routes_scope(code, code_to_inject) do
-    case Regex.run(
-           ~r/\n  if Application\.compile_env\(:[a-z][a-zA-Z0-9_]*, :dev_routes\) do/,
-           code,
-           return: :index
-         ) do
-      [{if_index, _}] ->
-        insert_index =
-          code
-          |> binary_part(0, if_index)
-          |> :binary.matches("\n  # Enable ")
-          |> List.last()
-          |> case do
-            {comment_index, _} -> comment_index
-            nil -> if_index
-          end
-
-        {before_dev_routes, dev_routes} = String.split_at(code, insert_index)
-        before_dev_routes <> code_to_inject <> dev_routes
+    case split_before_dev_routes(String.split(code, "\n"), []) do
+      {before_dev_routes, dev_routes} ->
+        join_injected(before_dev_routes, code_to_inject, dev_routes)
 
       _ ->
         nil
     end
+  end
+
+  defp split_before_dev_routes([line | rest], acc) do
+    if String.contains?(line, "if Application.compile_env") and
+         String.contains?(line, ":dev_routes") do
+      {dev_route_comments, before_dev_routes} =
+        Enum.split_while(acc, &(String.trim_leading(&1) |> String.starts_with?("#")))
+
+      {Enum.reverse(before_dev_routes), Enum.reverse(dev_route_comments, [line | rest])}
+    else
+      split_before_dev_routes(rest, [line | acc])
+    end
+  end
+
+  defp split_before_dev_routes([], _acc), do: nil
+
+  defp join_injected(before_dev_routes, code_to_inject, dev_routes) do
+    code_to_inject = code_to_inject |> String.trim("\n") |> String.split("\n")
+    Enum.join(before_dev_routes ++ code_to_inject ++ [""] ++ dev_routes, "\n")
   end
 
   defp inject_before_final_end_fallback(code, code_to_inject) do
