@@ -57,6 +57,7 @@ defmodule Phoenix.Router.RoutingTest do
     options "/options", UserController, :options
     connect "/connect", UserController, :connect
     match :move, "/move", UserController, :move
+    match :*, "/any", UserController, :any
 
     scope log: :info do
       pipe_through :noop
@@ -221,6 +222,18 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.method == "MOVE"
     assert conn.status == 200
     assert conn.resp_body == "users move"
+  end
+
+  test "any verb matches" do
+    conn = call(Router, :get, "/any")
+    assert conn.method == "GET"
+    assert conn.status == 200
+    assert conn.resp_body == "users any"
+
+    conn = call(Router, :put, "/any")
+    assert conn.method == "PUT"
+    assert conn.status == 200
+    assert conn.resp_body == "users any"
   end
 
   test "different verbs with similar paths" do
