@@ -4,12 +4,7 @@
 
 ### Potential breaking changes
 
-  * [Phoenix.Router] Phoenix will now group your routes per verb during compilation. This improves compilation times for large routers with no performance cost at runtime. However, this change implies that wildcard routes are always matched last, which changes the semantics of dead routes. If you had this code:
-
-      match :*, "/foo"
-      get "/foo"
-
-  The second route would never be matched but it will now be as part of this change. However, note that `get "/foo"` should not exist in the first place: it should be either removed or moved first. We recommend checking for any `match :*` in your router and moving them to the end of the file.
+  * [Phoenix.Router] Phoenix will now group your routes per verb during compilation when all `match :*` and `forward` routes are defined at the end of the router. This improves compilation times for large routers with no performance cost at runtime. If you have a route with an explicit verb after a `match :*` or `forward`, Phoenix will preserve the previous ordered matching semantics and emit a warning
 
 ## v1.8
 

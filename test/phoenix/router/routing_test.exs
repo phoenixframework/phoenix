@@ -44,7 +44,6 @@ defmodule Phoenix.Router.RoutingTest do
     get "/", UserController, :index, as: :users
     get "/users/top", UserController, :top, as: :top
     get "/users/:id", UserController, :show, as: :users, metadata: %{access: :user}
-    match :*, "/users/fallback", UserController, :any
     get "/spaced users/:id", UserController, :show
     get "/profiles/profile-:id", UserController, :show
     get "/route_that_crashes", UserController, :crash
@@ -77,6 +76,7 @@ defmodule Phoenix.Router.RoutingTest do
     end
 
     get "/*path", UserController, :not_found
+    match :*, "/users/fallback", UserController, :any
 
     defp noop(conn, _), do: conn
 
@@ -236,7 +236,7 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   describe "warnings" do
-    test "warns on duplicate route after :*" do
+    test "warns on route after :* and preserves ordered matching" do
       assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
                defmodule MatchOverlap do
                  use Phoenix.Router
@@ -246,9 +246,20 @@ defmodule Phoenix.Router.RoutingTest do
                  get "/foo/:baz", UserController, :show
                end
 
-               conn = call(MatchOverlap, :get, "foo/example")
-               assert conn.resp_body == "users show"
-             end) =~ "found route matching on \"/foo/:baz\" after match(:*, \"/foo/:bar\")"
+               conn = call(MatchOverlap, :get, "/foo/example")
+               assert conn.resp_body == "users index"
+             end) =~ "found route \"/foo/:baz\" after match :*, \"/foo/:bar\""
+    end
+
+    test "warns on any explicit route after :*" do
+      assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
+               defmodule MatchBeforeUnrelatedRoute do
+                 use Phoenix.Router
+
+                 match :*, "/any", UserController, :any
+                 get "/pages/:id", UserController, :show
+               end
+             end) =~ "found route \"/pages/:id\" after match :*, \"/any\""
     end
   end
 

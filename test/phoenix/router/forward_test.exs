@@ -130,6 +130,20 @@ defmodule Phoenix.Router.ForwardTest do
     assert conn.private[ApiRouter] == []
   end
 
+  test "warns on route after forward and preserves ordered matching" do
+    assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
+             defmodule ForwardOverlap do
+               use Phoenix.Router
+
+               forward "/admin", AdminDashboard
+               get "/admin/stats", Controller, :api_users
+             end
+
+             conn = call(ForwardOverlap, :get, "/admin/stats")
+             assert conn.resp_body == "stats"
+           end) =~ "found route \"/admin/stats\" after forward \"/admin\""
+  end
+
   test "forwards raises if using the plug to arguments" do
     error_message = ~r/expect a module/
 

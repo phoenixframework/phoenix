@@ -487,22 +487,15 @@ defmodule Phoenix.Router do
   @doc false
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse()
-    routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
+    {routes_with_exprs, warn_on_route_after_catch_all?} = build_route_exprs(routes, env)
 
     helpers =
       if Module.get_attribute(env.module, :phoenix_helpers) do
         Helpers.define(env, routes_with_exprs)
       end
 
-    # Group routes by verb making sure the ones that match all are handled last
     {matches, {pipelines, _}} =
-      routes_with_exprs
-      |> Enum.group_by(&elem(&1, 0).verb)
-      |> Map.pop(:*, [])
-      |> then(fn {match_routes_exprs, map} ->
-        Map.to_list(map) ++ [{:*, match_routes_exprs}]
-      end)
-      |> Enum.map_reduce({[], %{}}, &build_match_verb/2)
+      build_matches(routes_with_exprs, warn_on_route_after_catch_all?)
 
     routes_per_path =
       Enum.group_by(routes_with_exprs, &elem(&1, 1).path, &elem(&1, 0))
@@ -511,7 +504,7 @@ defmodule Phoenix.Router do
       routes_with_exprs
       |> Enum.map(&elem(&1, 1).path)
       |> Enum.uniq()
-      |> Enum.map(&build_verify(&1, routes_per_path, env))
+      |> Enum.map(&build_verify(&1, routes_per_path))
 
     verify_catch_all =
       quote generated: true do
@@ -562,11 +555,51 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp build_verify(path, routes_per_path, env) do
+  defp build_route_exprs(routes, env) do
+    {routes_with_exprs, state} =
+      Enum.map_reduce(routes, nil, fn route, catch_all ->
+        {{route, Route.exprs(route)}, warn_on_route_after_catch_all(route, catch_all, env)}
+      end)
+
+    {routes_with_exprs, match?({:warned, _}, state)}
+  end
+
+  defp warn_on_route_after_catch_all(route, catch_all, env) do
+    cond do
+      # TODO: error in future releases instead of warning
+      catch_all && !catch_all_route?(route) ->
+        IO.warn(
+          "found route #{inspect(route.path)} after #{catch_all_description(catch_all_route(catch_all))}. " <>
+            "Routes after match :* or forward will be matched before them in optimized routers, " <>
+            "so define all match :* and forward routes at the end of the router.",
+          Macro.Env.stacktrace(%{env | line: route.line})
+        )
+
+        {:warned, catch_all_route(catch_all)}
+
+      catch_all_route?(route) ->
+        catch_all || route
+
+      true ->
+        catch_all
+    end
+  end
+
+  defp catch_all_route({:warned, route}), do: route
+  defp catch_all_route(route), do: route
+
+  defp catch_all_route?(%{kind: :forward}), do: true
+  defp catch_all_route?(%{verb: :*}), do: true
+  defp catch_all_route?(_route), do: false
+
+  defp catch_all_description(%{kind: :forward, path: path}), do: "forward #{inspect(path)}"
+  defp catch_all_description(%{path: path}), do: "match :*, #{inspect(path)}"
+
+  defp build_verify(path, routes_per_path) do
     routes = Map.get(routes_per_path, path)
     warn_on_verify? = Enum.all?(routes, & &1.warn_on_verify?)
 
-    case find_forward_and_check_status(routes, nil, nil, env) do
+    case Enum.find(routes, &(&1.kind == :forward)) do
       %{metadata: %{forward: forward}, plug: plug, plug_opts: plug_opts} ->
         quote generated: true do
           def __forward__(unquote(plug)) do
@@ -588,41 +621,28 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp find_forward_and_check_status(
-         [%{kind: kind, verb: verb} = route | routes],
-         forward,
-         star_route,
-         env
-       ) do
-    forward =
-      if kind == :forward and is_nil(forward) do
-        route
-      else
-        forward
+  defp build_matches(routes_exprs, true) do
+    {matches, acc} = Enum.map_reduce(routes_exprs, {[], %{}}, &build_match/2)
+
+    match_catch_all =
+      quote generated: true do
+        @doc false
+        def __match_route__(_verb, _path, _host) do
+          :error
+        end
       end
 
-    star_route =
-      cond do
-        star_route ->
-          IO.warn(
-            "found route matching on #{inspect(route.path)} after match(:*, #{inspect(star_route.path)})",
-            Macro.Env.stacktrace(%{env | line: route.line})
-          )
-
-          star_route
-
-        verb == :* ->
-          route
-
-        true ->
-          nil
-      end
-
-    find_forward_and_check_status(routes, forward, star_route, env)
+    {[matches, match_catch_all], acc}
   end
 
-  defp find_forward_and_check_status([], forward, _star_route, _env) do
-    forward
+  defp build_matches(routes_exprs, false) do
+    routes_exprs
+    |> Enum.group_by(&elem(&1, 0).verb)
+    |> Map.pop(:*, [])
+    |> then(fn {match_routes_exprs, map} ->
+      Map.to_list(map) ++ [{:*, match_routes_exprs}]
+    end)
+    |> Enum.map_reduce({[], %{}}, &build_match_verb/2)
   end
 
   defp build_match_verb({:*, routes_exprs}, acc) do
@@ -668,8 +688,26 @@ defmodule Phoenix.Router do
     {dispatch, acc}
   end
 
+  defp build_match({route, expr}, {acc_pipes, known_pipes}) do
+    verb_match =
+      case route.verb do
+        :* -> Macro.var(:_verb, nil)
+        verb -> verb |> to_string() |> String.upcase()
+      end
+
+    {clauses, acc} =
+      build_match_path(:__match_route__, {route, expr}, {acc_pipes, known_pipes}, verb_match)
+
+    {clauses, acc}
+  end
+
   defp build_match_path(name, {route, expr}, {acc_pipes, known_pipes}) do
+    build_match_path(name, {route, expr}, {acc_pipes, known_pipes}, nil)
+  end
+
+  defp build_match_path(name, {route, expr}, {acc_pipes, known_pipes}, verb_match) do
     {pipe_name, acc_pipes, known_pipes} = build_match_pipes(route, acc_pipes, known_pipes)
+    def_kind = if verb_match, do: :def, else: :defp
 
     %{
       prepare: prepare,
@@ -682,7 +720,9 @@ defmodule Phoenix.Router do
     clauses =
       for host <- hosts do
         quote line: route.line do
-          defp unquote(name)(unquote(path), unquote(host)) do
+          unquote(def_kind)(
+            unquote(name)(unquote_splicing(match_route_args(verb_match, path, host)))
+          ) do
             {unquote(build_metadata(route, path_params)),
              fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} ->
                unquote(prepare)
@@ -693,6 +733,9 @@ defmodule Phoenix.Router do
 
     {clauses, {acc_pipes, known_pipes}}
   end
+
+  defp match_route_args(nil, path, host), do: [path, host]
+  defp match_route_args(verb_match, path, host), do: [verb_match, path, host]
 
   defp build_match_pipes(route, acc_pipes, known_pipes) do
     %{pipe_through: pipe_through} = route
@@ -752,9 +795,9 @@ defmodule Phoenix.Router do
   Useful for defining routes not included in the built-in macros.
 
   The catch-all verb, `:*`, may also be used to match all HTTP methods.
-  However, keep in mind that routes with the catch-all verb are always
-  matched last. Therefore it is recommended that all `match :*` routes
-  are defined at the end of the file.
+  `match :*` routes should be defined at the end of the router, after all
+  routes with explicit verbs. Phoenix emits a compile-time warning if a route
+  with an explicit verb is defined after a `match :*` route.
 
   ## Options
 
@@ -1287,6 +1330,10 @@ defmodule Phoenix.Router do
 
   The router pipelines will be invoked prior to forwarding the
   connection.
+
+  Because forwards match all HTTP methods, define them at the end of the
+  router, after all routes with explicit verbs. Phoenix emits a compile-time
+  warning if a route with an explicit verb is defined after a forward.
 
   ## Examples
 
