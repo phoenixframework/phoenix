@@ -613,7 +613,7 @@ end
 
 This means that all routes starting with `/jobs` will be sent to the `BackgroundJob.Plug` module. Inside the plug, you can match on subroutes, such as `/pending` and `/active` that shows the status of certain jobs.
 
-Since forwards match all HTTP methods under their path, keep them at the end of your router, after your application routes. The same applies to any `match :*` routes. Phoenix will emit a compile-time warning if a route with an explicit verb is defined after a forward or `match :*`.
+Since forwards match all HTTP methods under their path, keep them at the end of your router, after your application routes. The same applies to any `match :*` routes. This is required when a router is configured with `group_by: :verb`.
 
 We can even mix the [`forward/4`](`Phoenix.Router.forward/4`) macro with pipelines. If we wanted to ensure that the user was authenticated and was an administrator in order to see the jobs page, we could use the following in our router.
 

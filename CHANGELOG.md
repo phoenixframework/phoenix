@@ -2,9 +2,9 @@
 
 ## v1.9.0-dev
 
-### Deprecation
+### Enhancements
 
-  * [Phoenix.Router] Phoenix will now group your routes per verb during compilation when all `match :*` and `forward` routes are defined at the end of the router. This improves compilation times for large routers with no performance cost at runtime. If you have a route with an explicit verb after a `match :*` or `forward`, Phoenix will preserve the previous ordered matching semantics and emit a warning
+  * [Phoenix.Router] Add `use Phoenix.Router, group_by: :verb` to group routes per verb during compilation. This can improve compilation times for large routers with no performance cost at runtime. When enabled, all `match :*` and `forward` routes must be defined at the end of the router, otherwise compilation fails with a list of violations
 
 ## v1.8
 
