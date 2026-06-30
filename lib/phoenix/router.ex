@@ -485,6 +485,9 @@ defmodule Phoenix.Router do
   end
 
   @doc false
+  @routes_per_module 250
+  @checks_per_module 400
+
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse()
     routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
@@ -494,18 +497,15 @@ defmodule Phoenix.Router do
         Helpers.define(env, routes_with_exprs)
       end
 
-    # Group routes by verb making sure the ones that match all are handled last
-    {matches, {pipelines, _}} =
-      routes_with_exprs
-      |> Enum.group_by(&elem(&1, 0).verb)
-      |> Map.pop(:*, [])
-      |> then(fn {match_routes_exprs, map} ->
-        Map.to_list(map) ++ [{:*, match_routes_exprs}]
-      end)
-      |> Enum.map_reduce({[], %{}}, &build_match_verb/2)
+    {pipelines, pipe_index} = build_pipelines(routes_with_exprs)
 
-    routes_per_path =
-      Enum.group_by(routes_with_exprs, &elem(&1, 1).path, &elem(&1, 0))
+    # Emit the match clauses into sub-modules: the type checker's per-module
+    # cost is super-linear in the number of clauses, so splitting the match
+    # table across modules is where the compile-time speedup comes from.
+    {match_modules, match_module_names} =
+      build_match_modules(env.module, routes_with_exprs, pipe_index)
+
+    routes_per_path = Enum.group_by(routes_with_exprs, &elem(&1, 1).path, &elem(&1, 0))
 
     verifies =
       routes_with_exprs
@@ -527,15 +527,38 @@ defmodule Phoenix.Router do
         def __forward__(_), do: nil
       end
 
-    checks =
-      routes
-      |> Enum.map(fn %{line: line, metadata: metadata, plug: plug} ->
-        {line, Map.get(metadata, :mfa, {plug, :init, 1})}
-      end)
-      |> Enum.uniq()
-      |> Enum.map(fn {line, {module, function, arity}} ->
-        quote line: line, do: _ = &(unquote(module).unquote(function) / unquote(arity))
-      end)
+    check_modules = build_check_modules(routes, env.module)
+
+    match =
+      if match_module_names == [] do
+        quote do
+          @doc false
+          def __match_route__(_method, _path, _host), do: :error
+        end
+      else
+        quote do
+          @doc false
+          def __match_route__(method, path, host) do
+            __match_route__(unquote(match_module_names), method, path, host)
+          end
+
+          # The dispatch is deliberately dynamic: because the module is a
+          # variable, the type checker treats `match/3` as an unknown call
+          # rather than re-aggregating every route's return type into this
+          # module — which is the cost the sub-modules exist to avoid.
+          defp __match_route__([module | modules], method, path, host) do
+            case module.match(method, path, host) do
+              {metadata, prepare, pipeline, plug_opts} ->
+                {metadata, prepare, __pipeline__(pipeline), plug_opts}
+
+              :error ->
+                __match_route__(modules, method, path, host)
+            end
+          end
+
+          defp __match_route__([], _method, _path, _host), do: :error
+        end
+      end
 
     keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata]
     routes = Enum.map(routes, &Map.take(&1, keys))
@@ -545,9 +568,6 @@ defmodule Phoenix.Router do
       def __routes__, do: unquote(Macro.escape(routes))
 
       @doc false
-      def __checks__, do: unquote({:__block__, [], checks})
-
-      @doc false
       def __helpers__, do: unquote(helpers)
 
       defp prepare(conn) do
@@ -555,10 +575,12 @@ defmodule Phoenix.Router do
       end
 
       unquote(pipelines)
+      unquote(match)
       unquote(verifies)
       unquote(verify_catch_all)
-      unquote(matches)
       unquote(forward_catch_all)
+      unquote(match_modules)
+      unquote(check_modules)
     end
   end
 
@@ -625,52 +647,71 @@ defmodule Phoenix.Router do
     forward
   end
 
-  defp build_match_verb({:*, routes_exprs}, acc) do
-    name = :__match_route_catch_all__
-    {clauses, acc} = Enum.map_reduce(routes_exprs, acc, &build_match_path(name, &1, &2))
+  # Pipelines are defined on the router, but match clauses live in sub-modules
+  # and cannot capture private functions, so each clause carries the pipeline
+  # index that __pipeline__/1 resolves back into a capture.
+  defp build_pipelines(routes_with_exprs) do
+    {defs, index} =
+      Enum.reduce(routes_with_exprs, {[], %{}}, fn {route, _expr}, {defs, index} ->
+        pipe_through = route.pipe_through
 
-    dispatch =
-      quote generated: true do
-        unquote({:__block__, [], clauses})
+        if Map.has_key?(index, pipe_through) do
+          {defs, index}
+        else
+          i = map_size(index)
 
-        defp __match_route_catch_all__(_path, _host) do
-          :error
+          {[build_pipes(:"__pipe_through#{i}__", pipe_through) | defs],
+           Map.put(index, pipe_through, i)}
         end
+      end)
 
-        @doc false
-        def __match_route__(_, path, host) do
-          __match_route_catch_all__(path, host)
-        end
-      end
+    resolvers =
+      for {_pipe_through, i} <- Enum.sort_by(index, &elem(&1, 1)) do
+        name = :"__pipe_through#{i}__"
 
-    {dispatch, acc}
-  end
-
-  defp build_match_verb({verb, routes_exprs}, acc) do
-    pattern = verb |> to_string() |> String.upcase()
-    name = :"__match_route_#{verb}__"
-
-    {clauses, acc} = Enum.map_reduce(routes_exprs, acc, &build_match_path(name, &1, &2))
-
-    dispatch =
-      quote generated: true do
-        unquote({:__block__, [], clauses})
-
-        defp unquote(name)(path, host) do
-          __match_route_catch_all__(path, host)
-        end
-
-        def __match_route__(unquote(pattern), path, host) do
-          unquote(name)(path, host)
+        quote generated: true do
+          defp __pipeline__(unquote(i)), do: &(unquote(Macro.var(name, __MODULE__)) / 1)
         end
       end
 
-    {dispatch, acc}
+    {Enum.reverse(defs) ++ resolvers, index}
   end
 
-  defp build_match_path(name, {route, expr}, {acc_pipes, known_pipes}) do
-    {pipe_name, acc_pipes, known_pipes} = build_match_pipes(route, acc_pipes, known_pipes)
+  # Group routes by verb (the ones that match all come last) and chunk each
+  # group into its own sub-module, returning the module ASTs and their names
+  # in dispatch order.
+  defp build_match_modules(router, routes_with_exprs, pipe_index) do
+    {wildcard, by_verb} =
+      routes_with_exprs
+      |> Enum.group_by(&elem(&1, 0).verb)
+      |> Map.pop(:*, [])
 
+    groups = Map.to_list(by_verb) ++ [{:*, wildcard}]
+
+    {modules, names, _count} =
+      Enum.reduce(groups, {[], [], 0}, fn {_verb, routes_exprs}, acc ->
+        routes_exprs
+        |> Enum.chunk_every(@routes_per_module)
+        |> Enum.reduce(acc, fn chunk, {modules, names, count} ->
+          name = Module.concat(router, :"Match#{count}")
+
+          module =
+            quote generated: true do
+              defmodule unquote(name) do
+                @moduledoc false
+                unquote(Enum.flat_map(chunk, &build_match_path(&1, pipe_index)))
+                def match(_method, _path, _host), do: :error
+              end
+            end
+
+          {[module | modules], [name | names], count + 1}
+        end)
+      end)
+
+    {Enum.reverse(modules), Enum.reverse(names)}
+  end
+
+  defp build_match_path({route, expr}, pipe_index) do
     %{
       prepare: prepare,
       dispatch: dispatch,
@@ -679,34 +720,46 @@ defmodule Phoenix.Router do
       path: path
     } = expr
 
-    clauses =
-      for host <- hosts do
-        quote line: route.line do
-          defp unquote(name)(unquote(path), unquote(host)) do
-            {unquote(build_metadata(route, path_params)),
-             fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} ->
-               unquote(prepare)
-             end, &(unquote(Macro.var(pipe_name, __MODULE__)) / 1), unquote(dispatch)}
-          end
-        end
+    verb =
+      case route.verb do
+        :* -> quote(do: _method)
+        verb -> verb |> to_string() |> String.upcase()
       end
 
-    {clauses, {acc_pipes, known_pipes}}
+    pipeline = Map.fetch!(pipe_index, route.pipe_through)
+    metadata = build_metadata(route, path_params)
+
+    for host <- hosts do
+      quote line: route.line, generated: true do
+        def match(unquote(verb), unquote(path), unquote(host)) do
+          {unquote(metadata),
+           fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} ->
+             unquote(prepare)
+           end, unquote(pipeline), unquote(dispatch)}
+        end
+      end
+    end
   end
 
-  defp build_match_pipes(route, acc_pipes, known_pipes) do
-    %{pipe_through: pipe_through} = route
-
-    case known_pipes do
-      %{^pipe_through => name} ->
-        {name, acc_pipes, known_pipes}
-
-      %{} ->
-        name = :"__pipe_through#{map_size(known_pipes)}__"
-        acc_pipes = [build_pipes(name, pipe_through) | acc_pipes]
-        known_pipes = Map.put(known_pipes, pipe_through, name)
-        {name, acc_pipes, known_pipes}
-    end
+  defp build_check_modules(routes, router) do
+    routes
+    |> Enum.map(fn %{line: line, metadata: metadata, plug: plug} ->
+      {line, Map.get(metadata, :mfa, {plug, :init, 1})}
+    end)
+    |> Enum.uniq()
+    |> Enum.map(fn {line, {module, function, arity}} ->
+      quote line: line, do: _ = &(unquote(module).unquote(function) / unquote(arity))
+    end)
+    |> Enum.chunk_every(@checks_per_module)
+    |> Enum.with_index()
+    |> Enum.map(fn {checks, i} ->
+      quote generated: true do
+        defmodule unquote(Module.concat(router, :"Checks#{i}")) do
+          @moduledoc false
+          def __checks__, do: unquote({:__block__, [], checks})
+        end
+      end
+    end)
   end
 
   defp build_metadata(route, path_params) do
