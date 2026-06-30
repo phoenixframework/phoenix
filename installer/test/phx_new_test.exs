@@ -750,6 +750,35 @@ defmodule Mix.Tasks.Phx.NewTest do
     end)
   end
 
+  test "new with mongodb adapter" do
+    in_tmp("new with mongodb adapter", fn ->
+      project_path = Path.join(File.cwd!(), "custom_path")
+      Mix.Tasks.Phx.New.run([project_path, "--database", "mongodb"])
+
+      assert_file("custom_path/mix.exs", ":mongodb_ecto")
+
+      assert_file("custom_path/config/dev.exs", [
+        ~r/mongo_url:/,
+        ~r/mongodb:\/\/localhost:27017/
+      ])
+
+      assert_file("custom_path/config/test.exs", [~r/mongo_url:/])
+
+      assert_file("custom_path/config/runtime.exs", [~r/DATABASE_URL/])
+
+      assert_file("custom_path/config/config.exs", ~r/generators: \[.*binary_id: true.*\]/)
+
+      assert_file("custom_path/lib/custom_path/repo.ex", "Mongo.Ecto")
+
+      assert_file(
+        "custom_path/test/support/data_case.ex",
+        "Mongo.Ecto.truncate"
+      )
+
+      assert_file("custom_path/docker-compose.yml", ["mongo:latest", "--replSet", "rs.initiate"])
+    end)
+  end
+
   test "new with invalid database adapter" do
     in_tmp("new with invalid database adapter", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")
@@ -865,8 +894,8 @@ defmodule Mix.Tasks.Phx.NewTest do
     in_tmp("new interactive custom", fn ->
       # path
       send(self(), {:mix_shell_input, :prompt, "custom_app"})
-      # database: sqlite3 (option 4)
-      send(self(), {:mix_shell_input, :prompt, "4"})
+      # database: sqlite3 (option 5)
+      send(self(), {:mix_shell_input, :prompt, "5"})
       # binary_id: yes
       send(self(), {:mix_shell_input, :prompt, "y"})
       # web: API-only (option 3, skips assets prompt)
