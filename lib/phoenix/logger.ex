@@ -287,6 +287,8 @@ defmodule Phoenix.Logger do
     end)
   end
 
+  defp status_to_string(nil), do: "unknown"
+
   defp status_to_string(status) do
     status |> Plug.Conn.Status.code() |> Integer.to_string()
   end
