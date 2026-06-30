@@ -45,6 +45,16 @@ defmodule Phoenix.Router do
   Phoenix's router is extremely efficient, as it relies on Elixir
   pattern matching for matching routes and serving requests.
 
+  ## Options
+
+    * `:helpers` - whether to generate route helpers. Defaults to `true`.
+      Helpers are deprecated, see the "Helpers" section below for more information
+
+    * `:group_by` - when set to `:verb`, Phoenix groups route clauses per HTTP
+      verb during compilation. This can reduce compilation times for large
+      routers. When enabled, all `match :*` and `forward` routes must be defined
+      at the end of the router
+
   ## Routing
 
   `get/3`, `post/3`, `put/3`, and other macros named after HTTP verbs are used
@@ -141,11 +151,6 @@ defmodule Phoenix.Router do
   Phoenix generates a module `Helpers` inside your router by default, which contains
   named helpers to help developers generate and keep their routes up to date.
   Helpers can be disabled by passing `helpers: false` to `use Phoenix.Router`.
-
-  Routers may also be configured with `group_by: :verb`, which groups route
-  clauses per HTTP verb during compilation. This can reduce compilation times
-  for large routers. When enabled, all `match :*` and `forward` routes must be
-  defined at the end of the router.
 
   Helpers are automatically generated based on the controller name.
   For example, the route:
@@ -678,7 +683,9 @@ defmodule Phoenix.Router do
 
   defp build_match_verb({:*, routes_exprs}, acc) do
     name = :__match_route_catch_all__
-    {clauses, acc} = Enum.map_reduce(routes_exprs, acc, &build_match_path(name, &1, &2))
+
+    {clauses, acc} =
+      Enum.map_reduce(routes_exprs, acc, &build_match_path(:defp, name, [], &1, &2))
 
     dispatch =
       quote generated: true do
@@ -701,7 +708,8 @@ defmodule Phoenix.Router do
     pattern = verb |> to_string() |> String.upcase()
     name = :"__match_route_#{verb}__"
 
-    {clauses, acc} = Enum.map_reduce(routes_exprs, acc, &build_match_path(name, &1, &2))
+    {clauses, acc} =
+      Enum.map_reduce(routes_exprs, acc, &build_match_path(:defp, name, [], &1, &2))
 
     dispatch =
       quote generated: true do
@@ -727,18 +735,19 @@ defmodule Phoenix.Router do
       end
 
     {clauses, acc} =
-      build_match_path(:__match_route__, {route, expr}, {acc_pipes, known_pipes}, verb_match)
+      build_match_path(
+        :def,
+        :__match_route__,
+        [verb_match],
+        {route, expr},
+        {acc_pipes, known_pipes}
+      )
 
     {clauses, acc}
   end
 
-  defp build_match_path(name, {route, expr}, {acc_pipes, known_pipes}) do
-    build_match_path(name, {route, expr}, {acc_pipes, known_pipes}, nil)
-  end
-
-  defp build_match_path(name, {route, expr}, {acc_pipes, known_pipes}, verb_match) do
+  defp build_match_path(kind, name, prefix, {route, expr}, {acc_pipes, known_pipes}) do
     {pipe_name, acc_pipes, known_pipes} = build_match_pipes(route, acc_pipes, known_pipes)
-    def_kind = if verb_match, do: :def, else: :defp
 
     %{
       prepare: prepare,
@@ -750,10 +759,10 @@ defmodule Phoenix.Router do
 
     clauses =
       for host <- hosts do
+        args = prefix ++ [path, host]
+
         quote line: route.line do
-          unquote(def_kind)(
-            unquote(name)(unquote_splicing(match_route_args(verb_match, path, host)))
-          ) do
+          unquote(kind)(unquote(name)(unquote_splicing(args))) do
             {unquote(build_metadata(route, path_params)),
              fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} ->
                unquote(prepare)
@@ -764,9 +773,6 @@ defmodule Phoenix.Router do
 
     {clauses, {acc_pipes, known_pipes}}
   end
-
-  defp match_route_args(nil, path, host), do: [path, host]
-  defp match_route_args(verb_match, path, host), do: [verb_match, path, host]
 
   defp build_match_pipes(route, acc_pipes, known_pipes) do
     %{pipe_through: pipe_through} = route
