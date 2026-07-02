@@ -24,9 +24,6 @@
     "assets/js/phoenix/*"
   ],
   "devDependencies": {
-    "@babel/cli": "7.29.7",
-    "@babel/core": "7.29.7",
-    "@babel/preset-env": "7.29.7",
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.0.0",
     "documentation": "^14.0.3",
@@ -38,9 +35,9 @@
     "mock-socket": "^9.3.1"
   },
   "scripts": {
-    "test": "jest",
-    "test.coverage": "jest --coverage",
-    "test.watch": "jest --watch",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "test.coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage",
+    "test.watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
     "docs": "documentation build assets/js/phoenix/index.js -f html -o doc/js"
   }
 }

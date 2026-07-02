@@ -24,4 +24,7 @@ module.exports = {
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
   testRegex: "/assets/test/.*_test\\.js$",
+
+  // The assets tree is native ESM. Disable Jest's default JS transform.
+  transform: {},
 }
