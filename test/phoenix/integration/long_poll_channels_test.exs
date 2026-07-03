@@ -631,6 +631,36 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     assert resp.body["status"] == 408
   end
 
+  test "ignores ndjson batch entries after the first 100" do
+    vsn = "2.0.0"
+    join_ref = "1"
+    session = join("/ws", "room:lobby", vsn, join_ref)
+    Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
+
+    messages =
+      for n <- 1..101 do
+        %{
+          "topic" => "room:lobby",
+          "event" => "new_msg",
+          "ref" => to_string(n + 1),
+          "join_ref" => join_ref,
+          "payload" => %{"body" => "msg#{n}"}
+        }
+      end
+
+    resp = poll(:post, "/ws", vsn, session, messages)
+    assert resp.body["status"] == 200
+
+    new_msg_bodies =
+      for _ <- 1..100 do
+        assert_receive %Broadcast{event: "new_msg", payload: %{"body" => body}}
+        body
+      end
+
+    assert new_msg_bodies == for(n <- 1..100, do: "msg#{n}")
+    refute_receive %Broadcast{event: "new_msg", payload: %{"body" => "msg101"}}
+  end
+
   for {serializer, vsn, join_ref} <- [
         {V1.JSONSerializer, "1.0.0", nil},
         {V2.JSONSerializer, "2.0.0", "1"}
