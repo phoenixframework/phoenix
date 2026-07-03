@@ -282,12 +282,9 @@ describe("Socket with LongPoll", () => {
       const authToken = "my-auth-token"
       const socket = new Socket("/socket", {
         transport: LongPoll,
-        params: {token: authToken}
+        authToken
       })
-      
-      // Set auth token
-      socket.authToken = authToken
-      
+
       // Mock the transport to capture the protocols argument
       socket.transport = jest.fn(() => ({
         onopen: jest.fn(),
@@ -369,4 +366,3 @@ describe("Ajax.request", () => {
     )
   })
 })
-
