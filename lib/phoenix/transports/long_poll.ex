@@ -5,8 +5,7 @@ defmodule Phoenix.Transports.LongPoll do
   # The maximum is 10MB but read_body will cap the whole request at ~8MB,
   # so this acts as a secondary protection mechanism.
   @max_base64_size 10_000_000
-  # TODO: enforce batch size on the server in the next release
-  # @max_poll_batch_size 100
+  @max_poll_batch_size 100
   @connect_info_opts [:check_csrf]
 
   import Plug.Conn
@@ -87,7 +86,7 @@ defmodule Phoenix.Transports.LongPoll do
             ["application/x-ndjson"] ->
               body
               |> String.splitter(["\n", "\r\n"])
-              # |> Stream.take(@max_poll_batch_size)
+              |> Stream.take(@max_poll_batch_size)
               |> Enum.find_value(fn part ->
                 msg =
                   case part do
