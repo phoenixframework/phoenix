@@ -2,7 +2,7 @@ import {jest} from "@jest/globals"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
-import {SOCKET_STATES} from "../js/phoenix/constants"
+import {AUTH_TOKEN_PREFIX, SOCKET_STATES} from "../js/phoenix/constants"
 
 let socket
 
@@ -221,6 +221,43 @@ describe("with transports", function (){
       const conn = socket.conn
       socket.connect()
       expect(conn).toBe(socket.conn)
+    })
+
+    it("uses updated authToken function value when reconnecting", function (){
+      jest.useFakeTimers()
+
+      try {
+        let authToken = "old-token"
+        const connections = []
+        class ReconnectingWebSocket {
+          constructor(_url, protocols){
+            this.protocols = protocols
+            this.readyState = SOCKET_STATES.open
+            this.bufferedAmount = 0
+            connections.push(this)
+          }
+          close(){ this.readyState = SOCKET_STATES.closed }
+          send(){}
+        }
+
+        socket = new Socket("/socket", {
+          transport: ReconnectingWebSocket,
+          authToken: () => authToken,
+          reconnectAfterMs: () => 10
+        })
+
+        socket.connect()
+        authToken = "new-token"
+        socket.onConnClose({code: 1006})
+        jest.advanceTimersByTime(10)
+
+        expect(connections.length).toBe(2)
+        expect(connections[0].protocols).toEqual(["phoenix", `${AUTH_TOKEN_PREFIX}${btoa("old-token").replace(/=/g, "")}`])
+        expect(connections[1].protocols).toEqual(["phoenix", `${AUTH_TOKEN_PREFIX}${btoa("new-token").replace(/=/g, "")}`])
+        expect(socket.conn).toBe(connections[1])
+      } finally {
+        jest.useRealTimers()
+      }
     })
   })
 

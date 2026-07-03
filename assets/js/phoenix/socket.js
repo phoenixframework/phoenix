@@ -87,8 +87,8 @@ import Timer from "./timer"
  * Defaults to 20s (double the server long poll timer).
  *
  * @param {(Object|function)} [opts.params] - The optional params to pass when connecting
- * @param {string} [opts.authToken] - the optional authentication token to be exposed on the server
- * under the `:auth_token` connect_info key.
+ * @param {(string|function)} [opts.authToken] - the optional authentication token to be exposed on the server
+ * under the `:auth_token` connect_info key. Can be a string or a function that returns a string.
  * @param {string} [opts.binaryType] - The binary type to use for binary WebSocket frames.
  *
  * Defaults to "arraybuffer"
@@ -201,7 +201,7 @@ export default class Socket {
       }
       this.teardown(() => this.connect())
     }, this.reconnectAfterMs)
-    this.authToken = opts.authToken
+    this.authToken = opts.authToken && closure(opts.authToken)
   }
 
   /**
@@ -396,7 +396,7 @@ export default class Socket {
     // Sec-WebSocket-Protocol based token
     // (longpoll uses Authorization header instead)
     if(this.authToken){
-      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`]
+      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken()).replace(/=/g, "")}`]
     }
     this.conn = new this.transport(this.endPointURL(), protocols)
     this.conn.binaryType = this.binaryType
