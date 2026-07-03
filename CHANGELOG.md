@@ -1,6 +1,10 @@
 # Changelog for v1.9
 
-Nothing, so far.
+This release requires Plug v1.21+.
+
+### Enhancements
+
+  * [Router] Add the `query` macro for routing HTTP QUERY (RFC 10008) requests ([#6737](https://github.com/phoenixframework/phoenix/pull/6737))
 
 ## v1.8
 
