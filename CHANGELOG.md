@@ -29,6 +29,13 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience. This may also lead to errors on application boot if you were previously incorrectly setting compile time config at runtime.
 
+## 1.8.9 (2026-07-07)
+
+### Security fixes
+- [CVE-2026-56811](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-6983-jfq8-485w): Add a `max_channels_per_transport` option (defaulting to 100) to prevent a single client from spawning an unbounded number of channels (processes), eventually exhausting the server's memory or process limit.
+- [CVE-2026-56812](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-63mc-hw7g-86rr): Prevent presence keys from colliding with `Object.prototype` properties members, crashing the JS Presence client
+- Enforce longpoll batch size introduced in 1.8.6. This is additional hardening against [CVE-2026-32689](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-628h-q48j-jr6q). If your application sends events with a very high frequency and uses long polling, such that a single longpoll request would exceed 100 events, you should update to 1.8.7 first.
+
 ## 1.8.8 (2026-06-10)
 
 ### Enhancements

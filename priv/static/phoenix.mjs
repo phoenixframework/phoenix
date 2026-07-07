@@ -772,7 +772,7 @@ var LongPoll = class {
 var Presence = class _Presence {
   constructor(channel, opts = {}) {
     let events = opts.events || { state: "presence_state", diff: "presence_diff" };
-    this.state = {};
+    this.state = /* @__PURE__ */ Object.create(null);
     this.pendingDiffs = [];
     this.channel = channel;
     this.joinRef = null;
@@ -829,9 +829,10 @@ var Presence = class _Presence {
    * @returns {Presence}
    */
   static syncState(currentState, newState, onJoin, onLeave) {
-    let state = this.clone(currentState);
-    let joins = {};
-    let leaves = {};
+    let state = this.toNullProtoObj(this.clone(currentState));
+    newState = this.toNullProtoObj(newState);
+    let joins = /* @__PURE__ */ Object.create(null);
+    let leaves = /* @__PURE__ */ Object.create(null);
     this.map(state, (key, presence) => {
       if (!newState[key]) {
         leaves[key] = presence;
@@ -868,6 +869,7 @@ var Presence = class _Presence {
    * @returns {Presence}
    */
   static syncDiff(state, diff, onJoin, onLeave) {
+    state = this.toNullProtoObj(state);
     let { joins, leaves } = this.clone(diff);
     if (!onJoin) {
       onJoin = function() {
@@ -924,6 +926,22 @@ var Presence = class _Presence {
   // private
   static map(obj, func) {
     return Object.getOwnPropertyNames(obj).map((key) => func(key, obj[key]));
+  }
+  // Presence keys are chosen on the server and may collide with
+  // Object.prototype properties ("__proto__", "constructor", ...), so any
+  // object indexed by presence key must not have a prototype chain
+  //
+  // TODO: replace the null-prototype objects with Maps in Phoenix 2.0
+  // (breaking change for the lower-level static API)
+  static toNullProtoObj(obj) {
+    if (Object.getPrototypeOf(obj) === null) {
+      return obj;
+    }
+    let cleaned = /* @__PURE__ */ Object.create(null);
+    Object.getOwnPropertyNames(obj).forEach((key) => {
+      cleaned[key] = obj[key];
+    });
+    return cleaned;
   }
   static clone(obj) {
     return JSON.parse(JSON.stringify(obj));
@@ -1139,7 +1157,7 @@ var Socket = class {
       }
       this.teardown(() => this.connect());
     }, this.reconnectAfterMs);
-    this.authToken = opts.authToken;
+    this.authToken = opts.authToken && closure(opts.authToken);
   }
   /**
    * Returns the LongPoll transport reference
@@ -1330,7 +1348,7 @@ var Socket = class {
     this.closeWasClean = false;
     let protocols = void 0;
     if (this.authToken) {
-      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`];
+      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken()).replace(/=/g, "")}`];
     }
     this.conn = new this.transport(this.endPointURL(), protocols);
     this.conn.binaryType = this.binaryType;
