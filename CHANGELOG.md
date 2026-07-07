@@ -46,6 +46,13 @@ styled with Tailwind CSS by default. You can opt-out of Tailwind CSS with the `-
 flag (the Tailwind CSS classes are kept in the generated components as reference for
 future styling).
 
+## 1.7.24 (2026-07-07)
+
+### Security fixes
+- [CVE-2026-56811](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-6983-jfq8-485w): Add a `max_channels_per_transport` option (defaulting to 100) to prevent a single client from spawning an unbounded number of channels (processes), eventually exhausting the server's memory or process limit.
+- [CVE-2026-56812](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-63mc-hw7g-86rr): Prevent presence keys from colliding with `Object.prototype` properties members, crashing the JS Presence client
+- Enforce longpoll batch size introduced in 1.7.22. This is additional hardening against [CVE-2026-32689](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-628h-q48j-jr6q). If your application sends events with a very high frequency and uses long polling, such that a single longpoll request would exceed 100 events, you should update to 1.7.23 first.
+
 ## 1.7.23 (2026-05-06)
 
 ### Bug fixes
