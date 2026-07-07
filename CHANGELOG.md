@@ -12,10 +12,16 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
-### 1.5.14 (2022-10-10)
+## 1.5.15 (2026-07-07)
+
+### Security fixes
+- [CVE-2026-56811](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-6983-jfq8-485w): Add a `max_channels_per_transport` option (defaulting to 100) to prevent a single client from spawning an unbounded number of channels (processes), eventually exhausting the server's memory or process limit.
+- [CVE-2026-56812](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-63mc-hw7g-86rr): Prevent presence keys from colliding with `Object.prototype` properties members, crashing the JS Presence client
+
+## 1.5.14 (2022-10-10)
   * Fix security vulnerability in wildcard `check_origin` configurations
 
-### 1.5.13 (2021-09-22)
+## 1.5.13 (2021-09-22)
 
 ### Bug Fixes
   * [Router] Do not generate conflicting helpers in router
@@ -23,17 +29,17 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 ### JavaScript Client Bug Fixes
   * Fix messages for duplicate topic being dispatched to old channels
 
-### 1.5.12 (2021-08-24)
+## 1.5.12 (2021-08-24)
 
 ### Bug Fixes
   * Support `__mix_recompile__?` as a more efficient recompilation technique. This will be required on Elixir v1.13+.
 
-### 1.5.11 (2021-08-20)
+## 1.5.11 (2021-08-20)
 
 ### Bug Fixes
   * Relax `phoenix_ecto` version for installer to fix version conflicts
 
-### 1.5.10 (2021-08-06)
+## 1.5.10 (2021-08-06)
 
 ### Bug Fixes
   * [Channel] Push proper close event to client on duplicate topic shutdown
@@ -44,12 +50,12 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * Schedule heartbeat on reply to avoid intensive throttling
   * Fire each event in a separate task for the LongPoll transport to fix ordering
 
-### 1.5.9 (2021-05-10)
+## 1.5.9 (2021-05-10)
 
 ### JavaScript client
   * Bind to `beforeunload` instead of `unload` to solve Firefox connection issues
 
-### 1.5.8 (2021-02-23)
+## 1.5.8 (2021-02-23)
 
 ### Enhancements
   * [Endpoint] - Add `:log_access_url` config to endpoint start
@@ -60,7 +66,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 ### JavaScript client
   * Default channel `push` payload to empty object for backwards compatibility
 
-### 1.5.7 (2020-11-20)
+## 1.5.7 (2020-11-20)
 
 ### Enhancements
   * [Channel] - Add binary serialization support to default serializers
@@ -68,7 +74,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 ### JavaScript client
   * Add binary serialization support to default serializers for ability to push `ArrayBuffer` objects as binary WebSocket frames
 
-### 1.5.6 (2020-10-12)
+## 1.5.6 (2020-10-12)
 
 ### Enhancements
   * [phx.new] Add --install and --no-install options to phx.new
@@ -76,7 +82,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
 ### Bug fixes
   * [phx.new] Update `phoenix_live_dashboard` requirement to fix version conflicts
 
-### 1.5.5 (2020-09-21)
+## 1.5.5 (2020-09-21)
 
 ### Enhancements
   * [Phoenix.Logger] Add :conn to `[:phoenix, :router_dispatch, :exception]` events
@@ -84,7 +90,7 @@ Phoenix built-in guides have been restructured and revamped, providing a better 
   * [Phoenix.Controller] Don't create compile-time references when using `action_fallback` to speed up compilation
   * [Phoenix.Endpoint] Expose `:connect_info` `:trace_context_headers` in websockets and long polling
 
-### 1.5.4 (2020-07-21)
+## 1.5.4 (2020-07-21)
 
 ### Enhancements
   * [Phoenix.Endpoint] Include `:conn` in `[:phoenix, :error_rendered]` event
