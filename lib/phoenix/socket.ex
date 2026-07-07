@@ -79,6 +79,9 @@ defmodule Phoenix.Socket do
       This option controls how many supervisors will be spawned
       to handle channels. Defaults to the number of cores.
 
+    * `:max_channels_per_transport` - the maximum number of channels that may be
+      joined per transport process. Defaults to `100`.
+
   ## Garbage collection
 
   It's possible to force garbage collection in the transport process after
@@ -485,7 +488,16 @@ defmodule Phoenix.Socket do
 
     case negotiate_serializer(Keyword.fetch!(options, :serializer), vsn) do
       {:ok, serializer} ->
-        result = user_connect(user_socket, endpoint, transport, serializer, params, connect_info)
+        result =
+          user_connect(
+            user_socket,
+            endpoint,
+            transport,
+            serializer,
+            params,
+            connect_info,
+            options
+          )
 
         metadata = %{
           endpoint: endpoint,
@@ -587,7 +599,7 @@ defmodule Phoenix.Socket do
     end
   end
 
-  defp user_connect(handler, endpoint, transport, serializer, params, connect_info) do
+  defp user_connect(handler, endpoint, transport, serializer, params, connect_info, options) do
     # The information in the Phoenix.Socket goes to userland and channels.
     socket = %Socket{
       handler: handler,
@@ -600,7 +612,8 @@ defmodule Phoenix.Socket do
     # The information in the state is kept only inside the socket process.
     state = %{
       channels: %{},
-      channels_inverse: %{}
+      channels_inverse: %{},
+      max_channels_per_transport: Keyword.get(options, :max_channels_per_transport, 100)
     }
 
     connect_result =
@@ -666,29 +679,45 @@ defmodule Phoenix.Socket do
        ) do
     case socket.handler.__channel__(topic) do
       {channel, opts} ->
-        case Phoenix.Channel.Server.join(socket, channel, message, opts) do
-          {:ok, reply, pid} ->
-            reply = %Reply{
-              join_ref: join_ref,
-              ref: ref,
-              topic: topic,
-              status: :ok,
-              payload: reply
-            }
+        if map_size(state.channels) >= state.max_channels_per_transport do
+          Logger.warning(
+            "Reached max channels per transport limit of #{state.max_channels_per_transport} for socket #{inspect(socket.id)}"
+          )
 
-            state = put_channel(state, pid, topic, join_ref)
-            {:reply, :ok, encode_reply(socket, reply), {state, socket}}
+          reply = %Reply{
+            join_ref: join_ref,
+            ref: ref,
+            topic: topic,
+            status: :error,
+            payload: %{reason: "too many channels joined"}
+          }
 
-          {:error, reply} ->
-            reply = %Reply{
-              join_ref: join_ref,
-              ref: ref,
-              topic: topic,
-              status: :error,
-              payload: reply
-            }
+          {:reply, :error, encode_reply(socket, reply), {state, socket}}
+        else
+          case Phoenix.Channel.Server.join(socket, channel, message, opts) do
+            {:ok, reply, pid} ->
+              reply = %Reply{
+                join_ref: join_ref,
+                ref: ref,
+                topic: topic,
+                status: :ok,
+                payload: reply
+              }
 
-            {:reply, :error, encode_reply(socket, reply), {state, socket}}
+              state = put_channel(state, pid, topic, join_ref)
+              {:reply, :ok, encode_reply(socket, reply), {state, socket}}
+
+            {:error, reply} ->
+              reply = %Reply{
+                join_ref: join_ref,
+                ref: ref,
+                topic: topic,
+                status: :error,
+                payload: reply
+              }
+
+              {:reply, :error, encode_reply(socket, reply), {state, socket}}
+          end
         end
 
       _ ->
