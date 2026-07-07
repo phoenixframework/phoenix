@@ -333,6 +333,20 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     }
   end
 
+  def join_existing_session(path, session, topic, vsn, ref, join_ref) do
+    resp =
+      poll(:post, path, vsn, session, %{
+        "topic" => topic,
+        "event" => "phx_join",
+        "ref" => ref,
+        "join_ref" => join_ref,
+        "payload" => %{}
+      })
+
+    assert resp.body["status"] == 200
+    resp
+  end
+
   for %{adapter: adapter} <- [
         %{adapter: Bandit.PhoenixAdapter},
         %{adapter: Phoenix.Endpoint.Cowboy2Adapter}
@@ -379,6 +393,67 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           # poll without messages sends 204 no_content
           resp = poll(:get, "/ws", @vsn, session)
           assert resp.body["status"] == 204
+        end
+
+        test "#{@mode}: rejects the 101st channel join by default" do
+          prefix = "room:limit-#{System.unique_integer([:positive])}"
+          first_topic = "#{prefix}-1"
+          session = join("/ws", first_topic, @vsn, "1", @mode)
+
+          for index <- 1..100 do
+            topic = "#{prefix}-#{index}"
+
+            if index > 1 do
+              join_existing_session(
+                "/ws",
+                session,
+                topic,
+                @vsn,
+                to_string(index),
+                to_string(index)
+              )
+            end
+
+            resp = poll(:get, "/ws", @vsn, session)
+            assert resp.body["status"] == 200
+
+            assert [
+                     %Message{
+                       event: "phx_reply",
+                       payload: %{"response" => %{}, "status" => "ok"},
+                       topic: ^topic
+                     },
+                     %Message{
+                       event: "user_entered",
+                       payload: %{"user" => nil},
+                       topic: ^topic
+                     },
+                     %Message{
+                       event: "joined",
+                       payload: %{"status" => "connected", "user_id" => nil},
+                       topic: ^topic
+                     }
+                   ] = resp.body["messages"]
+          end
+
+          overflow_topic = "#{prefix}-101"
+          resp = join_existing_session("/ws", session, overflow_topic, @vsn, "101", "101")
+          assert resp.body["status"] == 200
+
+          resp = poll(:get, "/ws", @vsn, session)
+          assert resp.body["status"] == 200
+
+          assert [
+                   %Message{
+                     event: "phx_reply",
+                     payload: %{
+                       "response" => %{"reason" => "too many channels joined"},
+                       "status" => "error"
+                     },
+                     ref: "101",
+                     topic: ^overflow_topic
+                   }
+                 ] = resp.body["messages"]
         end
 
         test "#{@mode}: transport x_headers are extracted to the socket connect_info" do
