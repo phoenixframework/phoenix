@@ -4,6 +4,12 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.17 (2026-07-07)
+
+### Security fixes
+- [CVE-2026-56811](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-6983-jfq8-485w): Add a `max_channels_per_transport` option (defaulting to 100) to prevent a single client from spawning an unbounded number of channels (processes), eventually exhausting the server's memory or process limit.
+- [CVE-2026-56812](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-63mc-hw7g-86rr): Prevent presence keys from colliding with `Object.prototype` properties members, crashing the JS Presence client
+
 ## 1.6.16 (2023-02-17)
 
 ### Bug Fixes
