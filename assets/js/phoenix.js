@@ -1454,7 +1454,7 @@ export class Presence {
 
   constructor(channel, opts = {}){
     let events = opts.events || {state: "presence_state", diff: "presence_diff"}
-    this.state = {}
+    this.state = Object.create(null)
     this.pendingDiffs = []
     this.channel = channel
     this.joinRef = null
@@ -1512,9 +1512,10 @@ export class Presence {
    * @returns {Presence}
    */
   static syncState(currentState, newState, onJoin, onLeave){
-    let state = this.clone(currentState)
-    let joins = {}
-    let leaves = {}
+    let state = this.toNullProtoObj(this.clone(currentState))
+    newState = this.toNullProtoObj(newState)
+    let joins = Object.create(null)
+    let leaves = Object.create(null)
 
     this.map(state, (key, presence) => {
       if(!newState[key]){
@@ -1553,7 +1554,7 @@ export class Presence {
    * @returns {Presence}
    */
   static syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
-    let state = this.clone(currentState)
+    let state = this.toNullProtoObj(this.clone(currentState))
     if(!onJoin){ onJoin = function(){} }
     if(!onLeave){ onLeave = function(){} }
 
@@ -1602,6 +1603,21 @@ export class Presence {
 
   static map(obj, func){
     return Object.getOwnPropertyNames(obj).map(key => func(key, obj[key]))
+  }
+
+  // Presence keys are chosen on the server and may collide with
+  // Object.prototype properties ("__proto__", "constructor", ...), so any
+  // object indexed by presence key must not have a prototype chain
+  //
+  // TODO: replace the null-prototype objects with Maps in Phoenix 2.0
+  // (breaking change for the lower-level static API)
+  static toNullProtoObj(obj){
+    if(Object.getPrototypeOf(obj) === null){ return obj }
+    let cleaned = Object.create(null)
+    Object.getOwnPropertyNames(obj).forEach(key => {
+      cleaned[key] = obj[key]
+    })
+    return cleaned
   }
 
   static clone(obj){ return JSON.parse(JSON.stringify(obj)) }

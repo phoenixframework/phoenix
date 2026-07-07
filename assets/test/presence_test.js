@@ -133,6 +133,40 @@ describe("syncDiff", () => {
   })
 })
 
+describe("keys colliding with Object.prototype properties", function(){
+  // built via JSON.parse because a "__proto__" key in an object literal would
+  // set the prototype instead of creating an own property
+  const protoState = JSON.parse(`{
+    "__proto__": {"metas": [{"id": 1, "phx_ref": "1"}]},
+    "constructor": {"metas": [{"id": 2, "phx_ref": "2"}]},
+    "hasOwnProperty": {"metas": [{"id": 3, "phx_ref": "3"}]}
+  }`)
+
+  it("syncState joins and leaves them without touching the prototype", function(){
+    let joined = []
+    let state = Presence.syncState({}, protoState, key => joined.push(key))
+
+    assert.equal(Object.getPrototypeOf(state), null)
+    assert.deepEqual(joined, ["__proto__", "constructor", "hasOwnProperty"])
+    assert.deepEqual(Presence.list(state, (key, {metas}) => metas[0].id), [1, 2, 3])
+
+    let left = []
+    state = Presence.syncState(state, {}, null, key => left.push(key))
+    assert.deepEqual(left, ["__proto__", "constructor", "hasOwnProperty"])
+    assert.deepEqual(Presence.list(state), [])
+    assert.equal(Object.prototype.metas, undefined)
+  })
+
+  it("syncDiff joins and leaves them without touching the prototype", function(){
+    let diff = JSON.parse(`{"joins": {"__proto__": {"metas": [{"id": 1, "phx_ref": "1"}]}}, "leaves": {}}`)
+    let state = Presence.syncDiff({}, diff)
+    assert.deepEqual(Presence.list(state, (key, {metas}) => [key, metas[0].id]), [["__proto__", 1]])
+
+    state = Presence.syncDiff(state, JSON.parse(`{"joins": {}, "leaves": {"__proto__": {"metas": [{"id": 1, "phx_ref": "1"}]}}}`))
+    assert.deepEqual(Presence.list(state), [])
+    assert.equal(Object.prototype.metas, undefined)
+  })
+})
 
 describe("list", () => {
   it("lists full presence by default", () => {
