@@ -232,6 +232,20 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       Phoenix.Token.sign(Endpoint, Atom.to_string(__MODULE__), {:v1, "unknown", pid, topic})}
   end
 
+  def join_existing_session(path, session, topic, vsn, ref, join_ref) do
+    resp =
+      poll(:post, path, vsn, session, %{
+        "topic" => topic,
+        "event" => "phx_join",
+        "ref" => ref,
+        "join_ref" => join_ref,
+        "payload" => %{}
+      })
+
+    assert resp.body["status"] == 200
+    resp
+  end
+
   for mode <- [:local, :pubsub] do
     @mode mode
     @vsn "1.0.0"
@@ -395,6 +409,67 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :inactive}}, 5000)
       resp = poll(:post, "/ws", @vsn, session)
       assert resp.body["status"] == 410
+    end
+
+    test "#{@mode}: rejects the 101st channel join by default" do
+      prefix = "room:limit-#{System.unique_integer([:positive])}"
+      first_topic = "#{prefix}-1"
+      session = join("/ws", first_topic, @vsn, "1", @mode)
+
+      for index <- 1..100 do
+        topic = "#{prefix}-#{index}"
+
+        if index > 1 do
+          join_existing_session(
+            "/ws",
+            session,
+            topic,
+            @vsn,
+            to_string(index),
+            to_string(index)
+          )
+        end
+
+        resp = poll(:get, "/ws", @vsn, session)
+        assert resp.body["status"] == 200
+
+        assert [
+                  %Message{
+                    event: "phx_reply",
+                    payload: %{"response" => %{}, "status" => "ok"},
+                    topic: ^topic
+                  },
+                  %Message{
+                    event: "user_entered",
+                    payload: %{"user" => nil},
+                    topic: ^topic
+                  },
+                  %Message{
+                    event: "joined",
+                    payload: %{"status" => "connected", "user_id" => nil},
+                    topic: ^topic
+                  }
+                ] = resp.body["messages"]
+      end
+
+      overflow_topic = "#{prefix}-101"
+      resp = join_existing_session("/ws", session, overflow_topic, @vsn, "101", "101")
+      assert resp.body["status"] == 200
+
+      resp = poll(:get, "/ws", @vsn, session)
+      assert resp.body["status"] == 200
+
+      assert [
+                %Message{
+                  event: "phx_reply",
+                  payload: %{
+                    "response" => %{"reason" => "too many channels joined"},
+                    "status" => "error"
+                  },
+                  ref: "101",
+                  topic: ^overflow_topic
+                }
+              ] = resp.body["messages"]
     end
   end
 
