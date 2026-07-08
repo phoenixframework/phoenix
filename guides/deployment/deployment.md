@@ -148,3 +148,4 @@ The reason for this is simple. While a WebSocket is a long-lived open connection
 
   * [Render](https://render.com) has first class support for Phoenix applications. There are guides for hosting Phoenix with [Mix releases](https://render.com/docs/deploy-phoenix) and as a [Distributed Elixir Cluster](https://render.com/docs/deploy-elixir-cluster).
   * [Railway](https://railway.com) also provides support for Phoenix applications using [Mix releases](https://docs.railway.com/guides/phoenix).
+  * [Seenode](https://seenode.com) provides first class support for Phoenix with [a detailed documentation](https://seenode.com/docs/frameworks/elixir/phoenix/) and a [quickstart template](https://github.com/seenode/example-phoenix).
