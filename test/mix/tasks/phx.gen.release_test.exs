@@ -11,11 +11,14 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
     Mix.Task.clear()
 
     Process.put({Mix.Tasks.Phx.Gen.Release, :http_client}, fn url ->
-      case to_string(url) do
-        "https://hub.docker.com/v2/namespaces/hexpm/repositories/elixir/tags?" <> _ ->
-          Phoenix.json_library().encode!(%{
-            results: [%{name: "1.18.4-erlang-25.3.2.17-debian-trixie-20251117-slim"}]
-          })
+      uri = URI.parse(to_string(url))
+      params = URI.decode_query(uri.query || "")
+      tag = params["tag"] || "1.18.4-erlang-25.3.2.17-debian-trixie-"
+
+      if uri.host == "bob.hex.pm" and uri.path == "/api/docker" do
+        bob_tags_response([tag <> "20251117-slim"])
+      else
+        raise "unexpected URL #{url}"
       end
     end)
 
@@ -129,6 +132,71 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
     end)
   end
 
+  test "fetches docker tags from Bob API", config do
+    parent = self()
+
+    Process.put({Mix.Tasks.Phx.Gen.Release, :http_client}, fn url ->
+      uri = URI.parse(to_string(url))
+      send(parent, {:docker_url, uri})
+
+      if uri.host == "bob.hex.pm" and uri.path == "/api/docker" do
+        bob_tags_response(["1.18.4-erlang-27.0.3-debian-trixie-20251117-slim"])
+      else
+        raise "unexpected URL #{url}"
+      end
+    end)
+
+    in_tmp_project(config.test, fn ->
+      Gen.Release.run(["--docker", "--elixir", "1.18.4", "--otp", "27.0.3"])
+
+      assert_file("Dockerfile", fn file ->
+        assert file =~ ~S|ARG ELIXIR_VERSION=1.18.4|
+        assert file =~ ~S|ARG OTP_VERSION=27.0.3|
+        assert file =~ ~S|ARG DEBIAN_VERSION=trixie-20251117-slim|
+      end)
+
+      assert_receive {:docker_url, %URI{query: query}}
+      assert URI.decode_query(query)["tag"] == "1.18.4-erlang-27.0.3-debian-trixie-"
+    end)
+  end
+
+  test "falls back to compatible docker image versions", config do
+    Process.put({Mix.Tasks.Phx.Gen.Release, :http_client}, fn url ->
+      uri = URI.parse(to_string(url))
+      params = URI.decode_query(uri.query || "")
+
+      tags =
+        case {params["tag"], params["elixir_version"], params["erlang_version"]} do
+          {"1.18.3-erlang-27.0.0-debian-trixie-", _, _} ->
+            []
+
+          {_, "1.18.3", _} ->
+            []
+
+          {_, "1.18", "27.0"} ->
+            ["1.18.4-erlang-27.0.3-debian-trixie-20251117-slim"]
+
+          _ ->
+            []
+        end
+
+      if uri.host == "bob.hex.pm" and uri.path == "/api/docker" do
+        bob_tags_response(tags)
+      else
+        raise "unexpected URL #{url}"
+      end
+    end)
+
+    in_tmp_project(config.test, fn ->
+      Gen.Release.run(["--docker", "--elixir", "1.18.3", "--otp", "27.0.0"])
+
+      assert_file("Dockerfile", fn file ->
+        assert file =~ ~S|ARG ELIXIR_VERSION=1.18.4|
+        assert file =~ ~S|ARG OTP_VERSION=27.0.3|
+      end)
+    end)
+  end
+
   test "generates release and docker files with assets dir", config do
     in_tmp_project(config.test, fn ->
       File.mkdir_p!("assets")
@@ -152,5 +220,22 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
         refute file =~ ~S|RUN mix assets.deploy|
       end)
     end)
+  end
+
+  defp bob_tags_response(tags) do
+    Phoenix.json_library().encode!(%{
+      tags:
+        Enum.map(tags, fn tag ->
+          %{
+            repo: "hexpm/elixir",
+            tag: tag,
+            archs: ["amd64", "arm64"],
+            built_at: "2025-11-17T00:00:00Z"
+          }
+        end),
+      total: length(tags),
+      offset: 0,
+      page_size: 100
+    })
   end
 end
