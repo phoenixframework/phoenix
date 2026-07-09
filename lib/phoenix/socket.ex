@@ -722,7 +722,7 @@ defmodule Phoenix.Socket do
     case socket.handler.__channel__(topic) do
       {channel, opts} ->
         if map_size(state.channels) >= state.max_channels_per_transport do
-          Logger.warning(
+          Logger.error(
             "Reached max channels per transport limit of #{state.max_channels_per_transport} for socket #{inspect(socket.id)}"
           )
 
