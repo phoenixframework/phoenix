@@ -35,7 +35,46 @@ defmodule Phoenix.CodeReloader.Server do
   ## Callbacks
 
   def init(:ok) do
-    {:ok, %{check_symlinks: true, timestamp: timestamp()}}
+    # The Elixir compiler does not check to see if the mix.lock is stale during
+    # compilation as that's effectively handled on boot.
+    #
+    # On boot, Elixir checks if all dependencies match the lock. If they don't,
+    # Elixir fails to boot, and force a "mix deps.get". Which then writes a
+    # .mix/compile.lock checked by the Elixir compiler.
+    #
+    # Meanwhile, Phoenix has to answer the question: has the lock file changed?
+    # The usual answer is to compare configuration files to the Elixir manifest
+    # but we can't do that for the lockfile because touching the lockfile does
+    # not necessarily force Elixir to compile. As established above, the lockfile
+    # is checked on boot and it does not use timestamps for said checks. We could
+    # compare .mix/compile.lock but, since Elixir v1.20, changing .mix/compile.lock
+    # does not force Elixir to compile either. Generally speaking, the smarter the
+    # compiler gets, the harder it is to predict when it requires compilation.
+    # For this reason, we do a simple system where we compare config files and their
+    # MD5 to the latest timestamp and we abort if any of them changed.
+    md5s =
+      if Code.ensure_loaded?(Mix.Project) do
+        config = Mix.Project.config()
+        build_path = Mix.Project.build_path(config)
+
+        for file <- [config[:lockfile] | Mix.Project.config_files()],
+            # We only care about config files in the project,
+            # as we don't want track internal manifest files (per the comment above)
+            # and because reporting internal files to the user is a poor UX.
+            not String.starts_with?(file, build_path),
+            do: {file, file_md5(file)}
+      else
+        %{}
+      end
+
+    {:ok, %{check_symlinks: true, timestamp: timestamp(), md5s: md5s}}
+  end
+
+  defp file_md5(file) do
+    case File.read(file) do
+      {:ok, content} -> :erlang.md5(content)
+      {:error, _} -> nil
+    end
   end
 
   def handle_call(:check_symlinks, _from, state) do
@@ -89,7 +128,7 @@ defmodule Phoenix.CodeReloader.Server do
           proxy_io(fn ->
             try do
               task_loaded = Code.ensure_loaded(Mix.Task)
-              mix_compile(task_loaded, compilers, apps, args, state.timestamp, purge_fallback?)
+              mix_compile(task_loaded, compilers, apps, args, purge_fallback?, state)
             catch
               :exit, {:shutdown, 1} ->
                 :error
@@ -103,18 +142,18 @@ defmodule Phoenix.CodeReloader.Server do
         {backup, res, out}
       end)
 
-    reply =
+    {reply, state} =
       case res do
         :ok ->
-          :ok
+          {:ok, %{state | timestamp: timestamp()}}
 
         :error ->
           write_backup(backup)
-          {:error, IO.iodata_to_binary(out)}
+          {{:error, IO.iodata_to_binary(out)}, state}
       end
 
     Enum.each(froms, &GenServer.reply(&1, reply))
-    {:noreply, %{state | timestamp: timestamp()}}
+    {:noreply, state}
   end
 
   def handle_cast({:sync, pid, ref}, state) do
@@ -216,11 +255,19 @@ defmodule Phoenix.CodeReloader.Server do
          compilers,
          apps_to_reload,
          compile_args,
-         timestamp,
-         purge_fallback?
+         purge_fallback?,
+         state
        ) do
+    timestamp = state.timestamp
     config = Mix.Project.config()
     path = Mix.Project.consolidation_path(config)
+
+    state.md5s
+    |> Enum.filter(fn {file, md5} ->
+      Mix.Utils.stale?([file], [timestamp]) and file_md5(file) != md5
+    end)
+    |> Enum.map(&elem(&1, 0))
+    |> raise_if_config_files_changed()
 
     mix_compile_deps(
       Mix.Dep.cached(),
@@ -294,31 +341,30 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp mix_compile_unless_stale_config(compilers, compile_args, timestamp, path, purge_fallback?) do
     manifests = Mix.Tasks.Compile.Elixir.manifests()
-    configs = Mix.Project.config_files()
     config = Mix.Project.config()
 
-    case Mix.Utils.extract_stale(configs, manifests) do
-      [] ->
-        # If the manifests are more recent than the timestamp,
-        # someone updated this app behind the scenes, so purge all beams.
-        # TODO: remove once we depend on Elixir 1.18
-        if purge_fallback? and Mix.Utils.stale?(manifests, [timestamp]) do
-          purge_modules(Path.join(Mix.Project.app_path(config), "ebin"))
-        end
-
-        mix_compile(compilers, compile_args, config, path)
-
-      files ->
-        raise """
-        could not compile application: #{Mix.Project.config()[:app]}.
-
-        You must restart your server after changing configuration files or your dependencies.
-        In particular, the following files changed and must be recomputed on a server restart:
-
-          * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
-
-        """
+    # TODO: remove once we depend on Elixir 1.18
+    if purge_fallback? and Mix.Utils.stale?(manifests, [timestamp]) do
+      purge_modules(Path.join(Mix.Project.app_path(config), "ebin"))
     end
+
+    mix_compile(compilers, compile_args, config, path)
+  end
+
+  defp raise_if_config_files_changed([]) do
+    :ok
+  end
+
+  defp raise_if_config_files_changed(files) do
+    raise """
+    could not compile application: #{Mix.Project.config()[:app]}.
+
+    You must restart your server after changing configuration files or your dependencies.
+    In particular, the following files changed and must be recomputed on a server restart:
+
+      * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
+
+    """
   end
 
   defp mix_compile(compilers, compile_args, config, consolidation_path) do
