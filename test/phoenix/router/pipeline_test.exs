@@ -174,4 +174,35 @@ defmodule Phoenix.Router.PipelineTest do
       end
     end
   end
+
+  test "pipe_through with module plug and options" do
+    defmodule ModulePlugRouter do
+      use Phoenix.Router
+
+      defmodule GreetingPlug do
+        def init(opts), do: opts
+
+        def call(conn, opts) do
+          Plug.Conn.assign(conn, :greeting, Keyword.fetch!(opts, :greeting))
+        end
+      end
+
+      pipeline :api do
+        plug :put_assign, "api"
+      end
+
+      scope "/" do
+        pipe_through [:api, {GreetingPlug, greeting: "Hey there"}]
+        get "/hello", SampleController, :index
+      end
+
+      defp put_assign(conn, value) do
+        assign(conn, :stack, [value | conn.assigns[:stack] || []])
+      end
+    end
+
+    conn = call(ModulePlugRouter, :get, "/hello")
+    assert conn.assigns[:greeting] == "Hey there"
+    assert conn.assigns[:stack] == ["api"]
+  end
 end
