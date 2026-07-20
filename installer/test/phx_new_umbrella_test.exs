@@ -682,6 +682,33 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end)
   end
 
+  test "new with mongodb adapter" do
+    in_tmp("new with mongodb adapter", fn ->
+      app = "custom_path"
+      project_path = Path.join(File.cwd!(), app)
+      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mongodb"])
+
+      assert_file(app_path(app, "mix.exs"), ":mongodb_ecto")
+      assert_file(app_path(app, "lib/custom_path/repo.ex"), "Mongo.Ecto")
+
+      assert_file(root_path(app, "config/dev.exs"), [
+        ~r/mongo_url:/,
+        ~r/mongodb:\/\/localhost:27017/
+      ])
+
+      assert_file(root_path(app, "config/test.exs"), [~r/mongo_url:/])
+
+      assert_file(root_path(app, "config/runtime.exs"), [~r/DATABASE_URL/])
+
+      assert_file(root_path(app, "config/config.exs"), ~r/generators: \[.*binary_id: true.*\]/)
+
+      assert_file(
+        app_path(app, "test/support/data_case.ex"),
+        "Mongo.Ecto.truncate"
+      )
+    end)
+  end
+
   test "new with invalid database adapter" do
     in_tmp("new with invalid database adapter", fn ->
       project_path = Path.join(File.cwd!(), "custom_path")

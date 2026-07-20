@@ -25,6 +25,7 @@ defmodule Mix.Tasks.Phx.New do
 
         * `postgres` - via https://github.com/elixir-ecto/postgrex
         * `mysql` - via https://github.com/elixir-ecto/myxql
+        * `mongodb` - via https://github.com/elixir-mongo/mongodb_ecto
         * `mssql` - via https://github.com/livehelpnow/tds
         * `sqlite3` - via https://github.com/elixir-sqlite/ecto_sqlite3
 
