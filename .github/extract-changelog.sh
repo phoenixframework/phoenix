@@ -15,9 +15,9 @@ if [[ -z "$VERSION" ]]; then
     exit 1
 fi
 
-# Normalize version to drop the 'v' prefix, since Phoenix changelog headers
-# are written without it (e.g. "## 1.8.9 (2026-07-07)").
-VERSION="${VERSION#v}"
+# Normalize version to include 'v' prefix
+VERSION="${VERSION#v}"  # Remove 'v' if present
+VERSION="v${VERSION}"   # Add 'v' prefix
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHANGELOG_PATH="${SCRIPT_DIR}/../CHANGELOG.md"
@@ -28,12 +28,12 @@ if [[ ! -f "$CHANGELOG_PATH" ]]; then
 fi
 
 # Extract the section for the specified version
-# Match from "## X.Y.Z" until the next "## X.Y.Z" header
+# Match from "## vX.Y.Z" until the next "## v" header
 awk -v version="$VERSION" '
     BEGIN { found = 0; printing = 0 }
 
-    # Match the start of a numbered version section
-    /^## [0-9]/ {
+    # Match the start of our target version section
+    /^## v[0-9]/ {
         if (printing) {
             # We hit the next version, stop printing
             exit
