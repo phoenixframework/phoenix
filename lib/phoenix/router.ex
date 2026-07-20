@@ -816,7 +816,14 @@ defmodule Phoenix.Router do
   end
 
   defp build_pipes(name, pipe_through) do
-    plugs = pipe_through |> Enum.reverse() |> Enum.map(&{&1, [], true})
+    plugs =
+      pipe_through
+      |> Enum.reverse()
+      |> Enum.map(fn
+        {module, opts} -> {module, opts, true}
+        plug -> {plug, [], true}
+      end)
+
     opts = [init_mode: Phoenix.plug_init_mode(), log_on_halt: :debug]
     {conn, body} = Plug.Builder.compile(__ENV__, plugs, opts)
 
@@ -1035,6 +1042,11 @@ defmodule Phoenix.Router do
   Pipelines are defined in the router, see `pipeline/2` for more information.
 
       pipe_through [:require_authenticated_user, :my_browser_pipeline]
+
+  A module plug may also be given, optionally with a tuple of `{plug, opts}`
+  to pass options to it:
+
+      pipe_through [:browser, MyApp.Plugs.Locale, {MyApp.Plugs.Feature, flag: :beta}]
 
   ## Multiple invocations
 
