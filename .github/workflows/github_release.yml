@@ -1,0 +1,35 @@
+name: Creates a GitHub Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog for version
+        run: bash .github/extract-changelog.sh "${{ steps.version.outputs.version }}" > release_notes.md
+
+      - name: Create GitHub Release
+        run: |
+          PRERELEASE_FLAG=""
+          if [[ "${{ steps.version.outputs.version }}" == *-rc* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          gh release create "${{ steps.version.outputs.version }}" \
+            --title "${{ steps.version.outputs.version }}" \
+            --notes-file release_notes.md \
+            $PRERELEASE_FLAG
