@@ -29,19 +29,19 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience. This may also lead to errors on application boot if you were previously incorrectly setting compile time config at runtime.
 
-## 1.8.9 (2026-07-07)
+## v1.8.9 (2026-07-07)
 
 ### Security fixes
 - [CVE-2026-56811](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-6983-jfq8-485w): Add a `max_channels_per_transport` option (defaulting to 100) to prevent a single client from spawning an unbounded number of channels (processes), eventually exhausting the server's memory or process limit.
 - [CVE-2026-56812](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-63mc-hw7g-86rr): Prevent presence keys from colliding with `Object.prototype` properties members, crashing the JS Presence client
 - Enforce longpoll batch size introduced in 1.8.6. This is additional hardening against [CVE-2026-32689](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-628h-q48j-jr6q). If your application sends events with a very high frequency and uses long polling, such that a single longpoll request would exceed 100 events, you should update to 1.8.7 first.
 
-## 1.8.8 (2026-06-10)
+## v1.8.8 (2026-06-10)
 
 ### Enhancements
 - [phx.new] Use LiveView 1.2.0
 
-## 1.8.7 (2026-05-06)
+## v1.8.7 (2026-05-06)
 
 ### Bug fixes
 - Fix invalid status when longpoll request times out
@@ -52,7 +52,7 @@ This release introduces deprecation warnings for several features that have been
 ### JavaScript Client Bug Fixes
 - Fix encoding of non-ASCII metadata in binary channel messages
 
-## 1.8.6 (2026-05-05)
+## v1.8.6 (2026-05-05)
 
 ### Security fixes
 - [CVE-2026-32689](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-628h-q48j-jr6q): Fix Phoenix.Socket Longpoll transport memory exhaustion in nd-JSON body splitting
@@ -70,7 +70,7 @@ This release introduces deprecation warnings for several features that have been
 - [phx.gen.*] Fix generated migrations for myxql when using scopes ([#6635](https://github.com/phoenixframework/phoenix/pull/6635))
 - [phx.new] Fix crash when parent directory contains a colon ([#6633](https://github.com/phoenixframework/phoenix/pull/6633))
 
-## 1.8.5 (2026-03-05)
+## v1.8.5 (2026-03-05)
 
 ### JavaScript Client Bug Fixes
 - Fix socket connecting on visibility change when never established
@@ -78,7 +78,7 @@ This release introduces deprecation warnings for several features that have been
 ### Enhancements
 - Fix warnings on Elixir 1.20
 
-## 1.8.4 (2026-02-23)
+## v1.8.4 (2026-02-23)
 
 ### JavaScript Client Bug Fixes
 - Fix bug reconnecting connections when close was gracefully initiated by server
@@ -88,95 +88,95 @@ This release introduces deprecation warnings for several features that have been
 - Adds guards support in `assert_push`, `assert_broadcast`, and `assert_reply`
 - Enable purging in Phoenix code server for Elixir 1.20
 
-## 1.8.3 (2025-12-08)
+## v1.8.3 (2025-12-08)
 
 ### Enhancements
-  - Add top-level phoenix config: `sort_verified_routes_query_params` to enable sorting query params in verified routes during tests
+- Add top-level phoenix config: `sort_verified_routes_query_params` to enable sorting query params in verified routes during tests
 
 ### Bug fixes
-  - Fix endpoint port config in an umbrella application. ([#6549](https://github.com/phoenixframework/phoenix/pull/6549))
-  - Drop incoming channel messages with stale join refs
+- Fix endpoint port config in an umbrella application. ([#6549](https://github.com/phoenixframework/phoenix/pull/6549))
+- Drop incoming channel messages with stale join refs
 
-## 1.8.2 (2025-11-26)
+## v1.8.2 (2025-11-26)
 
 ### Bug fixes
-  - [phoenix.js] fix issue where LongPoll can cause "unmatched topic" errors (observed on iOS only) ([#6538](https://github.com/phoenixframework/phoenix/pull/6538))
-  - [phx.gen.live] fix tests when schema and table names are equal ([#6477](https://github.com/phoenixframework/phoenix/pull/6477))
-  - [Verified Routes] do not add path prefixes for static routes
-  - [Phoenix.Endpoint] fix LongPoll being active by default since 1.8.0 ([#6487](https://github.com/phoenixframework/phoenix/pull/6487))
+- [phoenix.js] fix issue where LongPoll can cause "unmatched topic" errors (observed on iOS only) ([#6538](https://github.com/phoenixframework/phoenix/pull/6538))
+- [phx.gen.live] fix tests when schema and table names are equal ([#6477](https://github.com/phoenixframework/phoenix/pull/6477))
+- [Verified Routes] do not add path prefixes for static routes
+- [Phoenix.Endpoint] fix LongPoll being active by default since 1.8.0 ([#6487](https://github.com/phoenixframework/phoenix/pull/6487))
 
 ### Enhancements
-  - [phoenix.js] socket now stops reconnection attempts while the page is hidden ([#6534](https://github.com/phoenixframework/phoenix/pull/6534))
-  - [phx.new] (re-)add `<.input field={@form[:foo]} type="hidden" />` support in core components
-  - [phx.new] set `force_ssl` in `prod.exs` by default ([#6435](https://github.com/phoenixframework/phoenix/pull/6435))
-  - [phx.new] change `--docker` base image to debian trixie ([#6521](https://github.com/phoenixframework/phoenix/pull/6521))
-  - [Phoenix.Socket.assign/2] allow passing a function as second argument `assign(socket, fn _existing_assigns -> %{this_gets: "merged"} end)` ([#6530](https://github.com/phoenixframework/phoenix/pull/6530))
-  - [Phoenix.Controller.assign/2] allow passing a function as second argument ([#6542](https://github.com/phoenixframework/phoenix/pull/6542))
-  - [Phoenix.Controller.assign/2] support keyword lists and maps as second argument similar to LiveView ([#6513](https://github.com/phoenixframework/phoenix/pull/6513))
-  - [Presence] support custom dispatcher for `presence_diff` broadcast ([#6500](https://github.com/phoenixframework/phoenix/pull/6500))
-  - [AGENTS.md] add short test guidelines to usage rules
+- [phoenix.js] socket now stops reconnection attempts while the page is hidden ([#6534](https://github.com/phoenixframework/phoenix/pull/6534))
+- [phx.new] (re-)add `<.input field={@form[:foo]} type="hidden" />` support in core components
+- [phx.new] set `force_ssl` in `prod.exs` by default ([#6435](https://github.com/phoenixframework/phoenix/pull/6435))
+- [phx.new] change `--docker` base image to debian trixie ([#6521](https://github.com/phoenixframework/phoenix/pull/6521))
+- [Phoenix.Socket.assign/2] allow passing a function as second argument `assign(socket, fn _existing_assigns -> %{this_gets: "merged"} end)` ([#6530](https://github.com/phoenixframework/phoenix/pull/6530))
+- [Phoenix.Controller.assign/2] allow passing a function as second argument ([#6542](https://github.com/phoenixframework/phoenix/pull/6542))
+- [Phoenix.Controller.assign/2] support keyword lists and maps as second argument similar to LiveView ([#6513](https://github.com/phoenixframework/phoenix/pull/6513))
+- [Presence] support custom dispatcher for `presence_diff` broadcast ([#6500](https://github.com/phoenixframework/phoenix/pull/6500))
+- [AGENTS.md] add short test guidelines to usage rules
 
-## 1.8.1 (2025-08-28)
-
-### Bug fixes
-  - [phx.new] Fix AGENTS.md failing to include CSS and JavaScript sections
-
-## 1.8.0 (2025-08-05)
+## v1.8.1 (2025-08-28)
 
 ### Bug fixes
-  - [phx.new] Don't include node_modules override in generated `tsconfig.json`
+- [phx.new] Fix AGENTS.md failing to include CSS and JavaScript sections
+
+## v1.8.0 (2025-08-05)
+
+### Bug fixes
+- [phx.new] Don't include node_modules override in generated `tsconfig.json`
 
 ### Enhancements
-  - [phx.gen.live|html|json] - Make context argument optional. Defaults to the plural name.
-  - [phx.new] Add `mix precommit` alias
-  - [phx.new] Add `AGENTS.md` generation compatible with [`usage_rules`](https://usage-rules.hexdocs.pm/)
-  - [phx.new] Add `usage_rules` folder to installer, allowing to sync generic Phoenix rules into new projects
-  - [phx.new] Use LiveView 1.1 release in generated code
-  - [phx.new] Ensure theme selector and flash closing works without LiveView
+- [phx.gen.live|html|json] - Make context argument optional. Defaults to the plural name.
+- [phx.new] Add `mix precommit` alias
+- [phx.new] Add `AGENTS.md` generation compatible with [`usage_rules`](https://usage-rules.hexdocs.pm/)
+- [phx.new] Add `usage_rules` folder to installer, allowing to sync generic Phoenix rules into new projects
+- [phx.new] Use LiveView 1.1 release in generated code
+- [phx.new] Ensure theme selector and flash closing works without LiveView
 
-## 1.8.0-rc.4 (2025-07-14)
+## v1.8.0-rc.4 (2025-07-14)
 
 ### Bug Fixes
-  - Fix phx.gen.presence PubSub server name for umbrella apps
-  - Fix `phx.gen.live` subscribing to pubsub in disconnected mounts
+- Fix phx.gen.presence PubSub server name for umbrella apps
+- Fix `phx.gen.live` subscribing to pubsub in disconnected mounts
 
 ### Enhancements
-  - [phx.new] Initialize initial git repo when git is installed
-  - [phx.new] Opt-in to HEEx `:debug_tags_location` in development
-  - [phx.gen.live|html|json|context] Make context name optional and inflect based on schema when missing
-  - [phx.gen.*] Use new Ecto 3.13 `Repo.transact/2` in generators
-  - [phx.gen.auth] Warn when using `phx.gen.auth` without esbuild as features assume `phoenix_html.js` in bundle
-  - Add `security.md` guide for security best practices
-  - [phoenix.js] - Add fetch() support to LongPoll when XMLHTTPRequest is not available
-  - Optimize parameter scrubbing by precompiling patterns
+- [phx.new] Initialize initial git repo when git is installed
+- [phx.new] Opt-in to HEEx `:debug_tags_location` in development
+- [phx.gen.live|html|json|context] Make context name optional and inflect based on schema when missing
+- [phx.gen.*] Use new Ecto 3.13 `Repo.transact/2` in generators
+- [phx.gen.auth] Warn when using `phx.gen.auth` without esbuild as features assume `phoenix_html.js` in bundle
+- Add `security.md` guide for security best practices
+- [phoenix.js] - Add fetch() support to LongPoll when XMLHTTPRequest is not available
+- Optimize parameter scrubbing by precompiling patterns
 
-## 1.8.0-rc.3 (2025-05-07)
+## v1.8.0-rc.3 (2025-05-07)
 
 ### Enhancements
-  - [phx.gen.auth] Allow configuring the scope's assign key in phx.gen.auth
-  - [phx.new] Do not override theme in root layout if explicitly set
+- [phx.gen.auth] Allow configuring the scope's assign key in phx.gen.auth
+- [phx.new] Do not override theme in root layout if explicitly set
 
-## 1.8.0-rc.2 (2025-04-29)
+## v1.8.0-rc.2 (2025-04-29)
 
 ### Bug Fixes
-  - [phx.gen.live] Only subscribe to pubsub if connected
-  - [phx.gen.auth] Remove unused current_password field
-  - [phx.gen.auth] Use context_app for scopes to fix generated scopes in umbrella apps
+- [phx.gen.live] Only subscribe to pubsub if connected
+- [phx.gen.auth] Remove unused current_password field
+- [phx.gen.auth] Use context_app for scopes to fix generated scopes in umbrella apps
 
-## 1.8.0-rc.1 (2025-04-16)
+## v1.8.0-rc.1 (2025-04-16)
 
 ### Enhancements
-  - [phx.new] Support PORT in dev
-  - [phx.gen.auth] Replace `utc_now/0 + truncate/1` with `utc_now/1`
-  - [phx.gen.auth] Make dev mailbox link more obvious
+- [phx.new] Support PORT in dev
+- [phx.gen.auth] Replace `utc_now/0 + truncate/1` with `utc_now/1`
+- [phx.gen.auth] Make dev mailbox link more obvious
 
 ### Bug Fixes
-  - [phx.new] Fix Tailwind custom variants for loading classes (#6194)
-  - [phx.new] Fix heroicons path for umbrella apps
-  - [phx.gen.auth] Fix missing index for scoped resources (#6186)
-  - [phx.gen.live] Fix crash when an open :show page gets a PubSub broadcast for items (#6197)
+- [phx.new] Fix Tailwind custom variants for loading classes (#6194)
+- [phx.new] Fix heroicons path for umbrella apps
+- [phx.gen.auth] Fix missing index for scoped resources (#6186)
+- [phx.gen.live] Fix crash when an open :show page gets a PubSub broadcast for items (#6197)
 
-## 1.8.0-rc.0 (2025-04-01) 🚀
+## v1.8.0-rc.0 (2025-04-01) 🚀
 
 - First release candidate!
 
