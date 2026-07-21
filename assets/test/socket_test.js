@@ -13,7 +13,7 @@ describe("with transports", function (){
     const mockSend = jest.fn()
     const mockAbort = jest.fn()
     const mockSetRequestHeader = jest.fn()
-    
+
     global.XMLHttpRequest = jest.fn(() => ({
       open: mockOpen,
       send: mockSend,
@@ -93,10 +93,16 @@ describe("with transports", function (){
         mockServer.stop(() => {
           expect(socket.transport).toBe(WebSocket)
           socket.onError((_reason) => {
-            setTimeout(() => {
-              expect(replaceSpy).toHaveBeenCalledWith(LongPoll)
-              done()
-            }, 100)
+            let startTime = Date.now()
+            const interval = setInterval(() => {
+              if (socket.transport === LongPoll) {
+                expect(replaceSpy).toHaveBeenCalledWith(LongPoll)
+                const elapsed = Date.now() - startTime
+                clearInterval(interval)
+                expect(elapsed).toBeGreaterThan(19)
+                done()
+              }
+            }, 5)
           })
           socket.connect()
         })
