@@ -546,7 +546,7 @@ defmodule Phoenix.Router do
         quote line: line, do: _ = &(unquote(module).unquote(function) / unquote(arity))
       end)
 
-    keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata]
+    keys = [:verb, :path, :plug, :plug_opts, :helper, :metadata, :hosts]
     routes = Enum.map(routes, &Map.take(&1, keys))
 
     quote do
@@ -1464,7 +1464,9 @@ defmodule Phoenix.Router do
               verb: nested_route.verb
           }
 
-          Map.put(route, :label, nested_route.label)
+          route
+          |> Map.put(:label, nested_route.label)
+          |> Map.put(:hosts, Map.get(nested_route, :hosts, route.hosts))
         end)
       else
         plug =
@@ -1480,6 +1482,7 @@ defmodule Phoenix.Router do
             helper: route.helper,
             verb: route.verb,
             path: route.path,
+            hosts: route.hosts,
             label: label
           }
         ]
