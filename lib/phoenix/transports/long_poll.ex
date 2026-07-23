@@ -7,6 +7,7 @@ defmodule Phoenix.Transports.LongPoll do
   @max_base64_size 10_000_000
   @max_poll_batch_size 100
   @connect_info_opts [:check_csrf]
+  @token_header "x-phoenix-longpoll-token"
 
   import Plug.Conn
   alias Phoenix.Socket.{V1, V2, Transport}
@@ -18,7 +19,8 @@ defmodule Phoenix.Transports.LongPoll do
       pubsub_timeout_ms: 2_000,
       serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
       transport_log: false,
-      crypto: [max_age: 1_209_600]
+      crypto: [max_age: 1_209_600],
+      token_location: :params
     ]
   end
 
@@ -52,9 +54,9 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Starts a new session or listen to a message if one already exists.
   defp dispatch(%{method: "GET"} = conn, endpoint, handler, opts) do
-    case resume_session(conn, conn.params, endpoint, opts) do
-      {:ok, new_conn, server_ref} ->
-        listen(new_conn, server_ref, endpoint, opts)
+    case resume_session(conn, endpoint, opts) do
+      {:ok, new_conn, server_ref, token} ->
+        listen(new_conn, server_ref, token, endpoint, opts)
 
       :error ->
         new_session(conn, endpoint, handler, opts)
@@ -63,8 +65,8 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Publish the message.
   defp dispatch(%{method: "POST"} = conn, endpoint, _, opts) do
-    case resume_session(conn, conn.params, endpoint, opts) do
-      {:ok, new_conn, server_ref} ->
+    case resume_session(conn, endpoint, opts) do
+      {:ok, new_conn, server_ref, _token} ->
         publish(new_conn, server_ref, endpoint, opts)
 
       :error ->
@@ -153,11 +155,21 @@ defmodule Phoenix.Transports.LongPoll do
       {:ok, server_pid} ->
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = sign_token(endpoint, data, opts)
-        conn |> put_status(:gone) |> status_token_messages_json(token, [])
+
+        # A new session is always established before the client holds a token,
+        # so this response tells the client where to send it from now on. Clients
+        # that predate this default to params, which we keep accepting.
+        extra =
+          case opts[:token_location] do
+            :header -> %{"token_location" => "header"}
+            _ -> %{}
+          end
+
+        conn |> put_status(:gone) |> status_token_messages_json(token, [], extra)
     end
   end
 
-  defp listen(conn, server_ref, endpoint, opts) do
+  defp listen(conn, server_ref, token, endpoint, opts) do
     ref = make_ref()
     client_ref = client_ref(server_ref)
     broadcast_from!(endpoint, server_ref, {:flush, client_ref, ref})
@@ -185,38 +197,44 @@ defmodule Phoenix.Transports.LongPoll do
 
     conn
     |> put_status(status)
-    |> status_token_messages_json(conn.params["token"], messages)
+    |> status_token_messages_json(token, messages)
+  end
+
+  # The token is accepted from either location regardless of :token_location,
+  # so that clients and servers can be rolled out independently.
+  defp fetch_token(conn) do
+    case get_req_header(conn, @token_header) do
+      [token | _] -> token
+      [] -> conn.params["token"]
+    end
   end
 
   # Retrieves the serialized `Phoenix.LongPoll.Server` pid
   # by publishing a message in the encrypted private topic.
-  defp resume_session(%Plug.Conn{} = conn, %{"token" => token}, endpoint, opts) do
-    case verify_token(endpoint, token, opts) do
-      {:ok, {:v1, id, pid, priv_topic}} ->
-        server_ref = server_ref(endpoint.config(:endpoint_id), id, pid, priv_topic)
+  defp resume_session(%Plug.Conn{} = conn, endpoint, opts) do
+    with token when is_binary(token) <- fetch_token(conn),
+         {:ok, {:v1, id, pid, priv_topic}} <- verify_token(endpoint, token, opts) do
+      server_ref = server_ref(endpoint.config(:endpoint_id), id, pid, priv_topic)
 
-        new_conn =
-          Plug.Conn.register_before_send(conn, fn conn ->
-            unsubscribe(endpoint, server_ref)
-            conn
-          end)
+      new_conn =
+        Plug.Conn.register_before_send(conn, fn conn ->
+          unsubscribe(endpoint, server_ref)
+          conn
+        end)
 
-        ref = make_ref()
-        :ok = subscribe(endpoint, server_ref)
-        broadcast_from!(endpoint, server_ref, {:subscribe, client_ref(server_ref), ref})
+      ref = make_ref()
+      :ok = subscribe(endpoint, server_ref)
+      broadcast_from!(endpoint, server_ref, {:subscribe, client_ref(server_ref), ref})
 
-        receive do
-          {:subscribe, ^ref} -> {:ok, new_conn, server_ref}
-        after
-          opts[:pubsub_timeout_ms] -> :error
-        end
-
-      _ ->
-        :error
+      receive do
+        {:subscribe, ^ref} -> {:ok, new_conn, server_ref, token}
+      after
+        opts[:pubsub_timeout_ms] -> :error
+      end
+    else
+      _ -> :error
     end
   end
-
-  defp resume_session(%Plug.Conn{}, _params, _endpoint, _opts), do: :error
 
   ## Helpers
 
@@ -283,13 +301,17 @@ defmodule Phoenix.Transports.LongPoll do
     send_json(conn, %{"status" => conn.status || 200})
   end
 
-  defp status_token_messages_json(conn, token, messages) do
-    send_json(conn, %{"status" => conn.status || 200, "token" => token, "messages" => messages})
+  defp status_token_messages_json(conn, token, messages, extra \\ %{}) do
+    body = %{"status" => conn.status || 200, "token" => token, "messages" => messages}
+    send_json(conn, Map.merge(body, extra))
   end
 
   defp send_json(conn, data) do
     conn
     |> put_resp_header("content-type", "application/json; charset=utf-8")
+    # When the token travels in a header, the poll URL is identical for every
+    # session, so responses must never be stored or shared by a cache.
+    |> put_resp_header("cache-control", "no-store")
     |> send_resp(200, Phoenix.json_library().encode_to_iodata!(data))
   end
 end

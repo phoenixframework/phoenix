@@ -117,6 +117,71 @@ describe("LongPoll", () => {
       )
     })
 
+    it("should keep the token in params when the server does not advertise the header", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      longpoll.timeout = 1000
+
+      Ajax.request.mockImplementationOnce((method, url, headers, body, timeout, ontimeout, callback) => {
+        callback({status: 410, token: "token123", messages: []})
+        return {abort: jest.fn()}
+      })
+
+      longpoll.poll()
+
+      expect(longpoll.tokenLocation).toBe("params")
+      expect(Ajax.request).toHaveBeenLastCalledWith(
+        "GET",
+        "http://localhost/socket/longpoll?token=token123",
+        {"Accept": "application/json"},
+        null,
+        expect.any(Number),
+        expect.any(Function),
+        expect.any(Function)
+      )
+    })
+
+    it("should move the token to a header when the server advertises it", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      longpoll.timeout = 1000
+
+      Ajax.request.mockImplementationOnce((method, url, headers, body, timeout, ontimeout, callback) => {
+        callback({status: 410, token: "token123", messages: [], token_location: "header"})
+        return {abort: jest.fn()}
+      })
+
+      longpoll.poll()
+
+      expect(longpoll.tokenLocation).toBe("header")
+      expect(Ajax.request).toHaveBeenLastCalledWith(
+        "GET",
+        "http://localhost/socket/longpoll",
+        {"Accept": "application/json", "X-Phoenix-Longpoll-Token": "token123"},
+        null,
+        expect.any(Number),
+        expect.any(Function),
+        expect.any(Function)
+      )
+    })
+
+    it("should send the token header on batched pushes", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      longpoll.timeout = 1000
+      longpoll.token = "token123"
+      longpoll.tokenLocation = "header"
+
+      longpoll.batchSend(["msg1"])
+
+      expect(Ajax.request).toHaveBeenLastCalledWith(
+        "POST",
+        "http://localhost/socket/longpoll",
+        {"Content-Type": "application/x-ndjson", "X-Phoenix-Longpoll-Token": "token123"},
+        "msg1",
+        expect.any(Number),
+        expect.any(Function),
+        expect.any(Function)
+      )
+    })
+
     it("should treat 410 as error when token already exists", () => {
       const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
       longpoll.timeout = 1000
