@@ -25,6 +25,9 @@ export default class LongPoll {
     }
     this.endPoint = null
     this.token = null
+    // Where to send the session token. The server tells us when it establishes
+    // the session; servers that predate that continue to receive it in params.
+    this.tokenLocation = "params"
     this.skipHeartbeat = true
     this.reqs = new Set()
     this.awaitingBatchAck = false
@@ -49,6 +52,7 @@ export default class LongPoll {
   }
 
   endpointURL(){
+    if(this.tokenLocation === "header"){ return this.pollEndpoint }
     return Ajax.appendParams(this.pollEndpoint, {token: this.token})
   }
 
@@ -113,6 +117,7 @@ export default class LongPoll {
           this.poll()
           break
         case 410:
+          this.tokenLocation = resp.token_location === "header" ? "header" : "params"
           this.readyState = SOCKET_STATES.open
           this.onopen({})
           this.poll()
@@ -189,6 +194,9 @@ export default class LongPoll {
     let ontimeout = () => {
       this.reqs.delete(req)
       onCallerTimeout()
+    }
+    if(this.tokenLocation === "header" && this.token !== null){
+      headers = Object.assign({}, headers, {"X-Phoenix-Longpoll-Token": this.token})
     }
     req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, resp => {
       this.reqs.delete(req)
