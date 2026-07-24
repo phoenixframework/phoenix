@@ -657,9 +657,10 @@ describe("with transport", function (){
       expect(channel.state).toBe("joined")
       expect(spy).toHaveBeenCalledTimes(0)
 
-      channel.trigger("phx_error")
+      channel.trigger("phx_error", {reason: "channel_crash"})
 
       expect(spy).toHaveBeenCalledTimes(1)
+      expect(spy).toHaveBeenCalledWith({reason: "channel_crash"})
     })
   })
 

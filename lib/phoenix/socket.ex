@@ -863,7 +863,14 @@ defmodule Phoenix.Socket do
   end
 
   defp encode_on_exit(socket, topic, ref, _reason) do
-    message = %Message{join_ref: ref, ref: ref, topic: topic, event: "phx_error", payload: %{}}
+    message = %Message{
+      join_ref: ref,
+      ref: ref,
+      topic: topic,
+      event: "phx_error",
+      payload: %{reason: "channel_crash"}
+    }
+
     encode_reply(socket, message)
   end
 
