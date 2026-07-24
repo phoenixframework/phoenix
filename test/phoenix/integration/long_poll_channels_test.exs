@@ -818,7 +818,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
           assert chan_error == %Message{
                    event: "phx_error",
-                   payload: %{},
+                   payload: %{"reason" => "channel_crash"},
                    topic: topic,
                    ref: @join_ref,
                    join_ref: @join_ref
