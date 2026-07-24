@@ -46,8 +46,8 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
       assert response.status_code == 200
       assert response.body =~ "PhxBlog"
 
-      assert File.stat!(Path.join(app_root_path, "lib/phx_blog_web/components/core_components.ex")) > @epoch
-      assert File.stat!(Path.join(app_root_path, "lib/phx_blog_web/controllers/page_html.ex")) > @epoch
+      assert File.stat!(Path.join(app_root_path, "lib/phx_blog_web/components/core_components.ex")).mtime > @epoch
+      assert File.stat!(Path.join(app_root_path, "lib/phx_blog_web/controllers/page_html.ex")).mtime > @epoch
       assert_tests_pass(app_root_path)
     end)
   end
