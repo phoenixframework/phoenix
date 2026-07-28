@@ -154,7 +154,12 @@ export default class LongPoll {
     this.awaitingBatchAck = true
     const next = offset + MAX_LONGPOLL_BATCH_SIZE
     const batch = messages.slice(offset, next)
-    this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), () => this.onerror("timeout"), resp => {
+    // a timed out batch is a failed batch: without resetting the ack, every
+    // later send would be buffered forever on a transport that looks alive
+    this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), () => {
+      this.awaitingBatchAck = false
+      this.ontimeout()
+    }, resp => {
       if(!resp || resp.status !== 200){
         this.awaitingBatchAck = false
         this.onerror(resp && resp.status)
