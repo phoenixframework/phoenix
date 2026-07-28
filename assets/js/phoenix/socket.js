@@ -4,6 +4,7 @@ import {
   CHANNEL_EVENTS,
   DEFAULT_TIMEOUT,
   DEFAULT_VSN,
+  MAX_UNUSABLE_PRIMARY_CONNECTIONS,
   SOCKET_STATES,
   TRANSPORTS,
   WS_CLOSE_NORMAL,
@@ -120,6 +121,8 @@ export default class Socket {
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
     this.transport = opts.transport || global.WebSocket || LongPoll
     this.primaryPassedHealthCheck = false
+    this.unusablePrimaryConnections = 0
+    this.connReceivedMessage = false
     this.longPollFallbackMs = opts.longPollFallbackMs
     this.fallbackTimer = null
     this.sessionStore = opts.sessionStorage || (global && global.sessionStorage)
@@ -218,6 +221,7 @@ export default class Socket {
   replaceTransport(newTransport){
     this.connectClock++
     this.closeWasClean = true
+    this.unusablePrimaryConnections = 0
     clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
     if(this.conn){
@@ -392,6 +396,7 @@ export default class Socket {
   transportConnect(){
     this.connectClock++
     this.closeWasClean = false
+    this.connReceivedMessage = false
     let protocols = undefined
     // Sec-WebSocket-Protocol based token
     // (longpoll uses Authorization header instead)
@@ -425,6 +430,15 @@ export default class Socket {
       this.transportConnect()
     }
     if(this.getSession(`phx:fallback:${fallbackTransportName}`)){ return fallback("memorized") }
+    // Some networks let the websocket handshake through and then kill the connection
+    // before it ever carries a message. Such a connection counts as established, so
+    // the error handler below never falls back, and as we run again on every
+    // reconnect, the fallback timer is cleared before it can fire. We therefore give
+    // up on the primary transport once enough connections in a row proved unusable.
+    // The fallback is not memorized, because the primary transport did connect.
+    if(this.unusablePrimaryConnections >= MAX_UNUSABLE_PRIMARY_CONNECTIONS){
+      return fallback("unusable primary transport")
+    }
 
     this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
 
@@ -550,6 +564,13 @@ export default class Socket {
     this.triggerChanError("connection_closed")
     this.clearHeartbeats()
     if(!this.closeWasClean && closeCode !== 1000){
+      // a connection that never delivered a message did not prove useful,
+      // which `connectWithFallback` uses to detect a broken primary transport
+      if(this.connReceivedMessage){
+        this.unusablePrimaryConnections = 0
+      } else {
+        this.unusablePrimaryConnections++
+      }
       this.reconnectTimer.scheduleTimeout()
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))
@@ -677,6 +698,7 @@ export default class Socket {
   }
 
   onConnMessage(rawMessage){
+    this.connReceivedMessage = true
     this.decode(rawMessage.data, msg => {
       let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){
