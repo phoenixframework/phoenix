@@ -640,7 +640,7 @@ var LongPoll = class {
     return endPoint.replace("ws://", "http://").replace("wss://", "https://").replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll);
   }
   endpointURL() {
-    return Ajax.appendParams(this.pollEndpoint, { token: this.token });
+    return this.pollEndpoint;
   }
   closeAndRetry(code, reason, wasClean) {
     this.close(code, reason, wasClean);
@@ -759,6 +759,9 @@ var LongPoll = class {
       this.reqs.delete(req);
       onCallerTimeout();
     };
+    if (this.token !== null) {
+      headers = Object.assign({}, headers, { "X-Phoenix-Longpoll-Token": this.token });
+    }
     req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, (resp) => {
       this.reqs.delete(req);
       if (this.isActive()) {
