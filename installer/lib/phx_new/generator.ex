@@ -122,7 +122,6 @@ defmodule Phx.New.Generator do
         [
           # rules specific to new apps
           @new_project_rules_files["project.md"],
-          @new_project_rules_files["phoenix.md"],
           # --no-assets is equivalent to --no-tailwind && --no-esbuild;
           # we check for both here
           project.binding[:javascript] && project.binding[:css] &&
@@ -326,7 +325,7 @@ defmodule Phx.New.Generator do
       elixir_install_bin_path: from_elixir_install && elixir_install_bin_path(),
       inside_docker_env?: inside_docker_env?,
       agents_md: agents_md,
-      config_regex_E: Version.match?(System.version(), "~> 1.19.3 or ~> 1.20") && "E" || ""
+      config_regex_E: (Version.match?(System.version(), "~> 1.19.3 or ~> 1.20") && "E") || ""
     ]
 
     %{project | binding: binding}
