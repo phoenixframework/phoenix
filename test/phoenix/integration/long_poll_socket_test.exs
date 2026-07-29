@@ -12,6 +12,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
   @moduletag :capture_log
   @port 5908
   @pool_size 1
+  @token_header "x-phoenix-longpoll-token"
 
   Application.put_env(
     :phoenix,
@@ -72,15 +73,6 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     socket "/custom/:socket_var", UserSocket,
       longpoll: [path: ":path_var/path", check_origin: ["//example.com"], pubsub_timeout_ms: 200],
       custom: :value
-
-    socket "/header-token", UserSocket,
-      longpoll: [
-        window_ms: 200,
-        pubsub_timeout_ms: 200,
-        check_origin: ["//example.com"],
-        token_location: :header
-      ],
-      custom: :value
   end
 
   setup %{adapter: adapter} do
@@ -100,6 +92,23 @@ defmodule Phoenix.Integration.LongPollSocketTest do
   end
 
   def poll(method, path, params, body \\ nil, headers \\ %{}) do
+    {token, params} = Map.pop(params, "token")
+
+    headers =
+      if token do
+        Map.put(headers, @token_header, token)
+      else
+        headers
+      end
+
+    do_poll(method, path, params, body, headers)
+  end
+
+  def poll_with_token_in_params(method, path, params, body \\ nil, headers \\ %{}) do
+    do_poll(method, path, params, body, headers)
+  end
+
+  defp do_poll(method, path, params, body, headers) do
     headers = Map.merge(%{"content-type" => "application/json"}, headers)
     url = "http://127.0.0.1:#{@port}/#{path}?" <> URI.encode_query(params)
     {:ok, resp} = HTTPClient.request(method, url, headers, body)
@@ -152,45 +161,14 @@ defmodule Phoenix.Integration.LongPollSocketTest do
         assert params =~ ~s(path_var" => "456")
       end
 
-      test "does not advertise the token header by default" do
-        resp = poll(:get, "ws/longpoll", %{}, nil)
-        refute Map.has_key?(resp.body, "token_location")
-      end
-
-      test "accepts the token from a header even when it is not advertised" do
+      test "accepts the token from params" do
         resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
-        token = %{"x-phoenix-longpoll-token" => resp.body["token"]}
-
-        resp = poll(:post, "ws/longpoll", %{}, "params", token)
-        assert resp.body["status"] == 200
-
-        resp = poll(:get, "ws/longpoll", %{}, nil, token)
-        assert resp.body["messages"] == [~s(%{"hello" => "world"})]
-      end
-
-      test "advertises the token header when token_location: :header" do
-        resp = poll(:get, "header-token/longpoll", %{"hello" => "world"}, nil)
-        assert resp.body["status"] == 410
-        assert resp.body["token_location"] == "header"
-        token = %{"x-phoenix-longpoll-token" => resp.body["token"]}
-
-        resp = poll(:post, "header-token/longpoll", %{}, "params", token)
-        assert resp.body["status"] == 200
-
-        resp = poll(:get, "header-token/longpoll", %{}, nil, token)
-        assert resp.body["status"] == 200
-        assert resp.body["token"] == token["x-phoenix-longpoll-token"]
-        assert resp.body["messages"] == [~s(%{"hello" => "world"})]
-      end
-
-      test "still accepts the token from params when token_location: :header" do
-        resp = poll(:get, "header-token/longpoll", %{"hello" => "world"}, nil)
         secret = Map.take(resp.body, ["token"])
 
-        resp = poll(:post, "header-token/longpoll", secret, "params")
+        resp = poll_with_token_in_params(:post, "ws/longpoll", secret, "params")
         assert resp.body["status"] == 200
 
-        resp = poll(:get, "header-token/longpoll", secret, nil)
+        resp = poll_with_token_in_params(:get, "ws/longpoll", secret)
         assert resp.body["messages"] == [~s(%{"hello" => "world"})]
       end
 
@@ -199,9 +177,13 @@ defmodule Phoenix.Integration.LongPollSocketTest do
         token = resp.body["token"]
 
         resp =
-          poll(:post, "ws/longpoll", %{"token" => "bogus"}, "params", %{
-            "x-phoenix-longpoll-token" => token
-          })
+          poll_with_token_in_params(
+            :post,
+            "ws/longpoll",
+            %{"token" => "bogus"},
+            "params",
+            %{@token_header => token}
+          )
 
         assert resp.body["status"] == 200
       end

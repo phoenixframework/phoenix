@@ -740,8 +740,7 @@ defmodule Phoenix.Endpoint do
           [
             :window_ms,
             :pubsub_timeout_ms,
-            :crypto,
-            :token_location
+            :crypto
           ]
       )
 
@@ -1064,13 +1063,6 @@ defmodule Phoenix.Endpoint do
 
     * `:crypto` - options for verifying and signing the token, accepted
       by `Phoenix.Token`. By default tokens are valid for 2 weeks
-
-    * `:token_location` - where clients should send the session token,
-      either `:params` (default) or `:header`. The server always accepts
-      the token from both locations; this option only controls which one
-      it tells clients to use when a session is established. Sending the
-      token in the `x-phoenix-longpoll-token` header keeps it out of URLs,
-      and therefore out of access logs.
 
   """
   defmacro socket(path, module, opts \\ []) do

@@ -19,8 +19,7 @@ defmodule Phoenix.Transports.LongPoll do
       pubsub_timeout_ms: 2_000,
       serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
       transport_log: false,
-      crypto: [max_age: 1_209_600],
-      token_location: :params
+      crypto: [max_age: 1_209_600]
     ]
   end
 
@@ -155,17 +154,7 @@ defmodule Phoenix.Transports.LongPoll do
       {:ok, server_pid} ->
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = sign_token(endpoint, data, opts)
-
-        # A new session is always established before the client holds a token,
-        # so this response tells the client where to send it from now on. Clients
-        # that predate this default to params, which we keep accepting.
-        extra =
-          case opts[:token_location] do
-            :header -> %{"token_location" => "header"}
-            _ -> %{}
-          end
-
-        conn |> put_status(:gone) |> status_token_messages_json(token, [], extra)
+        conn |> put_status(:gone) |> status_token_messages_json(token, [])
     end
   end
 
@@ -200,8 +189,8 @@ defmodule Phoenix.Transports.LongPoll do
     |> status_token_messages_json(token, messages)
   end
 
-  # The token is accepted from either location regardless of :token_location,
-  # so that clients and servers can be rolled out independently.
+  # Accept the token from either location so that newer clients can use the
+  # header while older clients continue to use params.
   defp fetch_token(conn) do
     case get_req_header(conn, @token_header) do
       [token | _] -> token

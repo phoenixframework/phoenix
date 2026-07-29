@@ -117,7 +117,7 @@ describe("LongPoll", () => {
       )
     })
 
-    it("should keep the token in params when the server does not advertise the header", () => {
+    it("should send the session token in a header", () => {
       const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
       longpoll.timeout = 1000
 
@@ -128,30 +128,6 @@ describe("LongPoll", () => {
 
       longpoll.poll()
 
-      expect(longpoll.tokenLocation).toBe("params")
-      expect(Ajax.request).toHaveBeenLastCalledWith(
-        "GET",
-        "http://localhost/socket/longpoll?token=token123",
-        {"Accept": "application/json"},
-        null,
-        expect.any(Number),
-        expect.any(Function),
-        expect.any(Function)
-      )
-    })
-
-    it("should move the token to a header when the server advertises it", () => {
-      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
-      longpoll.timeout = 1000
-
-      Ajax.request.mockImplementationOnce((method, url, headers, body, timeout, ontimeout, callback) => {
-        callback({status: 410, token: "token123", messages: [], token_location: "header"})
-        return {abort: jest.fn()}
-      })
-
-      longpoll.poll()
-
-      expect(longpoll.tokenLocation).toBe("header")
       expect(Ajax.request).toHaveBeenLastCalledWith(
         "GET",
         "http://localhost/socket/longpoll",
@@ -167,7 +143,6 @@ describe("LongPoll", () => {
       const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
       longpoll.timeout = 1000
       longpoll.token = "token123"
-      longpoll.tokenLocation = "header"
 
       longpoll.batchSend(["msg1"])
 
