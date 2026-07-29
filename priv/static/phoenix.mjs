@@ -722,7 +722,7 @@ var LongPoll = class {
     this.awaitingBatchAck = true;
     const next = offset + MAX_LONGPOLL_BATCH_SIZE;
     const batch = messages.slice(offset, next);
-    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.onerror("timeout"), (resp) => {
+    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.ontimeout(), (resp) => {
       if (!resp || resp.status !== 200) {
         this.awaitingBatchAck = false;
         this.onerror(resp && resp.status);
@@ -744,6 +744,7 @@ var LongPoll = class {
     this.readyState = SOCKET_STATES.closed;
     let opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
     this.batchBuffer = [];
+    this.awaitingBatchAck = false;
     clearTimeout(this.currentBatchTimer);
     this.currentBatchTimer = null;
     if (typeof CloseEvent !== "undefined") {
