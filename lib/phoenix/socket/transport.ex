@@ -570,7 +570,13 @@ defmodule Phoenix.Socket.Transport do
   end
 
   defp check_origin_config(handler, endpoint, opts) do
-    Phoenix.Config.cache(endpoint, {:check_origin, handler}, fn _ ->
+    # The same handler may be mounted several times with different
+    # :check_origin options, so the option must be part of the cache key.
+    # Otherwise the first mount to be reached decides the policy for all
+    # of them.
+    key = {:check_origin, handler, Keyword.get(opts, :check_origin)}
+
+    Phoenix.Config.cache(endpoint, key, fn _ ->
       check_origin =
         case Keyword.get(opts, :check_origin, endpoint.config(:check_origin)) do
           origins when is_list(origins) ->
