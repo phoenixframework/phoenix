@@ -26,7 +26,7 @@ defmodule Phoenix.Debug do
   For example, when using Phoenix LiveView, the browser establishes a socket
   connection when initially navigating to the page, and each live navigation
   retains the same socket connection. Nested LiveViews also share the same
-  connection, each being a different channel. See `Phoenix.Debug.channels/1`.
+  connection, each being a different channel. See `Phoenix.Debug.list_channels/1`.
 
   ## Examples
 
