@@ -290,9 +290,8 @@ defmodule Phoenix.Transports.LongPoll do
     send_json(conn, %{"status" => conn.status || 200})
   end
 
-  defp status_token_messages_json(conn, token, messages, extra \\ %{}) do
-    body = %{"status" => conn.status || 200, "token" => token, "messages" => messages}
-    send_json(conn, Map.merge(body, extra))
+  defp status_token_messages_json(conn, token, messages) do
+    send_json(conn, %{"status" => conn.status || 200, "token" => token, "messages" => messages})
   end
 
   defp send_json(conn, data) do
