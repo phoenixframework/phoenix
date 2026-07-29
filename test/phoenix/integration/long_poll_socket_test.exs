@@ -143,6 +143,34 @@ defmodule Phoenix.Integration.LongPollSocketTest do
         assert params =~ ~s(path_var" => "456")
       end
 
+      test "accepts the token from a header" do
+        resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
+        token = %{"x-phoenix-longpoll-token" => resp.body["token"]}
+
+        resp = poll(:post, "ws/longpoll", %{}, "params", token)
+        assert resp.body["status"] == 200
+
+        resp = poll(:get, "ws/longpoll", %{}, nil, token)
+        assert resp.body["messages"] == [~s(%{"hello" => "world"})]
+      end
+
+      test "the header takes precedence over a stale params token" do
+        resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
+        token = resp.body["token"]
+
+        resp =
+          poll(:post, "ws/longpoll", %{"token" => "bogus"}, "params", %{
+            "x-phoenix-longpoll-token" => token
+          })
+
+        assert resp.body["status"] == 200
+      end
+
+      test "responses are never cached" do
+        resp = poll(:get, "ws/longpoll", %{}, nil)
+        assert {_, ~c"no-store"} = List.keyfind(resp.headers, ~c"cache-control", 0)
+      end
+
       test "returns pong from async request" do
         resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
         assert resp.body["token"]
