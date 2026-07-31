@@ -255,6 +255,9 @@ defmodule Phoenix.Socket.Transport do
   def load_config(config, module),
     do: module.default_config() |> Keyword.merge(config) |> load_config()
 
+  @atom_keys [:peer_data, :trace_context_headers, :uri, :user_agent] ++
+               [:x_headers, :sec_websocket_headers, :auth_token]
+
   @doc false
   def load_config(config) do
     {connect_info, config} = Keyword.pop(config, :connect_info, [])
@@ -269,7 +272,7 @@ defmodule Phoenix.Socket.Transport do
 
     connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :trace_context_headers, :uri, :user_agent, :x_headers, :sec_websocket_headers, :auth_token] ->
+        key when key in @atom_keys ->
           key
 
         {:session, session} ->
@@ -470,9 +473,11 @@ defmodule Phoenix.Socket.Transport do
 
     * `:user_agent` - the value of the "user-agent" request header
 
+    * `:session` - the connection session information. By default validates
+      the csrf token in it unless `check_csrf` is false
+
     * `:sec_websocket_headers` - a list of all request headers that have a "sec-websocket-" prefix
 
-  The CSRF check can be disabled by setting the `:check_csrf` option to `false`.
   """
   def connect_info(conn, endpoint, keys, opts \\ []) do
     for key <- keys, into: %{} do
