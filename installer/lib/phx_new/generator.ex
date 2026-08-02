@@ -326,7 +326,8 @@ defmodule Phx.New.Generator do
       elixir_install_bin_path: from_elixir_install && elixir_install_bin_path(),
       inside_docker_env?: inside_docker_env?,
       agents_md: agents_md,
-      config_regex_E: Version.match?(System.version(), "~> 1.19.3 or ~> 1.20") && "E" || ""
+      config_regex_E: Version.match?(System.version(), "~> 1.19.3 or ~> 1.20") && "E" || "",
+      test_case_options: test_case_options(adapter_module)
     ]
 
     %{project | binding: binding}
@@ -409,6 +410,10 @@ defmodule Phx.New.Generator do
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
+
+  defp test_case_options(Ecto.Adapters.Postgres), do: ", async: true"
+  defp test_case_options(nil), do: ", async: true"
+  defp test_case_options(adapter) when is_atom(adapter), do: ""
 
   defp get_web_adapter("cowboy"),
     do:

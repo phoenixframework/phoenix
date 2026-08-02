@@ -1,5 +1,5 @@
 defmodule <%= @web_namespace %>.ErrorHTMLTest do
-  use <%= @web_namespace %>.ConnCase, async: true
+  use <%= @web_namespace %>.ConnCase<%= @test_case_options %>
 
   # Bring render_to_string/4 for testing custom views
   import Phoenix.Template, only: [render_to_string: 4]
