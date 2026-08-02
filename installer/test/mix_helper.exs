@@ -96,7 +96,20 @@ defmodule MixHelper do
 
   def assert_file(file) do
     assert File.regular?(file), "Expected #{file} to exist, but does not"
+    content = File.read!(file)
+
+    if not binary_file?(file) do
+      # \S\n\z matches non-whitespace followed by a single newline at EOF
+      assert content == "" or content =~ ~r/\S\n\z/,
+             "Expected #{file} to end with a single trailing newline"
+
+      refute content =~ "\n\n\n", "Expected #{file} to not contain consecutive blank lines"
+    end
+
+    content
   end
+
+  defp binary_file?(file), do: Path.extname(file) in ~w(.ico .pem .png)
 
   def refute_file(file) do
     refute File.regular?(file), "Expected #{file} to not exist, but it does"
@@ -111,8 +124,8 @@ defmodule MixHelper do
         assert_file(file, &assert(&1 =~ match))
 
       is_function(match, 1) ->
-        assert_file(file)
-        match.(File.read!(file))
+        content = assert_file(file)
+        match.(content)
 
       true ->
         raise inspect({file, match})

@@ -194,9 +194,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end)
 
       # assets
-      assert_file(web_path(@app, ".gitignore"), "/priv/static/assets/")
-      assert_file(web_path(@app, ".gitignore"), "#{@app}_web-*.tar")
-      assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
+      assert_file(web_path(@app, ".gitignore"), fn file ->
+        assert file =~ "/priv/static/assets/"
+        assert file =~ "#{@app}_web-*.tar"
+      end)
 
       assert_file(web_path(@app, "assets/css/app.css"), fn file ->
         assert file =~ "lib/phx_umb_web"
@@ -353,7 +354,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # No assets
       assert_file(web_path(@app, ".gitignore"), fn file ->
-        assert file =~ ~r/\n$/
         refute file =~ "/priv/static/assets/"
       end)
 
@@ -516,8 +516,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     in_tmp("new with no_assets", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--no-assets"])
 
-      refute File.read!(web_path(@app, ".gitignore")) |> String.contains?("/priv/static/assets/")
-      assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
+      assert_file(web_path(@app, ".gitignore"), fn file ->
+        refute file =~ "/priv/static/assets/"
+      end)
+
       assert_file(web_path(@app, "priv/static/assets/js/app.js"))
       assert_file(web_path(@app, "priv/static/assets/css/app.css"))
       assert_file(web_path(@app, "priv/static/favicon.ico"))
@@ -883,7 +885,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file("another/lib/another/components/layouts/root.html.heex")
 
         # assets
-        assert_file("another/.gitignore", ~r/\n$/)
+        assert_file("another/.gitignore")
         assert_file("another/priv/static/favicon.ico")
         assert_file("another/assets/css/app.css")
 

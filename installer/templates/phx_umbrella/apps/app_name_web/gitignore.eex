@@ -23,8 +23,8 @@ erl_crash.dump
 /tmp/
 
 # Ignore package tarball (built via "mix hex.build").
-<%= @web_app_name %>-*.tar
-<%= if @javascript or @css do %>
+<%= @web_app_name %>-*.tar<%= if @javascript or @css do %>
+
 # Ignore assets that are produced by build tools.
 /priv/static/assets/
 
@@ -33,9 +33,8 @@ erl_crash.dump
 
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
-/assets/node_modules/
-<% end %><%= if @adapter_app == :ecto_sqlite3 do %>
+/assets/node_modules/<% end %><%= if @adapter_app == :ecto_sqlite3 do %>
+
 # Database files
 *.db
-*.db-*
-<% end %>
+*.db-*<% end %>
