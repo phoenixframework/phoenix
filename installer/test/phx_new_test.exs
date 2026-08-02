@@ -89,8 +89,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/test/phx_blog_web/controllers/page_controller_test.exs")
-      assert_file("phx_blog/test/phx_blog_web/controllers/error_html_test.exs")
-      assert_file("phx_blog/test/phx_blog_web/controllers/error_json_test.exs")
+      assert_file("phx_blog/test/phx_blog_web/controllers/error_html_test.exs", "async: true")
+      assert_file("phx_blog/test/phx_blog_web/controllers/error_json_test.exs", "async: true")
       assert_file("phx_blog/test/support/conn_case.ex")
       assert_file("phx_blog/test/test_helper.exs")
 
@@ -557,6 +557,9 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\"]"
         refute file =~ "subdirectories:"
       end)
+
+      assert_file("phx_blog/test/phx_blog_web/controllers/error_html_test.exs", "async: true")
+      assert_file("phx_blog/test/phx_blog_web/controllers/error_json_test.exs", "async: true")
     end)
   end
 
@@ -686,6 +689,14 @@ defmodule Mix.Tasks.Phx.NewTest do
         "custom_path/test/support/data_case.ex",
         "Ecto.Adapters.SQL.Sandbox.start_owner"
       )
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_html_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_json_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
     end)
   end
 
@@ -716,8 +727,18 @@ defmodule Mix.Tasks.Phx.NewTest do
         "Ecto.Adapters.SQL.Sandbox.start_owner"
       )
 
-      assert_file("custom_path/.gitignore", "*.db")
-      assert_file("custom_path/.gitignore", "*.db-*")
+      assert_file("custom_path/test/custom_path_web/controllers/error_html_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_json_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
+
+      assert_file("custom_path/.gitignore", fn file ->
+        assert file =~ "*.db"
+        assert file =~ "*.db-*"
+      end)
     end)
   end
 
@@ -747,6 +768,14 @@ defmodule Mix.Tasks.Phx.NewTest do
         "custom_path/test/support/data_case.ex",
         "Ecto.Adapters.SQL.Sandbox.start_owner"
       )
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_html_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_json_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
     end)
   end
 

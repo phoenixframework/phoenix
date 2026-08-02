@@ -1,5 +1,5 @@
 defmodule <%= @web_namespace %>.ErrorJSONTest do
-  use <%= @web_namespace %>.ConnCase, async: true
+  use <%= @web_namespace %>.ConnCase<%= @test_case_options %>
 
   test "renders 404" do
     assert <%= @web_namespace %>.ErrorJSON.render("404.json", %{}) == %{errors: %{detail: "Not Found"}}

@@ -150,8 +150,17 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       )
 
       assert_file(web_path(@app, "test/#{@app}_web/controllers/page_controller_test.exs"))
-      assert_file(web_path(@app, "test/#{@app}_web/controllers/error_html_test.exs"))
-      assert_file(web_path(@app, "test/#{@app}_web/controllers/error_json_test.exs"))
+
+      assert_file(
+        web_path(@app, "test/#{@app}_web/controllers/error_html_test.exs"),
+        "async: true"
+      )
+
+      assert_file(
+        web_path(@app, "test/#{@app}_web/controllers/error_json_test.exs"),
+        "async: true"
+      )
+
       assert_file(web_path(@app, "test/support/conn_case.ex"))
       assert_file(web_path(@app, "test/test_helper.exs"))
 
@@ -625,6 +634,16 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(root_path(app, "config/runtime.exs"), [~r/url: database_url/])
 
       assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(tags)")
+
+      assert_file(
+        web_path(app, "test/custom_path_web/controllers/error_html_test.exs"),
+        fn file -> refute file =~ "async: true" end
+      )
+
+      assert_file(
+        web_path(app, "test/custom_path_web/controllers/error_json_test.exs"),
+        fn file -> refute file =~ "async: true" end
+      )
     end)
   end
 
@@ -651,6 +670,16 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(root_path(app, "config/runtime.exs"), [~r/database: database_path/])
 
       assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(tags)")
+
+      assert_file(
+        web_path(app, "test/custom_path_web/controllers/error_html_test.exs"),
+        fn file -> refute file =~ "async: true" end
+      )
+
+      assert_file(
+        web_path(app, "test/custom_path_web/controllers/error_json_test.exs"),
+        fn file -> refute file =~ "async: true" end
+      )
 
       assert_file(root_path(app, ".gitignore"), "*.db")
       assert_file(root_path(app, ".gitignore"), "*.db-*")
@@ -679,6 +708,16 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(root_path(app, "config/runtime.exs"), [~r/url: database_url/])
 
       assert_file(web_path(app, "test/support/conn_case.ex"), "DataCase.setup_sandbox(tags)")
+
+      assert_file(
+        web_path(app, "test/custom_path_web/controllers/error_html_test.exs"),
+        fn file -> refute file =~ "async: true" end
+      )
+
+      assert_file(
+        web_path(app, "test/custom_path_web/controllers/error_json_test.exs"),
+        fn file -> refute file =~ "async: true" end
+      )
     end)
   end
 
@@ -822,8 +861,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file("another/lib/another/endpoint.ex", ~r/defmodule Another.Endpoint do/)
 
         assert_file("another/test/another/controllers/page_controller_test.exs")
-        assert_file("another/test/another/controllers/error_html_test.exs")
-        assert_file("another/test/another/controllers/error_json_test.exs")
+        assert_file("another/test/another/controllers/error_html_test.exs", "async: true")
+        assert_file("another/test/another/controllers/error_json_test.exs", "async: true")
         assert_file("another/test/support/conn_case.ex")
         assert_file("another/test/test_helper.exs")
 
