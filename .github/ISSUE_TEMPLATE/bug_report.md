@@ -24,3 +24,6 @@ https://github.com/wojtekmach/mix_install_examples/blob/main/phoenix.exs
 
 ### Expected behavior
 
+<!--
+Describe the expected behaviour.
+-->
