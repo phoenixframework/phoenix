@@ -726,4 +726,51 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       )
     end)
   end
+
+  describe "format_schema_body/2" do
+    setup do
+      scope = %{schema_key: :user_id, schema_type: :id}
+      {:ok, scope: scope}
+    end
+
+    test "no fields, no assocs, no scope" do
+      schema = Schema.new("Blog.Post", "posts", [], [])
+      assert Schema.format_schema_body(schema) == "    timestamps()"
+    end
+
+    test "with fields, no assocs, no scope" do
+      schema = Schema.new("Blog.Post", "posts", ["title:string"], [])
+      assert Schema.format_schema_body(schema) == "    field :title, :string\n\n    timestamps()"
+    end
+
+    test "no fields, with assocs, no scope" do
+      schema = Schema.new("Blog.Comment", "comments", ["post_id:references:posts"], [])
+      assert Schema.format_schema_body(schema) == "    field :post_id, :id\n\n    timestamps()"
+    end
+
+    test "no fields, no assocs, with scope", %{scope: scope} do
+      schema = Schema.new("Blog.Post", "posts", [], [])
+      assert Schema.format_schema_body(schema, scope) == "    field :user_id, :id\n\n    timestamps()"
+    end
+
+    test "with fields, with assocs, no scope" do
+      schema = Schema.new("Blog.Comment", "comments", ["title:string", "post_id:references:posts"], [])
+      assert Schema.format_schema_body(schema) == "    field :title, :string\n    field :post_id, :id\n\n    timestamps()"
+    end
+
+    test "with fields, no assocs, with scope", %{scope: scope} do
+      schema = Schema.new("Blog.Post", "posts", ["title:string"], [])
+      assert Schema.format_schema_body(schema, scope) == "    field :title, :string\n    field :user_id, :id\n\n    timestamps()"
+    end
+
+    test "no fields, with assocs, with scope", %{scope: scope} do
+      schema = Schema.new("Blog.Comment", "comments", ["post_id:references:posts"], [])
+      assert Schema.format_schema_body(schema, scope) == "    field :post_id, :id\n    field :user_id, :id\n\n    timestamps()"
+    end
+
+    test "with fields, with assocs, with scope", %{scope: scope} do
+      schema = Schema.new("Blog.Comment", "comments", ["title:string", "post_id:references:posts"], [])
+      assert Schema.format_schema_body(schema, scope) == "    field :title, :string\n    field :post_id, :id\n    field :user_id, :id\n\n    timestamps()"
+    end
+  end
 end
