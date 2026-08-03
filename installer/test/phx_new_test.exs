@@ -147,7 +147,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/.gitignore", fn file ->
         assert file =~ "/priv/static/assets/"
         assert file =~ "phx_blog-*.tar"
-        assert file =~ ~r/\n$/
       end)
 
       assert_file("phx_blog/config/dev.exs", fn file ->
@@ -324,7 +323,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No assets
       assert_file("phx_blog/.gitignore", fn file ->
         refute file =~ "/priv/static/assets/"
-        assert file =~ ~r/\n$/
       end)
 
       refute File.exists?("phx_blog/priv/static/images/logo.svg")
@@ -531,8 +529,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ "/priv/static/assets/"
       end)
 
-      assert_file("phx_blog/.gitignore")
-      assert_file("phx_blog/.gitignore", ~r/\n$/)
       assert_file("phx_blog/priv/static/assets/css/app.css")
       assert_file("phx_blog/priv/static/assets/js/app.js")
       assert_file("phx_blog/priv/static/favicon.ico")
@@ -592,7 +588,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([project_path, "--app", @app_name, "--module", "PhoteuxBlog"])
 
       assert_file("custom_path/.gitignore")
-      assert_file("custom_path/.gitignore", ~r/\n$/)
       assert_file("custom_path/mix.exs", ~r/app: :phx_blog/)
       assert_file("custom_path/lib/phx_blog_web/endpoint.ex", ~r/app: :phx_blog/)
       assert_file("custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/)

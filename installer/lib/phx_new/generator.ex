@@ -128,7 +128,7 @@ defmodule Phx.New.Generator do
           project.binding[:javascript] && project.binding[:css] &&
             @new_project_rules_files["assets.md"],
           # generic usage rules
-          "\n<!-- usage-rules-start -->",
+          "<!-- usage-rules-start -->",
           [
             "<!-- phoenix:elixir-start -->\n",
             @rules_files["elixir.md"],
@@ -157,7 +157,7 @@ defmodule Phx.New.Generator do
               @rules_files["liveview.md"],
               "\n<!-- phoenix:liveview-end -->"
             ],
-          "<!-- usage-rules-end -->"
+          "<!-- usage-rules-end -->\n"
         ]
         |> Enum.reject(fn part -> part == nil or part == false end)
         |> Enum.intersperse("\n\n")
