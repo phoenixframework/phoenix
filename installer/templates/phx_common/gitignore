@@ -20,4 +20,16 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-<%= @app_name %>-*.tar
+*.tar
+
+# Database files.
+*.db
+*.db-*
+
+# Assets produced by build tools.
+priv/static/assets/
+priv/static/cache_manifest.json
+
+# Related to Node.js/npm.
+assets/node_modules/
+npm-debug.log
