@@ -274,8 +274,6 @@ defmodule Phx.New.Generator do
     {web_adapter_app, web_adapter_vsn, web_adapter_module, web_adapter_docs} =
       get_web_adapter(web_adapter)
 
-    pubsub_server = get_pubsub_server(project.app_mod)
-
     adapter_config =
       case Keyword.fetch(opts, :binary_id) do
         {:ok, value} -> Keyword.put_new(adapter_config, :binary_id, value)
@@ -285,7 +283,6 @@ defmodule Phx.New.Generator do
     binding = [
       app_name: project.app,
       app_module: inspect(project.app_mod),
-      root_app_name: project.root_app,
       root_app_module: inspect(project.root_mod),
       lib_web_name: project.lib_web_name,
       web_app_name: project.web_app,
@@ -295,7 +292,6 @@ defmodule Phx.New.Generator do
       phoenix_dep_umbrella_root: phoenix_dep(phoenix_path_umbrella_root),
       phoenix_js_path: phoenix_js_path(phoenix_path),
       phoenix_version: @phoenix_version,
-      pubsub_server: pubsub_server,
       secret_key_base_dev: random_string(64),
       secret_key_base_test: random_string(64),
       signing_salt: random_string(8),
@@ -382,13 +378,6 @@ defmodule Phx.New.Generator do
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
       #{adapter_config[:prod_config]}
     """)
-  end
-
-  defp get_pubsub_server(module) do
-    module
-    |> Module.split()
-    |> hd()
-    |> Module.concat(PubSub)
   end
 
   defp get_ecto_adapter("mssql", app, module) do
