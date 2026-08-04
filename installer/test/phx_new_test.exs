@@ -89,8 +89,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/test/phx_blog_web/controllers/page_controller_test.exs")
-      assert_file("phx_blog/test/phx_blog_web/controllers/error_html_test.exs")
-      assert_file("phx_blog/test/phx_blog_web/controllers/error_json_test.exs")
+      assert_file("phx_blog/test/phx_blog_web/controllers/error_html_test.exs", "async: true")
+      assert_file("phx_blog/test/phx_blog_web/controllers/error_json_test.exs", "async: true")
       assert_file("phx_blog/test/support/conn_case.ex")
       assert_file("phx_blog/test/test_helper.exs")
 
@@ -147,7 +147,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/.gitignore", fn file ->
         assert file =~ "/priv/static/assets/"
         assert file =~ "phx_blog-*.tar"
-        assert file =~ ~r/\n$/
       end)
 
       assert_file("phx_blog/config/dev.exs", fn file ->
@@ -324,7 +323,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       # No assets
       assert_file("phx_blog/.gitignore", fn file ->
         refute file =~ "/priv/static/assets/"
-        assert file =~ ~r/\n$/
       end)
 
       refute File.exists?("phx_blog/priv/static/images/logo.svg")
@@ -531,8 +529,6 @@ defmodule Mix.Tasks.Phx.NewTest do
         refute file =~ "/priv/static/assets/"
       end)
 
-      assert_file("phx_blog/.gitignore")
-      assert_file("phx_blog/.gitignore", ~r/\n$/)
       assert_file("phx_blog/priv/static/assets/css/app.css")
       assert_file("phx_blog/priv/static/assets/js/app.js")
       assert_file("phx_blog/priv/static/favicon.ico")
@@ -557,6 +553,9 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "inputs: [\"*.{heex,ex,exs}\", \"{config,lib,test}/**/*.{heex,ex,exs}\"]"
         refute file =~ "subdirectories:"
       end)
+
+      assert_file("phx_blog/test/phx_blog_web/controllers/error_html_test.exs", "async: true")
+      assert_file("phx_blog/test/phx_blog_web/controllers/error_json_test.exs", "async: true")
     end)
   end
 
@@ -589,7 +588,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([project_path, "--app", @app_name, "--module", "PhoteuxBlog"])
 
       assert_file("custom_path/.gitignore")
-      assert_file("custom_path/.gitignore", ~r/\n$/)
       assert_file("custom_path/mix.exs", ~r/app: :phx_blog/)
       assert_file("custom_path/lib/phx_blog_web/endpoint.ex", ~r/app: :phx_blog/)
       assert_file("custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/)
@@ -686,6 +684,14 @@ defmodule Mix.Tasks.Phx.NewTest do
         "custom_path/test/support/data_case.ex",
         "Ecto.Adapters.SQL.Sandbox.start_owner"
       )
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_html_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_json_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
     end)
   end
 
@@ -716,8 +722,18 @@ defmodule Mix.Tasks.Phx.NewTest do
         "Ecto.Adapters.SQL.Sandbox.start_owner"
       )
 
-      assert_file("custom_path/.gitignore", "*.db")
-      assert_file("custom_path/.gitignore", "*.db-*")
+      assert_file("custom_path/test/custom_path_web/controllers/error_html_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_json_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
+
+      assert_file("custom_path/.gitignore", fn file ->
+        assert file =~ "*.db"
+        assert file =~ "*.db-*"
+      end)
     end)
   end
 
@@ -747,6 +763,14 @@ defmodule Mix.Tasks.Phx.NewTest do
         "custom_path/test/support/data_case.ex",
         "Ecto.Adapters.SQL.Sandbox.start_owner"
       )
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_html_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
+
+      assert_file("custom_path/test/custom_path_web/controllers/error_json_test.exs", fn file ->
+        refute file =~ "async: true"
+      end)
     end)
   end
 

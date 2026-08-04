@@ -669,7 +669,7 @@ var LongPoll = class {
     return endPoint.replace("ws://", "http://").replace("wss://", "https://").replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll);
   }
   endpointURL() {
-    return Ajax.appendParams(this.pollEndpoint, { token: this.token });
+    return this.pollEndpoint;
   }
   closeAndRetry(code, reason, wasClean) {
     this.close(code, reason, wasClean);
@@ -751,7 +751,7 @@ var LongPoll = class {
     this.awaitingBatchAck = true;
     const next = offset + MAX_LONGPOLL_BATCH_SIZE;
     const batch = messages.slice(offset, next);
-    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.onerror("timeout"), (resp) => {
+    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.ontimeout(), (resp) => {
       if (!resp || resp.status !== 200) {
         this.awaitingBatchAck = false;
         this.onerror(resp && resp.status);
@@ -773,6 +773,7 @@ var LongPoll = class {
     this.readyState = SOCKET_STATES.closed;
     let opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
     this.batchBuffer = [];
+    this.awaitingBatchAck = false;
     clearTimeout(this.currentBatchTimer);
     this.currentBatchTimer = null;
     if (typeof CloseEvent !== "undefined") {
@@ -787,6 +788,9 @@ var LongPoll = class {
       this.reqs.delete(req);
       onCallerTimeout();
     };
+    if (this.token !== null) {
+      headers = Object.assign({}, headers, { "X-Phoenix-Longpoll-Token": this.token });
+    }
     req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, (resp) => {
       this.reqs.delete(req);
       if (this.isActive()) {
