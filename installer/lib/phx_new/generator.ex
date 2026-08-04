@@ -122,7 +122,6 @@ defmodule Phx.New.Generator do
         [
           # rules specific to new apps
           @new_project_rules_files["project.md"],
-          @new_project_rules_files["phoenix.md"],
           # --no-assets is equivalent to --no-tailwind && --no-esbuild;
           # we check for both here
           project.binding[:javascript] && project.binding[:css] &&
@@ -133,11 +132,6 @@ defmodule Phx.New.Generator do
             "<!-- phoenix:elixir-start -->\n",
             @rules_files["elixir.md"],
             "\n<!-- phoenix:elixir-end -->"
-          ],
-          [
-            "<!-- phoenix:phoenix-start -->\n",
-            @rules_files["phoenix.md"],
-            "\n<!-- phoenix:phoenix-end -->"
           ],
           project.binding[:ecto] &&
             [
