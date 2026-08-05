@@ -357,6 +357,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   slot :col, required: true do
     attr :label, :string
+    attr :class, :any
   end
 
   slot :action, doc: "the slot for showing user actions in the last table column"
@@ -382,7 +383,11 @@ defmodule <%= @web_namespace %>.CoreComponents do
           <td
             :for={col <- @col}
             phx-click={@row_click && @row_click.(row)}
-            class={@row_click && "hover:cursor-pointer"}
+            class={
+              [@row_click && "hover:cursor-pointer", col[:class]]
+              |> Enum.reject(& !&1)
+              |> Enum.join(" ")
+            }
           >
             {render_slot(col, @row_item.(row))}
           </td>
