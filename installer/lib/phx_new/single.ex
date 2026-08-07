@@ -110,20 +110,11 @@ defmodule Phx.New.Single do
       %{project | in_umbrella?: false, project_path: base_path}
     end
     |> put_app()
-    |> put_root_app()
     |> put_web_app()
   end
 
   defp put_app(%Project{base_path: base_path} = project) do
     %{project | app_path: base_path}
-  end
-
-  defp put_root_app(%Project{app: app, opts: opts} = project) do
-    %{
-      project
-      | root_app: app,
-        root_mod: Module.concat([opts[:module] || Macro.camelize(app)])
-    }
   end
 
   defp put_web_app(%Project{app: app} = project) do
