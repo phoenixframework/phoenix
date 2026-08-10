@@ -973,6 +973,21 @@ describe("with transport", function (){
     it("throws if channel has not been joined", function (){
       expect(() => channel.push("event", {})).toThrow(/^tried to push.*before joining/)
     })
+
+    it("does not leak the reply binding of a buffered push", function (){
+      socket.makeRef.mockRestore()
+      const replyBindings = () => channel.bindings.filter(b => b.event.startsWith("chan_reply_"))
+
+      joinPush = channel.join()
+      const pushes = [1, 2, 3].map(i => channel.push("event", {i}))
+      joinPush.trigger("ok", {})
+
+      expect(replyBindings().length).toBe(pushes.length)
+
+      pushes.forEach(push => push.trigger("ok", {}))
+
+      expect(replyBindings()).toEqual([])
+    })
   })
 
   describe("leave", function (){
