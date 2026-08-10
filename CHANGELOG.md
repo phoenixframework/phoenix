@@ -29,6 +29,23 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience. This may also lead to errors on application boot if you were previously incorrectly setting compile time config at runtime.
 
+## v1.8.10 (2026-08-10)
+
+### Bug fixes
+
+* [Phoenix.CodeReloader] Fix "must restart your server" messages from code reloader when compile.lock mtime changes without a content change ([#6753](https://github.com/phoenixframework/phoenix/issues/6753))
+* [Phoenix.Endpoint] add missing websocket options ([#6758](https://github.com/phoenixframework/phoenix/pull/6758))
+* [phoenix.js] Close and retry the longpoll transport when a batch POST times out ([#6769](https://github.com/phoenixframework/phoenix/pull/6769))
+* [phoenix.js] Release the stale reply binding of a buffered push ([#6788](https://github.com/phoenixframework/phoenix/pull/6788))
+
+### Enhancements
+
+* [phx.gen.release] Use Bob API to find Docker images in `phx.gen.release --docker`
+* [Channels] Allow LongPoll transport token to be sent in header (this will change in 1.9)
+* [Phoenix.Router] Support plugs with options in `pipe_throught` ([#6755](https://github.com/phoenixframework/phoenix/pull/6755))
+* [Phoenix.Token] document encode options (see [the change in plug_crypto](https://github.com/elixir-plug/plug_crypto/commit/35dd3d3da1b8b2e0009e3efc40bc67d3822f7210))
+* [phoenix.js] Ensure transport errors are identifiable ([#6763](https://github.com/phoenixframework/phoenix/pull/6763))
+
 ## v1.8.9 (2026-07-07)
 
 ### Security fixes
