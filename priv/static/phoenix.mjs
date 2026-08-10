@@ -133,6 +133,7 @@ var Push = class {
     if (this.timeoutTimer) {
       this.cancelTimeout();
     }
+    this.cancelRefEvent();
     this.ref = this.channel.socket.makeRef();
     this.refEvent = this.channel.replyEventName(this.ref);
     this.channel.on(this.refEvent, (payload) => {
