@@ -162,6 +162,7 @@ var Push = class {
     if (this.timeoutTimer) {
       this.cancelTimeout();
     }
+    this.cancelRefEvent();
     this.ref = this.channel.socket.makeRef();
     this.refEvent = this.channel.replyEventName(this.ref);
     this.channel.on(this.refEvent, (payload) => {
@@ -751,7 +752,7 @@ var LongPoll = class {
     this.awaitingBatchAck = true;
     const next = offset + MAX_LONGPOLL_BATCH_SIZE;
     const batch = messages.slice(offset, next);
-    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.onerror("timeout"), (resp) => {
+    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.ontimeout(), (resp) => {
       if (!resp || resp.status !== 200) {
         this.awaitingBatchAck = false;
         this.onerror(resp && resp.status);
@@ -773,6 +774,7 @@ var LongPoll = class {
     this.readyState = SOCKET_STATES.closed;
     let opts = Object.assign({ code: 1e3, reason: void 0, wasClean: true }, { code, reason, wasClean });
     this.batchBuffer = [];
+    this.awaitingBatchAck = false;
     clearTimeout(this.currentBatchTimer);
     this.currentBatchTimer = null;
     if (typeof CloseEvent !== "undefined") {
@@ -1462,7 +1464,7 @@ var Socket = class {
       if (this.hasLogger()) {
         this.log("transport", "heartbeat timeout. Attempting to re-establish connection");
       }
-      this.triggerChanError();
+      this.triggerChanError("heartbeat_timeout");
       this.closeWasClean = false;
       this.teardown(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout");
     }
@@ -1525,7 +1527,7 @@ var Socket = class {
     };
     let closeCode = event && event.code;
     if (this.hasLogger()) this.log("transport", "close", event);
-    this.triggerChanError();
+    this.triggerChanError("connection_closed");
     this.clearHeartbeats();
     if (!this.closeWasClean && closeCode !== 1e3) {
       this.reconnectTimer.scheduleTimeout();
@@ -1543,16 +1545,16 @@ var Socket = class {
       callback(error, transportBefore, establishedBefore);
     });
     if (transportBefore === this.transport || establishedBefore > 0) {
-      this.triggerChanError();
+      this.triggerChanError("connection_error");
     }
   }
   /**
    * @private
    */
-  triggerChanError() {
+  triggerChanError(reason) {
     this.channels.forEach((channel) => {
       if (!(channel.isErrored() || channel.isLeaving() || channel.isClosed())) {
-        channel.trigger(CHANNEL_EVENTS.error);
+        channel.trigger(CHANNEL_EVENTS.error, { source: "transport", reason });
       }
     });
   }
