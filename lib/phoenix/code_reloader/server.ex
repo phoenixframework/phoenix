@@ -52,8 +52,10 @@ defmodule Phoenix.CodeReloader.Server do
     # compiler gets, the harder it is to predict when it requires compilation.
     # For this reason, we do a simple system where we compare config files and their
     # MD5 to the latest timestamp and we abort if any of them changed.
+    mix_available? = mix_available?()
+
     md5s =
-      if mix_available?() do
+      if mix_available? do
         config = Mix.Project.config()
         build_path = Mix.Project.build_path(config)
 
@@ -67,7 +69,7 @@ defmodule Phoenix.CodeReloader.Server do
         []
       end
 
-    {:ok, %{check_symlinks: true, timestamp: timestamp(), md5s: md5s}}
+    {:ok, %{check_symlinks: mix_available?, timestamp: timestamp(), md5s: md5s}}
   end
 
   # Having Mix in the code path does not mean it has been started.
@@ -86,8 +88,7 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   def handle_call(:check_symlinks, _from, state) do
-    if state.check_symlinks and mix_available?() and not Mix.Project.umbrella?() and
-         File.dir?("priv") do
+    if state.check_symlinks and not Mix.Project.umbrella?() and File.dir?("priv") do
       priv_path = "#{Mix.Project.app_path()}/priv"
 
       case :file.read_link(priv_path) do
