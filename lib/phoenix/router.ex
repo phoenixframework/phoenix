@@ -816,7 +816,14 @@ defmodule Phoenix.Router do
   end
 
   defp build_pipes(name, pipe_through) do
-    plugs = pipe_through |> Enum.reverse() |> Enum.map(&{&1, [], true})
+    plugs =
+      pipe_through
+      |> Enum.reverse()
+      |> Enum.map(fn
+        {plug, opts} -> {plug, opts, true}
+        plug -> {plug, [], true}
+      end)
+
     opts = [init_mode: Phoenix.plug_init_mode(), log_on_halt: :debug]
     {conn, body} = Plug.Builder.compile(__ENV__, plugs, opts)
 
@@ -1028,13 +1035,26 @@ defmodule Phoenix.Router do
   @doc """
   Defines a list of plugs (and pipelines) to send the connection through.
 
-  Plugs are specified using the atom name of any imported 2-arity function
-  which takes a `Plug.Conn` and options and returns a `Plug.Conn`. For
-  example, `:require_authenticated_user`.
+  Function plugs are specified using the atom name of functions. For example,
+  `:require_authenticated_user`.
+
+  Module plugs are specified using the module name. For example,
+  `MyAppWeb.UserAuth`.
+
+  And, the plugs can also be given options via `{plug, opts}`. For example,
+  `{:require_authenticated_user, opts}`, or `{MyAppWeb.UserAuth, opts}`
 
   Pipelines are defined in the router, see `pipeline/2` for more information.
 
-      pipe_through [:require_authenticated_user, :my_browser_pipeline]
+  ## Examples
+
+      pipe_through [
+        :browser,
+        :require_authenticated_user,
+        {:trace_user, prefix: :authenticated},
+        MyAppWeb.Plugs.Locale,
+        {MyAppWeb.Plugs.Feature, flag: :beta}
+      ]
 
   ## Multiple invocations
 

@@ -7,7 +7,6 @@ defmodule Phx.New.Project do
             app_mod: nil,
             app_path: nil,
             lib_web_name: nil,
-            root_app: nil,
             root_mod: nil,
             project_path: nil,
             web_app: nil,
@@ -28,7 +27,6 @@ defmodule Phx.New.Project do
       base_path: project_path,
       app: app,
       app_mod: app_mod,
-      root_app: app,
       root_mod: app_mod,
       opts: opts
     }

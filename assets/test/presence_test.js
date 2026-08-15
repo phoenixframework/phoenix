@@ -132,6 +132,41 @@ describe("syncDiff", () => {
   })
 })
 
+describe("keys colliding with Object.prototype properties", () => {
+  // built via JSON.parse because a "__proto__" key in an object literal would
+  // set the prototype instead of creating an own property
+  const protoState = JSON.parse(`{
+    "__proto__": {"metas": [{"id": 1, "phx_ref": "1"}]},
+    "constructor": {"metas": [{"id": 2, "phx_ref": "2"}]},
+    "hasOwnProperty": {"metas": [{"id": 3, "phx_ref": "3"}]}
+  }`)
+
+  it("syncState joins and leaves them without touching the prototype", () => {
+    let joined = []
+    let state = Presence.syncState({}, protoState, key => joined.push(key))
+
+    expect(Object.getPrototypeOf(state)).toBe(null)
+    expect(joined).toEqual(["__proto__", "constructor", "hasOwnProperty"])
+    expect(Presence.list(state, (key, {metas}) => metas[0].id)).toEqual([1, 2, 3])
+
+    let left = []
+    state = Presence.syncState(state, {}, null, key => left.push(key))
+    expect(left).toEqual(["__proto__", "constructor", "hasOwnProperty"])
+    expect(Presence.list(state)).toEqual([])
+    expect(Object.prototype.metas).toBe(undefined)
+  })
+
+  it("syncDiff joins and leaves them without touching the prototype", () => {
+    let diff = JSON.parse(`{"joins": {"__proto__": {"metas": [{"id": 1, "phx_ref": "1"}]}}, "leaves": {}}`)
+    let state = Presence.syncDiff({}, diff)
+    expect(Presence.list(state, (key, {metas}) => [key, metas[0].id])).toEqual([["__proto__", 1]])
+
+    state = Presence.syncDiff(state, JSON.parse(`{"joins": {}, "leaves": {"__proto__": {"metas": [{"id": 1, "phx_ref": "1"}]}}}`))
+    expect(Presence.list(state)).toEqual([])
+    expect(Object.prototype.metas).toBe(undefined)
+  })
+})
+
 describe("list", () => {
   it("lists full presence by default", () => {
     let state = fixtures.state()

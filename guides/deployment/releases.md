@@ -159,22 +159,28 @@ Elixir releases work well with container technologies such as Docker. The idea i
 If you call `mix phx.gen.release --docker`, you'll see a new file with content similar to:
 
 ```Dockerfile
-# Find eligible builder and runner images on Docker Hub. We use Ubuntu/Debian
-# instead of Alpine to avoid DNS resolution issues in production.
-#
-# https://hub.docker.com/r/hexpm/elixir/tags?page=1&name=ubuntu
-# https://hub.docker.com/_/ubuntu?tab=tags
-#
 # This file is based on these images:
 #
-#   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
-#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20230612-slim - for the release image
-#   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.18.4-erlang-27.3.4.3-debian-trixie-20250908-slim
+#   - https://hub.docker.com/r/hexpm/elixir/tags - for the builder image
+#     E.g.: docker.io/hexpm/elixir:1.20.2-erlang-29.0.3-debian-trixie-20260623-slim
+#   - https://hub.docker.com/_/debian/tags?name=trixie-20260623-slim - for the runner image
+#     E.g.: docker.io/debian:trixie-20260623-slim
 #
-ARG ELIXIR_VERSION=1.18.4
-ARG OTP_VERSION=27.3.4.3
-ARG DEBIAN_VERSION=trixie-20250908-slim
+# Find builder and runner images on Docker Hub or on Hex's Build Server (Bob).
+# We recommend using Bob's Web UI to find recent tags:
+#
+#   - https://bob.hex.pm/docker
+#
+# We suggest using the same Debian version for both the builder and runner images.
+#
+# We suggest Debian/Ubuntu instead of Alpine to avoid production compatibility issues
+# (such as DNS resolution failures, and dynamically linked NIFs/precompiled binaries).
+#
+# For finding packages in Debian, search on https://packages.debian.org/.
+
+ARG ELIXIR_VERSION=1.20.3
+ARG OTP_VERSION=29.0.3
+ARG DEBIAN_VERSION=trixie-20260623-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"

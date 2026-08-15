@@ -5,11 +5,8 @@ defmodule <%= module %>Socket do
   #
   # It's possible to control the websocket connection and
   # assign values that can be accessed by your channel topics.
-
-  ## Channels<%= if existing_channel do %>
-
-  channel "<%= existing_channel[:singular] %>:*", <%= existing_channel[:module] %>Channel
-<% else %>
+<%= if existing_channel do %>
+  channel "<%= existing_channel[:singular] %>:*", <%= existing_channel[:module] %>Channel<% else %>
   # Uncomment the following line to define a "room:*" topic
   # pointing to the `<%= web_module %>.RoomChannel`:
   #
@@ -20,9 +17,8 @@ defmodule <%= module %>Socket do
   #     mix phx.gen.channel Room
   #
   # See the [`Channels guide`](https://phoenix.hexdocs.pm/channels.html)
-  # for further details.
+  # for further details.<% end %>
 
-<% end %>
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
   # verification, you can put default assigns into

@@ -11,6 +11,24 @@ defmodule Phoenix.CodeReloaderTest do
     {:error, "oops \e[31merror"}
   end
 
+  # Booting Elixir puts Mix in the code path but does not start it,
+  # which is how deployments that keep Mix around look to Phoenix.
+  @boot_without_mix """
+  true = Code.ensure_loaded?(Mix.Project)
+  nil = Process.whereis(Mix.ProjectStack)
+  {:ok, _} = Application.ensure_all_started(:phoenix)
+  IO.write("phoenix booted")
+  """
+
+  test "boots when Mix is in the code path but not started" do
+    args =
+      Enum.flat_map(:code.get_path(), &["-pa", List.to_string(&1)]) ++
+        ["-e", @boot_without_mix]
+
+    assert {output, 0} = System.cmd("elixir", args, stderr_to_stdout: true)
+    assert output =~ "phoenix booted"
+  end
+
   @tag :capture_log
   test "syncs with code server" do
     assert Phoenix.CodeReloader.sync() == :ok

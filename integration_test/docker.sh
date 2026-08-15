@@ -2,9 +2,9 @@
 
 # adapt with versions from .github/versions/ci.yml if necessary;
 # you can also override these with environment variables
-ELIXIR="${ELIXIR:-1.19.5}"
-ERLANG="${ERLANG:-28.3.3}"
-SUFFIX="${SUFFIX:-alpine-3.20.9}"
+ELIXIR="${ELIXIR:-1.20.2}"
+ERLANG="${ERLANG:-29.0.3}"
+SUFFIX="${SUFFIX:-alpine-3.24.1}"
 
 # Get the directory of the script
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")

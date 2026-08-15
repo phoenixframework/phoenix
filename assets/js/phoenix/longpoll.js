@@ -49,7 +49,7 @@ export default class LongPoll {
   }
 
   endpointURL(){
-    return Ajax.appendParams(this.pollEndpoint, {token: this.token})
+    return this.pollEndpoint
   }
 
   closeAndRetry(code, reason, wasClean){
@@ -154,7 +154,7 @@ export default class LongPoll {
     this.awaitingBatchAck = true
     const next = offset + MAX_LONGPOLL_BATCH_SIZE
     const batch = messages.slice(offset, next)
-    this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), () => this.onerror("timeout"), resp => {
+    this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), () => this.ontimeout(), resp => {
       if(!resp || resp.status !== 200){
         this.awaitingBatchAck = false
         this.onerror(resp && resp.status)
@@ -175,6 +175,7 @@ export default class LongPoll {
     this.readyState = SOCKET_STATES.closed
     let opts = Object.assign({code: 1000, reason: undefined, wasClean: true}, {code, reason, wasClean})
     this.batchBuffer = []
+    this.awaitingBatchAck = false
     clearTimeout(this.currentBatchTimer)
     this.currentBatchTimer = null
     if(typeof(CloseEvent) !== "undefined"){
@@ -189,6 +190,9 @@ export default class LongPoll {
     let ontimeout = () => {
       this.reqs.delete(req)
       onCallerTimeout()
+    }
+    if(this.token !== null){
+      headers = Object.assign({}, headers, {"X-Phoenix-Longpoll-Token": this.token})
     }
     req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, resp => {
       this.reqs.delete(req)
