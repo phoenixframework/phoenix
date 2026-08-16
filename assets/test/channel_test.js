@@ -1041,11 +1041,7 @@ describe("with transport", function (){
       expect(channel.state).toBe("closed")
     })
 
-    // TODO - the following tests are skipped until Channel.leave
-    // behavior can be fixed; currently, 'ok' is triggered immediately
-    // within Channel.leave so timeout callbacks are never reached
-    //
-    it.skip("sets state to leaving initially", function (){
+    it("sets state to leaving initially", function (){
       expect(channel.state).not.toBe("leaving")
 
       channel.leave()
@@ -1053,7 +1049,7 @@ describe("with transport", function (){
       expect(channel.state).toBe("leaving")
     })
 
-    it.skip("closes channel on 'timeout'", function (){
+    it("closes channel on 'timeout'", function (){
       channel.leave()
 
       jest.advanceTimersByTime(channel.timeout)
@@ -1061,7 +1057,7 @@ describe("with transport", function (){
       expect(channel.state).toBe("closed")
     })
 
-    it.skip("accepts timeout arg", function (){
+    it("accepts timeout arg", function (){
       channel.leave(channel.timeout * 2)
 
       jest.advanceTimersByTime(channel.timeout)
