@@ -53,7 +53,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Starts a new session or listen to a message if one already exists.
   defp dispatch(%{method: "GET"} = conn, endpoint, handler, opts) do
-    case resume_session(conn, endpoint, opts) do
+    case resume_session(conn, endpoint, handler, opts) do
       {:ok, new_conn, server_ref, token} ->
         listen(new_conn, server_ref, token, endpoint, opts)
 
@@ -63,8 +63,8 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   # Publish the message.
-  defp dispatch(%{method: "POST"} = conn, endpoint, _, opts) do
-    case resume_session(conn, endpoint, opts) do
+  defp dispatch(%{method: "POST"} = conn, endpoint, handler, opts) do
+    case resume_session(conn, endpoint, handler, opts) do
       {:ok, new_conn, server_ref, _token} ->
         publish(new_conn, server_ref, endpoint, opts)
 
@@ -153,7 +153,7 @@ defmodule Phoenix.Transports.LongPoll do
 
       {:ok, server_pid} ->
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
-        token = sign_token(endpoint, data, opts)
+        token = sign_token(endpoint, handler, data, opts)
         conn |> put_status(:gone) |> status_token_messages_json(token, [])
     end
   end
@@ -200,9 +200,14 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Retrieves the serialized `Phoenix.LongPoll.Server` pid
   # by publishing a message in the encrypted private topic.
-  defp resume_session(%Plug.Conn{} = conn, endpoint, opts) do
+  #
+  # The token is signed with a salt derived from the socket `handler` that
+  # minted it, so a token can only be resumed at the same handler/mount that
+  # created it. Tokens signed before this binding existed (or signed by a
+  # different handler) fail signature verification here and are rejected.
+  defp resume_session(%Plug.Conn{} = conn, endpoint, handler, opts) do
     with token when is_binary(token) <- fetch_token(conn),
-         {:ok, {:v1, id, pid, priv_topic}} <- verify_token(endpoint, token, opts) do
+         {:ok, {:v1, id, pid, priv_topic}} <- verify_token(endpoint, handler, token, opts) do
       server_ref = server_ref(endpoint.config(:endpoint_id), id, pid, priv_topic)
 
       new_conn =
@@ -256,22 +261,36 @@ defmodule Phoenix.Transports.LongPoll do
   defp broadcast_from!(_endpoint, pid, msg) when is_pid(pid),
     do: send(pid, msg)
 
-  defp sign_token(endpoint, data, opts) do
+  defp sign_token(endpoint, handler, data, opts) do
     Phoenix.Token.sign(
       endpoint,
-      Atom.to_string(endpoint.config(:pubsub_server)),
+      token_salt(endpoint, handler),
       data,
       opts[:crypto]
     )
   end
 
-  defp verify_token(endpoint, signed, opts) do
+  defp verify_token(endpoint, handler, signed, opts) do
     Phoenix.Token.verify(
       endpoint,
-      Atom.to_string(endpoint.config(:pubsub_server)),
+      token_salt(endpoint, handler),
       signed,
       opts[:crypto]
     )
+  end
+
+  # Binds the token to both the pubsub server and the socket handler that
+  # minted it. Using `:erlang.term_to_binary/1` over a tuple (rather than
+  # string concatenation) avoids any ambiguity between different
+  # server/handler pairs producing the same salt.
+  #
+  # This is a breaking change to the salt used for existing longpoll session
+  # tokens: tokens signed before this change (which do not carry a handler
+  # binding) will fail verification here and be treated the same as any
+  # other invalid/expired token (the client transparently starts a new
+  # session).
+  defp token_salt(endpoint, handler) do
+    :erlang.term_to_binary({endpoint.config(:pubsub_server), handler})
   end
 
   defp maybe_auth_token_from_header(conn, true) do

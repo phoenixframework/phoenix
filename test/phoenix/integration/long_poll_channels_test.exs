@@ -324,12 +324,15 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   def join(path, topic, vsn, join_ref, :pubsub, payload, params, headers) do
     session = join(path, topic, vsn, join_ref, :local, payload, params, headers)
 
+    # All :pubsub-mode callers in this test module join through "/ws", which
+    # is mounted with the `UserSocket` handler, hence the hardcoded salt below.
+    salt = :erlang.term_to_binary({__MODULE__, UserSocket})
+
     {:ok, {:v1, _id, pid, topic}} =
-      Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+      Phoenix.Token.verify(Endpoint, salt, session["token"])
 
     %{
-      "token" =>
-        Phoenix.Token.sign(Endpoint, Atom.to_string(__MODULE__), {:v1, "unknown", pid, topic})
+      "token" => Phoenix.Token.sign(Endpoint, salt, {:v1, "unknown", pid, topic})
     }
   end
 
@@ -694,6 +697,60 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           resp = poll(:post, "/ws", @vsn, session)
           assert resp.body["status"] == 410
         end
+      end
+
+      test "resumes a session at the same handler/mount that minted it" do
+        session = join("/ws", "room:lobby", "2.0.0", "1")
+
+        resp = poll(:get, "/ws", "2.0.0", session)
+        assert resp.body["status"] == 200
+      end
+
+      test "rejects a session token minted by a different socket handler" do
+        resp = poll(:get, "/ws", "2.0.0", %{}, nil)
+        assert resp.body["status"] == 410
+        session = Map.take(resp.body, ["token"])
+
+        # "/ws" is mounted with `UserSocket`, "/ws/connect_info" is mounted
+        # with the distinct `UserSocketConnectInfo` handler. A token minted
+        # at one must not be usable to resume a session at the other.
+        resp =
+          poll(:post, "/ws/connect_info", "2.0.0", session, %{
+            "topic" => "room:lobby",
+            "event" => "phx_join",
+            "ref" => "1",
+            "join_ref" => "1",
+            "payload" => %{}
+          })
+
+        assert resp.body["status"] == 410
+
+        resp = poll(:get, "/ws/connect_info", "2.0.0", session)
+        assert resp.body["status"] == 410
+      end
+
+      test "rejects a token signed under the legacy (pre-handler-binding) salt" do
+        resp = poll(:get, "/ws", "2.0.0", %{}, nil)
+        assert resp.body["status"] == 410
+
+        new_salt = :erlang.term_to_binary({__MODULE__, UserSocket})
+        legacy_salt = Atom.to_string(__MODULE__)
+
+        {:ok, {:v1, id, pid, priv_topic}} =
+          Phoenix.Token.verify(Endpoint, new_salt, resp.body["token"])
+
+        legacy_token = Phoenix.Token.sign(Endpoint, legacy_salt, {:v1, id, pid, priv_topic})
+
+        resp =
+          poll(:post, "/ws", "2.0.0", %{"token" => legacy_token}, %{
+            "topic" => "room:lobby",
+            "event" => "phx_join",
+            "ref" => "1",
+            "join_ref" => "1",
+            "payload" => %{}
+          })
+
+        assert resp.body["status"] == 410
       end
 
       test "publish responds with 408 when transport_dispatch times out" do
