@@ -156,7 +156,7 @@ defmodule Phoenix.MixProject do
       logo: "logo.png",
       extra_section: "GUIDES",
       assets: %{"guides/assets" => "assets"},
-      formatters: ["html", "epub"],
+      formatters: ["html", "markdown", "epub"],
       groups_for_modules: groups_for_modules(),
       extras: extras(),
       groups_for_extras: groups_for_extras(),
