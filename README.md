@@ -6,7 +6,7 @@
 
 > Peace of mind from prototype to production.
 
-[![Build Status](https://github.com/phoenixframework/phoenix/workflows/CI/badge.svg)](https://github.com/phoenixframework/phoenix/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/phoenix.svg)](https://hex.pm/packages/phoenix) [![Documentation](https://img.shields.io/badge/documentation-gray)](https://phoenix.hexdocs.pm)
+[![Build Status](https://github.com/phoenixframework/phoenix/workflows/CI/badge.svg)](https://github.com/phoenixframework/phoenix/actions/workflows/ci.yml) [![Hex.pm](https://img.shields.io/hexpm/v/phoenix.svg)](https://hex.pm/packages/phoenix) [![inspect.software](https://raw.githubusercontent.com/inspect-software/badges/main/v1/p/phoenixframework/phoenix.svg)](https://inspect.software/software/phoenixframework/phoenix) [![Documentation](https://img.shields.io/badge/documentation-gray)](https://phoenix.hexdocs.pm)
 
 ## Getting started
 
