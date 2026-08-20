@@ -791,8 +791,8 @@ defmodule Phoenix.Socket do
     %{topic: topic, join_ref: join_ref} = msg
 
     case state.channels_inverse do
-      # we need to match on nil to handle v1 protocol
-      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+      %{^pid => {^topic, existing_join_ref}}
+      when is_nil(join_ref) or join_ref === existing_join_ref ->
         send(pid, msg)
         {:ok, {update_channel_status(state, pid, topic, :leaving), socket}}
 
@@ -806,8 +806,11 @@ defmodule Phoenix.Socket do
     %{topic: topic, join_ref: join_ref} = msg
 
     case state.channels_inverse do
-      # we need to match on nil to handle v1 protocol
-      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+      # a nil join_ref is valid on non-join messages;
+      # phoenix.js also sends it on each message, but the protocol does not
+      # require it. Also, v1 protocol clients may send nil.
+      %{^pid => {^topic, existing_join_ref}}
+      when is_nil(join_ref) or join_ref === existing_join_ref ->
         send(pid, msg)
         {:ok, {state, socket}}
 
