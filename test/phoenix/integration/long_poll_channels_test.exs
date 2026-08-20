@@ -534,8 +534,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
         test "#{@mode}: publishing events" do
           Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
-          join_ref = "1"
-          session = join("/ws", "room:lobby", @vsn, join_ref, @mode)
+          session = join("/ws", "room:lobby", @vsn, "1", @mode)
 
           # Publish successfully
           resp =
@@ -543,7 +542,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
               "topic" => "room:lobby",
               "event" => "new_msg",
               "ref" => "1",
-              "join_ref" => join_ref,
+              # no join_ref required on regular messages
               "payload" => %{"body" => "hi!"}
             })
 
@@ -594,6 +593,23 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           end)
         end
 
+        test "#{@mode}: no join_ref is required on non-join messages" do
+          vsn = "2.0.0"
+          Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          resp =
+            poll(:post, "/ws", vsn, session, %{
+              "topic" => "room:lobby",
+              "event" => "new_msg",
+              "ref" => "2",
+              "payload" => %{"body" => "hi!"}
+            })
+
+          assert resp.body["status"] == 200
+          assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
+        end
+
         test "#{@mode}: lonpoll publishing batch events on v2 protocol" do
           vsn = "2.0.0"
           Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
@@ -614,12 +630,20 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
                 "ref" => "3",
                 "join_ref" => "1",
                 "payload" => %{"body" => "hi2"}
+              },
+              %{
+                "topic" => "room:lobby",
+                "event" => "new_msg",
+                "ref" => "stale",
+                "join_ref" => "stale",
+                "payload" => %{"body" => "stale"}
               }
             ])
 
           assert resp.body["status"] == 200
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi1"}}
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi2"}}
+          refute_receive %Broadcast{event: "new_msg", payload: %{"body" => "stale"}}
 
           # Publish base64 binary successfully
           resp =
@@ -825,14 +849,25 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
                  }
         end
 
-        test "sends phx_close if a channel server normally exits" do
+        test "ignores stale join refs and accepts a nil join ref on phx_leave" do
           session = join("/ws", "room:lobby", @vsn, @join_ref)
 
           resp =
             poll(:post, "/ws", @vsn, session, %{
               "topic" => "room:lobby",
               "event" => "phx_leave",
-              "join_ref" => @join_ref,
+              "join_ref" => "stale",
+              "ref" => "stale",
+              "payload" => %{}
+            })
+
+          assert resp.body["status"] == 200
+          assert resp.status == 200
+
+          resp =
+            poll(:post, "/ws", @vsn, session, %{
+              "topic" => "room:lobby",
+              "event" => "phx_leave",
               "ref" => "2",
               "payload" => %{}
             })
