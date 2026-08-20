@@ -154,7 +154,7 @@ defmodule Phoenix.ConnTest do
     |> Conn.put_private(:phoenix_recycled, true)
   end
 
-  @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
+  @http_methods [:get, :query, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   for method <- @http_methods do
     @doc """
