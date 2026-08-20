@@ -129,4 +129,34 @@ defmodule Phoenix.Naming do
 
     bin |> String.replace("_", " ") |> String.capitalize
   end
+
+  @doc """
+  Converts an attribute/form field into its titleized version (all words capitalized).
+
+  ## Examples
+
+      iex> Phoenix.Naming.titleize(:username)
+      "Username"
+      iex> Phoenix.Naming.titleize(:created_at)
+      "Created At"
+      iex> Phoenix.Naming.titleize("user_id")
+      "User"
+
+  """
+  @spec titleize(atom | String.t) :: String.t
+  def titleize(atom) when is_atom(atom),
+    do: titleize(Atom.to_string(atom))
+  def titleize(bin) when is_binary(bin) do
+    bin =
+      if String.ends_with?(bin, "_id") do
+        binary_part(bin, 0, byte_size(bin) - 3)
+      else
+        bin
+      end
+
+    bin
+    |> String.replace("_", " ")
+    |> String.split()
+    |> Enum.map_join(" ", &String.capitalize/1)
+  end
 end
