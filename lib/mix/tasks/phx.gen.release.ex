@@ -238,25 +238,23 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     |> map_size() > 0
   end
 
-  @bob_docker_api "https://bob.hex.pm/api/docker"
-  @bob_docker_url "https://bob.hex.pm/docker"
-  @docker_repo "hexpm/elixir"
-  @debian "trixie"
+  defp bob_url, do: "https://bob.hex.pm"
+  defp docker_repo, do: "hexpm/elixir"
+  defp debian, do: "trixie"
+
   defp elixir_otp_and_debian_vsn(elixir_vsn, otp_vsn) do
     elixir_vsn
     |> docker_tag_searches(otp_vsn)
     |> Enum.find_value(:error, fn search ->
-      candidates =
-        for tag <- fetch_bob_docker_tags(search.params),
-            candidate = docker_tag_candidate(tag),
-            candidate && docker_tag_matches?(candidate, search) do
-          candidate
-        end
+      tags = fetch_bob_docker_tags(search.params)
 
-      case best_docker_tag(candidates) do
-        nil -> nil
-        candidate -> {:ok, candidate.elixir, candidate.otp, candidate.debian_vsn}
-      end
+      Enum.find_value(tags, fn tag ->
+        candidate = docker_tag_candidate(tag)
+
+        if candidate && docker_tag_matches?(candidate, search) do
+          {:ok, candidate.elixir, candidate.otp, candidate.debian_vsn}
+        end
+      end)
     end)
   end
 
@@ -264,7 +262,10 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     [
       # prefer an exact match first
       docker_tag_search(
-        %{repo: @docker_repo, tag: "#{elixir_vsn}-erlang-#{otp_vsn}-debian-#{@debian}-"},
+        docker_tag_filters(%{
+          elixir_version: elixir_vsn,
+          erlang_version: otp_vsn
+        }),
         {:exact, elixir_vsn},
         {:exact, otp_vsn}
       ),
@@ -326,42 +327,40 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   defp docker_tag_filters(params) do
     Map.merge(
       %{
-        repo: @docker_repo,
+        repo: docker_repo(),
         os: "debian",
-        os_version: "#{@debian}-"
+        os_version: "#{debian()}-",
+        sort: "elixir_version,erlang_version,os_version"
       },
       params
     )
   end
 
-  defp fetch_bob_docker_tags(params, offset \\ 0, acc \\ []) do
+  defp fetch_bob_docker_tags(params) do
     body =
       params
-      |> bob_docker_tags_url(offset)
+      |> bob_docker_tags_url()
       |> fetch_body!()
       |> Phoenix.json_library().decode!()
 
-    tags = Map.fetch!(body, "tags")
-    next_offset = offset + length(tags)
-
-    if length(tags) > 0 and next_offset < Map.get(body, "total", next_offset) do
-      fetch_bob_docker_tags(params, next_offset, acc ++ tags)
-    else
-      acc ++ tags
-    end
+    Map.get(body, "tags", [])
   end
 
-  defp bob_docker_tags_url(params, offset) do
-    @bob_docker_api <> "?" <> URI.encode_query(Map.put(params, :offset, offset))
+  defp bob_docker_tags_url(params), do: bob_docker_url("/api/docker", params)
+  defp bob_docker_ui_url(params), do: bob_docker_url("/docker", params)
+
+  defp bob_docker_url(path, params) do
+    bob_url() <> path <> "?" <> URI.encode_query(params)
   end
 
-  defp bob_docker_url(params) do
-    @bob_docker_url <> "?" <> URI.encode_query(params)
-  end
-
-  defp docker_tag_candidate(%{"repo" => @docker_repo, "tag" => tag}) do
-    with [elixir, rest] <- String.split(tag, "-erlang-", parts: 2),
-         [otp, debian_vsn] <- String.split(rest, "-debian-#{@debian}-", parts: 2),
+  defp docker_tag_candidate(%{"repo" => repo, "tag" => tag} = candidate) do
+    # Bob API filters `repo` using a prefix match, so querying `hexpm/elixir` also returns
+    # single-arch `hexpm/elixir-amd64` and `hexpm/elixir-arm64` tags. We check exact equality
+    # and multiple architectures to ensure we only select multi-arch manifest images.
+    with true <- repo == docker_repo(),
+         true <- match?(%{"archs" => [_, _ | _]}, candidate),
+         [elixir, rest] <- String.split(tag, "-erlang-", parts: 2),
+         [otp, debian_vsn] <- String.split(rest, "-debian-#{debian()}-", parts: 2),
          true <- String.ends_with?(debian_vsn, "-slim") do
       %{
         elixir: elixir,
@@ -389,87 +388,6 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     do: same_version_prefix?(version, wanted, 2)
 
   defp version_matches?(version, {:major, wanted}), do: same_version_prefix?(version, wanted, 1)
-
-  defp best_docker_tag([]), do: nil
-
-  defp best_docker_tag([candidate | candidates]) do
-    Enum.reduce(candidates, candidate, fn candidate, best ->
-      if compare_docker_tags(candidate, best) == :gt, do: candidate, else: best
-    end)
-  end
-
-  defp compare_docker_tags(left, right) do
-    compare_versions(left.elixir, right.elixir, &compare_elixir_versions/2) ||
-      compare_versions(left.otp, right.otp, &compare_otp_versions/2) ||
-      compare_strings(left.debian_vsn, right.debian_vsn)
-  end
-
-  defp compare_versions(left, right, compare) do
-    case compare.(left, right) do
-      :eq -> nil
-      result -> result
-    end
-  end
-
-  defp compare_strings(left, right) do
-    cond do
-      left > right -> :gt
-      left < right -> :lt
-      true -> :eq
-    end
-  end
-
-  defp compare_elixir_versions(left, right) do
-    Version.compare(normalize_elixir_version(left), normalize_elixir_version(right))
-  end
-
-  defp normalize_elixir_version(version) do
-    case String.split(version, ".") do
-      [major, minor] -> "#{major}.#{minor}.0"
-      [_major, _minor | _rest] -> version
-      _ -> version
-    end
-  end
-
-  defp compare_otp_versions(left, right) do
-    compare_otp_components(otp_matchable(left), otp_matchable(right))
-  end
-
-  defp compare_otp_components({[left | lefts], left_pre}, {[right | rights], right_pre}) do
-    cond do
-      left > right -> :gt
-      left < right -> :lt
-      true -> compare_otp_components({lefts, left_pre}, {rights, right_pre})
-    end
-  end
-
-  defp compare_otp_components({[], left_pre}, {[], right_pre}) do
-    cond do
-      left_pre == [] and right_pre != [] -> :gt
-      left_pre != [] and right_pre == [] -> :lt
-      left_pre > right_pre -> :gt
-      left_pre < right_pre -> :lt
-      true -> :eq
-    end
-  end
-
-  defp compare_otp_components({[], _left_pre}, {_rights, _right_pre}), do: :lt
-  defp compare_otp_components({_lefts, _left_pre}, {[], _right_pre}), do: :gt
-
-  defp otp_matchable(version) do
-    [version, pre] =
-      case String.split(version, "-", parts: 2) do
-        [version, pre] -> [version, pre]
-        [version] -> [version, []]
-      end
-
-    components =
-      version
-      |> String.split(".")
-      |> Enum.map(&String.to_integer/1)
-
-    {components, pre}
-  end
 
   defp version_major_prefix(version), do: version_prefix(version, 1)
   defp version_major_minor_prefix(version), do: version_prefix(version, 2)
@@ -532,7 +450,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
       {:ok, elixir_vsn, otp_vsn, debian_vsn} ->
         binding =
           Keyword.merge(binding,
-            debian: @debian,
+            debian: debian(),
             debian_vsn: debian_vsn,
             elixir_vsn: elixir_vsn,
             otp_vsn: otp_vsn
@@ -548,7 +466,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
         raise """
         unable to fetch supported Docker image for Elixir #{wanted_elixir_vsn} and Erlang #{otp_vsn}.
-        Please check #{bob_docker_url(params)} for a suitable Elixir version
+        Please check #{bob_docker_ui_url(params)} for a suitable Elixir version
         """
     end
   end
