@@ -133,7 +133,6 @@ export default class Socket {
     this.disconnecting = false
     this.binaryType = opts.binaryType || "arraybuffer"
     this.connectClock = 1
-    this.pageHidden = false
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -156,15 +155,12 @@ export default class Socket {
         }
       })
       phxWindow.addEventListener("visibilitychange", () => {
-        if(document.visibilityState === "hidden"){
-          this.pageHidden = true
-        } else {
-          this.pageHidden = false
-          // reconnect immediately
-          if(!this.isConnected() && !this.closeWasClean){
-            this.teardown(() => this.connect())
-          }
-        }
+        this.handleVisibilityChange()
+      })
+      // Chrome 149 started to not reliably fire visibilitychange after resume,
+      // see https://issues.chromium.org/issues/547062449.
+      phxWindow.document && phxWindow.document.addEventListener("resume", () => {
+        this.handleVisibilityChange()
       })
     }
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000
@@ -202,6 +198,25 @@ export default class Socket {
       this.teardown(() => this.connect())
     }, this.reconnectAfterMs)
     this.authToken = opts.authToken && closure(opts.authToken)
+  }
+
+  /**
+   * @internal
+   */
+  get pageHidden(){
+    return phxWindow && phxWindow.document ? phxWindow.document.visibilityState === "hidden" : false
+  }
+
+  /**
+   * @internal
+   */
+  handleVisibilityChange(){
+    if(!this.pageHidden){
+      // reconnect immediately
+      if(!this.isConnected() && !this.closeWasClean){
+        this.teardown(() => this.connect())
+      }
+    }
   }
 
   /**
