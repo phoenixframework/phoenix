@@ -1119,7 +1119,6 @@ var Phoenix = (() => {
       this.disconnecting = false;
       this.binaryType = opts.binaryType || "arraybuffer";
       this.connectClock = 1;
-      this.pageHidden = false;
       if (this.transport !== LongPoll) {
         this.encode = opts.encode || this.defaultEncoder;
         this.decode = opts.decode || this.defaultDecoder;
@@ -1142,14 +1141,10 @@ var Phoenix = (() => {
           }
         });
         phxWindow.addEventListener("visibilitychange", () => {
-          if (document.visibilityState === "hidden") {
-            this.pageHidden = true;
-          } else {
-            this.pageHidden = false;
-            if (!this.isConnected() && !this.closeWasClean) {
-              this.teardown(() => this.connect());
-            }
-          }
+          this.handleVisibilityChange();
+        });
+        phxWindow.document && phxWindow.document.addEventListener("resume", () => {
+          this.handleVisibilityChange();
         });
       }
       this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 3e4;
@@ -1189,6 +1184,22 @@ var Phoenix = (() => {
         this.teardown(() => this.connect());
       }, this.reconnectAfterMs);
       this.authToken = opts.authToken && closure(opts.authToken);
+    }
+    /**
+     * @internal
+     */
+    get pageHidden() {
+      return phxWindow && phxWindow.document ? phxWindow.document.visibilityState === "hidden" : false;
+    }
+    /**
+     * @internal
+     */
+    handleVisibilityChange() {
+      if (!this.pageHidden) {
+        if (!this.isConnected() && !this.closeWasClean) {
+          this.teardown(() => this.connect());
+        }
+      }
     }
     /**
      * Returns the LongPoll transport reference
