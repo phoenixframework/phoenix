@@ -141,6 +141,43 @@ describe("with transports", function (){
     })
   })
 
+  describe("resume", function (){
+    // Chrome does not reliably fire visibilitychange when a frozen page is
+    // resumed, see https://issues.chromium.org/issues/547062449.
+    it("reconnects on resume after unclean close", function (){
+      socket = new Socket("/socket")
+      socket.closeWasClean = false
+      const teardownSpy = jest.spyOn(socket, "teardown")
+
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+      document.dispatchEvent(new Event("resume"))
+
+      expect(teardownSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not reconnect on resume while the page is still hidden", function (){
+      socket = new Socket("/socket")
+      socket.closeWasClean = false
+      const teardownSpy = jest.spyOn(socket, "teardown")
+
+      Object.defineProperty(document, "visibilityState", {value: "hidden", writable: true})
+      document.dispatchEvent(new Event("resume"))
+
+      expect(teardownSpy).not.toHaveBeenCalled()
+    })
+
+    it("does not reconnect on resume after clean close", function (){
+      socket = new Socket("/socket")
+      socket.closeWasClean = true
+      const teardownSpy = jest.spyOn(socket, "teardown")
+
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+      document.dispatchEvent(new Event("resume"))
+
+      expect(teardownSpy).not.toHaveBeenCalled()
+    })
+  })
+
   describe("protocol", function (){
     beforeEach(function (){
       socket = new Socket("/socket")
