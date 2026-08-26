@@ -1,9 +1,9 @@
 # This file is based on these images:
 #
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the builder image
-#     E.g.: docker.io/hexpm/elixir:<%= elixir_vsn %>-erlang-<%= otp_vsn %>-debian-<%= debian %>-<%= debian_vsn %>-slim
-#   - https://hub.docker.com/_/debian/tags?name=<%= debian %>-<%= debian_vsn %>-slim - for the runner image
-#     E.g.: docker.io/debian:<%= debian %>-<%= debian_vsn %>-slim
+#     E.g.: docker.io/hexpm/elixir:<%= elixir_vsn %>-erlang-<%= otp_vsn %>-debian-<%= debian_vsn %>
+#   - https://hub.docker.com/_/debian/tags?name=<%= debian_vsn %> - for the runner image
+#     E.g.: docker.io/debian:<%= debian_vsn %>
 #
 # Find builder and runner images on Docker Hub or on Hex's Build Server (Bob).
 # We recommend using Bob's Web UI to find recent tags:
@@ -19,7 +19,7 @@
 
 ARG ELIXIR_VERSION=<%= elixir_vsn %>
 ARG OTP_VERSION=<%= otp_vsn %>
-ARG DEBIAN_VERSION=<%= debian %>-<%= debian_vsn %>-slim
+ARG DEBIAN_VERSION=<%= debian_vsn %>
 
 ARG BUILDER_IMAGE="docker.io/hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="docker.io/debian:${DEBIAN_VERSION}"
