@@ -153,7 +153,7 @@ jobs:
     strategy:
       matrix:
         include:
-          # look for latest alpine image here: https://bob.hex.pm/docker
+          # look for latest alpine image here: https://bob.hex.pm/docker?repo=hexpm/elixir&os=alpine&sort=elixir_version,erlang_version,os_version
           - elixir: "1.17.3"
             otp: "25.3.2.21"
             suffix: "alpine-3.22.4"
