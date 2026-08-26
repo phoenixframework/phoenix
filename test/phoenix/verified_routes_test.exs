@@ -695,5 +695,36 @@ defmodule Phoenix.VerifiedRoutesTest do
       :code.purge(__MODULE__.VerifyForwardedRouter)
       :code.delete(__MODULE__.VerifyForwardedRouter)
     end
+
+    test "warns when :router is not a literal module" do
+      warnings =
+        ExUnit.CaptureIO.capture_io(:stderr, fn ->
+          defmodule DynamicRouter do
+            use Phoenix.VerifiedRoutes,
+              endpoint: unquote(@endpoint),
+              router: Module.concat([unquote(@router)])
+          end
+        end)
+
+      assert warnings =~
+               ":router option in VerifiedRoutes must be a literal module"
+    after
+      :code.purge(__MODULE__.DynamicRouter)
+      :code.delete(__MODULE__.DynamicRouter)
+    end
+
+    test "does not warn when :router is a literal module" do
+      warnings =
+        ExUnit.CaptureIO.capture_io(:stderr, fn ->
+          defmodule LiteralRouter do
+            use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+          end
+        end)
+
+      assert warnings == ""
+    after
+      :code.purge(__MODULE__.LiteralRouter)
+      :code.delete(__MODULE__.LiteralRouter)
+    end
   end
 end

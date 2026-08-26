@@ -229,6 +229,12 @@ defmodule Phoenix.VerifiedRoutes do
           if Macro.quoted_literal?(v) do
             {k, Macro.prewalk(v, &expand_alias(&1, __CALLER__))}
           else
+            if k == :router do
+              IO.warn(
+                ":router option in VerifiedRoutes must be a literal module, got: #{Macro.to_string(v)}",
+                __CALLER__
+              )
+            end
             {k, v}
           end
         end
