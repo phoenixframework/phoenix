@@ -246,7 +246,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
           Gen.Release.run(["--docker", "--elixir", "1.18.4", "--otp", "27.0.3"])
         end
 
-      assert error.message =~ "unable to fetch supported Docker image for Elixir 1.18.4 and Erlang 27.0.3."
+      assert error.message =~
+               "unable to fetch supported Docker image for Elixir 1.18.4 and Erlang 27.0.3."
+
       assert error.message =~ "https://bob.hex.pm/docker?"
       assert error.message =~ "erlang_version=27"
       assert error.message =~ "repo=hexpm%2Felixir"
@@ -265,7 +267,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
           tags: [
             # single-arch tag (should be ignored)
             %{
-              repo: "hexpm/elixir-amd64",
+              repo: "hexpm/elixir",
               tag: "1.18.4-erlang-27.0.3-debian-trixie-20251117-slim",
               archs: ["amd64"],
               built_at: "2025-11-17T00:00:00Z"

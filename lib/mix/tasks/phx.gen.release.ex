@@ -353,13 +353,9 @@ defmodule Mix.Tasks.Phx.Gen.Release do
     bob_url() <> path <> "?" <> URI.encode_query(params)
   end
 
-  defp docker_tag_candidate(%{"repo" => repo, "tag" => tag} = candidate) do
-    # Bob API filters `repo` using a prefix match, so querying `hexpm/elixir` also returns
-    # single-arch `hexpm/elixir-amd64` and `hexpm/elixir-arm64` tags. We check exact equality
-    # and multiple architectures to ensure we only select multi-arch manifest images.
-    with true <- repo == docker_repo(),
-         true <- match?(%{"archs" => [_, _ | _]}, candidate),
-         [elixir, rest] <- String.split(tag, "-erlang-", parts: 2),
+  # Ensure we only select multi-arch manifest images
+  defp docker_tag_candidate(%{"archs" => [_, _ | _], "tag" => tag}) do
+    with [elixir, rest] <- String.split(tag, "-erlang-", parts: 2),
          [otp, debian_vsn] <- String.split(rest, "-debian-#{debian()}-", parts: 2),
          true <- String.ends_with?(debian_vsn, "-slim") do
       %{
