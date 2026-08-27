@@ -832,9 +832,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
           File.cd!(dir, fn ->
             assert_raise Mix.Error,
                          ~r"The web task can only be run within an umbrella's apps directory",
-                         fn ->
-                           Mix.Tasks.Phx.New.Web.run(["valid"])
-                         end
+                         fn -> Mix.Tasks.Phx.New.Web.run(["web_app"]) end
           end)
         end
       end)
@@ -859,7 +857,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         end)
 
         assert_file("../config/config.exs", fn file ->
-          assert file =~ "ecto_repos: [Another.Repo]"
+          assert file =~ "config :another,\n  generators: [context_app: false]"
+          assert file =~ "config :another, Another.Endpoint,"
+          refute file =~ "ecto_repos: [Another.Repo]"
         end)
 
         assert_file("../config/prod.exs", fn file ->
@@ -876,7 +876,13 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file("another/test/another/controllers/page_controller_test.exs")
         assert_file("another/test/another/controllers/error_html_test.exs", "async: true")
         assert_file("another/test/another/controllers/error_json_test.exs", "async: true")
-        assert_file("another/test/support/conn_case.ex")
+
+        assert_file("another/test/support/conn_case.ex", fn file ->
+          assert file =~ "defmodule Another.ConnCase do"
+          assert file =~ "setup _tags do\n    {:ok, conn: Phoenix.ConnTest.build_conn()}\n  end"
+          refute file =~ "DataCase.setup_sandbox"
+        end)
+
         assert_file("another/test/test_helper.exs")
 
         assert_file(
@@ -906,7 +912,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         # Ecto
         assert_file("another/mix.exs", fn file ->
-          assert file =~ "{:phoenix_ecto,"
+          assert file =~ "{:phoenix,"
+          refute file =~ "{:phoenix_ecto,"
+          refute file =~ "ecto.create"
         end)
 
         assert_file("another/lib/another.ex", ~r"defmodule Another")

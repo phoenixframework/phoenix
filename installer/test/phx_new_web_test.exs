@@ -1,4 +1,4 @@
-Code.require_file "mix_helper.exs", __DIR__
+Code.require_file("mix_helper.exs", __DIR__)
 
 defmodule Mix.Tasks.Phx.New.WebTest do
   use ExUnit.Case
@@ -10,41 +10,56 @@ defmodule Mix.Tasks.Phx.New.WebTest do
   setup do
     # The shell asks to install deps.
     # We will politely say not.
-    send self(), {:mix_shell_input, :yes?, false}
+    send(self(), {:mix_shell_input, :yes?, false})
     :ok
   end
 
   test "new without args" do
     assert capture_io(fn -> Mix.Tasks.Phx.New.Web.run([]) end) =~
-           "Creates a new Phoenix web project within an umbrella project."
+             "Creates a new Phoenix web project within an umbrella project."
   end
 
   test "new with barebones umbrella" do
-    in_tmp_umbrella_project "new with barebones umbrella", fn ->
+    in_tmp_umbrella_project("new with barebones umbrella", fn ->
       files = ~w[../config/dev.exs ../config/test.exs ../config/prod.exs ../config/runtime.exs]
       Enum.each(files, &File.rm/1)
 
-      assert_file "../config/config.exs", &refute(&1 =~ ~S[import_config "#{config_env()}.exs"])
+      assert_file("../config/config.exs", &refute(&1 =~ ~S[import_config "#{config_env()}.exs"]))
       Mix.Tasks.Phx.New.Web.run([@app_name])
-      assert_file "../config/config.exs", &assert(&1 =~ ~S[import_config "#{config_env()}.exs"])
-    end
+      assert_file("../config/config.exs", &assert(&1 =~ ~S[import_config "#{config_env()}.exs"]))
+    end)
   end
 
   test "new outside umbrella", config do
-    in_tmp config.test, fn ->
-      assert_raise Mix.Error, ~r"The web task can only be run within an umbrella's apps directory", fn ->
-        Mix.Tasks.Phx.New.Web.run ["007invalid"]
-      end
-    end
+    in_tmp(config.test, fn ->
+      assert_raise Mix.Error,
+                   ~r"The web task can only be run within an umbrella's apps directory",
+                   fn -> Mix.Tasks.Phx.New.Web.run(["web_app"]) end
+    end)
   end
 
   test "new with defaults" do
-    in_tmp_umbrella_project "new with defaults", fn ->
+    in_tmp_umbrella_project("new with defaults", fn ->
       Mix.Tasks.Phx.New.Web.run([@app_name])
 
-      assert_file "../config/config.exs", fn file ->
-        assert file =~ "generators: [context_app: false]"
-      end
+      assert_file("../config/config.exs", fn file ->
+        assert file =~ "config :#{@app_name},\n  generators: [context_app: false]"
+        assert file =~ "config :#{@app_name}, PhxWeb.Endpoint,"
+        refute file =~ "ecto_repos:"
+      end)
+
+      assert_file("#{@app_name}/mix.exs", fn file ->
+        assert file =~ "app: :#{@app_name}"
+        assert file =~ "{:phoenix,"
+        refute file =~ "{:phoenix_ecto,"
+        refute file =~ "ecto.create"
+      end)
+
+      assert_file("#{@app_name}/test/support/conn_case.ex", fn file ->
+        assert file =~ "defmodule PhxWeb.ConnCase do"
+        assert file =~ "setup _tags do\n    {:ok, conn: Phoenix.ConnTest.build_conn()}\n  end"
+        refute file =~ "DataCase.setup_sandbox"
+      end)
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
@@ -54,19 +69,20 @@ defmodule Mix.Tasks.Phx.New.WebTest do
       assert msg =~ "$ cd phx_web"
       assert msg =~ "$ mix deps.get"
 
-      assert_received {:mix_shell, :info, ["Your web app requires a PubSub server to be running." <> _]}
+      assert_received {:mix_shell, :info,
+                       ["Your web app requires a PubSub server to be running." <> _]}
 
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
-    end
+    end)
   end
 
   test "app_name is included in tailwind config" do
-    in_tmp_umbrella_project "new with defaults", fn ->
+    in_tmp_umbrella_project("new with defaults", fn ->
       Mix.Tasks.Phx.New.Web.run(["testweb"])
 
-      assert_file "testweb/assets/vendor/heroicons.js", fn file ->
+      assert_file("testweb/assets/vendor/heroicons.js", fn file ->
         assert file =~ "/deps/heroicons/optimized"
-      end
-    end
+      end)
+    end)
   end
 end
