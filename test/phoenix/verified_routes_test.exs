@@ -700,8 +700,7 @@ defmodule Phoenix.VerifiedRoutesTest do
       assert_raise ArgumentError, ~r/:router option in VerifiedRoutes must be a literal module/, fn ->
         defmodule DynamicRouter do
           use Phoenix.VerifiedRoutes,
-            endpoint: unquote(@endpoint),
-            router: Module.concat([unquote(@router)])
+            router: Module.concat(["My", "Router"])
         end
       end
     after
