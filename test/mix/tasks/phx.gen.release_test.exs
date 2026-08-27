@@ -13,10 +13,11 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
     Process.put({Mix.Tasks.Phx.Gen.Release, :http_client}, fn url ->
       uri = URI.parse(to_string(url))
       params = URI.decode_query(uri.query || "")
-      tag = params["tag"] || "1.18.4-erlang-25.3.2.17-debian-trixie-"
+      elixir_vsn = params["elixir_version"] || "1.18.4"
+      otp_vsn = params["erlang_version"] || "25.3.2.17"
 
       if uri.host == "bob.hex.pm" and uri.path == "/api/docker" do
-        bob_tags_response([tag <> "20251117-slim"])
+        bob_tags_response(["#{elixir_vsn}-erlang-#{otp_vsn}-debian-trixie-20251117-slim"])
       else
         raise "unexpected URL #{url}"
       end
@@ -156,7 +157,13 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       end)
 
       assert_receive {:docker_url, %URI{query: query}}
-      assert URI.decode_query(query)["tag"] == "1.18.4-erlang-27.0.3-debian-trixie-"
+      params = URI.decode_query(query)
+      assert params["repo"] == "hexpm/elixir"
+      assert params["elixir_version"] == "1.18.4"
+      assert params["erlang_version"] == "27.0.3"
+      assert params["os"] == "debian"
+      assert params["os_version"] == "trixie-"
+      assert params["sort"] == "elixir_version,erlang_version,os_version"
     end)
   end
 
@@ -166,14 +173,14 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       params = URI.decode_query(uri.query || "")
 
       tags =
-        case {params["tag"], params["elixir_version"], params["erlang_version"]} do
-          {"1.18.3-erlang-27.0.0-debian-trixie-", _, _} ->
+        case {params["elixir_version"], params["erlang_version"]} do
+          {"1.18.3", "27.0.0"} ->
             []
 
-          {_, "1.18.3", _} ->
+          {"1.18.3", "27.0"} ->
             []
 
-          {_, "1.18", "27.0"} ->
+          {"1.18", "27.0"} ->
             ["1.18.4-erlang-27.0.3-debian-trixie-20251117-slim"]
 
           _ ->
@@ -218,6 +225,91 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
         refute file =~ ~S|RUN mix assets.setup|
         refute file =~ ~S|COPY assets assets|
         refute file =~ ~S|RUN mix assets.deploy|
+      end)
+    end)
+  end
+
+  test "raises when no matching docker image is found", config do
+    Process.put({Mix.Tasks.Phx.Gen.Release, :http_client}, fn url ->
+      uri = URI.parse(to_string(url))
+
+      if uri.host == "bob.hex.pm" and uri.path == "/api/docker" do
+        bob_tags_response([])
+      else
+        raise "unexpected URL #{url}"
+      end
+    end)
+
+    in_tmp_project(config.test, fn ->
+      error =
+        assert_raise RuntimeError, fn ->
+          Gen.Release.run(["--docker", "--elixir", "1.18.4", "--otp", "27.0.3"])
+        end
+
+      assert error.message =~
+               "unable to fetch supported Docker image for Elixir 1.18.4 and Erlang 27.0.3."
+
+      assert error.message =~ "https://bob.hex.pm/docker?"
+      assert error.message =~ "erlang_version=27"
+      assert error.message =~ "repo=hexpm%2Felixir"
+      assert error.message =~ "for a suitable Elixir version"
+    end)
+  end
+
+  # Bob API sorts descending by (elixir_version, erlang_version, os_version, built_at).
+  # The task selects the first candidate that is a multi-arch slim image.
+  test "selects first matching multi-arch slim tag from sorted results", config do
+    Process.put({Mix.Tasks.Phx.Gen.Release, :http_client}, fn url ->
+      uri = URI.parse(to_string(url))
+
+      if uri.host == "bob.hex.pm" and uri.path == "/api/docker" do
+        Phoenix.json_library().encode!(%{
+          tags: [
+            # single-arch tag (should be ignored)
+            %{
+              repo: "hexpm/elixir",
+              tag: "1.18.4-erlang-27.0.3-debian-trixie-20251117-slim",
+              archs: ["amd64"],
+              built_at: "2025-11-17T00:00:00Z"
+            },
+            # non-slim tag (should be ignored)
+            %{
+              repo: "hexpm/elixir",
+              tag: "1.18.4-erlang-27.0.3-debian-trixie-20251117",
+              archs: ["amd64", "arm64"],
+              built_at: "2025-11-17T00:00:00Z"
+            },
+            # first valid multi-arch slim tag (should be selected)
+            %{
+              repo: "hexpm/elixir",
+              tag: "1.18.4-erlang-27.0.3-debian-trixie-20251117-slim",
+              archs: ["amd64", "arm64"],
+              built_at: "2025-11-17T00:00:00Z"
+            },
+            # older multi-arch slim tag
+            %{
+              repo: "hexpm/elixir",
+              tag: "1.18.4-erlang-27.0.3-debian-trixie-20251001-slim",
+              archs: ["amd64", "arm64"],
+              built_at: "2025-10-01T00:00:00Z"
+            }
+          ],
+          total: 4,
+          offset: 0,
+          page_size: 100
+        })
+      else
+        raise "unexpected URL #{url}"
+      end
+    end)
+
+    in_tmp_project(config.test, fn ->
+      Gen.Release.run(["--docker", "--elixir", "1.18.4", "--otp", "27.0.3"])
+
+      assert_file("Dockerfile", fn file ->
+        assert file =~ ~S|ARG ELIXIR_VERSION=1.18.4|
+        assert file =~ ~S|ARG OTP_VERSION=27.0.3|
+        assert file =~ ~S|ARG DEBIAN_VERSION=trixie-20251117-slim|
       end)
     end)
   end
