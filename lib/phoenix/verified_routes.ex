@@ -226,16 +226,16 @@ defmodule Phoenix.VerifiedRoutes do
     opts =
       if Keyword.keyword?(opts) do
         for {k, v} <- opts do
-          if Macro.quoted_literal?(v) do
-            {k, Macro.prewalk(v, &expand_alias(&1, __CALLER__))}
-          else
-            if k == :router do
-              IO.warn(
-                ":router option in VerifiedRoutes must be a literal module, got: #{Macro.to_string(v)}",
-                __CALLER__
-              )
-            end
-            {k, v}
+          cond do
+            Macro.quoted_literal?(v) ->
+              {k, Macro.prewalk(v, &expand_alias(&1, __CALLER__))}
+
+            k == :router ->
+              raise ArgumentError,
+                ":router option in VerifiedRoutes must be a literal module, got: #{Macro.to_string(v)}"
+
+            true ->
+              {k, v}
           end
         end
       else
