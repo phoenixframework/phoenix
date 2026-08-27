@@ -151,6 +151,9 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       Gen.Release.run(["--docker", "--elixir", "1.18.4", "--otp", "27.0.3"])
 
       assert_file("Dockerfile", fn file ->
+        assert file =~
+                 "https://bob.hex.pm/docker?repo=hexpm/elixir&os=debian&sort=elixir_version,erlang_version,os_version"
+
         assert file =~ ~S|ARG ELIXIR_VERSION=1.18.4|
         assert file =~ ~S|ARG OTP_VERSION=27.0.3|
         assert file =~ ~S|ARG DEBIAN_VERSION=trixie-20251117-slim|

@@ -169,7 +169,7 @@ If you call `mix phx.gen.release --docker`, you'll see a new file with content s
 # Find builder and runner images on Docker Hub or on Hex's Build Server (Bob).
 # We recommend using Bob's Web UI to find recent tags:
 #
-#   - https://bob.hex.pm/docker
+#   - https://bob.hex.pm/docker?repo=hexpm/elixir&os=debian&sort=elixir_version,erlang_version,os_version
 #
 # We suggest using the same Debian version for both the builder and runner images.
 #
