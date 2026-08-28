@@ -20,8 +20,8 @@ jobs:
           - elixir: "1.18.4"
             otp: "27.3.4.13"
 
-          - elixir: "1.20.2"
-            otp: "29.0.3"
+          - elixir: "1.20.4"
+            otp: "29.0.5"
             lint: true
 
     runs-on: ubuntu-24.04
@@ -72,8 +72,8 @@ jobs:
           - elixir: "1.18.4"
             otp: "27.3.4.3"
 
-          - elixir: "1.20.2"
-            otp: "29.0.3"
+          - elixir: "1.20.4"
+            otp: "29.0.5"
 
     runs-on: ubuntu-24.04
 
@@ -156,8 +156,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - elixir: "1.20.2"
-            otp: "29.0.3"
+          - elixir: "1.20.4"
+            otp: "29.0.5"
 
     runs-on: ubuntu-24.04
 
@@ -212,9 +212,9 @@ jobs:
             otp: "27.3.4.3"
             suffix: "alpine-3.22.4"
 
-          - elixir: "1.20.2"
-            otp: "29.0.3"
-            suffix: "alpine-3.24.1"
+          - elixir: "1.20.4"
+            otp: "29.0.5"
+            suffix: "alpine-3.23.5"
 
     container:
       image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-${{ matrix.suffix }}

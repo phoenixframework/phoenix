@@ -13,8 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     env:
-      elixir: 1.18.3
-      otp: 27.2
+      elixir: 1.20.4
+      otp: 29.0.5
     permissions:
       contents: write # for stefanzweifel/git-auto-commit-action to push code in repo
     steps:
