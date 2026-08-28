@@ -5,12 +5,15 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
+      contents: write # to create the release
     env:
       GITHUB_TOKEN: ${{ github.token }}
     steps:
