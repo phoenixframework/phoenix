@@ -22,7 +22,8 @@ jobs:
     permissions:
       contents: write # for stefanzweifel/git-auto-commit-action to push code in repo
     steps:
-      - name: Checkout
+      # the push step below needs the checkout credentials
+      - name: Checkout # zizmor: ignore[artipacked]
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Elixir
