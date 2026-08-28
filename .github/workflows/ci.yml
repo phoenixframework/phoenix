@@ -3,6 +3,10 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   mix_test:
     name: mix test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
@@ -25,10 +29,13 @@ jobs:
             lint: true
 
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
@@ -58,6 +65,11 @@ jobs:
 
       - name: Run tests
         run: mix test
+        if: ${{ !matrix.lint }}
+
+      - name: Run tests & lint
+        run: mix test --warnings-as-errors
+        if: ${{ matrix.lint }}
 
   installer_test:
     name: installer test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
@@ -76,10 +88,13 @@ jobs:
             otp: "29.0.5"
 
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
@@ -114,9 +129,12 @@ jobs:
   npm_test:
     name: npm test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Restore deps and _build cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -148,7 +166,7 @@ jobs:
         run: npm test
 
   docs:
-    name: mix docs (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    name: mix docs
 
     env:
       MIX_ENV: docs
@@ -160,10 +178,13 @@ jobs:
             otp: "29.0.5"
 
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
@@ -203,6 +224,7 @@ jobs:
 
   integration-test-elixir:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       matrix:
@@ -223,13 +245,13 @@ jobs:
         PHX_CI: true
     services:
       postgres:
-        image: postgres
+        image: postgres:18
         ports:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
       mysql:
-        image: mysql
+        image: mysql:26
         ports:
           - 3306:3306
         env:
@@ -243,5 +265,7 @@ jobs:
           - 1433:1433
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Run test script
         run: ./integration_test/test.sh
