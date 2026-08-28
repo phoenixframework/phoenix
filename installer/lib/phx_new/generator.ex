@@ -296,7 +296,6 @@ defmodule Phx.New.Generator do
       css: tailwind,
       mailer: mailer,
       ecto: ecto,
-      database: db,
       html: html,
       live: live,
       live_comment: if(live, do: nil, else: "// "),
