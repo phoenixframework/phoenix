@@ -39,6 +39,7 @@ defmodule Phoenix.Router.RoutingTest do
 
   defmodule Router do
     use Phoenix.Router
+    import ExUnit.Assertions, except: [trace: 3]
 
     get "/", UserController, :index, as: :users
     get "/users/top", UserController, :top, as: :top
@@ -52,7 +53,6 @@ defmodule Phoenix.Router.RoutingTest do
     get "/static/images/icons/*image", UserController, :image
     get "/exit", UserController, :exit
     get "/halt-controller", UserController, :halt
-
     trace("/trace", UserController, :trace)
     options "/options", UserController, :options
     connect "/connect", UserController, :connect

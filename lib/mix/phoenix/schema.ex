@@ -262,6 +262,45 @@ defmodule Mix.Phoenix.Schema do
     end)
   end
 
+  def format_schema_body(schema, scope \\ nil) do
+    fields = format_fields_for_schema(schema)
+
+    assocs =
+      Enum.map_join(schema.assocs, "\n", fn {_, k, _, _} ->
+        type = if schema.binary_id, do: ":binary_id", else: ":id"
+        "    field #{inspect(k)}, #{type}"
+      end)
+
+    scope_field =
+      if scope do
+        "    field :#{scope.schema_key}, #{inspect(scope.schema_type)}"
+      else
+        ""
+      end
+
+    timestamp_opts =
+      if schema.timestamp_type != :naive_datetime do
+        "type: #{inspect(schema.timestamp_type)}"
+      else
+        ""
+      end
+
+    timestamps = "    timestamps(#{timestamp_opts})"
+
+    schema_fields =
+      [fields, assocs, scope_field]
+      |> join_non_empty("\n")
+
+    [schema_fields, timestamps]
+    |> join_non_empty("\n\n")
+  end
+
+  defp join_non_empty(list, joiner) do
+    list
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.join(joiner)
+  end
+
   @doc """
   Returns the required fields in the schema. Anything not in the `optionals` list
   is considered required.

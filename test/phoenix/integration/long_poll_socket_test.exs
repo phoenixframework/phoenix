@@ -12,6 +12,7 @@ defmodule Phoenix.Integration.LongPollSocketTest do
   @moduletag :capture_log
   @port 5908
   @pool_size 1
+  @token_header "x-phoenix-longpoll-token"
 
   Application.put_env(
     :phoenix,
@@ -91,6 +92,23 @@ defmodule Phoenix.Integration.LongPollSocketTest do
   end
 
   def poll(method, path, params, body \\ nil, headers \\ %{}) do
+    {token, params} = Map.pop(params, "token")
+
+    headers =
+      if token do
+        Map.put(headers, @token_header, token)
+      else
+        headers
+      end
+
+    do_poll(method, path, params, body, headers)
+  end
+
+  def poll_with_token_in_params(method, path, params, body \\ nil, headers \\ %{}) do
+    do_poll(method, path, params, body, headers)
+  end
+
+  defp do_poll(method, path, params, body, headers) do
     headers = Map.merge(%{"content-type" => "application/json"}, headers)
     url = "http://127.0.0.1:#{@port}/#{path}?" <> URI.encode_query(params)
     {:ok, resp} = HTTPClient.request(method, url, headers, body)
@@ -141,6 +159,38 @@ defmodule Phoenix.Integration.LongPollSocketTest do
         assert params =~ ~s("key" => "value")
         assert params =~ ~s("socket_var" => "123")
         assert params =~ ~s(path_var" => "456")
+      end
+
+      test "accepts the token from params" do
+        resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
+        secret = Map.take(resp.body, ["token"])
+
+        resp = poll_with_token_in_params(:post, "ws/longpoll", secret, "params")
+        assert resp.body["status"] == 200
+
+        resp = poll_with_token_in_params(:get, "ws/longpoll", secret)
+        assert resp.body["messages"] == [~s(%{"hello" => "world"})]
+      end
+
+      test "the header takes precedence over a stale params token" do
+        resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
+        token = resp.body["token"]
+
+        resp =
+          poll_with_token_in_params(
+            :post,
+            "ws/longpoll",
+            %{"token" => "bogus"},
+            "params",
+            %{@token_header => token}
+          )
+
+        assert resp.body["status"] == 200
+      end
+
+      test "responses are never cached" do
+        resp = poll(:get, "ws/longpoll", %{}, nil)
+        assert {_, ~c"no-store"} = List.keyfind(resp.headers, ~c"cache-control", 0)
       end
 
       test "returns pong from async request" do

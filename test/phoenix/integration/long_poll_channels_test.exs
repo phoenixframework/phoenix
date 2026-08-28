@@ -333,6 +333,20 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     }
   end
 
+  def join_existing_session(path, session, topic, vsn, ref, join_ref) do
+    resp =
+      poll(:post, path, vsn, session, %{
+        "topic" => topic,
+        "event" => "phx_join",
+        "ref" => ref,
+        "join_ref" => join_ref,
+        "payload" => %{}
+      })
+
+    assert resp.body["status"] == 200
+    resp
+  end
+
   for %{adapter: adapter} <- [
         %{adapter: Bandit.PhoenixAdapter},
         %{adapter: Phoenix.Endpoint.Cowboy2Adapter}
@@ -379,6 +393,67 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           # poll without messages sends 204 no_content
           resp = poll(:get, "/ws", @vsn, session)
           assert resp.body["status"] == 204
+        end
+
+        test "#{@mode}: rejects the 101st channel join by default" do
+          prefix = "room:limit-#{System.unique_integer([:positive])}"
+          first_topic = "#{prefix}-1"
+          session = join("/ws", first_topic, @vsn, "1", @mode)
+
+          for index <- 1..100 do
+            topic = "#{prefix}-#{index}"
+
+            if index > 1 do
+              join_existing_session(
+                "/ws",
+                session,
+                topic,
+                @vsn,
+                to_string(index),
+                to_string(index)
+              )
+            end
+
+            resp = poll(:get, "/ws", @vsn, session)
+            assert resp.body["status"] == 200
+
+            assert [
+                     %Message{
+                       event: "phx_reply",
+                       payload: %{"response" => %{}, "status" => "ok"},
+                       topic: ^topic
+                     },
+                     %Message{
+                       event: "user_entered",
+                       payload: %{"user" => nil},
+                       topic: ^topic
+                     },
+                     %Message{
+                       event: "joined",
+                       payload: %{"status" => "connected", "user_id" => nil},
+                       topic: ^topic
+                     }
+                   ] = resp.body["messages"]
+          end
+
+          overflow_topic = "#{prefix}-101"
+          resp = join_existing_session("/ws", session, overflow_topic, @vsn, "101", "101")
+          assert resp.body["status"] == 200
+
+          resp = poll(:get, "/ws", @vsn, session)
+          assert resp.body["status"] == 200
+
+          assert [
+                   %Message{
+                     event: "phx_reply",
+                     payload: %{
+                       "response" => %{"reason" => "too many channels joined"},
+                       "status" => "error"
+                     },
+                     ref: "101",
+                     topic: ^overflow_topic
+                   }
+                 ] = resp.body["messages"]
         end
 
         test "#{@mode}: transport x_headers are extracted to the socket connect_info" do
@@ -459,8 +534,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
         test "#{@mode}: publishing events" do
           Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
-          join_ref = "1"
-          session = join("/ws", "room:lobby", @vsn, join_ref, @mode)
+          session = join("/ws", "room:lobby", @vsn, "1", @mode)
 
           # Publish successfully
           resp =
@@ -468,7 +542,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
               "topic" => "room:lobby",
               "event" => "new_msg",
               "ref" => "1",
-              "join_ref" => join_ref,
+              # no join_ref required on regular messages
               "payload" => %{"body" => "hi!"}
             })
 
@@ -519,6 +593,23 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           end)
         end
 
+        test "#{@mode}: no join_ref is required on non-join messages" do
+          vsn = "2.0.0"
+          Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          resp =
+            poll(:post, "/ws", vsn, session, %{
+              "topic" => "room:lobby",
+              "event" => "new_msg",
+              "ref" => "2",
+              "payload" => %{"body" => "hi!"}
+            })
+
+          assert resp.body["status"] == 200
+          assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
+        end
+
         test "#{@mode}: lonpoll publishing batch events on v2 protocol" do
           vsn = "2.0.0"
           Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
@@ -539,12 +630,20 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
                 "ref" => "3",
                 "join_ref" => "1",
                 "payload" => %{"body" => "hi2"}
+              },
+              %{
+                "topic" => "room:lobby",
+                "event" => "new_msg",
+                "ref" => "stale",
+                "join_ref" => "stale",
+                "payload" => %{"body" => "stale"}
               }
             ])
 
           assert resp.body["status"] == 200
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi1"}}
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi2"}}
+          refute_receive %Broadcast{event: "new_msg", payload: %{"body" => "stale"}}
 
           # Publish base64 binary successfully
           resp =
@@ -642,6 +741,36 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         assert resp.status == 200
         assert resp.body["status"] == 408
       end
+
+      test "ignores ndjson batch entries after the first 100", %{topic: topic} do
+        vsn = "2.0.0"
+        join_ref = "1"
+        session = join("/ws", topic, vsn, join_ref)
+        Phoenix.PubSub.subscribe(__MODULE__, topic)
+
+        messages =
+          for n <- 1..101 do
+            %{
+              "topic" => topic,
+              "event" => "new_msg",
+              "ref" => to_string(n + 1),
+              "join_ref" => join_ref,
+              "payload" => %{"body" => "msg#{n}"}
+            }
+          end
+
+        resp = poll(:post, "/ws", vsn, session, messages)
+        assert resp.body["status"] == 200
+
+        new_msg_bodies =
+          for _ <- 1..100 do
+            assert_receive %Broadcast{event: "new_msg", payload: %{"body" => body}}
+            body
+          end
+
+        assert new_msg_bodies == for(n <- 1..100, do: "msg#{n}")
+        refute_receive %Broadcast{event: "new_msg", payload: %{"body" => "msg101"}}
+      end
     end
 
     for {serializer, vsn, join_ref} <- [
@@ -713,21 +842,32 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
           assert chan_error == %Message{
                    event: "phx_error",
-                   payload: %{},
+                   payload: %{"reason" => "channel_crash"},
                    topic: topic,
                    ref: @join_ref,
                    join_ref: @join_ref
                  }
         end
 
-        test "sends phx_close if a channel server normally exits" do
+        test "ignores stale join refs and accepts a nil join ref on phx_leave" do
           session = join("/ws", "room:lobby", @vsn, @join_ref)
 
           resp =
             poll(:post, "/ws", @vsn, session, %{
               "topic" => "room:lobby",
               "event" => "phx_leave",
-              "join_ref" => @join_ref,
+              "join_ref" => "stale",
+              "ref" => "stale",
+              "payload" => %{}
+            })
+
+          assert resp.body["status"] == 200
+          assert resp.status == 200
+
+          resp =
+            poll(:post, "/ws", @vsn, session, %{
+              "topic" => "room:lobby",
+              "event" => "phx_leave",
               "ref" => "2",
               "payload" => %{}
             })

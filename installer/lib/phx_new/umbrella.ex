@@ -21,7 +21,7 @@ defmodule Phx.New.Umbrella do
     project
     |> put_app()
     |> put_web()
-    |> put_root_app()
+    |> put_root_mod()
   end
 
   defp put_app(project) do
@@ -45,11 +45,10 @@ defmodule Phx.New.Umbrella do
     }
   end
 
-  defp put_root_app(%Project{app: app} = project) do
+  defp put_root_mod(%Project{} = project) do
     %{
       project
-      | root_app: :"#{app}_umbrella",
-        root_mod: Module.concat(project.app_mod, "Umbrella")
+      | root_mod: Module.concat(project.app_mod, "Umbrella")
     }
   end
 

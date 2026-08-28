@@ -65,9 +65,18 @@ describe("with transport", function (){
     it("sets subprotocols when authToken is provided", function (){
       const authToken = "1234"
       const socket = new Socket("/socket", {authToken})
-      
+
       socket.connect()
       expect(socket.conn.protocols).toEqual(["phoenix", "base64url.bearer.phx.MTIzNA"])
+    })
+
+    it("sets subprotocols when authToken is a function", function (){
+      let authToken = "1234"
+      const socket = new Socket("/socket", {authToken: () => authToken})
+
+      authToken = "5678"
+      socket.connect()
+      expect(socket.conn.protocols).toEqual(["phoenix", "base64url.bearer.phx.NTY3OA"])
     })
   })
 
@@ -648,9 +657,10 @@ describe("with transport", function (){
       expect(channel.state).toBe("joined")
       expect(spy).toHaveBeenCalledTimes(0)
 
-      channel.trigger("phx_error")
+      channel.trigger("phx_error", {reason: "channel_crash"})
 
       expect(spy).toHaveBeenCalledTimes(1)
+      expect(spy).toHaveBeenCalledWith({reason: "channel_crash"})
     })
   })
 
@@ -962,6 +972,21 @@ describe("with transport", function (){
 
     it("throws if channel has not been joined", function (){
       expect(() => channel.push("event", {})).toThrow(/^tried to push.*before joining/)
+    })
+
+    it("does not leak the reply binding of a buffered push", function (){
+      socket.makeRef.mockRestore()
+      const replyBindings = () => channel.bindings.filter(b => b.event.startsWith("chan_reply_"))
+
+      joinPush = channel.join()
+      const pushes = [1, 2, 3].map(i => channel.push("event", {i}))
+      joinPush.trigger("ok", {})
+
+      expect(replyBindings().length).toBe(pushes.length)
+
+      pushes.forEach(push => push.trigger("ok", {}))
+
+      expect(replyBindings()).toEqual([])
     })
   })
 

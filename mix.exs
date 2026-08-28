@@ -80,7 +80,7 @@ defmodule Phoenix.MixProject do
   defp deps do
     [
       {:plug, "~> 1.14"},
-      {:plug_crypto, "~> 1.2 or ~> 2.0"},
+      {:plug_crypto, "~> 2.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
       {:phoenix_template, "~> 1.0"},
@@ -156,7 +156,7 @@ defmodule Phoenix.MixProject do
       logo: "logo.png",
       extra_section: "GUIDES",
       assets: %{"guides/assets" => "assets"},
-      formatters: ["html", "epub"],
+      formatters: ["html", "markdown", "epub"],
       groups_for_modules: groups_for_modules(),
       extras: extras(),
       groups_for_extras: groups_for_extras(),

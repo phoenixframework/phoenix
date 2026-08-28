@@ -127,8 +127,7 @@ defmodule Phoenix.Router.Route do
       dispatch: build_dispatch(route),
       hosts: build_host_match(route.hosts),
       path_params: build_path_params(binding),
-      prepare: build_prepare(route),
-      verb_match: verb_match(route.verb)
+      prepare: build_prepare(route)
     }
   end
 
@@ -137,9 +136,6 @@ defmodule Phoenix.Router.Route do
   def build_host_match([_ | _] = hosts) do
     for host <- hosts, do: Plug.Router.Utils.build_host_match(host)
   end
-
-  defp verb_match(:*), do: Macro.var(:_verb, nil)
-  defp verb_match(verb), do: verb |> to_string() |> String.upcase()
 
   defp build_path_params(binding), do: {:%{}, [], binding}
 

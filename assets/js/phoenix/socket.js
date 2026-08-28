@@ -87,8 +87,8 @@ import Timer from "./timer"
  * Defaults to 20s (double the server long poll timer).
  *
  * @param {(Object|function)} [opts.params] - The optional params to pass when connecting
- * @param {string} [opts.authToken] - the optional authentication token to be exposed on the server
- * under the `:auth_token` connect_info key.
+ * @param {(string|function)} [opts.authToken] - the optional authentication token to be exposed on the server
+ * under the `:auth_token` connect_info key. Can be a string or a function that returns a string.
  * @param {string} [opts.binaryType] - The binary type to use for binary WebSocket frames.
  *
  * Defaults to "arraybuffer"
@@ -133,7 +133,6 @@ export default class Socket {
     this.disconnecting = false
     this.binaryType = opts.binaryType || "arraybuffer"
     this.connectClock = 1
-    this.pageHidden = false
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -156,15 +155,12 @@ export default class Socket {
         }
       })
       phxWindow.addEventListener("visibilitychange", () => {
-        if(document.visibilityState === "hidden"){
-          this.pageHidden = true
-        } else {
-          this.pageHidden = false
-          // reconnect immediately
-          if(!this.isConnected() && !this.closeWasClean){
-            this.teardown(() => this.connect())
-          }
-        }
+        this.handleVisibilityChange()
+      })
+      // Chrome 149 started to not reliably fire visibilitychange after resume,
+      // see https://issues.chromium.org/issues/547062449.
+      phxWindow.document && phxWindow.document.addEventListener("resume", () => {
+        this.handleVisibilityChange()
       })
     }
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000
@@ -201,7 +197,26 @@ export default class Socket {
       }
       this.teardown(() => this.connect())
     }, this.reconnectAfterMs)
-    this.authToken = opts.authToken
+    this.authToken = opts.authToken && closure(opts.authToken)
+  }
+
+  /**
+   * @internal
+   */
+  get pageHidden(){
+    return phxWindow && phxWindow.document ? phxWindow.document.visibilityState === "hidden" : false
+  }
+
+  /**
+   * @internal
+   */
+  handleVisibilityChange(){
+    if(!this.pageHidden){
+      // reconnect immediately
+      if(!this.isConnected() && !this.closeWasClean){
+        this.teardown(() => this.connect())
+      }
+    }
   }
 
   /**
@@ -396,7 +411,7 @@ export default class Socket {
     // Sec-WebSocket-Protocol based token
     // (longpoll uses Authorization header instead)
     if(this.authToken){
-      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken).replace(/=/g, "")}`]
+      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken()).replace(/=/g, "")}`]
     }
     this.conn = new this.transport(this.endPointURL(), protocols)
     this.conn.binaryType = this.binaryType
@@ -482,7 +497,7 @@ export default class Socket {
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
       if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
-      this.triggerChanError()
+      this.triggerChanError("heartbeat_timeout")
       this.closeWasClean = false
       this.teardown(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout")
     }
@@ -547,7 +562,7 @@ export default class Socket {
     if(this.conn) this.conn.onclose = () => {} // noop to prevent recursive calls in teardown
     let closeCode = event && event.code
     if(this.hasLogger()) this.log("transport", "close", event)
-    this.triggerChanError()
+    this.triggerChanError("connection_closed")
     this.clearHeartbeats()
     if(!this.closeWasClean && closeCode !== 1000){
       this.reconnectTimer.scheduleTimeout()
@@ -566,17 +581,17 @@ export default class Socket {
       callback(error, transportBefore, establishedBefore)
     })
     if(transportBefore === this.transport || establishedBefore > 0){
-      this.triggerChanError()
+      this.triggerChanError("connection_error")
     }
   }
 
   /**
    * @private
    */
-  triggerChanError(){
+  triggerChanError(reason){
     this.channels.forEach(channel => {
       if(!(channel.isErrored() || channel.isLeaving() || channel.isClosed())){
-        channel.trigger(CHANNEL_EVENTS.error)
+        channel.trigger(CHANNEL_EVENTS.error, {source: "transport", reason})
       }
     })
   }

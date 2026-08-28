@@ -122,22 +122,16 @@ defmodule Phx.New.Generator do
         [
           # rules specific to new apps
           @new_project_rules_files["project.md"],
-          @new_project_rules_files["phoenix.md"],
           # --no-assets is equivalent to --no-tailwind && --no-esbuild;
           # we check for both here
           project.binding[:javascript] && project.binding[:css] &&
             @new_project_rules_files["assets.md"],
           # generic usage rules
-          "\n<!-- usage-rules-start -->",
+          "<!-- usage-rules-start -->",
           [
             "<!-- phoenix:elixir-start -->\n",
             @rules_files["elixir.md"],
             "\n<!-- phoenix:elixir-end -->"
-          ],
-          [
-            "<!-- phoenix:phoenix-start -->\n",
-            @rules_files["phoenix.md"],
-            "\n<!-- phoenix:phoenix-end -->"
           ],
           project.binding[:ecto] &&
             [
@@ -157,7 +151,7 @@ defmodule Phx.New.Generator do
               @rules_files["liveview.md"],
               "\n<!-- phoenix:liveview-end -->"
             ],
-          "<!-- usage-rules-end -->"
+          "<!-- usage-rules-end -->\n"
         ]
         |> Enum.reject(fn part -> part == nil or part == false end)
         |> Enum.intersperse("\n\n")
@@ -274,8 +268,6 @@ defmodule Phx.New.Generator do
     {web_adapter_app, web_adapter_vsn, web_adapter_module, web_adapter_docs} =
       get_web_adapter(web_adapter)
 
-    pubsub_server = get_pubsub_server(project.app_mod)
-
     adapter_config =
       case Keyword.fetch(opts, :binary_id) do
         {:ok, value} -> Keyword.put_new(adapter_config, :binary_id, value)
@@ -285,7 +277,6 @@ defmodule Phx.New.Generator do
     binding = [
       app_name: project.app,
       app_module: inspect(project.app_mod),
-      root_app_name: project.root_app,
       root_app_module: inspect(project.root_mod),
       lib_web_name: project.lib_web_name,
       web_app_name: project.web_app,
@@ -295,7 +286,6 @@ defmodule Phx.New.Generator do
       phoenix_dep_umbrella_root: phoenix_dep(phoenix_path_umbrella_root),
       phoenix_js_path: phoenix_js_path(phoenix_path),
       phoenix_version: @phoenix_version,
-      pubsub_server: pubsub_server,
       secret_key_base_dev: random_string(64),
       secret_key_base_test: random_string(64),
       signing_salt: random_string(8),
@@ -326,7 +316,8 @@ defmodule Phx.New.Generator do
       elixir_install_bin_path: from_elixir_install && elixir_install_bin_path(),
       inside_docker_env?: inside_docker_env?,
       agents_md: agents_md,
-      config_regex_E: Version.match?(System.version(), "~> 1.19.3 or ~> 1.20") && "E" || ""
+      config_regex_E: Version.match?(System.version(), "~> 1.19.3 or ~> 1.20") && "E" || "",
+      test_case_options: test_case_options(adapter_module)
     ]
 
     %{project | binding: binding}
@@ -383,13 +374,6 @@ defmodule Phx.New.Generator do
     """)
   end
 
-  defp get_pubsub_server(module) do
-    module
-    |> Module.split()
-    |> hd()
-    |> Module.concat(PubSub)
-  end
-
   defp get_ecto_adapter("mssql", app, module) do
     {:tds, Ecto.Adapters.Tds, socket_db_config(app, module, "sa", "some!Password")}
   end
@@ -409,6 +393,10 @@ defmodule Phx.New.Generator do
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
+
+  defp test_case_options(Ecto.Adapters.Postgres), do: ", async: true"
+  defp test_case_options(nil), do: ", async: true"
+  defp test_case_options(adapter) when is_atom(adapter), do: ""
 
   defp get_web_adapter("cowboy"),
     do:

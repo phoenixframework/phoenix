@@ -2,7 +2,7 @@ import {jest} from "@jest/globals"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
-import {SOCKET_STATES} from "../js/phoenix/constants"
+import {AUTH_TOKEN_PREFIX, SOCKET_STATES} from "../js/phoenix/constants"
 
 let socket
 
@@ -141,6 +141,43 @@ describe("with transports", function (){
     })
   })
 
+  describe("resume", function (){
+    // Chrome does not reliably fire visibilitychange when a frozen page is
+    // resumed, see https://issues.chromium.org/issues/547062449.
+    it("reconnects on resume after unclean close", function (){
+      socket = new Socket("/socket")
+      socket.closeWasClean = false
+      const teardownSpy = jest.spyOn(socket, "teardown")
+
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+      document.dispatchEvent(new Event("resume"))
+
+      expect(teardownSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not reconnect on resume while the page is still hidden", function (){
+      socket = new Socket("/socket")
+      socket.closeWasClean = false
+      const teardownSpy = jest.spyOn(socket, "teardown")
+
+      Object.defineProperty(document, "visibilityState", {value: "hidden", writable: true})
+      document.dispatchEvent(new Event("resume"))
+
+      expect(teardownSpy).not.toHaveBeenCalled()
+    })
+
+    it("does not reconnect on resume after clean close", function (){
+      socket = new Socket("/socket")
+      socket.closeWasClean = true
+      const teardownSpy = jest.spyOn(socket, "teardown")
+
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+      document.dispatchEvent(new Event("resume"))
+
+      expect(teardownSpy).not.toHaveBeenCalled()
+    })
+  })
+
   describe("protocol", function (){
     beforeEach(function (){
       socket = new Socket("/socket")
@@ -221,6 +258,43 @@ describe("with transports", function (){
       const conn = socket.conn
       socket.connect()
       expect(conn).toBe(socket.conn)
+    })
+
+    it("uses updated authToken function value when reconnecting", function (){
+      jest.useFakeTimers()
+
+      try {
+        let authToken = "old-token"
+        const connections = []
+        class ReconnectingWebSocket {
+          constructor(_url, protocols){
+            this.protocols = protocols
+            this.readyState = SOCKET_STATES.open
+            this.bufferedAmount = 0
+            connections.push(this)
+          }
+          close(){ this.readyState = SOCKET_STATES.closed }
+          send(){}
+        }
+
+        socket = new Socket("/socket", {
+          transport: ReconnectingWebSocket,
+          authToken: () => authToken,
+          reconnectAfterMs: () => 10
+        })
+
+        socket.connect()
+        authToken = "new-token"
+        socket.onConnClose({code: 1006})
+        jest.advanceTimersByTime(10)
+
+        expect(connections.length).toBe(2)
+        expect(connections[0].protocols).toEqual(["phoenix", `${AUTH_TOKEN_PREFIX}${btoa("old-token").replace(/=/g, "")}`])
+        expect(connections[1].protocols).toEqual(["phoenix", `${AUTH_TOKEN_PREFIX}${btoa("new-token").replace(/=/g, "")}`])
+        expect(socket.conn).toBe(connections[1])
+      } finally {
+        jest.useRealTimers()
+      }
     })
   })
 
@@ -712,6 +786,24 @@ describe("with transports", function (){
     })
   })
 
+  describe("heartbeatTimeout", function (){
+    it("triggers channel error with the heartbeat timeout reason", function (){
+      socket = new Socket("/socket")
+      const channel = socket.channel("topic")
+      const triggerSpy = jest.spyOn(channel, "trigger")
+      jest.spyOn(socket, "teardown").mockImplementation(() => {})
+
+      channel.join().trigger("ok", {})
+      socket.pendingHeartbeatRef = "1"
+      socket.heartbeatTimeout()
+
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error", {
+        source: "transport",
+        reason: "heartbeat_timeout"
+      })
+    })
+  })
+
   describe("onConnClose", function (){
     let mockServer
 
@@ -781,7 +873,10 @@ describe("with transports", function (){
       channel.join()
       expect(channel.state).toBe("joining")
       socket.onConnClose()
-      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error", {
+        source: "transport",
+        reason: "connection_closed"
+      })
     })
 
     it("triggers channel error if joined", function (){
@@ -790,7 +885,10 @@ describe("with transports", function (){
       channel.join().trigger("ok", {})
       expect(channel.state).toBe("joined")
       socket.onConnClose()
-      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error", {
+        source: "transport",
+        reason: "connection_closed"
+      })
     })
 
     it("does not trigger channel error after leave", function (){
@@ -800,7 +898,7 @@ describe("with transports", function (){
       channel.leave()
       expect(channel.state).toBe("closed")
       socket.onConnClose()
-      expect(triggerSpy).not.toHaveBeenCalledWith("phx_error")
+      expect(triggerSpy.mock.calls.some(([event]) => event === "phx_error")).toBe(false)
     })
 
     it("does not send heartbeat after explicit disconnect", function (done){
@@ -858,7 +956,10 @@ describe("with transports", function (){
       socket.onConnOpen()
       expect(channel.state).toBe("joining")
       socket.onConnError("error")
-      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error", {
+        source: "transport",
+        reason: "connection_error"
+      })
     })
 
     it("triggers channel error if joining with no connection", function (){
@@ -867,7 +968,10 @@ describe("with transports", function (){
       channel.join()
       expect(channel.state).toBe("joining")
       socket.onConnError("error")
-      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error", {
+        source: "transport",
+        reason: "connection_error"
+      })
     })
 
     it("triggers channel error if joined", function (){
@@ -888,7 +992,10 @@ describe("with transports", function (){
 
       expect(transport).toBe(WebSocket)
       expect(connectionsCount).toBe(1)
-      expect(triggerSpy).toHaveBeenCalledWith("phx_error")
+      expect(triggerSpy).toHaveBeenCalledWith("phx_error", {
+        source: "transport",
+        reason: "connection_error"
+      })
     })
 
     it("does not trigger channel error after leave", function (){
@@ -898,7 +1005,7 @@ describe("with transports", function (){
       channel.leave()
       expect(channel.state).toBe("closed")
       socket.onConnError("error")
-      expect(triggerSpy).not.toHaveBeenCalledWith("phx_error")
+      expect(triggerSpy.mock.calls.some(([event]) => event === "phx_error")).toBe(false)
     })
 
     it("does not trigger channel error if transport replaced with no previous connection", function (){
@@ -918,7 +1025,7 @@ describe("with transports", function (){
 
       expect(connectionsCount).toBe(0)
       expect(socket.transport).toBe(FakeTransport)
-      expect(triggerSpy).not.toHaveBeenCalledWith("phx_error")
+      expect(triggerSpy.mock.calls.some(([event]) => event === "phx_error")).toBe(false)
     })
   })
 

@@ -1,7 +1,7 @@
 import {jest} from "@jest/globals"
 import {LongPoll} from "../js/phoenix"
 import {Socket} from "../js/phoenix"
-import {AUTH_TOKEN_PREFIX} from "../js/phoenix/constants"
+import {AUTH_TOKEN_PREFIX, SOCKET_STATES} from "../js/phoenix/constants"
 import Ajax from "../js/phoenix/ajax"
 
 describe("LongPoll", () => {
@@ -111,6 +111,46 @@ describe("LongPoll", () => {
         expect.any(String),
         {"Accept": "application/json"},
         null,
+        expect.any(Number),
+        expect.any(Function),
+        expect.any(Function)
+      )
+    })
+
+    it("should send the session token in a header", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      longpoll.timeout = 1000
+
+      Ajax.request.mockImplementationOnce((method, url, headers, body, timeout, ontimeout, callback) => {
+        callback({status: 410, token: "token123", messages: []})
+        return {abort: jest.fn()}
+      })
+
+      longpoll.poll()
+
+      expect(Ajax.request).toHaveBeenLastCalledWith(
+        "GET",
+        "http://localhost/socket/longpoll",
+        {"Accept": "application/json", "X-Phoenix-Longpoll-Token": "token123"},
+        null,
+        expect.any(Number),
+        expect.any(Function),
+        expect.any(Function)
+      )
+    })
+
+    it("should send the token header on batched pushes", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      longpoll.timeout = 1000
+      longpoll.token = "token123"
+
+      longpoll.batchSend(["msg1"])
+
+      expect(Ajax.request).toHaveBeenLastCalledWith(
+        "POST",
+        "http://localhost/socket/longpoll",
+        {"Content-Type": "application/x-ndjson", "X-Phoenix-Longpoll-Token": "token123"},
+        "msg1",
         expect.any(Number),
         expect.any(Function),
         expect.any(Function)
@@ -253,6 +293,51 @@ describe("LongPoll", () => {
         jest.useRealTimers()
       }
     })
+
+    it("closes and retries when a batch POST times out", () => {
+      jest.useFakeTimers()
+      try {
+        const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+        longpoll.timeout = 1000
+        longpoll.poll = jest.fn()
+        longpoll.readyState = SOCKET_STATES.open
+
+        const onerror = jest.fn()
+        const onclose = jest.fn()
+        longpoll.onerror = onerror
+        longpoll.onclose = onclose
+
+        const calls = []
+        Ajax.request.mockImplementation((method, url, headers, body, timeout, ontimeout, callback) => {
+          calls.push({method, body, ontimeout, callback})
+          return {abort: jest.fn()}
+        })
+
+        longpoll.send("a")
+        jest.runOnlyPendingTimers()
+
+        expect(calls).toHaveLength(1)
+        expect(longpoll.awaitingBatchAck).toBe(true)
+
+        // the POST times out on the caller side
+        calls[0].ontimeout()
+
+        expect(onerror).toHaveBeenCalledWith("timeout")
+        expect(onclose).toHaveBeenCalled()
+        expect(longpoll.readyState).toBe(SOCKET_STATES.connecting)
+        expect(longpoll.awaitingBatchAck).toBe(false)
+
+        // later sends must not be silently buffered on the dead batch
+        longpoll.send("b")
+        jest.runOnlyPendingTimers()
+
+        expect(longpoll.batchBuffer).toEqual([])
+        expect(calls).toHaveLength(2)
+        expect(calls[1].body).toBe("b")
+      } finally {
+        jest.useRealTimers()
+      }
+    })
   })
 })
 
@@ -282,12 +367,9 @@ describe("Socket with LongPoll", () => {
       const authToken = "my-auth-token"
       const socket = new Socket("/socket", {
         transport: LongPoll,
-        params: {token: authToken}
+        authToken
       })
-      
-      // Set auth token
-      socket.authToken = authToken
-      
+
       // Mock the transport to capture the protocols argument
       socket.transport = jest.fn(() => ({
         onopen: jest.fn(),
@@ -369,4 +451,3 @@ describe("Ajax.request", () => {
     )
   })
 })
-

@@ -238,6 +238,33 @@ defmodule Phoenix.Socket.TransportTest do
       # an allowed host
       refute check_origin("https://host.com/", check_origin: mfa).halted
     end
+
+    test "does not share the origin policy between mounts of the same handler" do
+      # The helper above passes a fresh make_ref/0 as the handler on every
+      # call, so it never exercises the policy cache. A single handler mounted
+      # twice with different :check_origin options must not have the first
+      # mount's policy applied to the second.
+      handler = __MODULE__.MultiMount
+      mount_a = [check_origin: ["//a.example"]]
+      mount_b = [check_origin: ["//b.example"]]
+
+      check = fn origin, opts ->
+        conn(:get, "/")
+        |> put_req_header("origin", origin)
+        |> Transport.check_origin(handler, Endpoint, opts)
+      end
+
+      # Mount A is reached first and populates the cache.
+      refute check.("http://a.example", mount_a).halted
+
+      # Mount B must apply its own allowlist, not mount A's.
+      assert check.("http://a.example", mount_b).halted
+      refute check.("http://b.example", mount_b).halted
+
+      # Mount A keeps its own allowlist too.
+      refute check.("http://a.example", mount_a).halted
+      assert check.("http://b.example", mount_a).halted
+    end
   end
 
   ## Check subprotocols

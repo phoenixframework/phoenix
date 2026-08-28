@@ -268,15 +268,47 @@ defmodule Mix.Tasks.Phx.Gen.Auth.Injector do
     if String.contains?(code, code_to_inject) do
       :already_injected
     else
-      new_code =
-        code
-        |> String.trim_trailing()
-        |> String.trim_trailing("end")
-        |> Kernel.<>(code_to_inject)
-        |> Kernel.<>("end\n")
-
-      {:ok, new_code}
+      {:ok,
+       inject_before_dev_routes_scope(code, code_to_inject) ||
+         inject_before_final_end_fallback(code, code_to_inject)}
     end
+  end
+
+  defp inject_before_dev_routes_scope(code, code_to_inject) do
+    case split_before_dev_routes(String.split(code, "\n"), []) do
+      {before_dev_routes, dev_routes} ->
+        join_injected(before_dev_routes, code_to_inject, dev_routes)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp split_before_dev_routes([line | rest], acc) do
+    if String.contains?(line, "if Application.compile_env") and
+         String.contains?(line, ":dev_routes") do
+      {dev_route_comments, before_dev_routes} =
+        Enum.split_while(acc, &(String.trim_leading(&1) |> String.starts_with?("#")))
+
+      {Enum.reverse(before_dev_routes), Enum.reverse(dev_route_comments, [line | rest])}
+    else
+      split_before_dev_routes(rest, [line | acc])
+    end
+  end
+
+  defp split_before_dev_routes([], _acc), do: nil
+
+  defp join_injected(before_dev_routes, code_to_inject, dev_routes) do
+    code_to_inject = code_to_inject |> String.trim("\n") |> String.split("\n")
+    Enum.join(before_dev_routes ++ code_to_inject ++ [""] ++ dev_routes, "\n")
+  end
+
+  defp inject_before_final_end_fallback(code, code_to_inject) do
+    code
+    |> String.trim_trailing()
+    |> String.trim_trailing("end")
+    |> Kernel.<>(code_to_inject)
+    |> Kernel.<>("end\n")
   end
 
   @spec ensure_not_already_injected(String.t(), String.t()) :: :ok | :already_injected

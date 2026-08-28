@@ -50,7 +50,7 @@ defmodule Phoenix.Integration.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
       {:swoosh, "~> 1.16"},
-      {:bandit, "~> 1.0"},
+      {:bandit, "~> 1.12"},
       {:bcrypt_elixir, "~> 3.0"},
       {:argon2_elixir, "~> 4.0"},
       {:pbkdf2_elixir, "~> 2.0"},
