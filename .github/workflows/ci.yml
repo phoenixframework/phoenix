@@ -147,6 +147,60 @@ jobs:
       - name: Run tests
         run: npm test
 
+  docs:
+    name: mix docs (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+
+    env:
+      MIX_ENV: docs
+
+    strategy:
+      matrix:
+        include:
+          - elixir: "1.20.2"
+            otp: "29.0.3"
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      # the docs alias also builds the JavaScript documentation with npm
+      - name: Set up Node.js 24.x
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+
+      - name: Restore deps and _build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            deps
+            _build
+          key: docs-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            docs-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+
+      - name: Restore npm cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: mix deps.get --only docs
+
+      - name: Build the documentation
+        run: mix docs --warnings-as-errors
+
   integration-test-elixir:
     runs-on: ubuntu-latest
 
