@@ -64,7 +64,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "--format=esm"
         assert file =~ "cd: Path.expand(\"../apps/phx_umb_web/assets\", __DIR__)"
         assert file =~ ~S[import_config "#{config_env()}.exs"]
-        assert file =~ "config :phoenix, :json_library, Jason"
+        assert file =~ "config :phoenix, :json_library, JSON"
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
         assert file =~ "generators: [context_app: :phx_umb]\n"
@@ -135,7 +135,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(web_path(@app, "mix.exs"), fn file ->
         assert file =~ "mod: {PhxUmbWeb.Application, []}"
-        assert file =~ "{:jason"
       end)
 
       assert_file(web_path(@app, "lib/#{@app}_web.ex"), fn file ->
@@ -221,7 +220,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # app deps
       assert_file(web_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:phoenix_ecto,"
-        assert file =~ "{:jason,"
       end)
 
       # Ecto
@@ -234,7 +232,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "aliases: aliases()"
         assert file =~ "ecto.setup"
         assert file =~ "ecto.reset"
-        assert file =~ "{:jason,"
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/repo.ex"), ~r"defmodule PhxUmb.Repo")

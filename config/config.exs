@@ -5,7 +5,8 @@ config :logger, :console,
   format: "\n$time $metadata[$level] $message\n"
 
 config :phoenix,
-  json_library: Jason,
+  # TODO: Remove once we don't test with Elixir < 1.18 any more
+  json_library: (if Code.ensure_loaded?(JSON), do: JSON, else: Jason),
   stacktrace_depth: 20,
   trim_on_html_eex_engine: false,
   sort_verified_routes_query_params: true
