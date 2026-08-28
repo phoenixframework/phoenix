@@ -65,6 +65,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "cd: Path.expand(\"../apps/phx_umb_web/assets\", __DIR__)"
         assert file =~ ~S[import_config "#{config_env()}.exs"]
         assert file =~ "config :phoenix, :json_library, JSON"
+        assert file =~ "config :postgrex, :json_library, JSON"
+        assert file =~ "config :swoosh, :json_library, JSON"
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
         assert file =~ "generators: [context_app: :phx_umb]\n"
@@ -313,6 +315,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(@app, "config/prod.exs"), fn file ->
         assert file =~ "config :swoosh, :api_client, Swoosh.ApiClient.Req"
+        assert file =~ "config :swoosh, :local, false"
       end)
 
       # Install dependencies?
@@ -367,6 +370,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(app_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_ecto"))
 
       assert_file(root_path(@app, "config/config.exs"), fn file ->
+        assert file =~ "config :phoenix, :json_library, JSON"
+        refute file =~ "config :postgrex, :json_library, JSON"
+        refute file =~ "config :swoosh, :json_library, JSON"
         refute file =~ "config :esbuild"
         refute file =~ "config :phx_blog_web, :generators"
         refute file =~ "ecto_repos:"
@@ -626,6 +632,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mysql"])
 
       assert_file(app_path(app, "mix.exs"), ":myxql")
+      assert_file(root_path(app, "config/config.exs"), "config :myxql, :json_library, JSON")
       assert_file(app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.MyXQL")
 
       assert_file(root_path(app, "config/dev.exs"), [~r/username: "root"/, ~r/password: ""/])
@@ -653,6 +660,12 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "sqlite3"])
 
       assert_file(app_path(app, "mix.exs"), ":ecto_sqlite3")
+
+      assert_file(
+        root_path(app, "config/config.exs"),
+        "config :ecto_sqlite3, :json_library, JSON"
+      )
+
       assert_file(app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.SQLite3")
 
       assert_file(app_path(app, "lib/custom_path/application.ex"), fn file ->
@@ -692,6 +705,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mssql"])
 
       assert_file(app_path(app, "mix.exs"), ":tds")
+      assert_file(root_path(app, "config/config.exs"), "config :tds, :json_library, JSON")
       assert_file(app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.Tds")
 
       assert_file(root_path(app, "config/dev.exs"), [

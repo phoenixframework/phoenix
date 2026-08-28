@@ -38,7 +38,7 @@ defmodule Phoenix do
   @doc """
   Returns the configured JSON encoding library for Phoenix.
 
-  To customize the JSON library, including the following
+  To customize the JSON library, include the following
   in your `config/config.exs`:
 
       config :phoenix, :json_library, AlternativeJsonLibrary

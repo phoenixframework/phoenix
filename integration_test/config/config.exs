@@ -2,7 +2,8 @@ import Config
 
 config :phoenix, :json_library, JSON
 
-config :swoosh, api_client: false
+config :swoosh, :json_library, JSON
+config :swoosh, :api_client, false
 
 config :tailwind, :version, "4.1.12"
 
