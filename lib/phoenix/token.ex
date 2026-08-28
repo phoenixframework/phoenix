@@ -167,10 +167,10 @@ defmodule Phoenix.Token do
   """
   @spec encrypt(context, binary, term, [shared_opt | max_age_opt | signed_at_opt | encode_opt]) ::
           binary
-  def encrypt(context, secret, data, opts \\ []) when is_binary(secret) do
+  def encrypt(context, salt, data, opts \\ []) when is_binary(salt) do
     context
     |> get_key_base()
-    |> Plug.Crypto.encrypt(secret, data, opts)
+    |> Plug.Crypto.encrypt(salt, data, opts)
   end
 
   @doc """
@@ -252,10 +252,10 @@ defmodule Phoenix.Token do
       token by `encrypt/4`.
   """
   @spec decrypt(context, binary, binary, [shared_opt | max_age_opt]) :: term()
-  def decrypt(context, secret, token, opts \\ []) when is_binary(secret) do
+  def decrypt(context, salt, token, opts \\ []) when is_binary(salt) do
     context
     |> get_key_base()
-    |> Plug.Crypto.decrypt(secret, token, opts)
+    |> Plug.Crypto.decrypt(salt, token, opts)
   end
 
   ## Helpers
