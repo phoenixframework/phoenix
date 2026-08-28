@@ -16,6 +16,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     env:
       elixir: 1.20.4
       otp: 29.0.5
