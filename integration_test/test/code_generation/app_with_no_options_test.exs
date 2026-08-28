@@ -1,8 +1,6 @@
 defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
   use Phoenix.Integration.CodeGeneratorCase, async: true
 
-  @epoch {{1970, 1, 1}, {0, 0, 0}}
-
   test "newly generated app has no warnings or errors" do
     with_installer_tmp("app_with_no_options", fn tmp_dir ->
       {app_root_path, _} =
