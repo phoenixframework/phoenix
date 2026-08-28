@@ -161,7 +161,7 @@ jobs:
         run: npm test
 
   docs:
-    name: mix docs (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    name: mix docs
 
     env:
       MIX_ENV: docs
