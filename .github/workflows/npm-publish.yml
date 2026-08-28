@@ -26,9 +26,9 @@ jobs:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
-      # Ensure npm 11.5.1 or later is installed
+      # trusted publishing needs npm 11.5.1 or later; Node 24 still ships 11.3.x
       - name: Update npm
-        run: npm install -g npm@latest
+        run: npm install -g npm@11 # zizmor: ignore[adhoc-packages]
 
       - name: Determine npm tag
         id: npm-tag
