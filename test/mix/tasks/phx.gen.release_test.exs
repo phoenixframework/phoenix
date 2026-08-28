@@ -282,6 +282,27 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
               archs: ["amd64", "arm64"],
               built_at: "2025-11-17T00:00:00Z"
             },
+            # non-debian tag (should be ignored)
+            %{
+              repo: "hexpm/elixir",
+              tag: "1.18.4-erlang-27.0.3-alpine-3.20-slim",
+              archs: ["amd64", "arm64"],
+              built_at: "2025-11-17T00:00:00Z"
+            },
+            # tag with newline (should be ignored)
+            %{
+              repo: "hexpm/elixir",
+              tag: "1.18.4\nRUN evil-erlang-27.0.3-debian-trixie-20251117-slim",
+              archs: ["amd64", "arm64"],
+              built_at: "2025-11-17T00:00:00Z"
+            },
+            # malformed tag (should be ignored)
+            %{
+              repo: "hexpm/elixir",
+              tag: "malformed-tag",
+              archs: ["amd64", "arm64"],
+              built_at: "2025-11-17T00:00:00Z"
+            },
             # first valid multi-arch slim tag (should be selected)
             %{
               repo: "hexpm/elixir",
@@ -297,7 +318,7 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
               built_at: "2025-10-01T00:00:00Z"
             }
           ],
-          total: 4,
+          total: 7,
           offset: 0,
           page_size: 100
         })
@@ -312,6 +333,28 @@ defmodule Mix.Tasks.Phx.Gen.ReleaseTest do
       assert_file("Dockerfile", fn file ->
         assert file =~ ~S|ARG ELIXIR_VERSION=1.18.4|
         assert file =~ ~S|ARG OTP_VERSION=27.0.3|
+        assert file =~ ~S|ARG DEBIAN_VERSION=trixie-20251117-slim|
+      end)
+    end)
+  end
+
+  test "supports pre-release versions with hyphens in tag candidate matching", config do
+    Process.put({Mix.Tasks.Phx.Gen.Release, :http_client}, fn url ->
+      uri = URI.parse(to_string(url))
+
+      if uri.host == "bob.hex.pm" and uri.path == "/api/docker" do
+        bob_tags_response(["1.19.0-rc.0-erlang-27.1-rc.1-debian-trixie-20251117-slim"])
+      else
+        raise "unexpected URL #{url}"
+      end
+    end)
+
+    in_tmp_project(config.test, fn ->
+      Gen.Release.run(["--docker", "--elixir", "1.19.0-rc.0", "--otp", "27.1-rc.1"])
+
+      assert_file("Dockerfile", fn file ->
+        assert file =~ ~S|ARG ELIXIR_VERSION=1.19.0-rc.0|
+        assert file =~ ~S|ARG OTP_VERSION=27.1-rc.1|
         assert file =~ ~S|ARG DEBIAN_VERSION=trixie-20251117-slim|
       end)
     end)

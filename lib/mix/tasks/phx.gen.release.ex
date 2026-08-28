@@ -252,7 +252,7 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         candidate = docker_tag_candidate(tag)
 
         if candidate && docker_tag_matches?(candidate, search) do
-          {:ok, candidate.elixir, candidate.otp, candidate.debian_vsn}
+          {:ok, candidate}
         end
       end)
     end)
@@ -355,16 +355,12 @@ defmodule Mix.Tasks.Phx.Gen.Release do
 
   # Ensure we only select multi-arch manifest images
   defp docker_tag_candidate(%{"archs" => [_, _ | _], "tag" => tag}) do
-    with [elixir, rest] <- String.split(tag, "-erlang-", parts: 2),
-         [otp, debian_vsn] <- String.split(rest, "-debian-#{debian()}-", parts: 2),
-         true <- String.ends_with?(debian_vsn, "-slim") do
-      %{
-        elixir: elixir,
-        otp: otp,
-        debian_vsn: String.replace_suffix(debian_vsn, "-slim", "")
-      }
-    else
-      _ -> nil
+    case Regex.run(~r/\A([\w.-]+?)-erlang-([\w.-]+?)-debian-([\w.-]+-slim)\z/, tag) do
+      [_, elixir_vsn, otp_vsn, debian_vsn] ->
+        %{elixir_vsn: elixir_vsn, otp_vsn: otp_vsn, debian_vsn: debian_vsn}
+
+      _ ->
+        nil
     end
   end
 
@@ -373,8 +369,8 @@ defmodule Mix.Tasks.Phx.Gen.Release do
   end
 
   defp docker_tag_matches?(candidate, search) do
-    version_matches?(candidate.elixir, search.elixir_match) and
-      version_matches?(candidate.otp, search.otp_match)
+    version_matches?(candidate.elixir_vsn, search.elixir_match) and
+      version_matches?(candidate.otp_vsn, search.otp_match)
   end
 
   defp version_matches?(_version, :any), do: true
@@ -419,37 +415,27 @@ defmodule Mix.Tasks.Phx.Gen.Release do
           _ -> System.version()
         end
 
-    otp_vsn = opts[:otp] || otp_vsn()
+    wanted_otp_vsn = opts[:otp] || otp_vsn()
 
-    vsns =
-      case elixir_otp_and_debian_vsn(wanted_elixir_vsn, otp_vsn) do
-        {:ok, elixir_vsn, image_otp_vsn, debian_vsn} ->
-          if elixir_vsn != wanted_elixir_vsn do
-            Logger.warning(
-              "Docker image for Elixir #{wanted_elixir_vsn} not found, defaulting to Elixir #{elixir_vsn}"
-            )
-          end
+    case elixir_otp_and_debian_vsn(wanted_elixir_vsn, wanted_otp_vsn) do
+      {:ok, %{elixir_vsn: elixir_vsn, otp_vsn: otp_vsn, debian_vsn: debian_vsn}} ->
+        if elixir_vsn != wanted_elixir_vsn do
+          Logger.warning(
+            "Docker image for Elixir #{wanted_elixir_vsn} not found, defaulting to Elixir #{elixir_vsn}"
+          )
+        end
 
-          if image_otp_vsn != otp_vsn do
-            Logger.warning(
-              "Docker image for Erlang/OTP #{otp_vsn} not found, defaulting to Erlang/OTP #{image_otp_vsn}"
-            )
-          end
+        if otp_vsn != wanted_otp_vsn do
+          Logger.warning(
+            "Docker image for Erlang/OTP #{wanted_otp_vsn} not found, defaulting to Erlang/OTP #{otp_vsn}"
+          )
+        end
 
-          {:ok, elixir_vsn, image_otp_vsn, debian_vsn}
-
-        :error ->
-          :error
-      end
-
-    case vsns do
-      {:ok, elixir_vsn, otp_vsn, debian_vsn} ->
         binding =
           Keyword.merge(binding,
-            debian: debian(),
-            debian_vsn: debian_vsn,
             elixir_vsn: elixir_vsn,
-            otp_vsn: otp_vsn
+            otp_vsn: otp_vsn,
+            debian_vsn: debian_vsn
           )
 
         Mix.Phoenix.copy_from(paths(), "priv/templates/phx.gen.release", binding, [
@@ -458,10 +444,10 @@ defmodule Mix.Tasks.Phx.Gen.Release do
         ])
 
       :error ->
-        params = docker_tag_filters(%{erlang_version: version_major_prefix(otp_vsn)})
+        params = docker_tag_filters(%{erlang_version: version_major_prefix(wanted_otp_vsn)})
 
         raise """
-        unable to fetch supported Docker image for Elixir #{wanted_elixir_vsn} and Erlang #{otp_vsn}.
+        unable to fetch supported Docker image for Elixir #{wanted_elixir_vsn} and Erlang #{wanted_otp_vsn}.
         Please check #{bob_docker_ui_url(params)} for a suitable Elixir version
         """
     end
