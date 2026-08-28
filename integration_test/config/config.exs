@@ -1,7 +1,6 @@
 import Config
 
-# TODO: Remove the `json_library` check once `JSON` becomes the standard `Phoenix.json_library/1`
-config :phoenix, :json_library, (if Code.ensure_loaded?(JSON), do: JSON, else: Jason)
+config :phoenix, :json_library, JSON
 
 config :swoosh, api_client: false
 

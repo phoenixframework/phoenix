@@ -154,8 +154,8 @@ jobs:
       matrix:
         include:
           # look for latest alpine image here: https://bob.hex.pm/docker
-          - elixir: "1.17.3"
-            otp: "25.3.2.21"
+          - elixir: "1.18.4"
+            otp: "27.3.4.3"
             suffix: "alpine-3.22.4"
 
           - elixir: "1.19.5"
