@@ -695,5 +695,17 @@ defmodule Phoenix.VerifiedRoutesTest do
       :code.purge(__MODULE__.VerifyForwardedRouter)
       :code.delete(__MODULE__.VerifyForwardedRouter)
     end
+
+    test "raises when :router is not a literal module" do
+      assert_raise ArgumentError, ~r/:router option in VerifiedRoutes must be a literal module/, fn ->
+        defmodule DynamicRouter do
+          use Phoenix.VerifiedRoutes,
+            router: Module.concat(["My", "Router"])
+        end
+      end
+    after
+      :code.purge(__MODULE__.DynamicRouter)
+      :code.delete(__MODULE__.DynamicRouter)
+    end
   end
 end
