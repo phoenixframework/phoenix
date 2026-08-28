@@ -2,6 +2,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
   use Phoenix.Integration.CodeGeneratorCase, async: true
 
   describe "phx.gen.auth" do
+    @tag database: :postgresql
     test "generates scope for phx.gen.live" do
       with_installer_tmp("scopes", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "scopes")
@@ -35,6 +36,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
       end)
     end
 
+    @tag database: :postgresql
     test "generates scope for phx.gen.html" do
       with_installer_tmp("scopes", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "scopes")
@@ -65,6 +67,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
       end)
     end
 
+    @tag database: :postgresql
     test "generates scope for phx.gen.json" do
       with_installer_tmp("scopes", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "scopes")
@@ -99,6 +102,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
   end
 
   describe "custom scope" do
+    @tag database: :postgresql
     test "route_prefix and route_access_path with all generators" do
       with_installer_tmp("scopes", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "scopes", ["--live"])
@@ -563,6 +567,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesTest do
       end)
     end
 
+    @tag database: :postgresql
     test "phx.gen.json" do
       with_installer_tmp("scopes", fn tmp_dir ->
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "scopes")
