@@ -245,13 +245,13 @@ jobs:
         PHX_CI: true
     services:
       postgres:
-        image: postgres
+        image: postgres:18
         ports:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
       mysql:
-        image: mysql
+        image: mysql:26
         ports:
           - 3306:3306
         env:
