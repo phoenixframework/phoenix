@@ -450,4 +450,87 @@ describe("Ajax.request", () => {
       })
     )
   })
+
+  it("clears the timeout timer when fetch completes successfully", () => {
+    global.XMLHttpRequest = undefined
+    const setTimeoutSpy = jest.spyOn(global, "setTimeout")
+    const clearTimeoutSpy = jest.spyOn(global, "clearTimeout")
+
+    return new Promise((resolve, reject) => {
+      Ajax.request("GET", "/test-endpoint", {}, null, 5000, null, (response) => {
+        try {
+          expect(response).toEqual({success: true})
+          const timerId = setTimeoutSpy.mock.results[0].value
+          expect(clearTimeoutSpy).toHaveBeenCalledWith(timerId)
+          resolve()
+        } catch(err){
+          reject(err)
+        }
+      })
+    })
+  })
+
+  it("clears the timeout timer when fetch errors", () => {
+    global.XMLHttpRequest = undefined
+    global.fetch = jest.fn(() => Promise.reject(new Error("Network error")))
+    const setTimeoutSpy = jest.spyOn(global, "setTimeout")
+    const clearTimeoutSpy = jest.spyOn(global, "clearTimeout")
+
+    return new Promise((resolve, reject) => {
+      Ajax.request("GET", "/test-endpoint", {}, null, 5000, null, (response) => {
+        try {
+          expect(response).toBeNull()
+          const timerId = setTimeoutSpy.mock.results[0].value
+          expect(clearTimeoutSpy).toHaveBeenCalledWith(timerId)
+          resolve()
+        } catch(err){
+          reject(err)
+        }
+      })
+    })
+  })
+
+  it("does not set or clear timeout timer when timeout is 0 or not specified", () => {
+    global.XMLHttpRequest = undefined
+    const setTimeoutSpy = jest.spyOn(global, "setTimeout")
+    const clearTimeoutSpy = jest.spyOn(global, "clearTimeout")
+
+    return new Promise((resolve, reject) => {
+      Ajax.request("GET", "/test-endpoint", {}, null, 0, null, (response) => {
+        try {
+          expect(response).toEqual({success: true})
+          expect(setTimeoutSpy).not.toHaveBeenCalled()
+          expect(clearTimeoutSpy).not.toHaveBeenCalled()
+          resolve()
+        } catch(err){
+          reject(err)
+        }
+      })
+    })
+  })
+
+  it("invokes ontimeout and clears timer when fetch rejects with AbortError", () => {
+    global.XMLHttpRequest = undefined
+    const abortError = new Error("The user aborted a request.")
+    abortError.name = "AbortError"
+    global.fetch = jest.fn(() => Promise.reject(abortError))
+    const setTimeoutSpy = jest.spyOn(global, "setTimeout")
+    const clearTimeoutSpy = jest.spyOn(global, "clearTimeout")
+
+    return new Promise((resolve, reject) => {
+      const callback = jest.fn(() => reject(new Error("callback should not be called on AbortError")))
+      const ontimeout = () => {
+        try {
+          expect(callback).not.toHaveBeenCalled()
+          const timerId = setTimeoutSpy.mock.results[0].value
+          expect(clearTimeoutSpy).toHaveBeenCalledWith(timerId)
+          resolve()
+        } catch(err){
+          reject(err)
+        }
+      }
+
+      Ajax.request("GET", "/test-endpoint", {}, null, 5000, ontimeout, callback)
+    })
+  })
 })
