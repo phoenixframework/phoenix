@@ -44,4 +44,6 @@ jobs:
           fi
 
       - name: Publish to npm
-        run: npm publish --tag ${{ steps.npm-tag.outputs.tag }}
+        env:
+          NPM_TAG: ${{ steps.npm-tag.outputs.tag }}
+        run: npm publish --tag "$NPM_TAG"
