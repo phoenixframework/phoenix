@@ -302,8 +302,7 @@ defmodule Mix.Tasks.Phx.New do
           Mix.shell().info([:green, "* running ", :reset, "mix assets.setup"])
 
           # First compile only builders so we can install in parallel
-          # TODO: Once we require Erlang/OTP 28, jason may no longer be required
-          cmd(project, "mix deps.compile jason #{Enum.join(builders, " ")}", log: false)
+          cmd(project, "mix deps.compile #{Enum.join(builders, " ")}", log: false)
         end
 
         tasks =
@@ -482,9 +481,9 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version(), "~> 1.17") do
+    unless Version.match?(System.version(), "~> 1.18") do
       Mix.raise(
-        "Phoenix v#{@version} installer requires Elixir v1.17 or later, " <>
+        "Phoenix v#{@version} installer requires Elixir v1.18 or later, " <>
           "but you are running v#{System.version()}"
       )
     end
@@ -565,66 +564,61 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  # we need to parse JSON, so we only check for new versions on Elixir 1.18+
-  if Version.match?(System.version(), "~> 1.18") do
-    defp get_latest_version(package) do
-      Task.async(fn ->
-        # ignore any errors to not prevent the generators from running
-        # due to any issues while checking the version
-        try do
-          with {:ok, package} <- get_package(package) do
-            versions =
-              for release <- package["releases"],
-                  version = Version.parse!(release["version"]),
-                  # ignore pre-releases like release candidates, etc.
-                  version.pre == [] do
-                version
-              end
+  defp get_latest_version(package) do
+    Task.async(fn ->
+      # ignore any errors to not prevent the generators from running
+      # due to any issues while checking the version
+      try do
+        with {:ok, package} <- get_package(package) do
+          versions =
+            for release <- package["releases"],
+                version = Version.parse!(release["version"]),
+                # ignore pre-releases like release candidates, etc.
+                version.pre == [] do
+              version
+            end
 
-            Enum.max(versions, Version)
-          end
-        rescue
-          e -> {:error, e}
-        catch
-          :exit, _ -> {:error, :exit}
+          Enum.max(versions, Version)
         end
-      end)
-    end
-
-    defp get_package(name) do
-      http_options =
-        [
-          ssl: [
-            verify: :verify_peer,
-            cacerts: :public_key.cacerts_get(),
-            depth: 2,
-            customize_hostname_check: [
-              match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-            ],
-            versions: [:"tlsv1.2", :"tlsv1.3"]
-          ]
-        ]
-
-      options = [body_format: :binary]
-
-      case :httpc.request(
-             :get,
-             {~c"https://hex.pm/api/packages/#{name}",
-              [{~c"user-agent", ~c"Mix.Tasks.Phx.New/#{@version}"}]},
-             http_options,
-             options
-           ) do
-        {:ok, {{_, 200, _}, _headers, body}} ->
-          {:ok, JSON.decode!(body)}
-
-        {:ok, {{_, status, _}, _, _}} ->
-          {:error, status}
-
-        {:error, reason} ->
-          {:error, reason}
+      rescue
+        e -> {:error, e}
+      catch
+        :exit, _ -> {:error, :exit}
       end
+    end)
+  end
+
+  defp get_package(name) do
+    http_options =
+      [
+        ssl: [
+          verify: :verify_peer,
+          cacerts: :public_key.cacerts_get(),
+          depth: 2,
+          customize_hostname_check: [
+            match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+          ],
+          versions: [:"tlsv1.2", :"tlsv1.3"]
+        ]
+      ]
+
+    options = [body_format: :binary]
+
+    case :httpc.request(
+            :get,
+            {~c"https://hex.pm/api/packages/#{name}",
+            [{~c"user-agent", ~c"Mix.Tasks.Phx.New/#{@version}"}]},
+            http_options,
+            options
+          ) do
+      {:ok, {{_, 200, _}, _headers, body}} ->
+        {:ok, JSON.decode!(body)}
+
+      {:ok, {{_, status, _}, _, _}} ->
+        {:error, status}
+
+      {:error, reason} ->
+        {:error, reason}
     end
-  else
-    defp get_latest_version(_), do: nil
   end
 end

@@ -134,7 +134,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(web_path(@app, "mix.exs"), fn file ->
         assert file =~ "mod: {PhxUmbWeb.Application, []}"
-        assert file =~ "{:jason"
       end)
 
       assert_file(web_path(@app, "lib/#{@app}_web.ex"), fn file ->
@@ -210,7 +209,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # app deps
       assert_file(web_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:phoenix_ecto,"
-        assert file =~ "{:jason,"
       end)
 
       # Ecto
@@ -223,7 +221,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "aliases: aliases()"
         assert file =~ "ecto.setup"
         assert file =~ "ecto.reset"
-        assert file =~ "{:jason,"
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/repo.ex"), ~r"defmodule PhxUmb.Repo")

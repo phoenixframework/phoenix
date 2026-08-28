@@ -9,7 +9,7 @@ defmodule <%= @web_namespace %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.17",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -65,7 +65,6 @@ defmodule <%= @web_namespace %>.MixProject do
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 1.0"},<% end %><%= if @app_name != @web_app_name do %>
       {:<%= @app_name %>, in_umbrella: true},<% end %>
-      {:jason, "~> 1.2"},
       {<%= inspect @web_adapter_app %>, "<%= @web_adapter_vsn %>"}
     ]
   end

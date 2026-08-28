@@ -46,10 +46,6 @@ defmodule Mix.Tasks.Phx.New.WebTest do
         assert file =~ "generators: [context_app: false]"
       end
 
-      assert_file "#{@app_name}/mix.exs", fn file ->
-        assert file =~ "{:jason,"
-      end
-
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
