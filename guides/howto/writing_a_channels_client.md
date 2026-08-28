@@ -17,7 +17,7 @@ For example, if you see: `socket "/mobile", MyAppWeb.MobileSocket`, the path for
 
     [host]:[port]/mobile/websocket?vsn=2.0.0
 
-Passing `&vsn=2.0.0` specifies `Phoenix.Socket.V2.JSONSerializer`, which is built into Phoenix, and which expects and returns messages in the form of lists.
+Passing `&vsn=2.0.0` selects the V2 JSON serializer, which is built into Phoenix, and which expects and returns messages in the form of lists.
 
 You also need to include [the standard header fields for upgrading an HTTP request to a WebSocket connection](https://developer.mozilla.org/en-US/docs/Web/HTTP/Protocol_upgrade_mechanism) or use an HTTP library that handles this for you; in Elixir, [mint_web_socket](https://hex.pm/packages/mint_web_socket) is an example.
 
@@ -26,7 +26,7 @@ Other parameters or headers may be expected or required by the specific `connect
 ## Message Format
 
 The message format is determined by the serializer configured for the application.
-For these examples, `Phoenix.Socket.V2.JSONSerializer` is assumed.
+For these examples, the V2 JSON serializer is assumed.
 
 The general format for messages a client sends to a Phoenix Channel is as follows:
 

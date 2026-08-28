@@ -82,9 +82,8 @@ defmodule Phoenix.Presence do
   ## Custom dispatcher
 
   It's possible to customize the dispatcher module used to broadcast.
-  By default, `Phoenix.Channel.Server` is used, which is the same dispatcher
-  used by channels. To customize the dispatcher, pass the `:dispatcher` option
-  when using `Phoenix.Presence`:
+  By default, presence uses the same dispatcher as channels. To customize the
+  dispatcher, pass the `:dispatcher` option when using `Phoenix.Presence`:
 
       use Phoenix.Presence,
         otp_app: :my_app,
