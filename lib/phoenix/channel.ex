@@ -20,7 +20,7 @@ defmodule Phoenix.Channel do
 
   Any topic coming into the router with the `"room:"` prefix would dispatch
   to `MyAppWeb.RoomChannel` in the above example. Topics can also be pattern
-  matched in your channels' `join/3` callback to pluck out the scoped pattern:
+  matched in your channels' `c:join/3` callback to pluck out the scoped pattern:
 
       # handles the special `"lobby"` subtopic
       def join("room:lobby", _payload, socket) do
@@ -40,17 +40,17 @@ defmodule Phoenix.Channel do
   ## Authorization
 
   Clients must join a channel to send and receive PubSub events on that channel.
-  Your channels must implement a `join/3` callback that authorizes the socket
+  Your channels must implement a `c:join/3` callback that authorizes the socket
   for the given topic. For example, you could check if the user is allowed to
   join that particular room.
 
-  To authorize a socket in `join/3`, return `{:ok, socket}`.
-  To refuse authorization in `join/3`, return `{:error, reply}`.
+  To authorize a socket in `c:join/3`, return `{:ok, socket}`.
+  To refuse authorization in `c:join/3`, return `{:error, reply}`.
 
   ## Incoming Events
 
   After a client has successfully joined a channel, incoming events from the
-  client are routed through the channel's `handle_in/3` callbacks. Within these
+  client are routed through the channel's `c:handle_in/3` callbacks. Within these
   callbacks, you can perform any action. Incoming callbacks must return the
   `socket` to maintain ephemeral state.
 
@@ -147,7 +147,7 @@ defmodule Phoenix.Channel do
   - The user's game is ending soon
   - The IoT device's settings should be updated
 
-  For example, you could `push/3` a message to the client in `handle_info/3`
+  For example, you could `push/3` a message to the client in `c:handle_info/2`
   after receiving a `PubSub` message relevant to them.
 
       alias Phoenix.Socket.Broadcast
@@ -167,14 +167,14 @@ defmodule Phoenix.Channel do
         {:reply, %{val: Game.get_rank(socket.assigns[:user])}, socket}
       end
 
-  Note that in this example, `push/3` is called from `handle_in/3`; in this way
+  Note that in this example, `push/3` is called from `c:handle_in/3`; in this way
   you can essentially reply N times to a single message from the client. See
   `reply/2` for why this may be desirable.
 
   ## Intercepting Outgoing Events
 
   When an event is broadcasted with `broadcast/3`, each channel subscriber can
-  choose to intercept the event and have their `handle_out/3` callback triggered.
+  choose to intercept the event and have their `c:handle_out/3` callback triggered.
   This allows the event's payload to be customized on a socket by socket basis
   to append extra information, or conditionally filter the message from being
   delivered. If the event is not intercepted with `Phoenix.Channel.intercept/1`,
@@ -202,7 +202,7 @@ defmodule Phoenix.Channel do
 
   ## Terminate
 
-  On termination, the channel callback `terminate/2` will be invoked with
+  On termination, the channel callback `c:terminate/2` will be invoked with
   the error reason and the socket.
 
   If we are terminating because the client left, the reason will be
@@ -212,15 +212,15 @@ defmodule Phoenix.Channel do
   If any of the callbacks return a `:stop` tuple, it will also
   trigger terminate with the reason given in the tuple.
 
-  `terminate/2`, however, won't be invoked in case of errors nor in
+  `c:terminate/2`, however, won't be invoked in case of errors nor in
   case of exits. This is the same behaviour as you find in Elixir
   abstractions like `GenServer` and others. Similar to `GenServer`,
-  it would also be possible to `:trap_exit` to guarantee that `terminate/2`
+  it would also be possible to `:trap_exit` to guarantee that `c:terminate/2`
   is invoked. This practice is not encouraged though.
 
   Generally speaking, if you want to clean something up, it is better to
   monitor your channel process and do the clean up from another process.
-  All channel callbacks, including `join/3`, are called from within the
+  All channel callbacks, including `c:join/3`, are called from within the
   channel process. Therefore, `self()` in any of them returns the PID to
   be monitored.
 
@@ -502,7 +502,7 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Defines which Channel events to intercept for `handle_out/3` callbacks.
+  Defines which Channel events to intercept for `c:handle_out/3` callbacks.
 
   By default, broadcasted events are pushed directly to the client, but
   intercepting events gives your channel a chance to customize the event
@@ -524,7 +524,7 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-  `handle_out/3` callbacks must return one of:
+  `c:handle_out/3` callbacks must return one of:
 
       {:noreply, Socket.t} |
       {:noreply, Socket.t, timeout | :hibernate} |
@@ -626,7 +626,7 @@ defmodule Phoenix.Channel do
   correlate that reply with the message you pushed, you'll need to include a
   unique identifier in the message, track it in the Channel's state, have the
   client include it in its reply, and examine the ref when the reply comes to
-  `handle_in/3`.
+  `c:handle_in/3`.
 
   ## Examples
 
@@ -645,13 +645,13 @@ defmodule Phoenix.Channel do
   @doc """
   Replies asynchronously to a socket push.
 
-  The usual way of replying to a client's message is to return a tuple from `handle_in/3`
+  The usual way of replying to a client's message is to return a tuple from `c:handle_in/3`
   like:
 
       {:reply, {status, payload}, socket}
 
   But sometimes you need to reply to a push asynchronously - that is, after
-  your `handle_in/3` callback completes. For example, you might need to perform
+  your `c:handle_in/3` callback completes. For example, you might need to perform
   work in another process and reply when it's finished.
 
   You can do this by generating a reference to the socket with `socket_ref/1`

@@ -130,7 +130,7 @@ defmodule Phoenix.Presence do
         query |> Repo.all() |> Enum.into(%{})
       end
 
-  The `fetch/2` function above fetches all users from the database who
+  The `c:fetch/2` function above fetches all users from the database who
   have registered presences for the given topic. The presences
   information is then extended with a `:user` key of the user's
   information, while maintaining the required `:metas` field from the

@@ -941,7 +941,7 @@ defmodule Phoenix.Endpoint do
       endpoint configuration
 
     * `:connect_info` - a list of keys that represent data to be copied from
-      the transport to be made available in the user socket `connect/3` callback.
+      the transport to be made available in the user socket `c:Phoenix.Socket.connect/3` callback.
       See the "Connect info" subsection for valid keys
 
   ### Connect info

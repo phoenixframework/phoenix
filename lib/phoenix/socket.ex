@@ -25,11 +25,11 @@ defmodule Phoenix.Socket do
 
   Socket handlers are mounted in Endpoints and must define two callbacks:
 
-    * `connect/3` - receives the socket params, connection info if any, and
+    * `c:connect/3` - receives the socket params, connection info if any, and
       authenticates the connection. Must return a `Phoenix.Socket` struct,
       often with custom assigns
 
-    * `id/1` - receives the socket returned by `connect/3` and returns the
+    * `c:id/1` - receives the socket returned by `c:connect/3` and returns the
       id of this connection as a string. The `id` is used to identify socket
       connections, often to a particular user, allowing us to force disconnections.
       For sockets requiring no authentication, `nil` can be returned
@@ -225,7 +225,7 @@ defmodule Phoenix.Socket do
               {:ok, Socket.t()} | {:error, term} | :error
 
   @doc """
-  Shortcut version of `connect/3` which does not receive `connect_info`.
+  Shortcut version of `c:connect/3` which does not receive `connect_info`.
 
   Provided for backwards compatibility.
   """

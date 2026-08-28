@@ -38,13 +38,13 @@ defmodule Phoenix.ChannelTest do
   socket representing communication to be pushed to the server.
 
   For example, we can use the `push/3` function in the test
-  to push messages to the channel (it will invoke `handle_in/3`):
+  to push messages to the channel (it will invoke `c:Phoenix.Channel.handle_in/3`):
 
       push(socket, "my_event", %{"some" => "data"})
 
   Similarly, we can broadcast messages from the test itself
   on the topic that both test and channel are subscribed to,
-  triggering `handle_out/3` on the channel:
+  triggering `c:Phoenix.Channel.handle_out/3` on the channel:
 
       broadcast_from(socket, "my_event", %{"some" => "data"})
 
@@ -75,7 +75,7 @@ defmodule Phoenix.ChannelTest do
   like writing to the database, and verify those side-effects
   during their tests.
 
-  Imagine the following `handle_in/3` inside a channel:
+  Imagine the following `c:Phoenix.Channel.handle_in/3` inside a channel:
 
       def handle_in("publish", %{"id" => id}, socket) do
         Repo.get!(Post, id) |> Post.publish() |> Repo.update!()
@@ -137,7 +137,7 @@ defmodule Phoenix.ChannelTest do
   To assert that your channel closes or errors asynchronously,
   you can monitor the channel process with the tools provided
   by Elixir, and wait for the `:DOWN` message.
-  Imagine an implementation of the `handle_info/2` function
+  Imagine an implementation of the `c:Phoenix.Channel.handle_info/2` function
   that closes the channel when it receives `:some_message`:
 
       def handle_info(:some_message, socket) do
@@ -305,7 +305,7 @@ defmodule Phoenix.ChannelTest do
   Initiates a transport connection for the socket handler.
 
   Useful for testing UserSocket authentication. Returns
-  the result of the handler's `connect/3` callback.
+  the result of the handler's `c:Phoenix.Socket.connect/3` callback.
   """
   defmacro connect(handler, params, options \\ quote(do: [])) do
     if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
@@ -460,7 +460,7 @@ defmodule Phoenix.ChannelTest do
   @doc """
   Pushes a message into the channel.
 
-  The triggers the `handle_in/3` callback in the channel.
+  The triggers the `c:Phoenix.Channel.handle_in/3` callback in the channel.
 
   ## Examples
 
@@ -506,7 +506,7 @@ defmodule Phoenix.ChannelTest do
   Broadcast event from pid to all subscribers of the socket topic.
 
   The test process will not receive the published message. This triggers
-  the `handle_out/3` callback in the channel.
+  the `c:Phoenix.Channel.handle_out/3` callback in the channel.
 
   ## Examples
 

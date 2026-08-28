@@ -103,11 +103,11 @@ defmodule Phoenix.Logger do
 
   In some cases you may wish to set the log level dynamically
   on a per-request basis. To do so, set the `:log` option to
-  a tuple, `{Mod, Fun, Args}`. The `Plug.Conn.t()` for the
+  a tuple, `{Mod, Fun, Args}`. The [`Plug.Conn.t()`](`t:Plug.Conn.t/0`) for the
   request will be prepended to the provided list of arguments.
 
   When invoked, your function must return a
-  [`Logger.level()`](`t:Logger.level()/0`) or `false` to
+  [`Logger.level()`](`t:Logger.level/0`) or `false` to
   disable logging for the request.
 
   For example, in your Endpoint you might do something like this:
