@@ -22,20 +22,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Extract version from tag
-        id: version
-        run: echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-
       - name: Extract changelog for version
-        run: bash .github/extract-changelog.sh "${{ steps.version.outputs.version }}" > release_notes.md
+        run: bash .github/extract-changelog.sh "$GITHUB_REF_NAME" > release_notes.md
 
       - name: Create GitHub Release
         run: |
           PRERELEASE_FLAG=""
-          if [[ "${{ steps.version.outputs.version }}" == *-rc* ]]; then
+          if [[ "$GITHUB_REF_NAME" == *-rc* ]]; then
             PRERELEASE_FLAG="--prerelease"
           fi
-          gh release create "${{ steps.version.outputs.version }}" \
-            --title "${{ steps.version.outputs.version }}" \
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
             --notes-file release_notes.md \
             $PRERELEASE_FLAG
