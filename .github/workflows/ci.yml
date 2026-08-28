@@ -65,6 +65,11 @@ jobs:
 
       - name: Run tests
         run: mix test
+        if: ${{ !matrix.lint }}
+
+      - name: Run tests & lint
+        run: mix test --warnings-as-errors
+        if: ${{ matrix.lint }}
 
   installer_test:
     name: installer test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
