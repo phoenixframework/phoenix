@@ -80,7 +80,7 @@ Note: the app name cannot be changed afterwards. A random name is used if you do
 Gigalixir requires that you specify the Erlang and Elixir versions you intend to use. It's generally a good idea to run the same version in production as you do in development. For example:
 
 ```console
-$ echo 'elixir_version=1.17.2' > elixir_buildpack.config
+$ echo 'elixir_version=1.18.4' > elixir_buildpack.config
 $ echo 'erlang_version=27.0' >> elixir_buildpack.config
 $ git add elixir_buildpack.config
 ```

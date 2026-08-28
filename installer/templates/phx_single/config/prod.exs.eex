@@ -21,10 +21,10 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
   ]<%= if @mailer do %>
 
 # Configure Swoosh API Client
-config :swoosh, api_client: Swoosh.ApiClient.Req
+config :swoosh, :api_client, Swoosh.ApiClient.Req
 
 # Disable Swoosh Local Memory Storage
-config :swoosh, local: false<% end %>
+config :swoosh, :local, false<% end %>
 
 # Do not print debug messages in production
 config :logger, level: :info
