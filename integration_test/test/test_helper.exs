@@ -6,5 +6,4 @@ File.cp_r!(
   Path.expand("../_build/dev", __DIR__)
 )
 
-ExUnit.configure(timeout: 180_000, exclude: [:database])
-ExUnit.start()
+ExUnit.start(timeout: 180_000, exclude: [:database])

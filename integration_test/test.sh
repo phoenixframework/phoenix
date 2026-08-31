@@ -16,4 +16,11 @@ cd "$(dirname "$0")"
 
 echo "Running integration tests"
 mix deps.get
-mix test --include database
+
+if [ -n "$GITHUB_STEP_SUMMARY" ]; then
+  mix test --include database \
+    --formatter ExUnit.CLIFormatter \
+    --formatter Phoenix.Integration.SummaryFormatter
+else
+  mix test --include database
+fi
