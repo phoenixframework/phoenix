@@ -6,7 +6,7 @@ defmodule Phoenix.Integration.SummaryFormatter do
   # When the `GITHUB_STEP_SUMMARY` environment variable is set (which GitHub Actions
   # automatically populates with a path to a step summary file), this formatter appends
   # a markdown summary containing overall test metrics, a concurrent module execution
-  # timeline highlighting the critical path, a per-module duration breakdown, and a table
+  # timeline grouped into virtual worker lanes, a per-module duration breakdown, and a table
   # of test durations sorted from slowest to fastest.
   #
   # This formatter takes inspiration from `mix test --slowest` and `--slowest-modules`.
@@ -188,27 +188,40 @@ defmodule Phoenix.Integration.SummaryFormatter do
 
     sorted_modules =
       modules
-      |> Enum.sort_by(fn {_mod, %{start: s, finish: f}} -> (f || s) - s end, :desc)
+      |> Enum.sort_by(fn {mod, %{start: s, finish: f}} -> {s, f || s, mod} end)
 
-    slowest_mod =
-      case sorted_modules do
-        [{mod, _} | _] -> mod
-        _ -> nil
-      end
+    lanes =
+      Enum.reduce(sorted_modules, [], fn item, acc_lanes ->
+        assign_to_lane(acc_lanes, item, [])
+      end)
+      |> Enum.map(&Enum.reverse/1)
 
-    rows =
-      Enum.map(sorted_modules, fn {mod, %{start: s, finish: f}} ->
-        module_name = if mod, do: mod |> Module.split() |> List.last(), else: "Unknown"
-        duration_ms = max(1000, (f || s) - s)
-        start_ms = max(0, s - suite_start)
-        finish_ms = start_ms + duration_ms
+    {slowest_mod, _} =
+      Enum.max_by(
+        modules,
+        fn {_mod, %{start: s, finish: f}} -> (f || s) - s end,
+        fn -> {nil, nil} end
+      )
 
-        start_str = format_gantt_time(start_ms)
-        finish_str = format_gantt_time(finish_ms)
+    section_rows =
+      lanes
+      |> Enum.with_index(1)
+      |> Enum.map(fn {lane, idx} ->
+        tasks =
+          Enum.map(lane, fn {mod, %{start: s, finish: f}} ->
+            module_name = format_gantt_module_name(mod)
+            duration_ms = max(1000, (f || s) - s)
+            start_ms = max(0, s - suite_start)
+            finish_ms = start_ms + duration_ms
 
-        tag = if mod == slowest_mod, do: ":crit, active,", else: ":active,"
+            start_str = format_gantt_time(start_ms)
+            finish_str = format_gantt_time(finish_ms)
+            tag = if mod == slowest_mod, do: ":crit, active,", else: ":active,"
 
-        "    #{module_name} #{tag} #{start_str}, #{finish_str}"
+            "    #{module_name} #{tag} #{start_str}, #{finish_str}"
+          end)
+
+        "    section Lane #{idx}\n" <> Enum.join(tasks, "\n")
       end)
 
     """
@@ -216,12 +229,15 @@ defmodule Phoenix.Integration.SummaryFormatter do
     <summary><b>Module Execution Timeline</b></summary>
 
     ```mermaid
+    ---
+    displayMode: compact
+    ---
     gantt
         title Module Execution Timeline
         dateFormat mm:ss
         axisFormat %M:%S
-        section Modules
-    #{Enum.join(rows, "\n")}
+        todayMarker off
+    #{Enum.join(section_rows, "\n")}
     ```
 
     </details>
@@ -229,6 +245,34 @@ defmodule Phoenix.Integration.SummaryFormatter do
   end
 
   defp format_mermaid_gantt(_modules, _suite_start), do: ""
+
+  defp assign_to_lane([], item, acc) do
+    Enum.reverse([[item] | acc])
+  end
+
+  defp assign_to_lane(
+         [[{_last_mod, %{finish: last_finish, start: last_start}} | _] = lane | rest],
+         {_mod, %{start: s}} = item,
+         acc
+       ) do
+    if (last_finish || last_start) <= s do
+      Enum.reverse(acc) ++ [[item | lane] | rest]
+    else
+      assign_to_lane(rest, item, [lane | acc])
+    end
+  end
+
+  defp format_gantt_module_name(nil), do: "Unknown"
+
+  defp format_gantt_module_name(mod) do
+    mod
+    |> Module.split()
+    |> List.last()
+    |> String.replace_prefix("UmbrellaAppWith", "Umbrella")
+    |> String.replace_prefix("AppWith", "")
+    |> String.replace("Adapter", "")
+    |> String.replace_suffix("Test", "")
+  end
 
   defp format_gantt_time(ms) do
     total_seconds = div(ms, 1000)
