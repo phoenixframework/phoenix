@@ -39,6 +39,6 @@ defmodule Mix.Tasks.Phx.New.Web do
       Mix.raise "The web task can only be run within an umbrella's apps directory"
     end
 
-    Mix.Tasks.Phx.New.run(args, Phx.New.Web, :web_path)
+    Mix.Tasks.Phx.New.run(args ++ ["--no-ecto"], Phx.New.Web, :web_path)
   end
 end
