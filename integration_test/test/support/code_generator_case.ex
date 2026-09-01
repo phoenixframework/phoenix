@@ -7,6 +7,12 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     end
   end
 
+  # NOTE: Keep `app_name` short (as of writing, <= 10 characters excluding underscores,
+  # e.g. "pg_auth_live", "umb_a_html"). App names are converted to module names, and long names
+  # can cause lines in generated files to exceed Elixir's default 98-character formatter limit
+  # and fail `assert_passes_formatter_check/1`.
+  # Additionally, each concurrent test module must use a unique `app_name` to guarantee test
+  # database isolation (`<app_name>_test`) when running against shared database services.
   def generate_phoenix_app(tmp_dir, app_name, opts \\ [])
       when is_binary(app_name) and is_list(opts) do
     app_path = Path.expand(app_name, tmp_dir)
