@@ -33,7 +33,7 @@ jobs:
           node-version: 24.x
 
       - name: Restore deps and _build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             deps
