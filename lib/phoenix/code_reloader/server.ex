@@ -2,9 +2,6 @@ defmodule Phoenix.CodeReloader.Server do
   @moduledoc false
   use GenServer
 
-  # Elixir v1.19 bundles consolidation into compile.elixir
-  # so we no longer need to trigger it manually
-  @requires_consolidation not Version.match?(System.version(), ">= 1.19.0")
 
   require Logger
   alias Phoenix.CodeReloader.Proxy
@@ -259,6 +256,33 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
+  # Elixir v1.19 bundles consolidation into compile.elixir
+  # so we no longer need to trigger it manually
+  if Version.match?(System.version(), "< 1.19.0") do
+    defp maybe_purge_consolidated_modules(config, path) do
+      if config[:consolidate_protocols] do
+        # If we are consolidating protocols, we need to purge all of its modules
+        # to ensure the consolidated versions are loaded. "mix compile" performs
+        # a similar task.
+        Code.prepend_path(path)
+        purge_modules(path)
+      end
+    end
+
+    defp maybe_compile_protocols(config) do
+      if config[:consolidate_protocols] do
+        # Calling compile.protocols is not required from Elixir v1.19
+        Mix.Task.reenable("compile.protocols")
+        Mix.Task.run("compile.protocols", [])
+      end
+
+      :ok
+    end
+  else
+    defp maybe_purge_consolidated_modules(_config, _path), do: :ok
+    defp maybe_compile_protocols(_config), do: :ok
+  end
+
   defp mix_compile(
          {:module, Mix.Task},
          compilers,
@@ -298,13 +322,7 @@ defmodule Phoenix.CodeReloader.Server do
       purge_fallback?
     )
 
-    if @requires_consolidation && config[:consolidate_protocols] do
-      # If we are consolidating protocols, we need to purge all of its modules
-      # to ensure the consolidated versions are loaded. "mix compile" performs
-      # a similar task.
-      Code.prepend_path(path)
-      purge_modules(path)
-    end
+    maybe_purge_consolidated_modules(config, path)
 
     :ok
   end
@@ -411,11 +429,10 @@ defmodule Phoenix.CodeReloader.Server do
           exit({:shutdown, 1})
         end
 
-      @requires_consolidation && status == :ok && config[:consolidate_protocols] ->
-        # TODO: Calling compile.protocols is no longer be required from Elixir v1.19
-        Mix.Task.reenable("compile.protocols")
-        Mix.Task.run("compile.protocols", [])
         :ok
+
+      status == :ok ->
+        maybe_compile_protocols(config)
 
       true ->
         :ok
