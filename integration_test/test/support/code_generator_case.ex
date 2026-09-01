@@ -103,6 +103,39 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     mix_run!(["ecto.drop"], app_path, env: [{"MIX_ENV", "test"}])
   end
 
+  # Renames existing migration files in `app_path` to deterministic, sequentially ordered
+  # timestamps in the past (starting at 2000-01-01 00:00:00).
+  #
+  # Consecutive generator invocations in tests (e.g. `phx.gen.auth` followed by `phx.gen.live`)
+  # run fast enough to generate migrations within the same second, leading to timestamp
+  # collisions or unexpected execution order. Calling this helper between generator runs
+  # shifts existing migrations to earlier timestamps so subsequent generators can produce
+  # fresh, non-colliding migration versions with current timestamps immediately without sleeping.
+  #
+  # Preconditions & Limitations:
+  #
+  # - Must be called before migrations are executed against the database.
+  # - Only looks for migrations under `priv/repo/migrations`.
+  def adjust_migration_timestamps(app_path) when is_binary(app_path) do
+    [
+      Path.join(app_path, "priv/repo/migrations/*_*.exs"),
+      Path.join(app_path, "apps/*/priv/repo/migrations/*_*.exs")
+    ]
+    |> Enum.flat_map(&Path.wildcard/1)
+    |> Enum.with_index()
+    |> Enum.each(fn {path, idx} ->
+      dir = Path.dirname(path)
+      name = Path.basename(path)
+      [_, rest] = Regex.run(~r"^\d{14}_(.+)$", name)
+      new_timestamp = Integer.to_string(20_000_101_000_000 + idx)
+      new_path = Path.join(dir, "#{new_timestamp}_#{rest}")
+
+      if path != new_path do
+        File.rename!(path, new_path)
+      end
+    end)
+  end
+
   def with_installer_tmp(name, opts \\ [], function)
       when is_list(opts) and is_function(function, 1) do
     autoremove? = Keyword.get(opts, :autoremove?, true)

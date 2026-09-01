@@ -8,8 +8,9 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesJsonTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "sc_json")
 
         mix_run!(~w(phx.gen.auth Accounts User users --no-live), app_root_path)
-        # we need to wait, otherwise we'd generate two migrations with the same version...
-        Process.sleep(1500)
+
+        adjust_migration_timestamps(app_root_path)
+
         mix_run!(~w(phx.gen.json Blog Post posts title:string), app_root_path)
 
         modify_file(Path.join(app_root_path, "lib/sc_json_web/router.ex"), fn file ->

@@ -10,8 +10,8 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesCustomRoutesTest do
         # First generate authentication system
         mix_run!(~w(phx.gen.auth Accounts User users --live), app_root_path)
 
-        # sleep to have fresh migration name
-        Process.sleep(1500)
+        adjust_migration_timestamps(app_root_path)
+
         mix_run!(~w(ecto.gen.migration AddOrganizationAndOrgUser), app_root_path)
 
         assert [migration] =
@@ -337,21 +337,22 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesCustomRoutesTest do
         end)
 
         # Generate resources with all three generators - use different contexts to avoid naming conflicts
-        Process.sleep(1500)
+
+        adjust_migration_timestamps(app_root_path)
 
         mix_run!(
           ~w(phx.gen.html Blog1 Article articles title:string --scope organization),
           app_root_path
         )
 
-        Process.sleep(1500)
+        adjust_migration_timestamps(app_root_path)
 
         mix_run!(
           ~w(phx.gen.live Blog2 Post posts title:string --scope organization),
           app_root_path
         )
 
-        Process.sleep(1500)
+        adjust_migration_timestamps(app_root_path)
 
         mix_run!(
           ~w(phx.gen.json Blog3 Comment comments content:string --scope organization),
