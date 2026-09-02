@@ -289,6 +289,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Mount installer/tmp on tmpfs
+        run: |
+          mkdir -p installer/tmp
+          sudo mount -t tmpfs -o size=4G,uid=$(id -u),gid=$(id -g) tmpfs installer/tmp
+
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
