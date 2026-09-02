@@ -1,10 +1,10 @@
-defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
+defmodule Phoenix.Integration.CodeGeneration.MinimalAppTest do
   use Phoenix.Integration.CodeGeneratorCase, async: true
 
   test "newly generated app has no warnings or errors" do
-    with_installer_tmp("app_with_no_options", fn tmp_dir ->
+    with_installer_tmp("minimal_app", fn tmp_dir ->
       {app_root_path, _} =
-        generate_phoenix_app(tmp_dir, "phx_blog", [
+        generate_phoenix_app(tmp_dir, "minimal", [
           "--no-html",
           "--no-assets",
           "--no-ecto",
@@ -22,7 +22,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
   test "generated app boots with mix phx.server" do
     with_installer_tmp("development_workflow", fn tmp_dir ->
       {app_root_path, _} =
-        generate_phoenix_app(tmp_dir, "phx_blog", [
+        generate_phoenix_app(tmp_dir, "minimal", [
           "--no-assets",
           "--no-ecto",
           "--no-gettext",
@@ -35,7 +35,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithNoOptionsTest do
       with_phx_server(app_root_path, fn url ->
         {:ok, response} = http_get(url)
         assert response.status_code == 200
-        assert response.body =~ "PhxBlog"
+        assert response.body =~ "Minimal"
       end)
     end)
   end
