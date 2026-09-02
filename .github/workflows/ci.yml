@@ -223,14 +223,16 @@ jobs:
         run: mix docs --warnings-as-errors
 
   integration-test-elixir:
-    name: integration test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    name: integration test (${{ matrix.service }} | OTP ${{ matrix.versions.otp }} | Elixir ${{ matrix.versions.elixir }})
 
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     strategy:
+      fail-fast: false
       matrix:
-        include:
+        service: [postgresql, mysql, mssql, none]
+        versions:
           - elixir: "1.18.4"
             otp: "27.3.4.3"
 
@@ -247,42 +249,6 @@ jobs:
       MIX_OS_DEPS_COMPILE_PARTITION_COUNT: 2
       MAKEFLAGS: "-j2"
 
-    services:
-      postgres:
-        image: postgres:18
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 10
-      mysql:
-        image: mysql:26
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-        options: >-
-          --health-cmd "mysqladmin ping -h localhost"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 10
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2019-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: some!Password
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -C -Q 'SELECT 1' 2>/dev/null || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' 2>/dev/null"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 25
-
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -294,11 +260,16 @@ jobs:
           mkdir -p installer/tmp
           sudo mount -t tmpfs -o size=4G,uid=$(id -u),gid=$(id -g) tmpfs installer/tmp
 
+      - name: Start database container (${{ matrix.service }})
+        if: matrix.service != 'none'
+        run: |
+          docker compose -f integration_test/docker-compose.yml up -d --wait ${{ matrix.service }}
+
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ matrix.versions.elixir }}
+          otp-version: ${{ matrix.versions.otp }}
 
       - name: Restore deps and _build cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -306,9 +277,9 @@ jobs:
           path: |
             integration_test/deps
             integration_test/_build
-          key: integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('integration_test/mix.lock') }}
+          key: integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-${{ hashFiles('integration_test/mix.lock') }}
           restore-keys: |
-            integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+            integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}
 
       - name: Fetch dependencies
         working-directory: integration_test
@@ -323,6 +294,12 @@ jobs:
       - name: Run integration tests
         working-directory: integration_test
         run: |
-          mix test --include database \
+          if [ "${{ matrix.service }}" = "none" ]; then
+            FLAGS="--include database:sqlite3"
+          else
+            FLAGS="--include database:${{ matrix.service }} --only database:${{ matrix.service }}"
+          fi
+
+          mix test $FLAGS \
             --formatter ExUnit.CLIFormatter \
             --formatter Phoenix.Integration.SummaryFormatter

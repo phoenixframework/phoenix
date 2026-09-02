@@ -1,21 +1,43 @@
-version: '3'
 services:
-  postgres:
-    image: postgres
+  postgresql:
+    image: postgres:18
     ports:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: postgres
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
   mysql:
-    image: mysql
+    image: mysql:26
     ports:
       - "3306:3306"
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
   mssql:
     image: mcr.microsoft.com/mssql/server:2019-latest
     environment:
-      ACCEPT_EULA: Y
-      SA_PASSWORD: some!Password
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "some!Password"
     ports:
       - "1433:1433"
+    tmpfs:
+      - /var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -C -Q 'SELECT 1' 2>/dev/null || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -Q 'SELECT 1' 2>/dev/null"]
+      interval: 2s
+      timeout: 3s
+      retries: 25
