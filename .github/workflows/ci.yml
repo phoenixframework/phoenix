@@ -223,32 +223,30 @@ jobs:
         run: mix docs --warnings-as-errors
 
   integration-test-elixir:
-    runs-on: ubuntu-latest
+    name: integration test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
       matrix:
         include:
-          # look for latest alpine image here: https://bob.hex.pm/docker?repo=hexpm/elixir&os=alpine&sort=elixir_version,erlang_version,os_version
           - elixir: "1.18.4"
             otp: "27.3.4.3"
-            alpine: "3.22.4"
 
           - elixir: "1.20.4"
             otp: "29.0.5"
-            alpine: "3.23.5"
 
-    container:
-      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-${{ matrix.alpine }}
-      env:
-        ELIXIR_ASSERT_TIMEOUT: 10000
-        PHX_CI: true
-        # Set to half of the runner vCPU cores to compile deps/NIFs
-        # concurrently across OS processes without CPU oversubscription.
-        # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
-        # and https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/
-        MIX_OS_DEPS_COMPILE_PARTITION_COUNT: 2
-        MAKEFLAGS: "-j2"
+    env:
+      ELIXIR_ASSERT_TIMEOUT: 10000
+      PHX_CI: true
+      # Set to half of the runner vCPU cores to compile deps/NIFs
+      # concurrently across OS processes without CPU oversubscription.
+      # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+      # and https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/
+      MIX_OS_DEPS_COMPILE_PARTITION_COUNT: 2
+      MAKEFLAGS: "-j2"
+
     services:
       postgres:
         image: postgres:18
@@ -284,25 +282,28 @@ jobs:
           --health-interval 2s
           --health-timeout 3s
           --health-retries 25
+
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install system packages
-        run: apk add --no-progress --update git socat make gcc libc-dev cmake g++
+      - name: Set up Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
 
-      - name: Set up Hex and Rebar
-        run: |
-          mix local.rebar --force
-          mix local.hex --force
-
-      - name: Start database proxy bridges
-        run: |
-          socat TCP-LISTEN:5432,fork TCP-CONNECT:postgres:5432 > /dev/null 2>&1 &
-          socat TCP-LISTEN:3306,fork TCP-CONNECT:mysql:3306 > /dev/null 2>&1 &
-          socat TCP-LISTEN:1433,fork TCP-CONNECT:mssql:1433 > /dev/null 2>&1 &
+      - name: Restore deps and _build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            integration_test/deps
+            integration_test/_build
+          key: integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('integration_test/mix.lock') }}
+          restore-keys: |
+            integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
 
       - name: Fetch dependencies
         working-directory: integration_test
