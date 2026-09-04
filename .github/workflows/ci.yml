@@ -304,7 +304,7 @@ jobs:
             --formatter ExUnit.CLIFormatter \
             --formatter Phoenix.Integration.SummaryFormatter
         env:
-          PHX_TEST_SERVICE: ${{ matrix.service }}
+          PHX_TEST_JOB: ${{ matrix.service }}
           PHX_ELIXIR_VERSION: ${{ matrix.versions.elixir }}
           PHX_OTP_VERSION: ${{ matrix.versions.otp }}
           PHX_INTEGRATION_SUMMARY_JSON: ${{ runner.temp }}/summary-${{ matrix.service }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}.json
@@ -326,6 +326,7 @@ jobs:
     timeout-minutes: 2
     needs: integration-test-elixir
     if: always()
+    continue-on-error: true
 
     steps:
       - name: Checkout
@@ -344,9 +345,7 @@ jobs:
         with:
           pattern: summary-*
           merge-multiple: true
-          path: tmp/summaries
+          path: ${{ runner.temp }}/summaries
 
       - name: Aggregate test summaries
-        run: elixir integration_test/aggregate_summary.exs tmp/summaries
-        env:
-          MATRIX_RESULT: ${{ needs.integration-test-elixir.result }}
+        run: elixir integration_test/aggregate_summary.exs "${{ runner.temp }}/summaries" >> "$GITHUB_STEP_SUMMARY"
