@@ -52,7 +52,7 @@ jobs:
           cache: "npm"
 
       - name: Install npm dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Build assets
         run: mix assets.build

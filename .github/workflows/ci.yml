@@ -153,7 +153,7 @@ jobs:
           cache: "npm"
 
       - name: Install locked npm dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Run tests
         run: npm test
