@@ -101,9 +101,16 @@ defmodule Phoenix.Integration.SummaryFormatter do
 
     total_executed_time_us = Enum.sum(Enum.map(slowest, &(&1.time || 0)))
 
+    # A module still fires module_started/module_finished even when every one of
+    # its tests is filtered out -- which is the common case now that CI runs the
+    # suite one database at a time. Keep only modules that actually ran
+    # something, so they do not show up as zero-duration rows and empty bars.
+    executed_modules = MapSet.new(slowest, & &1.module)
+
     modules_stats =
       tests
       |> Enum.group_by(& &1.module)
+      |> Enum.filter(fn {mod, _tests} -> MapSet.member?(executed_modules, mod) end)
       |> Enum.map(fn {mod, mod_tests} ->
         mod_executed =
           Enum.reject(mod_tests, fn test ->
@@ -122,7 +129,7 @@ defmodule Phoenix.Integration.SummaryFormatter do
         %{
           module: mod,
           status: mod_status,
-          test_count: length(mod_tests),
+          test_count: length(mod_executed),
           total_us: total_us,
           avg_us: avg_us,
           max_us: max_us
@@ -150,7 +157,7 @@ defmodule Phoenix.Integration.SummaryFormatter do
       | :---: | :---: | :---: | :---: | :---: | :---: |
       | **#{total}** | **#{passed}** | **#{total_failures}** | **#{excluded}** | **#{skipped}** | **#{format_duration(wall_time_ms)}** |
       """,
-      format_mermaid_gantt(modules, suite_start),
+      format_mermaid_gantt(Map.take(modules, MapSet.to_list(executed_modules)), suite_start),
       """
       <details open>
       <summary><b>Module Breakdown</b></summary>
