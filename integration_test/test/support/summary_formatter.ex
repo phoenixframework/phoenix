@@ -130,14 +130,17 @@ defmodule Phoenix.Integration.SummaryFormatter do
       end)
       |> Enum.sort_by(& &1.total_us, :desc)
 
-    partition_info =
-      case System.get_env("MIX_TEST_PARTITION") do
+    # CI splits the suite across several jobs -- one per database, plus one that
+    # needs no database at all -- and each writes its own summary. Label them so
+    # the summaries for a single Elixir version can be told apart.
+    group_info =
+      case System.get_env("PHX_TEST_GROUP") do
         nil -> ""
         "" -> ""
-        partition -> " / partition #{partition}"
+        group -> " / #{group}"
       end
 
-    env_info = "Elixir #{System.version()} / OTP #{System.otp_release()}#{partition_info}"
+    env_info = "Elixir #{System.version()} / OTP #{System.otp_release()}#{group_info}"
 
     sections = [
       """
