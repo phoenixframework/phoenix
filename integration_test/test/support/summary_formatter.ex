@@ -130,7 +130,14 @@ defmodule Phoenix.Integration.SummaryFormatter do
       end)
       |> Enum.sort_by(& &1.total_us, :desc)
 
-    env_info = "Elixir #{System.version()} / OTP #{System.otp_release()}"
+    partition_info =
+      case System.get_env("MIX_TEST_PARTITION") do
+        nil -> ""
+        "" -> ""
+        partition -> " / partition #{partition}"
+      end
+
+    env_info = "Elixir #{System.version()} / OTP #{System.otp_release()}#{partition_info}"
 
     sections = [
       """
