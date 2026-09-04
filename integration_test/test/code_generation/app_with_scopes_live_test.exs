@@ -8,8 +8,9 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithScopesLiveTest do
         {app_root_path, _} = generate_phoenix_app(tmp_dir, "sc_live")
 
         mix_run!(~w(phx.gen.auth Accounts User users --live), app_root_path)
-        # we need to wait, otherwise we would generate two migrations with the same version...
-        Process.sleep(1500)
+
+        adjust_migration_timestamps(app_root_path)
+
         mix_run!(~w(phx.gen.live Blog Post posts title:string), app_root_path)
 
         modify_file(Path.join(app_root_path, "lib/sc_live_web/router.ex"), fn file ->

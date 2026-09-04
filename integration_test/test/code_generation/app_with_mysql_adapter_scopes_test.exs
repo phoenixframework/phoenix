@@ -10,8 +10,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMySQLAdapterScopesTest do
 
         mix_run!(~w(phx.gen.auth Accounts User users --live), app_root_path)
 
-        # we need to wait, otherwise we'd generate two migrations with the same version...
-        Process.sleep(1500)
+        adjust_migration_timestamps(app_root_path)
 
         mix_run!(
           ~w(phx.gen.live Blog Post posts title:string),
