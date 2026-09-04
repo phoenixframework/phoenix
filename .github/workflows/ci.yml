@@ -51,7 +51,7 @@ jobs:
             _build
           key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-
 
       - name: Install dependencies
         run: mix deps.get --only test
@@ -110,7 +110,7 @@ jobs:
             _build
           key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-
 
       - name: Install installer dependencies
         run: mix deps.get
@@ -186,7 +186,7 @@ jobs:
             _build
           key: docs-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            docs-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}
+            docs-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-
 
       - name: Install dependencies
         run: mix deps.get --only docs
@@ -259,7 +259,7 @@ jobs:
             integration_test/_build
           key: integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-${{ hashFiles('integration_test/mix.lock') }}
           restore-keys: |
-            integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}
+            integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-
 
       - name: Fetch dependencies
         working-directory: integration_test
