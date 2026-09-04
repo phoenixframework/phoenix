@@ -223,13 +223,20 @@ jobs:
         run: mix docs --warnings-as-errors
 
   integration-test-elixir:
-    name: integration test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    name: integration test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}} | partition ${{matrix.partition}})
 
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
+      # Keep running the remaining partitions when one fails, otherwise a single
+      # failing partition hides the results of all the others.
+      fail-fast: false
       matrix:
+        # Test files are split across Elixir instances via `mix test --partitions`.
+        # Keep this list in sync with the `--partitions` count in the test step below.
+        partition: [1, 2, 3]
+        elixir: ["1.18.4", "1.20.4"]
         include:
           - elixir: "1.18.4"
             otp: "27.3.4.3"
@@ -240,6 +247,7 @@ jobs:
     env:
       ELIXIR_ASSERT_TIMEOUT: 10000
       PHX_CI: true
+      MIX_TEST_PARTITION: ${{ matrix.partition }}
       # Set to half of the runner vCPU cores to compile deps/NIFs
       # concurrently across OS processes without CPU oversubscription.
       # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
@@ -254,22 +262,38 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
+        # Probe over TCP (-h 127.0.0.1) rather than the Unix socket: initdb runs
+        # a temporary server with `listen_addresses` empty, and a socket probe
+        # reports ready against *that* server, before the real one is listening.
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
           --health-interval 2s
           --health-timeout 3s
           --health-retries 10
+          --health-start-period 30s
       mysql:
         image: mysql:26
         ports:
           - 3306:3306
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        # Things to be aware of:
+        #
+        # 1. Initializing the data directory on first boot takes 30s+ on a slow
+        #    runner, which overruns the retry budget below. Probes that fail
+        #    during --health-start-period do not consume that budget, and the
+        #    first successful probe ends the period early.
+        # 2. The entrypoint starts a temporary server during initialization with
+        #    `port: 0` (Unix socket only). `mysqladmin ping -h localhost` uses
+        #    the socket, so it reports healthy against that temporary server --
+        #    which is then shut down and restarted. Probing over TCP instead
+        #    only succeeds once the real server is listening on 3306.
         options: >-
-          --health-cmd "mysqladmin ping -h localhost"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 --protocol=TCP"
           --health-interval 2s
           --health-timeout 3s
           --health-retries 10
+          --health-start-period 60s
       mssql:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:
@@ -323,6 +347,6 @@ jobs:
       - name: Run integration tests
         working-directory: integration_test
         run: |
-          mix test --include database \
+          mix test --include database --partitions 3 \
             --formatter ExUnit.CLIFormatter \
             --formatter Phoenix.Integration.SummaryFormatter
