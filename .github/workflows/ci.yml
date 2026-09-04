@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   mix_test:
-    name: mix test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    name: mix test (Elixir ${{matrix.elixir}} | OTP ${{matrix.otp}})
 
     env:
       MIX_ENV: test
@@ -72,7 +72,7 @@ jobs:
         if: ${{ matrix.lint }}
 
   installer_test:
-    name: installer test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    name: installer test (Elixir ${{matrix.elixir}} | OTP ${{matrix.otp}})
 
     env:
       MIX_ENV: test
@@ -223,7 +223,7 @@ jobs:
         run: mix docs --warnings-as-errors
 
   integration-test-elixir:
-    name: integration test (${{ matrix.service }} | OTP ${{ matrix.versions.otp }} | Elixir ${{ matrix.versions.elixir }})
+    name: integration test [${{ matrix.service == 'none' && 'sqlite3 + no-db' || matrix.service }}] (Elixir ${{ matrix.versions.elixir }} | OTP ${{ matrix.versions.otp }})
 
     runs-on: ubuntu-24.04
     timeout-minutes: 15
