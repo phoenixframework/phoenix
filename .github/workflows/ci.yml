@@ -222,20 +222,19 @@ jobs:
       - name: Build the documentation
         run: mix docs --warnings-as-errors
 
-  integration-test-elixir:
-    name: integration test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}} | partition ${{matrix.partition}})
+  # The generator, compile and formatter tests never talk to a database server,
+  # and the sqlite3 tests use a file-backed database. Together that is the
+  # largest slice of the suite, and it runs with no service containers at all --
+  # nothing to pull, nothing to wait for.
+  integration-test-no-db:
+    name: integration test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}} | no db)
 
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
-      # Keep running the remaining partitions when one fails, otherwise a single
-      # failing partition hides the results of all the others.
       fail-fast: false
       matrix:
-        # Test files are split across Elixir instances via `mix test --partitions`.
-        # Keep this list in sync with the `--partitions` count in the test step below.
-        partition: [1, 2, 3]
         elixir: ["1.18.4", "1.20.4"]
         include:
           - elixir: "1.18.4"
@@ -247,65 +246,13 @@ jobs:
     env:
       ELIXIR_ASSERT_TIMEOUT: 10000
       PHX_CI: true
-      MIX_TEST_PARTITION: ${{ matrix.partition }}
+      PHX_TEST_GROUP: no-db
       # Set to half of the runner vCPU cores to compile deps/NIFs
       # concurrently across OS processes without CPU oversubscription.
       # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
       # and https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/
       MIX_OS_DEPS_COMPILE_PARTITION_COUNT: 2
       MAKEFLAGS: "-j2"
-
-    services:
-      postgres:
-        image: postgres:18
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Probe over TCP (-h 127.0.0.1) rather than the Unix socket: initdb runs
-        # a temporary server with `listen_addresses` empty, and a socket probe
-        # reports ready against *that* server, before the real one is listening.
-        options: >-
-          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 10
-          --health-start-period 30s
-      mysql:
-        image: mysql:26
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-        # Things to be aware of:
-        #
-        # 1. Initializing the data directory on first boot takes 30s+ on a slow
-        #    runner, which overruns the retry budget below. Probes that fail
-        #    during --health-start-period do not consume that budget, and the
-        #    first successful probe ends the period early.
-        # 2. The entrypoint starts a temporary server during initialization with
-        #    `port: 0` (Unix socket only). `mysqladmin ping -h localhost` uses
-        #    the socket, so it reports healthy against that temporary server --
-        #    which is then shut down and restarted. Probing over TCP instead
-        #    only succeeds once the real server is listening on 3306.
-        options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1 --protocol=TCP"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 10
-          --health-start-period 60s
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2019-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: some!Password
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -C -Q 'SELECT 1' 2>/dev/null || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' 2>/dev/null"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 25
 
     steps:
       - name: Checkout
@@ -347,6 +294,144 @@ jobs:
       - name: Run integration tests
         working-directory: integration_test
         run: |
-          mix test --include database --partitions 3 \
+          mix test --include database:sqlite3 \
+            --formatter ExUnit.CLIFormatter \
+            --formatter Phoenix.Integration.SummaryFormatter
+
+  # One job per database server, so each pulls exactly one image instead of all
+  # three. `--only database:<name>` runs that server's tests and nothing else;
+  # together with the `no-db` job above, every test runs exactly once.
+  integration-test-db:
+    name: integration test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}} | ${{matrix.db.name}})
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        db:
+          - name: postgresql
+            image: postgres:18
+            port: 5432
+            # Probe over TCP (-h 127.0.0.1) rather than the Unix socket: initdb
+            # runs a temporary server with `listen_addresses` empty, and a
+            # socket probe reports ready against *that* server, before the real
+            # one is listening.
+            health_cmd: pg_isready -U postgres -h 127.0.0.1
+            health_retries: 10
+            health_start_period: 30s
+
+          - name: mysql
+            image: mysql:26
+            port: 3306
+            # Two things to be aware of:
+            #
+            # 1. Initializing the data directory on first boot takes 30s+ on a
+            #    slow runner, which overruns the retry budget. Probes that fail
+            #    during --health-start-period do not consume that budget, and
+            #    the first successful probe ends the period early.
+            # 2. The entrypoint starts a temporary server during initialization
+            #    with `port: 0` (Unix socket only). `mysqladmin ping -h
+            #    localhost` uses the socket, so it reports healthy against that
+            #    temporary server -- which is then shut down and restarted.
+            #    Probing over TCP only succeeds once the real server is up.
+            health_cmd: mysqladmin ping -h 127.0.0.1 --protocol=TCP
+            health_retries: 10
+            health_start_period: 60s
+
+          - name: mssql
+            image: mcr.microsoft.com/mssql/server:2019-latest
+            port: 1433
+            # Block scalar so the \" escapes reach docker verbatim, exactly as
+            # they did when this was written inline.
+            health_cmd: >-
+              /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -C -Q 'SELECT 1' 2>/dev/null || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' 2>/dev/null
+            health_retries: 25
+            health_start_period: 30s
+
+        elixir: ["1.18.4", "1.20.4"]
+        include:
+          - elixir: "1.18.4"
+            otp: "27.3.4.3"
+
+          - elixir: "1.20.4"
+            otp: "29.0.5"
+
+    env:
+      ELIXIR_ASSERT_TIMEOUT: 10000
+      PHX_CI: true
+      PHX_TEST_GROUP: ${{ matrix.db.name }}
+      # Set to half of the runner vCPU cores to compile deps/NIFs
+      # concurrently across OS processes without CPU oversubscription.
+      # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+      # and https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/
+      MIX_OS_DEPS_COMPILE_PARTITION_COUNT: 2
+      MAKEFLAGS: "-j2"
+
+    services:
+      # A single, matrix-driven service: the job needs exactly one database, so
+      # only one image is ever pulled. The service name does not matter -- the
+      # job runs on the host, so tests reach the server through the published
+      # port on localhost rather than a container network alias.
+      db:
+        image: ${{ matrix.db.image }}
+        ports:
+          - ${{ matrix.db.port }}:${{ matrix.db.port }}
+        # `env:` keys cannot be matrix-driven, so all three images' variables are
+        # set unconditionally. Each image ignores the ones meant for the others.
+        env:
+          POSTGRES_PASSWORD: postgres
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          ACCEPT_EULA: Y
+          SA_PASSWORD: some!Password
+        options: >-
+          --health-cmd "${{ matrix.db.health_cmd }}"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries ${{ matrix.db.health_retries }}
+          --health-start-period ${{ matrix.db.health_start_period }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Mount installer/tmp on tmpfs
+        run: |
+          mkdir -p installer/tmp
+          sudo mount -t tmpfs -o size=4G,uid=$(id -u),gid=$(id -g) tmpfs installer/tmp
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Restore deps and _build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            integration_test/deps
+            integration_test/_build
+          key: integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('integration_test/mix.lock') }}
+          restore-keys: |
+            integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+
+      - name: Fetch dependencies
+        working-directory: integration_test
+        run: mix deps.get
+
+      - name: Compile dependencies
+        working-directory: integration_test
+        run: mix deps.compile
+        env:
+          MIX_ENV: test
+
+      - name: Run integration tests
+        working-directory: integration_test
+        run: |
+          mix test --only database:${{ matrix.db.name }} \
             --formatter ExUnit.CLIFormatter \
             --formatter Phoenix.Integration.SummaryFormatter
