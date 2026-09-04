@@ -1,5 +1,12 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - main
+      - "v*.*"
+  pull_request:
+
 permissions:
   contents: read
 
