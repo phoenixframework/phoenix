@@ -106,14 +106,15 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
   def with_installer_tmp(name, opts \\ [], function)
       when is_list(opts) and is_function(function, 1) do
     autoremove? = Keyword.get(opts, :autoremove?, true)
-    path = Path.join([installer_tmp_path(), random_string(10), to_string(name)])
+    base = Path.join([installer_tmp_path(), random_string(10)])
+    path = Path.join([base, to_string(name)])
 
     try do
       File.rm_rf!(path)
       File.mkdir_p!(path)
       function.(path)
     after
-      if autoremove?, do: File.rm_rf!(path)
+      if autoremove?, do: File.rm_rf!(base)
     end
   end
 
