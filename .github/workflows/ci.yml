@@ -153,12 +153,8 @@ jobs:
 
     env:
       MIX_ENV: docs
-
-    strategy:
-      matrix:
-        include:
-          - elixir: "1.20.4"
-            otp: "29.0.5"
+      elixir: "1.20.4"
+      otp: "29.0.5"
 
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -172,8 +168,8 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ env.elixir }}
+          otp-version: ${{ env.otp }}
 
       # the docs alias also builds the JavaScript documentation with npm
       - name: Set up Node.js 24.x
@@ -188,9 +184,9 @@ jobs:
           path: |
             deps
             _build
-          key: docs-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          key: docs-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            docs-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+            docs-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}
 
       - name: Install dependencies
         run: mix deps.get --only docs
