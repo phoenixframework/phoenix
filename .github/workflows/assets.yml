@@ -42,7 +42,7 @@ jobs:
           key: ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-${{ hashFiles('**/mix.lock') }}-dev
           restore-keys: |
             ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-
-      - name: Install Dependencies
+      - name: Install dependencies
         run: mix deps.get --only dev
 
       - name: Set up Node.js 24.x
