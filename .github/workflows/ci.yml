@@ -262,22 +262,38 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
+        # Probe over TCP (-h 127.0.0.1) rather than the Unix socket: initdb runs
+        # a temporary server with `listen_addresses` empty, and a socket probe
+        # reports ready against *that* server, before the real one is listening.
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
           --health-interval 2s
           --health-timeout 3s
           --health-retries 10
+          --health-start-period 30s
       mysql:
         image: mysql:26
         ports:
           - 3306:3306
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        # Things to be aware of:
+        #
+        # 1. Initializing the data directory on first boot takes 30s+ on a slow
+        #    runner, which overruns the retry budget below. Probes that fail
+        #    during --health-start-period do not consume that budget, and the
+        #    first successful probe ends the period early.
+        # 2. The entrypoint starts a temporary server during initialization with
+        #    `port: 0` (Unix socket only). `mysqladmin ping -h localhost` uses
+        #    the socket, so it reports healthy against that temporary server --
+        #    which is then shut down and restarted. Probing over TCP instead
+        #    only succeeds once the real server is listening on 3306.
         options: >-
-          --health-cmd "mysqladmin ping -h localhost"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 --protocol=TCP"
           --health-interval 2s
           --health-timeout 3s
           --health-retries 10
+          --health-start-period 60s
       mssql:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:
