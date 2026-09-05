@@ -13,7 +13,6 @@ defmodule Phx.New.Ecto do
      "#{@pre}/test/test_helper.exs.eex": "test/test_helper.exs",
      "#{@pre}/README.md.eex": "README.md",
      "#{@pre}/mix.exs.eex": "mix.exs",
-     "#{@pre}/gitignore.eex": ".gitignore",
      "#{@pre}/formatter.exs.eex": ".formatter.exs"}
   ])
 

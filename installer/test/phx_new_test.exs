@@ -146,8 +146,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/priv/static/images/logo.svg")
 
       assert_file("phx_blog/.gitignore", fn file ->
-        assert file =~ "/priv/static/assets/"
-        assert file =~ "phx_blog-*.tar"
+        assert file =~ "priv/static/assets/"
+        assert file =~ "*.tar"
       end)
 
       assert_file("phx_blog/config/dev.exs", fn file ->
@@ -322,11 +322,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       ])
 
       # No assets
-      assert_file("phx_blog/.gitignore", fn file ->
-        refute file =~ "/priv/static/assets/"
-      end)
-
-      refute File.exists?("phx_blog/priv/static/images/logo.svg")
+      refute_file("phx_blog/priv/static/images/logo.svg")
 
       assert_file("phx_blog/config/dev.exs", ~r/watchers: \[\]/)
 
@@ -528,10 +524,6 @@ defmodule Mix.Tasks.Phx.NewTest do
   test "new with --no-assets" do
     in_tmp("new no_assets", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--no-assets"])
-
-      assert_file("phx_blog/.gitignore", fn file ->
-        refute file =~ "/priv/static/assets/"
-      end)
 
       assert_file("phx_blog/priv/static/assets/css/app.css")
       assert_file("phx_blog/priv/static/assets/js/app.js")
