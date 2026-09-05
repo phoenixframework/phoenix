@@ -3,3 +3,9 @@
 # To ban all spiders from the entire site uncomment the next two lines:
 # User-agent: *
 # Disallow: /
+
+# /live/longpoll is LiveView's fallback transport for clients that can't open a
+# WebSocket, which includes search engine crawlers. It carries no indexable
+# content, so disallow it to keep crawlers from spending crawl budget there.
+User-agent: *
+Disallow: /live/longpoll
