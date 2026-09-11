@@ -631,7 +631,7 @@ defmodule Phoenix.Socket.Transport do
     do: false
 
   defp origin_allowed?(true, uri, endpoint, _conn),
-    do: compare?(uri.host, host_to_binary(endpoint.config(:url)[:host]))
+    do: compare?(uri.host, Phoenix.Endpoint.host_to_binary(endpoint.config(:url)[:host]))
 
   defp origin_allowed?(check_origin, uri, _endpoint, _conn) when is_list(check_origin),
     do: origin_allowed?(uri, check_origin)
@@ -659,7 +659,4 @@ defmodule Phoenix.Socket.Transport do
   defp compare_host?(request_host, allowed_host),
     do: request_host == allowed_host
 
-  # TODO: Remove this once {:system, env_var} deprecation is removed
-  defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
-  defp host_to_binary(host), do: host
 end

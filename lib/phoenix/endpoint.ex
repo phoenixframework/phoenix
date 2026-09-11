@@ -1094,4 +1094,10 @@ defmodule Phoenix.Endpoint do
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
     Phoenix.Endpoint.Supervisor.server?(otp_app, endpoint)
   end
+
+  @doc false
+  def host_to_binary(nil), do: "localhost"
+  # TODO: Remove this once {:system, env_var} deprecation is removed
+  def host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
+  def host_to_binary(host), do: host
 end
