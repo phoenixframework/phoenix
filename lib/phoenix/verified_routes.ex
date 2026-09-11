@@ -232,7 +232,7 @@ defmodule Phoenix.VerifiedRoutes do
 
             k == :router ->
               raise ArgumentError,
-                ":router option in VerifiedRoutes must be a literal module, got: #{Macro.to_string(v)}"
+                    ":router option in VerifiedRoutes must be a literal module, got: #{Macro.to_string(v)}"
 
             true ->
               {k, v}
@@ -595,8 +595,11 @@ defmodule Phoenix.VerifiedRoutes do
 
   def static_url(%Plug.Conn{private: private}, path) do
     case private do
-      %{phoenix_static_url: static_url} -> concat_url(static_url, path)
-      %{phoenix_endpoint: endpoint} -> static_url(endpoint, path)
+      %{phoenix_static_url: static_url} ->
+        concat_url(static_url, Phoenix.URL.validate_local_path!(path))
+
+      %{phoenix_endpoint: endpoint} ->
+        static_url(endpoint, path)
     end
   end
 
@@ -684,13 +687,13 @@ defmodule Phoenix.VerifiedRoutes do
 
   def static_path(%Plug.Conn{private: private}, path) do
     case private do
-      %{phoenix_static_url: _} -> path
+      %{phoenix_static_url: _} -> Phoenix.URL.validate_local_path!(path)
       %{phoenix_endpoint: endpoint} -> endpoint.static_path(path)
     end
   end
 
   def static_path(%URI{} = uri, path) do
-    (uri.path || "") <> path
+    (uri.path || "") <> Phoenix.URL.validate_local_path!(path)
   end
 
   def static_path(%_{endpoint: endpoint}, path) do

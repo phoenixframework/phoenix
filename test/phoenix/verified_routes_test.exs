@@ -459,6 +459,66 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/ø" == "/%C3%B8"
   end
 
+  describe "static path validation" do
+    @unsafe_static_paths [
+      "/\t/attacker.example/p.js",
+      "/\n/attacker.example/p.js",
+      "/\r/attacker.example/p.js",
+      "/\n\t/attacker.example/p.js",
+      "/%09/attacker.example/p.js",
+      "/\\attacker.example/p.js"
+    ]
+
+    test "static_path/2 validates the path when phoenix_static_url is set" do
+      conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), "https://cdn.example")
+
+      assert Phoenix.VerifiedRoutes.static_path(conn, "/images/foo.png") == "/images/foo.png"
+
+      assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
+        Phoenix.VerifiedRoutes.static_path(conn, "//attacker.example/p.js")
+      end
+
+      for path <- @unsafe_static_paths do
+        assert_raise ArgumentError, ~r/unsafe characters/, fn ->
+          Phoenix.VerifiedRoutes.static_path(conn, path)
+        end
+      end
+    end
+
+    test "static_url/2 validates the path when phoenix_static_url is set" do
+      conn = Phoenix.Controller.put_static_url(conn_with_endpoint(), "https://cdn.example")
+
+      assert Phoenix.VerifiedRoutes.static_url(conn, "/images/foo.png") ==
+               "https://cdn.example/images/foo.png"
+
+      assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
+        Phoenix.VerifiedRoutes.static_url(conn, "//attacker.example/p.js")
+      end
+
+      for path <- @unsafe_static_paths do
+        assert_raise ArgumentError, ~r/unsafe characters/, fn ->
+          Phoenix.VerifiedRoutes.static_url(conn, path)
+        end
+      end
+    end
+
+    test "static_path/2 validates the path for a %URI{} context" do
+      uri = uri_with_script_name()
+
+      assert Phoenix.VerifiedRoutes.static_path(uri, "/images/foo.png") == "/api/images/foo.png"
+
+      assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
+        Phoenix.VerifiedRoutes.static_path(uri, "//attacker.example/p.js")
+      end
+
+      for path <- @unsafe_static_paths do
+        assert_raise ArgumentError, ~r/unsafe characters/, fn ->
+          Phoenix.VerifiedRoutes.static_path(uri, path)
+        end
+      end
+    end
+  end
+
   describe "with static path" do
     @endpoint StaticPath
     @router Router
@@ -697,12 +757,14 @@ defmodule Phoenix.VerifiedRoutesTest do
     end
 
     test "raises when :router is not a literal module" do
-      assert_raise ArgumentError, ~r/:router option in VerifiedRoutes must be a literal module/, fn ->
-        defmodule DynamicRouter do
-          use Phoenix.VerifiedRoutes,
-            router: Module.concat(["My", "Router"])
-        end
-      end
+      assert_raise ArgumentError,
+                   ~r/:router option in VerifiedRoutes must be a literal module/,
+                   fn ->
+                     defmodule DynamicRouter do
+                       use Phoenix.VerifiedRoutes,
+                         router: Module.concat(["My", "Router"])
+                     end
+                   end
     after
       :code.purge(__MODULE__.DynamicRouter)
       :code.delete(__MODULE__.DynamicRouter)
