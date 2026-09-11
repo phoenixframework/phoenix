@@ -366,7 +366,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     static_url_config = endpoint.config(:static_url) || url_config
 
     struct_url = build_url(endpoint, url_config)
-    host = Phoenix.Endpoint.host_to_binary(url_config[:host])
+    host = host_to_binary(url_config[:host])
     path = empty_string_if_root(url_config[:path] || "/")
     script_name = String.split(path, "/", trim: true)
 
@@ -399,7 +399,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       end
 
     scheme = url[:scheme] || scheme
-    host = Phoenix.Endpoint.host_to_binary(url[:host])
+    host = host_to_binary(url[:host])
     port = port_to_integer(url[:port] || port)
 
     if host =~ ~r"[^:]:\d" do
@@ -481,4 +481,9 @@ defmodule Phoenix.Endpoint.Supervisor do
       System.cmd(cmd, args)
     end
   end
+
+  def host_to_binary(nil), do: "localhost"
+  # TODO: Remove this once {:system, env_var} deprecation is removed
+  def host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
+  def host_to_binary(host), do: host
 end
