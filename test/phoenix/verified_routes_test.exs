@@ -262,11 +262,48 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert unverified_path(@endpoint, @router, "/posts", a: "b") == "/posts?a=b"
   end
 
+  test "unverified_path validates the path" do
+    assert unverified_path(@endpoint, @router, "") == ""
+
+    for path <- ["//invalid/x", "@invalid/x", "invalid/x"] do
+      assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
+        unverified_path(@endpoint, @router, path)
+      end
+    end
+
+    for path <- ["/\t/invalid/x", "/\n/invalid/x", "/\\invalid/x"] do
+      assert_raise ArgumentError, ~r/unsafe characters/, fn ->
+        unverified_path(@endpoint, @router, path)
+      end
+    end
+  end
+
   test "unverified_url" do
     assert unverified_url(conn_with_script_name(), "/posts") == "https://example.com/posts"
     assert unverified_url(@endpoint, "/posts") == "https://example.com/posts"
     assert unverified_url(@endpoint, "/posts", %{}) == "https://example.com/posts"
     assert unverified_url(@endpoint, "/posts", a: "b") == "https://example.com/posts?a=b"
+  end
+
+  test "unverified_url validates the path" do
+    # "" is how the router helpers ask for the endpoint url itself
+    assert unverified_url(@endpoint, "") == "https://example.com"
+    assert unverified_url(@endpoint, "", a: "b") == "https://example.com?a=b"
+
+    # a path that does not start with / lands in the authority instead
+    for path <- ["@invalid/landing", ".invalid/x", "invalid/x"] do
+      assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
+        unverified_url(@endpoint, path)
+      end
+    end
+
+    assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
+      unverified_url(%URI{scheme: "https", host: "example.com"}, "@invalid/landing")
+    end
+
+    assert_raise ArgumentError, ~r/unsafe characters/, fn ->
+      unverified_url(@endpoint, "/\n/invalid/x")
+    end
   end
 
   test "~p raises on leftover sigil" do
