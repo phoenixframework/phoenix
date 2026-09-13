@@ -356,6 +356,19 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
       Endpoint.static_path("//invalid_path")
     end
+
+    # characters a browser's URL parser strips, turning the path scheme-relative
+    for unsafe <- [
+          "/\t/example.com",
+          "/%09/example.com",
+          "/\n/example.com",
+          "/\r/example.com",
+          "/\n\t/example.com"
+        ] do
+      assert_raise ArgumentError, ~r/unsafe characters/, fn ->
+        Endpoint.static_path(unsafe)
+      end
+    end
   end
 
   test "static_integrity/1 validates paths are local/safe" do
@@ -368,6 +381,19 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
     assert_raise ArgumentError, ~r/expected a path starting with a single/, fn ->
       Endpoint.static_integrity("//invalid_path")
+    end
+
+    # characters a browser's URL parser strips, turning the path scheme-relative
+    for unsafe <- [
+          "/\t/example.com",
+          "/%09/example.com",
+          "/\n/example.com",
+          "/\r/example.com",
+          "/\n\t/example.com"
+        ] do
+      assert_raise ArgumentError, ~r/unsafe characters/, fn ->
+        Endpoint.static_integrity(unsafe)
+      end
     end
   end
 

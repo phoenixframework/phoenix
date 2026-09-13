@@ -283,26 +283,8 @@ defmodule Phoenix.Endpoint.Supervisor do
   The result is wrapped in a `{:cache | :nocache, value}` tuple so
   the `Phoenix.Config` layer knows how to cache it.
   """
-  @invalid_local_url_chars ["\\"]
-
-  def static_lookup(_endpoint, "//" <> _ = path) do
-    raise_invalid_path(path)
-  end
-
-  def static_lookup(_endpoint, "/" <> _ = path) do
-    if String.contains?(path, @invalid_local_url_chars) do
-      raise ArgumentError, "unsafe characters detected for path #{inspect(path)}"
-    else
-      {:nocache, {path, nil}}
-    end
-  end
-
-  def static_lookup(_endpoint, path) when is_binary(path) do
-    raise_invalid_path(path)
-  end
-
-  defp raise_invalid_path(path) do
-    raise ArgumentError, "expected a path starting with a single / but got #{inspect(path)}"
+  def static_lookup(_endpoint, path) do
+    {:nocache, {Phoenix.URL.validate_local_path!(path), nil}}
   end
 
   # TODO: Remove the first function clause once {:system, env_var} tuples are removed
