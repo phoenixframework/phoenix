@@ -17,6 +17,7 @@ defmodule Phoenix.Router.RoutingTest do
     def options(conn, _params), do: text(conn, "users options")
     def connect(conn, _params), do: text(conn, "users connect")
     def trace(conn, _params), do: text(conn, "users trace")
+    def query(conn, _params), do: text(conn, "users query")
     def not_found(conn, _params), do: text(put_status(conn, :not_found), "not found")
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
     def move(conn, _params), do: text(conn, "users move")
@@ -56,6 +57,7 @@ defmodule Phoenix.Router.RoutingTest do
     trace("/trace", UserController, :trace)
     options "/options", UserController, :options
     connect "/connect", UserController, :connect
+    query "/query", UserController, :query
     match :move, "/move", UserController, :move
     match :*, "/any", UserController, :any
 
@@ -183,6 +185,12 @@ defmodule Phoenix.Router.RoutingTest do
     conn = call(Router, :trace, "/trace")
     assert conn.status == 200
     assert conn.resp_body == "users trace"
+  end
+
+  test "query to custom action" do
+    conn = call(Router, :query, "/query")
+    assert conn.status == 200
+    assert conn.resp_body == "users query"
   end
 
   test "splat arg with preceding named parameter to files/:user_name/*path" do
