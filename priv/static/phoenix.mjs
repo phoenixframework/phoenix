@@ -518,12 +518,21 @@ var Ajax = class {
       body
     };
     let controller = null;
+    let timeoutId = null;
     if (timeout) {
       controller = new AbortController();
-      const _timeoutId = setTimeout(() => controller.abort(), timeout);
+      timeoutId = setTimeout(() => controller.abort(), timeout);
       options.signal = controller.signal;
     }
-    global.fetch(endPoint, options).then((response) => response.text()).then((data) => this.parseJSON(data)).then((data) => callback && callback(data)).catch((err) => {
+    global.fetch(endPoint, options).then((response) => response.text()).then((data) => this.parseJSON(data)).then((data) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      callback && callback(data);
+    }).catch((err) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       if (err.name === "AbortError" && ontimeout) {
         ontimeout();
       } else {
