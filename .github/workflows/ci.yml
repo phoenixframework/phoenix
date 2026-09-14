@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   mix_test:
-    name: mix test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    name: mix test (Elixir ${{matrix.elixir}} | OTP ${{matrix.otp}})
 
     env:
       MIX_ENV: test
@@ -72,7 +72,7 @@ jobs:
         if: ${{ matrix.lint }}
 
   installer_test:
-    name: installer test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    name: installer test (Elixir ${{matrix.elixir}} | OTP ${{matrix.otp}})
 
     env:
       MIX_ENV: test
@@ -223,14 +223,16 @@ jobs:
         run: mix docs --warnings-as-errors
 
   integration-test-elixir:
-    name: integration test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
+    name: integration test [${{ matrix.service == 'none' && 'sqlite3 + no-db' || matrix.service }}] (Elixir ${{ matrix.versions.elixir }} | OTP ${{ matrix.versions.otp }})
 
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     strategy:
+      fail-fast: false
       matrix:
-        include:
+        service: [postgresql, mysql, mssql, none]
+        versions:
           - elixir: "1.18.4"
             otp: "27.3.4.3"
 
@@ -247,42 +249,6 @@ jobs:
       MIX_OS_DEPS_COMPILE_PARTITION_COUNT: 2
       MAKEFLAGS: "-j2"
 
-    services:
-      postgres:
-        image: postgres:18
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 10
-      mysql:
-        image: mysql:26
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-        options: >-
-          --health-cmd "mysqladmin ping -h localhost"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 10
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2019-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: some!Password
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -C -Q 'SELECT 1' 2>/dev/null || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' 2>/dev/null"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 25
-
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -294,11 +260,16 @@ jobs:
           mkdir -p installer/tmp
           sudo mount -t tmpfs -o size=4G,uid=$(id -u),gid=$(id -g) tmpfs installer/tmp
 
+      - name: Start database container (${{ matrix.service }})
+        if: matrix.service != 'none'
+        run: |
+          docker compose -f integration_test/docker-compose.yml up -d --wait ${{ matrix.service }}
+
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ matrix.versions.elixir }}
+          otp-version: ${{ matrix.versions.otp }}
 
       - name: Restore deps and _build cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -306,9 +277,9 @@ jobs:
           path: |
             integration_test/deps
             integration_test/_build
-          key: integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('integration_test/mix.lock') }}
+          key: integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-${{ hashFiles('integration_test/mix.lock') }}
           restore-keys: |
-            integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+            integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}
 
       - name: Fetch dependencies
         working-directory: integration_test
@@ -323,6 +294,59 @@ jobs:
       - name: Run integration tests
         working-directory: integration_test
         run: |
-          mix test --include database \
+          if [ "${{ matrix.service }}" = "none" ]; then
+            FLAGS="--include database:sqlite3"
+          else
+            FLAGS="--include database:${{ matrix.service }} --only database:${{ matrix.service }}"
+          fi
+
+          mix test $FLAGS \
             --formatter ExUnit.CLIFormatter \
             --formatter Phoenix.Integration.SummaryFormatter
+        env:
+          PHX_TEST_SERVICE: ${{ matrix.service }}
+          PHX_ELIXIR_VERSION: ${{ matrix.versions.elixir }}
+          PHX_OTP_VERSION: ${{ matrix.versions.otp }}
+          PHX_INTEGRATION_SUMMARY_JSON: ${{ runner.temp }}/summary-${{ matrix.service }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}.json
+
+      - name: Upload summary artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: summary-${{ matrix.service }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}
+          path: ${{ runner.temp }}/summary-${{ matrix.service }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}.json
+          retention-days: 1
+          compression-level: 0
+          overwrite: true
+          if-no-files-found: warn
+
+  integration-test-summary:
+    name: integration test results
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    needs: integration-test-elixir
+    if: always()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: "1.20.4"
+          otp-version: "29.0.5"
+
+      - name: Download summary artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: summary-*
+          merge-multiple: true
+          path: tmp/summaries
+
+      - name: Aggregate test summaries
+        run: elixir integration_test/aggregate_summary.exs tmp/summaries
+        env:
+          MATRIX_RESULT: ${{ needs.integration-test-elixir.result }}
