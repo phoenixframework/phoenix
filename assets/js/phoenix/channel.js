@@ -88,6 +88,25 @@ export default class Channel {
   }
 
   /**
+   * Adopt the channel
+   * @param {integer} timeout
+   * @returns {Push}
+   */
+  adopt(token, timeout = this.timeout){
+    if(this.joinedOnce){
+      throw new Error("Cannot adopt a joined channel. 'adopt' or 'join' can only be called a single time per channel instance")
+    } else {
+      // TODO: this is ugly
+      this.joinPush.event = CHANNEL_EVENTS.adopt
+      this.joinPush.payload = () => ({ join_payload: this.params(), token: token })
+      this.timeout = timeout
+      this.joinedOnce = true
+      this.rejoin()
+      return this.joinPush;
+    }
+  }
+
+  /**
    * Hook into channel close
    * @param {Function} callback
    */
