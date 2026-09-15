@@ -1064,6 +1064,20 @@ defmodule Phoenix.Endpoint do
     * `:crypto` - options for verifying and signing the token, accepted
       by `Phoenix.Token`. By default tokens are valid for 2 weeks
 
+  > #### Long polling and resource exhaustion {: .warning}
+  >
+  > The long polling transport opens up a process in the cluster that stays
+  > alive, by default, for `:window_ms` times 1.5 (15 seconds) after its last
+  > poll. Because a session is created on demand for every request, an attacker
+  > can use this to cheaply spawn hundreds of thousands of processes on a single
+  > node, potentially approaching Erlang's default process limit of roughly one
+  > million. We recommend rate limiting long polling requests, either with a rate
+  > limiter such as [Hammer](https://hexdocs.pm/hammer) or, even better, at the
+  > load balancer and infrastructure level.
+  >
+  > The socket `c:Phoenix.Socket.connect/3` callback is the proper way to perform
+  > such rate limiting.
+
   """
   defmacro socket(path, module, opts \\ []) do
     module = Macro.expand(module, %{__CALLER__ | function: {:socket_dispatch, 2}})
