@@ -59,10 +59,6 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(_), do: nil
   end
 
-  defmodule ServerEndpoint do
-    def __sockets__(), do: []
-  end
-
   setup_all do
     # TODO: Remove this once {:system, env_var} tuples are removed (Phoenix 2.0)
     System.put_env("PHOENIX_PORT", "8080")
@@ -83,76 +79,84 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     :ok
   end
 
-  defp persistent!(endpoint), do: :persistent_term.get({Phoenix.Endpoint, endpoint})
+  describe "url configuration" do
+    defp persistent!(endpoint), do: :persistent_term.get({Phoenix.Endpoint, endpoint})
 
-  test "generates the static url based on the static host configuration" do
-    assert persistent!(StaticURLEndpoint).static_url == "http://static.example.com"
+    test "generates url" do
+      assert persistent!(URLEndpoint).url == "random://example.com:678"
+      assert persistent!(HTTPEndpoint).url == "http://example.com"
+      assert persistent!(HTTPSEndpoint).url == "https://example.com"
+      assert persistent!(HTTPEnvVarEndpoint).url == "http://example.org:8080"
+    end
+
+    test "defaults host to localhost when omitted, nil, or unset" do
+      assert persistent!(HTTPUnsetEnvVarEndpoint).url == "http://localhost"
+      assert persistent!(HTTPUnsetEnvVarEndpoint).host == "localhost"
+      assert persistent!(HTTPNilHostEndpoint).url == "http://localhost"
+      assert persistent!(HTTPNilHostEndpoint).host == "localhost"
+      assert persistent!(StaticURLEndpoint).url == "http://localhost"
+      assert persistent!(StaticURLEndpoint).host == "localhost"
+    end
+
+    test "generates the static url based on the static host configuration" do
+      assert persistent!(StaticURLEndpoint).static_url == "http://static.example.com"
+    end
+
+    test "static url fallbacks to url when there is no configuration for static_url" do
+      assert persistent!(URLEndpoint).static_url == "random://example.com:678"
+    end
+
+    test "static_path/2 returns file's path with lookup cache" do
+      assert {:nocache, {"/phoenix.png", nil}} =
+               Supervisor.static_lookup(HTTPEndpoint, "/phoenix.png")
+
+      assert {:nocache, {"/images/unknown.png", nil}} =
+               Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
+    end
   end
 
-  test "static url fallbacks to url when there is no configuration for static_url" do
-    assert persistent!(URLEndpoint).static_url == "random://example.com:678"
-  end
+  describe "server configuration" do
+    defmodule ServerEndpoint do
+      def __sockets__(), do: []
+    end
 
-  test "generates url" do
-    assert persistent!(URLEndpoint).url == "random://example.com:678"
-    assert persistent!(HTTPEndpoint).url == "http://example.com"
-    assert persistent!(HTTPSEndpoint).url == "https://example.com"
-    assert persistent!(HTTPEnvVarEndpoint).url == "http://example.org:8080"
-  end
+    import ExUnit.CaptureLog
 
-  test "defaults host to localhost when omitted, nil, or unset" do
-    assert persistent!(HTTPUnsetEnvVarEndpoint).url == "http://localhost"
-    assert persistent!(HTTPUnsetEnvVarEndpoint).host == "localhost"
-    assert persistent!(HTTPNilHostEndpoint).url == "http://localhost"
-    assert persistent!(HTTPNilHostEndpoint).host == "localhost"
-    assert persistent!(StaticURLEndpoint).url == "http://localhost"
-    assert persistent!(StaticURLEndpoint).host == "localhost"
-  end
+    test "logs info if :http or :https configuration is set but not :server when running in release" do
+      # simulate running inside release
+      System.put_env("RELEASE_NAME", "phoenix-test")
+      Application.put_env(:phoenix, ServerEndpoint, server: false, http: [], https: [])
 
-  test "static_path/2 returns file's path with lookup cache" do
-    assert {:nocache, {"/phoenix.png", nil}} =
-             Supervisor.static_lookup(HTTPEndpoint, "/phoenix.png")
+      assert capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-    assert {:nocache, {"/images/unknown.png", nil}} =
-             Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
-  end
+      Application.put_env(:phoenix, ServerEndpoint, server: false, http: [])
 
-  import ExUnit.CaptureLog
+      assert capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-  test "logs info if :http or :https configuration is set but not :server when running in release" do
-    # simulate running inside release
-    System.put_env("RELEASE_NAME", "phoenix-test")
-    Application.put_env(:phoenix, ServerEndpoint, server: false, http: [], https: [])
+      Application.put_env(:phoenix, ServerEndpoint, server: false, https: [])
 
-    assert capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
+      assert capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-    Application.put_env(:phoenix, ServerEndpoint, server: false, http: [])
+      Application.put_env(:phoenix, ServerEndpoint, server: false)
 
-    assert capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
+      refute capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-    Application.put_env(:phoenix, ServerEndpoint, server: false, https: [])
+      Application.put_env(:phoenix, ServerEndpoint, server: true)
 
-    assert capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
+      refute capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-    Application.put_env(:phoenix, ServerEndpoint, server: false)
-
-    refute capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
-
-    Application.put_env(:phoenix, ServerEndpoint, server: true)
-
-    refute capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
-
-    Application.delete_env(:phoenix, ServerEndpoint)
+      Application.delete_env(:phoenix, ServerEndpoint)
+    end
   end
 
   describe "watchers" do
