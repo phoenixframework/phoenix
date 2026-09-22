@@ -64,8 +64,6 @@ defmodule Phoenix.Endpoint.SupervisorTest do
   end
 
   setup_all do
-    Application.put_env(:phoenix, SupervisorApp.Endpoint, custom: true)
-
     # TODO: Remove this once {:system, env_var} tuples are removed (Phoenix 2.0)
     System.put_env("PHOENIX_PORT", "8080")
     System.put_env("PHOENIX_HOST", "example.org")
