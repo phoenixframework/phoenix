@@ -2,7 +2,7 @@ import {jest} from "@jest/globals"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 import {encode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
-import {AUTH_TOKEN_PREFIX, SOCKET_STATES} from "../js/phoenix/constants"
+import {AUTH_TOKEN_PREFIX, MAX_UNUSABLE_PRIMARY_CONNECTIONS, SOCKET_STATES} from "../js/phoenix/constants"
 
 let socket
 
@@ -85,6 +85,24 @@ describe("with transports", function (){
     })
 
     describe("longPollFallbackMs", function (){
+      // a transport that opens and then dies again, optionally delivering a message
+      // before it does, like a middlebox that kills established websockets
+      const dyingTransport = (connections, message) => class DyingTransport {
+        constructor(){
+          this.readyState = SOCKET_STATES.open
+          this.bufferedAmount = 0
+          connections.push(this)
+          setTimeout(() => this.onopen(), 0)
+          if(message){ setTimeout(() => this.onmessage({data: encode(message)}), 5) }
+          setTimeout(() => {
+            this.readyState = SOCKET_STATES.closed
+            this.onclose({code: 1006})
+          }, 10)
+        }
+        close(){ this.readyState = SOCKET_STATES.closed }
+        send(){}
+      }
+
       it("falls back to longpoll when set after primary transport failure", function (done){
         let mockServer
         socket = new Socket("/socket", {longPollFallbackMs: 20})
@@ -100,6 +118,56 @@ describe("with transports", function (){
           })
           socket.connect()
         })
+      })
+
+      it("falls back to longpoll when the primary transport keeps dying after opening", function (){
+        jest.useFakeTimers()
+
+        try {
+          const connections = []
+          socket = new Socket("/socket", {
+            transport: dyingTransport(connections),
+            longPollFallbackMs: 2500,
+            reconnectAfterMs: () => 10
+          })
+          const replaceSpy = jest.spyOn(socket, "replaceTransport")
+
+          socket.connect()
+          jest.advanceTimersByTime(200)
+
+          expect(connections.length).toBe(MAX_UNUSABLE_PRIMARY_CONNECTIONS)
+          expect(replaceSpy).toHaveBeenCalledWith(LongPoll)
+          expect(socket.transport).toBe(LongPoll)
+        } finally {
+          jest.useRealTimers()
+        }
+      })
+
+      it("does not fall back when the primary transport delivers messages", function (){
+        jest.useFakeTimers()
+
+        try {
+          const connections = []
+          const transport = dyingTransport(connections, {
+            topic: "phoenix", event: "phx_reply", payload: {status: "ok", response: {}}, ref: "1"
+          })
+          socket = new Socket("/socket", {
+            transport: transport,
+            longPollFallbackMs: 2500,
+            reconnectAfterMs: () => 10
+          })
+          const replaceSpy = jest.spyOn(socket, "replaceTransport")
+
+          socket.connect()
+          jest.advanceTimersByTime(200)
+
+          expect(connections.length).toBeGreaterThan(MAX_UNUSABLE_PRIMARY_CONNECTIONS)
+          expect(replaceSpy).not.toHaveBeenCalled()
+          expect(socket.transport).toBe(transport)
+          expect(socket.unusablePrimaryConnections).toBe(0)
+        } finally {
+          jest.useRealTimers()
+        }
       })
     })
   })
