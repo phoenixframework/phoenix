@@ -57,12 +57,26 @@ defmodule Phoenix.Socket.TransportTest do
   ## Check origin
 
   describe "check_origin/4" do
+    Application.put_env(:phoenix, __MODULE__.NilHostEndpoint,
+      url: [host: nil],
+      secret_key_base: @secret_key_base
+    )
+
+    defmodule NilHostEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+    end
+
     defp check_origin(%Plug.Conn{} = conn, origin, opts) do
       conn = put_req_header(conn, "origin", origin)
       Transport.check_origin(conn, make_ref(), Endpoint, opts)
     end
 
-    defp check_origin(origin, opts), do: check_origin(conn(:get, "/"), origin, opts)
+    defp check_origin(endpoint, origin, opts) when is_atom(endpoint) do
+      conn = put_req_header(conn(:get, "/"), "origin", origin)
+      Transport.check_origin(conn, make_ref(), endpoint, opts)
+    end
+
+    defp check_origin(origin, opts), do: check_origin(Endpoint, origin, opts)
 
     test "does not check origin if disabled" do
       refute check_origin("/", check_origin: false).halted
@@ -71,6 +85,15 @@ defmodule Phoenix.Socket.TransportTest do
     test "checks origin against host" do
       refute check_origin("https://host.com/", check_origin: true).halted
       conn = check_origin("https://another.com/", check_origin: true)
+      assert conn.halted
+      assert conn.status == 403
+    end
+
+    test "checks origin falls back to localhost when endpoint host is nil" do
+      start_supervised!(NilHostEndpoint)
+
+      refute check_origin(NilHostEndpoint, "https://localhost/", check_origin: true).halted
+      conn = check_origin(NilHostEndpoint, "https://another.com/", check_origin: true)
       assert conn.halted
       assert conn.status == 403
     end

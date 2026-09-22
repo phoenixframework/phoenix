@@ -18,11 +18,29 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(_), do: nil
   end
 
+  # TODO: Remove this once {:system, env_var} tuples are removed (Phoenix 2.0)
   defmodule HTTPEnvVarEndpoint do
     def config(:otp_app), do: :phoenix
     def config(:https), do: false
     def config(:http), do: [port: {:system, "PHOENIX_PORT"}]
     def config(:url), do: [host: {:system, "PHOENIX_HOST"}]
+    def config(_), do: nil
+  end
+
+  # TODO: Remove this once {:system, env_var} tuples are removed (Phoenix 2.0)
+  defmodule HTTPUnsetEnvVarEndpoint do
+    def config(:otp_app), do: :phoenix
+    def config(:https), do: false
+    def config(:http), do: [port: 80]
+    def config(:url), do: [host: {:system, "UNSET_PHOENIX_HOST"}]
+    def config(_), do: nil
+  end
+
+  defmodule HTTPNilHostEndpoint do
+    def config(:otp_app), do: :phoenix
+    def config(:https), do: false
+    def config(:http), do: [port: 80]
+    def config(:url), do: [host: nil]
     def config(_), do: nil
   end
 
@@ -47,10 +65,21 @@ defmodule Phoenix.Endpoint.SupervisorTest do
 
   setup_all do
     Application.put_env(:phoenix, SupervisorApp.Endpoint, custom: true)
+
+    # TODO: Remove this once {:system, env_var} tuples are removed (Phoenix 2.0)
     System.put_env("PHOENIX_PORT", "8080")
     System.put_env("PHOENIX_HOST", "example.org")
+    System.delete_env("UNSET_PHOENIX_HOST")
 
-    [HTTPSEndpoint, HTTPEndpoint, HTTPEnvVarEndpoint, URLEndpoint, StaticURLEndpoint]
+    [
+      HTTPSEndpoint,
+      HTTPEndpoint,
+      HTTPEnvVarEndpoint,
+      HTTPUnsetEnvVarEndpoint,
+      HTTPNilHostEndpoint,
+      URLEndpoint,
+      StaticURLEndpoint
+    ]
     |> Enum.each(&Supervisor.warmup/1)
 
     :ok
@@ -71,6 +100,15 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     assert persistent!(HTTPEndpoint).url == "http://example.com"
     assert persistent!(HTTPSEndpoint).url == "https://example.com"
     assert persistent!(HTTPEnvVarEndpoint).url == "http://example.org:8080"
+  end
+
+  test "defaults host to localhost when omitted, nil, or unset" do
+    assert persistent!(HTTPUnsetEnvVarEndpoint).url == "http://localhost"
+    assert persistent!(HTTPUnsetEnvVarEndpoint).host == "localhost"
+    assert persistent!(HTTPNilHostEndpoint).url == "http://localhost"
+    assert persistent!(HTTPNilHostEndpoint).host == "localhost"
+    assert persistent!(StaticURLEndpoint).url == "http://localhost"
+    assert persistent!(StaticURLEndpoint).host == "localhost"
   end
 
   test "static_path/2 returns file's path with lookup cache" do
