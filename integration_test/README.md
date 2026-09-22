@@ -21,6 +21,8 @@ To test against different Elixir or Erlang/OTP versions:
 
 Find valid image tags (Ubuntu-based, `hexpm/elixir` repo) on [bob.hex.pm](https://bob.hex.pm/docker?repo=hexpm/elixir&os=ubuntu&os_version=noble-&sort=elixir_version,erlang_version,os_version).
 
+All databases (PostgreSQL, MySQL, and MSSQL) are started by default. Because the official MSSQL image supports only `amd64`, the MSSQL service and tests are automatically skipped on other platforms (e.g., `arm64`).
+
 When running tests repeatedly, backing database containers remain warm in the background for instant re-runs. To tear down the database services when finished:
 
     $ ./docker.sh down

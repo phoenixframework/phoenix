@@ -7,6 +7,17 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     end
   end
 
+  # The official Microsoft SQL Server image only supports the amd64 architecture.
+  # Returns a skip reason string on unsupported architectures (e.g. arm64 / Apple Silicon),
+  # or `nil` on supported architectures so tests execute normally.
+  def reason_if_mssql_unsupported do
+    [arch | _] = :erlang.system_info(:system_architecture) |> to_string() |> String.split("-")
+
+    if arch not in ["x86_64", "amd64"] do
+      "MSSQL is not supported on #{arch}"
+    end
+  end
+
   # NOTE: Keep `app_name` short (as of writing, <= 10 characters excluding underscores,
   # e.g. "pg_auth_live", "umb_a_html"). App names are converted to module names, and long names
   # can cause lines in generated files to exceed Elixir's default 98-character formatter limit

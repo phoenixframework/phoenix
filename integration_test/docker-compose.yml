@@ -28,6 +28,8 @@ services:
       retries: 1
 
   mssql:
+    profiles:
+      - mssql
     image: mcr.microsoft.com/mssql/server:2019-latest
     environment:
       ACCEPT_EULA: "Y"
@@ -69,6 +71,7 @@ services:
         condition: service_healthy
       mssql:
         condition: service_healthy
+        required: false
 
 volumes:
   build_cache:

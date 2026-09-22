@@ -2,7 +2,7 @@ defmodule Phoenix.Integration.CodeGeneration.AppWithMSSQLAdapterHtmlTest do
   use Phoenix.Integration.CodeGeneratorCase, async: true
 
   describe "phx.gen.html" do
-    @tag database: :mssql
+    @tag database: :mssql, skip: reason_if_mssql_unsupported()
     test "has a passing test suite" do
       with_installer_tmp("app_with_mssql_adapter_html", fn tmp_dir ->
         {app_root_path, _} =
