@@ -260,7 +260,7 @@ defmodule Mix.Tasks.Phx.Gen.Cert do
       subject: rdn(common_name),
       subjectPublicKeyInfo:
         otp_subject_public_key_info(
-          algorithm: public_key_algorithm(algorithm: @rsaEncryption),
+          algorithm: public_key_algorithm(algorithm: @rsaEncryption, parameters: :NULL),
           subjectPublicKey: public_key
         ),
       extensions: extensions(public_key, hostnames)
