@@ -1,6 +1,7 @@
 services:
   postgresql:
     image: postgres:18
+    command: -c max_connections=300
     environment:
       POSTGRES_PASSWORD: postgres
     tmpfs:
@@ -15,6 +16,7 @@ services:
 
   mysql:
     image: mysql:26
+    command: --max-connections=300
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     tmpfs:
