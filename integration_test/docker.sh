@@ -26,4 +26,23 @@ HALF_CORES=$(( CORES > 2 ? CORES / 2 : 2 ))
 export MIX_OS_DEPS_COMPILE_PARTITION_COUNT="${MIX_OS_DEPS_COMPILE_PARTITION_COUNT:-$HALF_CORES}"
 export MAKEFLAGS="${MAKEFLAGS:--j$MIX_OS_DEPS_COMPILE_PARTITION_COUNT}"
 
-exec docker compose run --build --rm runner "$@"
+# Record test timings and timeline summary to timestamped directory
+TIMESTAMP=$(date -u +%Y%m%d_%H%M%S)
+SUMMARY_DIR="tmp/summary_${TIMESTAMP}"
+SUMMARY_JSON="${SUMMARY_DIR}/summary.json"
+SUMMARY_MD="${SUMMARY_DIR}/summary.md"
+
+TEST_EXIT=0
+docker compose run --build --rm \
+  -e PHX_INTEGRATION_SUMMARY_JSON="$SUMMARY_JSON" \
+  runner \
+  --formatter ExUnit.CLIFormatter \
+  --formatter Phoenix.Integration.SummaryFormatter \
+  "${@:---include=database}" || TEST_EXIT=$?
+
+if [ -f "$SUMMARY_JSON" ]; then
+  docker compose run --no-deps --rm -T --entrypoint elixir runner aggregate_summary.exs "$SUMMARY_DIR" > "$SUMMARY_MD" || true
+  echo "Saved summary report to $SUMMARY_MD"
+fi
+
+exit $TEST_EXIT
