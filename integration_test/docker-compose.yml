@@ -8,10 +8,12 @@ services:
     tmpfs:
       - /var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 2s
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      start_period: 60s
+      start_interval: 2s
+      interval: 120s
       timeout: 3s
-      retries: 10
+      retries: 1
 
   mysql:
     image: mysql:26
@@ -22,10 +24,12 @@ services:
     tmpfs:
       - /var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
-      interval: 2s
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --protocol=TCP --silent"]
+      start_period: 60s
+      start_interval: 2s
+      interval: 120s
       timeout: 3s
-      retries: 10
+      retries: 1
 
   mssql:
     image: mcr.microsoft.com/mssql/server:2019-latest
@@ -38,6 +42,8 @@ services:
       - /var/opt/mssql
     healthcheck:
       test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -C -Q 'SELECT 1' 2>/dev/null || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -Q 'SELECT 1' 2>/dev/null"]
-      interval: 2s
+      start_period: 60s
+      start_interval: 2s
+      interval: 120s
       timeout: 3s
-      retries: 25
+      retries: 1
