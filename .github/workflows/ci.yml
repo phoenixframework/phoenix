@@ -236,6 +236,7 @@ jobs:
           - elixir: "1.18.4"
             otp: "27.3.4.3"
 
+          # keep version in sync with integration_test/.env
           - elixir: "1.20.4"
             otp: "29.0.5"
 
