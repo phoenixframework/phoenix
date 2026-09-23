@@ -1,8 +1,6 @@
 services:
   postgresql:
     image: postgres:18
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_PASSWORD: postgres
     tmpfs:
@@ -17,8 +15,6 @@ services:
 
   mysql:
     image: mysql:26
-    ports:
-      - "3306:3306"
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     tmpfs:
@@ -36,8 +32,6 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "some!Password"
-    ports:
-      - "1433:1433"
     tmpfs:
       - /var/opt/mssql
     healthcheck:

@@ -263,8 +263,9 @@ jobs:
 
       - name: Start database container (${{ matrix.service }})
         if: matrix.service != 'none'
+        working-directory: integration_test
         run: |
-          docker compose -f integration_test/docker-compose.yml up -d --wait ${{ matrix.service }}
+          docker compose -f docker-compose.yml -f docker-compose.ports.yml up -d --wait ${{ matrix.service }}
 
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1

@@ -46,13 +46,19 @@ To run all tests including databases:
 
     $ mix test --include database
 
-For convenience, there is also a `docker-compose.yml` file that allows for starting up all of the supported databases locally:
-
-    $ docker compose up -d
-
-Or start only a specific database (e.g. Postgres):
-
-    $ docker compose up -d postgres
+> [!NOTE]
+> **Running databases for host-native tests:**
+> `docker-compose.yml` does not publish database ports to the host by default. This avoids port collisions with local databases already running on your machine (e.g. PostgreSQL on 5432 or MySQL on 3306) and prevents exposing test databases with default credentials to the local network.
+>
+> When running tests directly on the host (`mix test`) rather than inside Docker (`./docker.sh`), include `docker-compose.ports.yml` to publish ports strictly to loopback (`127.0.0.1`):
+>
+> ```bash
+> # Start all databases with host ports published on 127.0.0.1
+> $ docker compose -f docker-compose.yml -f docker-compose.ports.yml up -d
+>
+> # Or start only a specific database (e.g. Postgres)
+> $ docker compose -f docker-compose.yml -f docker-compose.ports.yml up -d postgres
+> ```
 
 ## How tests are written
 
