@@ -143,7 +143,7 @@ defmodule Phoenix.Socket.Transport do
   returns `{:ok, state}`, `{:error, reason}` or `:error`.
   The state must be stored by the transport and returned
   in all future operations. When `{:error, reason}` is
-  returned, some transports - such as WebSockets - allow
+  returned, the WebSocket and long polling transports allow
   customizing the response based on `reason` via a custom
   `:error_handler`.
 
