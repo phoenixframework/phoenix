@@ -57,13 +57,18 @@ defmodule <%= inspect schema.module %>Token do
   The token is valid if it matches the value in the database and it has
   not expired (after @session_validity_in_days).
   """
-  def verify_session_token_query(token) do
+  def verify_session_token_query(token) do<%= if mongo_adapter? do %>
+    cutoff = DateTime.add(DateTime.utc_now(), -@session_validity_in_days * 86400, :second)
+    query =
+      from token in by_token_and_context_query(token, "session"),
+        where: token.inserted_at > ^cutoff
+<% else %>
     query =
       from token in by_token_and_context_query(token, "session"),
         join: <%= schema.singular %> in assoc(token, :<%= schema.singular %>),
         where: token.inserted_at > ago(@session_validity_in_days, "day"),
         select: {%{<%= schema.singular %> | authenticated_at: token.authenticated_at}, token.inserted_at}
-
+<% end %>
     {:ok, query}
   end
 
@@ -111,14 +116,17 @@ defmodule <%= inspect schema.module %>Token do
       {:ok, decoded_token} ->
         hashed_token = :crypto.hash(@hash_algorithm, decoded_token)
 
+<%= if mongo_adapter? do %>        cutoff = DateTime.add(DateTime.utc_now(), -@magic_link_validity_in_minutes * 60, :second)
         query =
+          from token in by_token_and_context_query(hashed_token, "login"),
+            where: token.inserted_at > ^cutoff
+<% else %>        query =
           from token in by_token_and_context_query(hashed_token, "login"),
             join: <%= schema.singular %> in assoc(token, :<%= schema.singular %>),
             where: token.inserted_at > ago(^@magic_link_validity_in_minutes, "minute"),
             where: token.sent_to == <%= schema.singular %>.email,
             select: {<%= schema.singular %>, token}
-
-        {:ok, query}
+<% end %>        {:ok, query}
 
       :error ->
         :error
@@ -141,11 +149,14 @@ defmodule <%= inspect schema.module %>Token do
       {:ok, decoded_token} ->
         hashed_token = :crypto.hash(@hash_algorithm, decoded_token)
 
+<%= if mongo_adapter? do %>        cutoff = DateTime.add(DateTime.utc_now(), -@change_email_validity_in_days * 86400, :second)
         query =
           from token in by_token_and_context_query(hashed_token, context),
+            where: token.inserted_at > ^cutoff
+<% else %>        query =
+          from token in by_token_and_context_query(hashed_token, context),
             where: token.inserted_at > ago(@change_email_validity_in_days, "day")
-
-        {:ok, query}
+<% end %>        {:ok, query}
 
       :error ->
         :error
