@@ -8,6 +8,7 @@ defmodule Phoenix.Transports.LongPoll do
   @max_poll_batch_size 100
   @connect_info_opts [:check_csrf]
   @token_header "x-phoenix-longpoll-token"
+  @topic_prefix "phx:lp:"
 
   import Plug.Conn
   alias Phoenix.Socket.{V1, V2, Transport}
@@ -24,6 +25,30 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   def init(opts), do: opts
+
+  @doc false
+  # A session token is bound to the mount that issued it by embedding this tag
+  # in the session's private topic. The topic is opaque to the rest of the
+  # transport -- it is only ever used as a pubsub topic -- so servers running an
+  # older Phoenix keep accepting tokens that carry a tag, which makes this safe
+  # to roll out to a mixed fleet.
+  #
+  # The tag must be stable across nodes and reboots, so it is derived
+  # exclusively from the compile-time identity of the mount.
+  def put_mount_tag(config, handler, path) do
+    tag =
+      :crypto.hash(:sha256, [
+        Atom.to_string(handler),
+        0,
+        path,
+        0,
+        Keyword.fetch!(config, :path)
+      ])
+      |> binary_part(0, 9)
+      |> Base.url_encode64(padding: false)
+
+    Keyword.put(config, :mount_tag, tag)
+  end
 
   def call(conn, {endpoint, handler, opts}) do
     conn
@@ -133,7 +158,9 @@ defmodule Phoenix.Transports.LongPoll do
 
   defp new_session(conn, endpoint, handler, opts) do
     priv_topic =
-      "phx:lp:" <>
+      @topic_prefix <>
+        Keyword.fetch!(opts, :mount_tag) <>
+        ":" <>
         Base.encode64(:crypto.strong_rand_bytes(16)) <>
         (System.system_time(:millisecond) |> Integer.to_string())
 
@@ -202,7 +229,8 @@ defmodule Phoenix.Transports.LongPoll do
   # by publishing a message in the encrypted private topic.
   defp resume_session(%Plug.Conn{} = conn, endpoint, opts) do
     with token when is_binary(token) <- fetch_token(conn),
-         {:ok, {:v1, id, pid, priv_topic}} <- verify_token(endpoint, token, opts) do
+         {:ok, {:v1, id, pid, priv_topic}} <- verify_token(endpoint, token, opts),
+         :ok <- check_mount(priv_topic, opts) do
       server_ref = server_ref(endpoint.config(:endpoint_id), id, pid, priv_topic)
 
       new_conn =
@@ -226,6 +254,20 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   ## Helpers
+
+  # Rejects a token that was issued at a different mount. The tag is separated
+  # from the random part by a ":", which the random part itself can never
+  # contain, so a topic without one is a token created before mount binding
+  # existed. Those are still accepted so that rolling deploys do not tear down
+  # live sessions; the clause can be dropped in a later release.
+  defp check_mount(@topic_prefix <> rest, opts) do
+    case :binary.split(rest, ":") do
+      [tag, _random] -> if tag == opts[:mount_tag], do: :ok, else: :error
+      [_legacy] -> :ok
+    end
+  end
+
+  defp check_mount(_priv_topic, _opts), do: :error
 
   defp server_ref(endpoint_id, id, pid, topic) when is_pid(pid) do
     cond do
