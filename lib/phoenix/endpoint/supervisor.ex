@@ -217,9 +217,16 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp server?(conf) when is_list(conf) do
-    Keyword.get_lazy(conf, :server, fn ->
-      Application.get_env(:phoenix, :serve_endpoints, false)
-    end)
+    serve_endpoints = Application.get_env(:phoenix, :serve_endpoints, false)
+    server = Keyword.get(conf, :server, serve_endpoints)
+
+    if not server and serve_endpoints,
+      do:
+        Logger.warning(
+          ":server is set to :false in your Phoenix.Endpoint configuration, so the server will not be started"
+        )
+
+    server
   end
 
   defp defaults(otp_app, module) do
