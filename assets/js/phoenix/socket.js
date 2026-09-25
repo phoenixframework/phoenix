@@ -236,8 +236,18 @@ export default class Socket {
     clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
     if(this.conn){
+      const wasOpen = this.isConnected()
+      // the old conn closes asynchronously, so detach its handlers to prevent its
+      // events from being handled as if they belonged to the new transport
+      this.conn.onopen = function (){ } // noop
+      this.conn.onerror = function (){ } // noop
+      this.conn.onmessage = function (){ } // noop
+      this.conn.onclose = function (){ } // noop
       this.conn.close()
       this.conn = null
+      this.clearHeartbeats()
+      // any in-flight pushes on the old conn are lost, so channels need to rejoin
+      if(wasOpen){ this.triggerChanError("connection_closed") }
     }
     this.transport = newTransport
   }
