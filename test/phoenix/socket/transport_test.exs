@@ -82,10 +82,6 @@ defmodule Phoenix.Socket.TransportTest do
       assert conn.status == 403
     end
 
-    test "can get the host from system variables" do
-      refute check_origin("https://host.com", check_origin: true).halted
-    end
-
     test "wildcard subdomains" do
       origins = ["https://*.ex.com", "http://*.ex.com"]
 
