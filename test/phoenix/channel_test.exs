@@ -4,6 +4,28 @@ defmodule Phoenix.Channel.ChannelTest do
   @pubsub __MODULE__.PubSub
   import Phoenix.Channel
 
+  defmodule ClusterAdapter do
+    # Sends what would be broadcast to other nodes to the test process
+    @behaviour Phoenix.PubSub.Adapter
+
+    def node_name(_adapter_name), do: node()
+
+    def child_spec(opts) do
+      test_pid = Keyword.fetch!(opts, :test_pid)
+      agent_opts = [name: opts[:adapter_name]]
+      %{id: __MODULE__, start: {Agent, :start_link, [fn -> test_pid end, agent_opts]}}
+    end
+
+    def broadcast(adapter_name, topic, message, dispatcher) do
+      send(Agent.get(adapter_name, & &1), {:cluster_broadcast, topic, message, dispatcher})
+      :ok
+    end
+
+    def direct_broadcast(adapter_name, _node_name, topic, message, dispatcher) do
+      broadcast(adapter_name, topic, message, dispatcher)
+    end
+  end
+
   setup_all do
     start_supervised! {Phoenix.PubSub, name: @pubsub, pool_size: 1}
     :ok
@@ -93,6 +115,39 @@ defmodule Phoenix.Channel.ChannelTest do
       payload: %{key: :val},
       topic: "sometopic"
     }
+  end
+
+  # TODO: Remove in Phoenix 1.10
+  test "broadcasts to other nodes with Phoenix.Channel.Server as dispatcher" do
+    pubsub = __MODULE__.ClusterPubSub
+    start_supervised!({Phoenix.PubSub, name: pubsub, adapter: ClusterAdapter, test_pid: self()})
+
+    socket = %Phoenix.Socket{
+      pubsub_server: pubsub,
+      topic: "sometopic",
+      channel_pid: spawn_link(fn -> :ok end),
+      joined: true
+    }
+
+    broadcast(socket, "event1", %{key: :val})
+
+    assert_receive {:cluster_broadcast, "sometopic", %Phoenix.Socket.Broadcast{event: "event1"},
+                    Phoenix.Channel.Server}
+
+    broadcast!(socket, "event2", %{key: :val})
+
+    assert_receive {:cluster_broadcast, "sometopic", %Phoenix.Socket.Broadcast{event: "event2"},
+                    Phoenix.Channel.Server}
+
+    broadcast_from(socket, "event3", %{key: :val})
+
+    assert_receive {:cluster_broadcast, "sometopic", %Phoenix.Socket.Broadcast{event: "event3"},
+                    Phoenix.Channel.Server}
+
+    broadcast_from!(socket, "event4", %{key: :val})
+
+    assert_receive {:cluster_broadcast, "sometopic", %Phoenix.Socket.Broadcast{event: "event4"},
+                    Phoenix.Channel.Server}
   end
 
   test "pushing to transport" do
