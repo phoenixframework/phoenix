@@ -1228,8 +1228,21 @@ var Phoenix = (() => {
       clearTimeout(this.fallbackTimer);
       this.reconnectTimer.reset();
       if (this.conn) {
+        const wasOpen = this.isConnected();
+        this.conn.onopen = function() {
+        };
+        this.conn.onerror = function() {
+        };
+        this.conn.onmessage = function() {
+        };
+        this.conn.onclose = function() {
+        };
         this.conn.close();
         this.conn = null;
+        this.clearHeartbeats();
+        if (wasOpen) {
+          this.triggerChanError("connection_closed");
+        }
       }
       this.transport = newTransport;
     }
