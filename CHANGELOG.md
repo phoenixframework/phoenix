@@ -29,6 +29,17 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience. This may also lead to errors on application boot if you were previously incorrectly setting compile time config at runtime.
 
+## v1.8.15 (2026-09-25)
+
+### Bug fixes
+
+* [phx.gen.cert] Fix certificate not being accepted by Chromium ([#6847](https://github.com/phoenixframework/phoenix/issues/6847))
+* [phoenix.js] Fix asynchronous transport close tearing down the replacement transport ([#6852](https://github.com/phoenixframework/phoenix/issues/6852))
+
+### Enhancements
+
+* [phx.new] Update Tailwind version to 4.3.3
+
 ## v1.8.14 (2026-09-14)
 
 ### Bug fixes
