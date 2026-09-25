@@ -101,6 +101,48 @@ describe("with transports", function (){
           socket.connect()
         })
       })
+
+      it("ignores the close of an open primary transport when falling back", function (done){
+        class StubWebSocket {
+          constructor(){ this.readyState = SOCKET_STATES.connecting }
+          send(){ }
+          close(){ this.readyState = SOCKET_STATES.closed }
+        }
+        window.sessionStorage.removeItem("phx:fallback:LongPoll")
+        socket = new Socket("/socket", {longPollFallbackMs: 20, transport: StubWebSocket})
+        const closeSpy = jest.fn()
+        socket.onClose(closeSpy)
+        const channel = socket.channel("topic")
+        channel.join()
+        const triggerSpy = jest.spyOn(channel, "trigger")
+
+        socket.connect()
+        const ws = socket.conn
+        ws.readyState = SOCKET_STATES.open
+        ws.onopen()
+        const reconnectSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
+
+        // the health check ping never gets a reply, so we fall back while the websocket is open
+        setTimeout(() => {
+          expect(socket.transport).toBe(LongPoll)
+          const longpoll = socket.conn
+          expect(longpoll).toBeInstanceOf(LongPoll)
+          expect(triggerSpy).toHaveBeenCalledWith("phx_error", {
+            source: "transport",
+            reason: "connection_closed"
+          })
+
+          // the websocket close event arrives after the longpoll transport was created
+          const longpollOnClose = longpoll.onclose
+          ws.onclose({code: 1000})
+
+          expect(closeSpy).not.toHaveBeenCalled()
+          expect(reconnectSpy).not.toHaveBeenCalled()
+          expect(socket.conn).toBe(longpoll)
+          expect(longpoll.onclose).toBe(longpollOnClose)
+          done()
+        }, 50)
+      })
     })
   })
 
