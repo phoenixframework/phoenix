@@ -740,7 +740,8 @@ defmodule Phoenix.Endpoint do
           [
             :window_ms,
             :pubsub_timeout_ms,
-            :crypto
+            :crypto,
+            :error_handler
           ]
       )
 
@@ -1063,6 +1064,25 @@ defmodule Phoenix.Endpoint do
 
     * `:crypto` - options for verifying and signing the token, accepted
       by `Phoenix.Token`. By default tokens are valid for 2 weeks
+
+    * `:error_handler` - custom error handler for connection errors.
+      If `c:Phoenix.Socket.connect/3` returns an `{:error, reason}` tuple,
+      the error handler will be called with the error reason. Long polling
+      responses always carry the status inside their JSON body, so unlike
+      the WebSocket handler this one does not receive the `Plug.Conn`.
+      It must be an MFA tuple that receives the error reason and returns an
+      integer or atom status accepted by `Plug.Conn.put_status/2`, other than
+      200, 204 and 410, which the long polling protocol uses itself.
+      Defaults to `:forbidden`. For example:
+
+          socket "/socket", MySocket,
+              longpoll: [
+                error_handler: {MySocket, :handle_longpoll_error, []}
+              ]
+
+      and a `{:error, :rate_limit}` return may be handled on `MySocket` as:
+
+          def handle_longpoll_error(:rate_limit), do: :too_many_requests
 
   > #### Long polling and resource exhaustion {: .warning}
   >

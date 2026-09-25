@@ -36,7 +36,11 @@ defmodule Phoenix.Integration.LongPollSocketTest do
 
     def connect(map) do
       %{endpoint: Endpoint, params: params, transport: :longpoll} = map
-      {:ok, {:params, params}}
+
+      case params do
+        %{"error" => _} -> {:error, :nope}
+        _ -> {:ok, {:params, params}}
+      end
     end
 
     def init({:params, _} = state) do
@@ -130,6 +134,11 @@ defmodule Phoenix.Integration.LongPollSocketTest do
           resp = poll(:get, "ws/longpoll", %{}, nil, %{"origin" => "http://notallowed.com"})
           assert resp.body["status"] == 403
         end)
+      end
+
+      test "refuses connects that return an error tuple with 403 by default" do
+        resp = poll(:get, "ws/longpoll", %{"error" => "true"})
+        assert resp.body["status"] == 403
       end
 
       test "returns params with sync request" do
