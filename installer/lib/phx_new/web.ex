@@ -25,7 +25,6 @@ defmodule Phx.New.Web do
      "phx_web/controllers/error_json.ex.eex": "lib/:web_app/controllers/error_json.ex",
      "#{@pre}/mix.exs.eex": "mix.exs",
      "#{@pre}/README.md.eex": "README.md",
-     "#{@pre}/gitignore.eex": ".gitignore",
      "#{@pre}/test/test_helper.exs.eex": "test/test_helper.exs",
      "phx_test/support/conn_case.ex.eex": "test/support/conn_case.ex",
      "phx_test/controllers/error_json_test.exs.eex": "test/:web_app/controllers/error_json_test.exs",

@@ -7,11 +7,11 @@
 # The directory Mix downloads your dependencies sources to.
 /deps/
 
-# Where 3rd-party dependencies like ExDoc output generated docs.
+# Where third-party dependencies like ExDoc output generated docs.
 /doc/
 
-# Ignore .fetch files in case you like to edit your project deps locally.
-/.fetch
+# Temporary files, for example, from tests.
+/tmp/
 
 # If the VM crashes, it generates a dump, let's ignore it too.
 erl_crash.dump
@@ -19,9 +19,17 @@ erl_crash.dump
 # Also ignore archive artifacts (built via "mix archive.build").
 *.ez
 
-# Temporary files, for example, from tests.
-/tmp/<%= if @adapter_app == :ecto_sqlite3 do %>
+# Ignore package tarball (built via "mix hex.build").
+*.tar
 
-# Database files
+# Database files.
 *.db
-*.db-*<% end %>
+*.db-*
+
+# Assets produced by build tools.
+priv/static/assets/
+priv/static/cache_manifest.json
+
+# Related to Node.js/npm.
+assets/node_modules/
+npm-debug.log

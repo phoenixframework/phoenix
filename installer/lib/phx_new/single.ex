@@ -21,11 +21,11 @@ defmodule Phx.New.Single do
      "phx_single/mix.exs.eex": "mix.exs",
      "phx_single/README.md.eex": "README.md",
      "phx_single/formatter.exs.eex": ".formatter.exs",
-     "phx_single/gitignore.eex": ".gitignore",
      "phx_test/support/conn_case.ex.eex": "test/support/conn_case.ex",
      "phx_single/test/test_helper.exs.eex": "test/test_helper.exs",
      "phx_test/controllers/error_json_test.exs.eex":
        "test/:lib_web_name/controllers/error_json_test.exs"},
+    {:text, :project, "phx_common/gitignore": ".gitignore"},
     {:keep, :web,
      "phx_web/controllers": "lib/:lib_web_name/controllers",
      "phx_test/controllers": "test/:lib_web_name/controllers"}
