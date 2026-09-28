@@ -297,7 +297,7 @@ jobs:
           if [ "${{ matrix.service }}" = "none" ]; then
             FLAGS="--include database:sqlite3"
           else
-            FLAGS="--include database:${{ matrix.service }} --only database:${{ matrix.service }}"
+            FLAGS="--only database:${{ matrix.service }}"
           fi
 
           mix test $FLAGS \
