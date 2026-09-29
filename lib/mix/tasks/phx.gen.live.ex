@@ -410,8 +410,10 @@ defmodule Mix.Tasks.Phx.Gen.Live do
           field={@form[#{inspect(key)}]}
           type="select"
           label="#{label(key)}"
-          prompt="Choose a value"
-          options={Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})}
+          options={
+            [{"Choose a value", ""}] ++
+              Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})
+          }
         />
         """
 

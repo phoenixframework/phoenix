@@ -198,11 +198,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
     [
       {:eex, "controller.ex.eex", Path.join([controller_pre, "#{singular}_controller.ex"])},
-      {:eex, "edit.html.heex.eex", Path.join([controller_pre, "#{singular}_html", "edit.html.heex"])},
+      {:eex, "edit.html.heex.eex",
+       Path.join([controller_pre, "#{singular}_html", "edit.html.heex"])},
       {:eex, "index.html.heex.eex",
        Path.join([controller_pre, "#{singular}_html", "index.html.heex"])},
-      {:eex, "new.html.heex.eex", Path.join([controller_pre, "#{singular}_html", "new.html.heex"])},
-      {:eex, "show.html.heex.eex", Path.join([controller_pre, "#{singular}_html", "show.html.heex"])},
+      {:eex, "new.html.heex.eex",
+       Path.join([controller_pre, "#{singular}_html", "new.html.heex"])},
+      {:eex, "show.html.heex.eex",
+       Path.join([controller_pre, "#{singular}_html", "show.html.heex"])},
       {:eex, "resource_form.html.heex.eex",
        Path.join([controller_pre, "#{singular}_html", "#{singular}_form.html.heex"])},
       {:eex, "html.ex.eex", Path.join([controller_pre, "#{singular}_html.ex"])},
@@ -305,8 +308,10 @@ defmodule Mix.Tasks.Phx.Gen.Html do
           field={f[#{inspect(key)}]}
           type="select"
           label="#{label(key)}"
-          prompt="Choose a value"
-          options={Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})}
+          options={
+            [{"Choose a value", ""}] ++
+              Ecto.Enum.values(#{inspect(schema.module)}, #{inspect(key)})
+          }
         />
         """
 
