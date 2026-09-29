@@ -440,6 +440,35 @@ describe("with transports", function (){
       }).not.toThrow()
     })
 
+    it("rejoins channels on the next connection when the close event has not fired", function (){
+      const connections = []
+      class StubWebSocket {
+        constructor(){
+          this.readyState = SOCKET_STATES.connecting
+          this.sent = []
+          connections.push(this)
+        }
+        send(data){ this.sent.push(JSON.parse(data)) }
+        // the connection is closed, but its close event has not fired yet when teardown detaches onclose
+        close(){ this.readyState = SOCKET_STATES.closed }
+      }
+      socket = new Socket("/socket", {transport: StubWebSocket})
+      socket.connect()
+      connections[0].readyState = SOCKET_STATES.open
+      connections[0].onopen()
+      const channel = socket.channel("topic")
+      channel.join().trigger("ok", {})
+      expect(channel.state).toBe("joined")
+
+      socket.disconnect()
+      socket.connect()
+      connections[1].readyState = SOCKET_STATES.open
+      connections[1].onopen()
+
+      expect(channel.state).toBe("joining")
+      expect(connections[1].sent).toContainEqual([expect.any(String), expect.any(String), "topic", "phx_join", {}])
+    })
+
     it("properly tears down old connection when immediately reconnecting", function (){
       const connections = []
       const mockWebSocket = function StubWebSocketNoAutoClose(_url){
