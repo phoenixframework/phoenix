@@ -454,6 +454,28 @@ defmodule Phoenix.Test.ChannelTest do
     assert_graceful_exit(pid)
   end
 
+  test "push broadcasts sent directly through pubsub" do
+    subscribe_and_join!(socket(UserSocket), Channel, "foo:ok")
+    broadcast = %Broadcast{topic: "foo:ok", event: "default", payload: %{"foo" => "bar"}}
+    Phoenix.PubSub.broadcast!(Phoenix.Test.ChannelTest.PubSub, "foo:ok", broadcast)
+    assert_push "default", %{"foo" => "bar"}
+  end
+
+  test "handles broadcasts dispatched by Phoenix.Channel.Server from older nodes" do
+    Process.flag(:trap_exit, true)
+    {:ok, _, socket} = subscribe_and_join(socket(UserSocket), Channel, "foo:ok")
+    pubsub = Phoenix.Test.ChannelTest.PubSub
+
+    broadcast = %Broadcast{topic: "foo:ok", event: "default", payload: %{"foo" => "bar"}}
+    Phoenix.PubSub.local_broadcast(pubsub, "foo:ok", broadcast, Phoenix.Channel.Server)
+    assert_push "default", %{"foo" => "bar"}
+
+    broadcast = %Broadcast{topic: "foo:ok", event: "stop", payload: %{"foo" => "bar"}}
+    Phoenix.PubSub.local_broadcast(pubsub, "foo:ok", broadcast, Phoenix.Channel.Server)
+    assert_receive {:terminate, :shutdown}
+    assert_graceful_exit(socket.channel_pid)
+  end
+
   ## handle_info
 
   test "handles messages and stops" do

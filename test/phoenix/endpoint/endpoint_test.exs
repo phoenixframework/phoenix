@@ -42,6 +42,15 @@ defmodule Phoenix.Endpoint.EndpointTest do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
+  defmodule TaggingSender do
+    @behaviour Phoenix.PubSub.Sender
+
+    def send(pid, tag, message, state) do
+      Kernel.send(pid, {tag, message})
+      state
+    end
+  end
+
   setup_all do
     ExUnit.CaptureLog.capture_log(fn -> start_supervised!(Endpoint) end)
     start_supervised!({Phoenix.PubSub, name: :endpoint_pub})
@@ -305,6 +314,22 @@ defmodule Phoenix.Endpoint.EndpointTest do
       payload: %{key: :val},
       topic: "sometopic"
     }
+  end
+
+  test "pubsub broadcasts are delivered through the subscription sender" do
+    Endpoint.subscribe("sendertopic", sender: {TaggingSender, :tagged})
+    some = spawn(fn -> :ok end)
+
+    Endpoint.broadcast("sendertopic", "event1", %{key: :val})
+    assert_receive {:tagged, %Phoenix.Socket.Broadcast{event: "event1", topic: "sendertopic"}}
+
+    Endpoint.broadcast_from!(some, "sendertopic", "event2", %{key: :val})
+    assert_receive {:tagged, %Phoenix.Socket.Broadcast{event: "event2", topic: "sendertopic"}}
+
+    Endpoint.local_broadcast("sendertopic", "event3", %{key: :val})
+    assert_receive {:tagged, %Phoenix.Socket.Broadcast{event: "event3", topic: "sendertopic"}}
+
+    refute_received %Phoenix.Socket.Broadcast{}
   end
 
   test "loads cache manifest from specified application" do

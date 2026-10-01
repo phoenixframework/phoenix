@@ -82,7 +82,7 @@ defmodule Phoenix.MixProject do
       {:plug, "~> 1.14"},
       {:plug_crypto, "~> 2.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:phoenix_pubsub, "~> 2.1"},
+      {:phoenix_pubsub, github: "phoenixframework/phoenix_pubsub", branch: "sd-sender"},
       {:phoenix_template, "~> 1.0"},
       {:websock_adapter, "~> 0.5"},
 

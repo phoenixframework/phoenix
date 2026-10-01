@@ -82,7 +82,8 @@ defmodule Phoenix.Presence do
   ## Custom dispatcher
 
   It's possible to customize the dispatcher module used to broadcast.
-  By default, presence uses the same dispatcher as channels. To customize the
+  By default, presence uses the default `Phoenix.PubSub` dispatching,
+  which respects the `:sender` given when subscribing. To customize the
   dispatcher, pass the `:dispatcher` option when using `Phoenix.Presence`:
 
       use Phoenix.Presence,
@@ -90,8 +91,9 @@ defmodule Phoenix.Presence do
         pubsub_server: MyApp.PubSub,
         dispatcher: MyApp.CustomDispatcher
 
-  See `m:Phoenix.PubSub#module-custom-dispatching` for more information on
-  custom dispatchers.
+  Custom dispatchers are deprecated in `Phoenix.PubSub`. Prefer customizing
+  delivery per subscription with the `:sender` option of `Phoenix.PubSub.subscribe/3`
+  instead. See `Phoenix.PubSub.Sender` for more information.
 
   ## Fetching Presence Information
 
@@ -431,7 +433,7 @@ defmodule Phoenix.Presence do
       pubsub_server =
         opts[:pubsub_server] || raise "use Phoenix.Presence expects :pubsub_server to be given"
 
-      dispatcher = opts[:dispatcher] || Phoenix.Channel.Server
+      dispatcher = opts[:dispatcher]
 
       Phoenix.Tracker.start_link(
         __MODULE__,
@@ -530,7 +532,11 @@ defmodule Phoenix.Presence do
         payload: presence_diff
       }
 
-      Phoenix.PubSub.local_broadcast(state.pubsub_server, topic, broadcast, state.dispatcher)
+      if dispatcher = state.dispatcher do
+        Phoenix.PubSub.local_broadcast(state.pubsub_server, topic, broadcast, dispatcher)
+      else
+        Phoenix.PubSub.local_broadcast(state.pubsub_server, topic, broadcast)
+      end
     end)
 
     new_state =
