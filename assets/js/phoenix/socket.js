@@ -539,6 +539,7 @@ export default class Socket {
           this.conn.onmessage = function (){ } // noop
           this.conn.onclose = function (){ } // noop
           this.conn = null
+          this.triggerChanError("connection_closed")
         }
 
         callback && callback()
