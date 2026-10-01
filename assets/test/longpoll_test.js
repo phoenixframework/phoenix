@@ -177,6 +177,52 @@ describe("LongPoll", () => {
       expect(mockOnerror).toHaveBeenCalledWith(410)
       expect(mockCloseAndRetry).toHaveBeenCalledWith(3410, "session_gone", false)
     })
+
+    it("should report unknown statuses through onerror and close", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      longpoll.timeout = 1000
+
+      const onerror = jest.fn()
+      const onclose = jest.fn()
+      longpoll.onerror = onerror
+      longpoll.onclose = onclose
+
+      Ajax.request.mockImplementation((method, url, headers, body, timeout, ontimeout, callback) => {
+        callback({status: 429, token: null, messages: []})
+        return {abort: jest.fn()}
+      })
+
+      longpoll.poll()
+
+      expect(onerror).toHaveBeenCalledWith(429)
+      expect(onclose).toHaveBeenCalledWith(expect.objectContaining({code: 3429, reason: "unhandled status", wasClean: false}))
+    })
+
+    it.each([
+      [{message: "Too Many Requests"}],
+      [{status: -2000}],
+      [{status: 2000}]
+    ])("should treat a JSON body without an HTTP status as a server error: %j", (resp) => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      longpoll.timeout = 1000
+
+      const onerror = jest.fn()
+      const close = jest.fn()
+      const closeAndRetry = jest.fn()
+      longpoll.onerror = onerror
+      longpoll.close = close
+      longpoll.closeAndRetry = closeAndRetry
+
+      Ajax.request.mockImplementation((method, url, headers, body, timeout, ontimeout, callback) => {
+        callback(resp)
+        return {abort: jest.fn()}
+      })
+
+      longpoll.poll()
+
+      expect(onerror).toHaveBeenCalledWith(500)
+      expect(closeAndRetry).toHaveBeenCalledWith(1011, "internal server error", 500)
+    })
   })
 
   describe("batchSend", () => {

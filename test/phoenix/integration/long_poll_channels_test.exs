@@ -105,6 +105,10 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       {:error, :custom}
     end
 
+    def connect(%{"invalid_error" => status}, _socket) do
+      {:error, {:invalid, status}}
+    end
+
     def connect(params, socket) do
       unless params["logging"] == "enabled", do: Logger.put_process_level(self(), :none)
       {:ok, assign(socket, :user_id, params["user_id"])}
@@ -113,6 +117,12 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     def id(socket) do
       if id = socket.assigns.user_id, do: "user_sockets:#{id}"
     end
+
+    def handle_error(:custom), do: :too_many_requests
+    def handle_error({:invalid, "ok"}), do: :ok
+    def handle_error({:invalid, "no_content"}), do: :no_content
+    def handle_error({:invalid, "gone"}), do: :gone
+    def handle_error({:invalid, "rate_limited"}), do: :rate_limited
   end
 
   defmodule SlowSocket do
@@ -138,7 +148,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       longpoll: [
         window_ms: 200,
         pubsub_timeout_ms: 200,
-        check_origin: ["//example.com"]
+        check_origin: ["//example.com"],
+        error_handler: {UserSocket, :handle_error, []}
       ]
 
     socket "/ws/admin", UserSocket,
@@ -787,8 +798,28 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           resp = poll(:get, "/ws", @vsn, %{"reject" => "true"}, %{})
           assert resp.body["status"] == 403
 
-          resp = poll(:get, "/ws", @vsn, %{"custom_error" => "true"}, %{})
+          resp = poll(:get, "/ws/admin", @vsn, %{"custom_error" => "true"}, %{})
           assert resp.body["status"] == 403
+        end
+
+        test "refuses connects with the status returned by the error handler" do
+          resp = poll(:get, "/ws", @vsn, %{"custom_error" => "true"}, %{})
+          assert resp.body["status"] == 429
+        end
+
+        test "raises when the error handler returns an invalid status" do
+          for status <- ["ok", "no_content", "gone", "rate_limited"] do
+            query = URI.encode_query(%{"invalid_error" => status, "vsn" => @vsn})
+            url = "http://127.0.0.1:#{@port}/ws/longpoll?" <> query
+
+            log =
+              capture_log(fn ->
+                {:ok, resp} = HTTPClient.request(:get, url, %{})
+                assert resp.status == 500
+              end)
+
+            assert log =~ "Converted error ArgumentError to 500 response"
+          end
         end
 
         test "refuses unallowed origins" do

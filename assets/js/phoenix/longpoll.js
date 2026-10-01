@@ -84,6 +84,10 @@ export default class LongPoll {
         status = 0
       }
 
+      // A JSON body without an HTTP status is not a longpoll response,
+      // for example an error body from a proxy. Treat it like a bad response.
+      if(!Number.isInteger(status) || status < 100 || status > 999){ status = 0 }
+
       switch(status){
         case 200:
           messages.forEach(msg => {
@@ -126,7 +130,10 @@ export default class LongPoll {
           this.onerror(500)
           this.closeAndRetry(1011, "internal server error", 500)
           break
-        default: throw new Error(`unhandled poll status ${status}`)
+        default:
+          this.onerror(status)
+          this.close(3000 + status, "unhandled status", false)
+          break
       }
     })
   }

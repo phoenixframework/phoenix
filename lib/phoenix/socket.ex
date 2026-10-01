@@ -215,8 +215,9 @@ defmodule Phoenix.Socket do
       {:ok, assign(socket, :user_id, verified_user_id)}
 
   To deny connection, return `:error` or `{:error, term}`. To control the
-  response the client receives in that case, [define an error handler in the
-  websocket configuration](`Phoenix.Endpoint.socket/3#websocket-configuration`).
+  response the client receives in that case, define an error handler in the
+  [websocket](`Phoenix.Endpoint.socket/3#websocket-configuration`) or
+  [longpoll](`Phoenix.Endpoint.socket/3#longpoll-configuration`) configuration.
 
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.
