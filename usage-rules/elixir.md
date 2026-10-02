@@ -2,6 +2,7 @@
 
 - **Never** nest multiple modules in the same file as it can cause cyclic dependencies and compilation errors
 - Elixir's standard library has everything necessary for date and time manipulation. Familiarize yourself with the common `Time`, `Date`, `DateTime`, and `Calendar` interfaces by accessing their documentation as necessary. **Never** install additional dependencies unless asked or for date/time parsing (which you can use the `date_time_parser` package)
+- **Never** use `DateTime.utc_now() |> DateTime.truncate(:second)`. **Always** use `DateTime.utc_now(:second)` instead
 - Don't use `String.to_atom/1` on user input (memory leak risk)
 - Use `Task.async_stream(collection, callback, options)` for concurrent enumeration with back-pressure. The majority of times you will want to pass `timeout: :infinity` as option
 
