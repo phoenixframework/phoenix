@@ -27,7 +27,8 @@ defmodule <%= inspect schema.module %> do
   """
   def email_changeset(<%= schema.singular %>, attrs, opts \\ []) do
     <%= schema.singular %>
-    |> cast(attrs, [:email])
+    |> cast(attrs, [:email])<%= if mongo_adapter? do %>
+    |> update_change(:email, &String.downcase/1)<% end %>
     |> validate_email(opts)
   end
 
