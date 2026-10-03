@@ -36,6 +36,11 @@ import Timer from "./timer"
  * @param {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
  * before falling back to the LongPoll transport. Disabled by default.
  *
+ * Clients without WebSocket support fall back to LongPoll, and this includes search
+ * engine crawlers, whose renderers do not open WebSockets. They then repeatedly request
+ * the LongPoll endpoint (e.g. `/live/longpoll` for LiveView), which serves no indexable
+ * content. Disallow that path in `robots.txt` to avoid spending crawl budget on it.
+ *
  * @param {boolean} [opts.debug] - When true, enables debug logging. Default false.
  *
  * @param {Function} [opts.encode] - The function to encode outgoing messages.
