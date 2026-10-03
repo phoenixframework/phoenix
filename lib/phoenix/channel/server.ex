@@ -58,6 +58,52 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc """
+  Called to adopt an existing pid as a channel.
+  """
+  def adopt(socket, channel, pid, message, opts) do
+    %{topic: topic, payload: payload, ref: ref, join_ref: join_ref} = message
+
+    starter = opts[:starter] || (&PoolSupervisor.start_child/3)
+    assigns = Map.merge(socket.assigns, Keyword.get(opts, :assigns, %{}))
+
+    socket = %{
+      socket
+      | topic: topic,
+        channel: channel,
+        join_ref: join_ref || ref,
+        assigns: assigns
+    }
+
+    ref = make_ref()
+    from = {self(), ref}
+    child_spec = {Phoenix.Channel.AdoptStandin, pid}
+
+    case starter.(socket, from, child_spec) do
+      {:ok, _standin_pid} ->
+        send(pid, {Phoenix.Channel, payload, from, socket})
+        mon_ref = Process.monitor(pid)
+
+        receive do
+          {^ref, {:ok, reply}} ->
+            Process.demonitor(mon_ref, [:flush])
+            {:ok, reply, pid}
+
+          {^ref, {:error, reply}} ->
+            Process.demonitor(mon_ref, [:flush])
+            {:error, reply}
+
+          {:DOWN, ^mon_ref, _, _, reason} ->
+            Logger.error(fn -> Exception.format_exit(reason) end)
+            {:error, %{reason: "join crashed"}}
+        end
+
+      {:error, reason} ->
+        Logger.error(fn -> Exception.format_exit(reason) end)
+        {:error, %{reason: "join crashed"}}
+    end
+  end
+
+  @doc """
   Gets the socket from the channel.
 
   Used by channel tests.
