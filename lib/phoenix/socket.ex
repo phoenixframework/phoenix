@@ -769,19 +769,32 @@ defmodule Phoenix.Socket do
   end
 
   defp handle_in({pid, _ref, status}, %{event: "phx_join", topic: topic} = message, state, socket) do
-    receive do
-      {:socket_close, ^pid, _reason} -> :ok
-    after
-      0 ->
-        if status != :leaving do
-          Logger.debug(fn ->
-            "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
-              "Closing existing channel for new join."
-          end)
-        end
-    end
+    closed? =
+      receive do
+        {:socket_close, ^pid, _reason} -> true
+      after
+        0 ->
+          if status != :leaving do
+            Logger.debug(fn ->
+              "Duplicate channel join for topic \"#{topic}\" in #{inspect(socket.handler)}. " <>
+                "Closing existing channel for new join."
+            end)
+          end
 
-    :ok = shutdown_duplicate_channel(pid)
+          false
+      end
+
+    :ok =
+      if status == :leaving and not closed? do
+        # the channel is already leaving on the client's request, so it stops on
+        # its own once it handled the messages the client sent before the leave.
+        # We wait for it instead of shutting it down, as shutting it down would
+        # discard those messages
+        await_channel_shutdown(pid)
+      else
+        shutdown_duplicate_channel(pid)
+      end
+
     {:push, {opcode, payload}, {new_state, new_socket}} = socket_close(pid, {state, socket})
     send(self(), {:socket_push, opcode, payload})
     handle_in(nil, message, new_state, new_socket)
@@ -902,6 +915,18 @@ defmodule Phoenix.Socket do
   defp shutdown_duplicate_channel(pid) do
     ref = Process.monitor(pid)
     Process.exit(pid, {:shutdown, :duplicate_join})
+
+    receive do
+      {:DOWN, ^ref, _, _, _} -> :ok
+    after
+      5_000 ->
+        Process.exit(pid, :kill)
+        receive do: ({:DOWN, ^ref, _, _, _} -> :ok)
+    end
+  end
+
+  defp await_channel_shutdown(pid) do
+    ref = Process.monitor(pid)
 
     receive do
       {:DOWN, ^ref, _, _, _} -> :ok

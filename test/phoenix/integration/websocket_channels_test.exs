@@ -49,6 +49,11 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       {:reply, :ok, socket}
     end
 
+    def handle_in("slow_msg", _message, socket) do
+      Process.sleep(100)
+      {:reply, :ok, socket}
+    end
+
     def handle_in("boom", _message, _socket) do
       raise "boom"
     end
@@ -816,6 +821,45 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
             topic: "room:joiner",
             event: "phx_reply",
             ref: "2",
+            payload: %{"response" => %{}, "status" => "ok"}
+          }
+        end
+
+        test "rejoining a leaving topic waits for the channel to handle pending messages" do
+          {:ok, sock} = WebsocketClient.connect(self(), "#{@vsn_path}&user_id=1001", @serializer)
+          WebsocketClient.join(sock, "room:rejoin", %{})
+
+          assert_receive %Message{
+            topic: "room:rejoin",
+            event: "phx_reply",
+            ref: "1",
+            payload: %{"response" => %{}, "status" => "ok"}
+          }
+
+          chan = Process.whereis(:"room:rejoin")
+          Process.monitor(chan)
+
+          # the client pushes an event and then immediately leaves and rejoins
+          # the same topic, as the LiveView client does on live navigation;
+          # the pushed event must still be handled
+          WebsocketClient.send_event(sock, "room:rejoin", "slow_msg", %{})
+          WebsocketClient.leave(sock, "room:rejoin", %{})
+          WebsocketClient.join(sock, "room:rejoin", %{})
+
+          assert_receive %Message{
+                           topic: "room:rejoin",
+                           event: "phx_reply",
+                           ref: "2",
+                           payload: %{"response" => %{}, "status" => "ok"}
+                         },
+                         1000
+
+          assert_receive {:DOWN, _, :process, ^chan, {:shutdown, :left}}, 1000
+
+          assert_receive %Message{
+            topic: "room:rejoin",
+            event: "phx_reply",
+            ref: "4",
             payload: %{"response" => %{}, "status" => "ok"}
           }
         end
