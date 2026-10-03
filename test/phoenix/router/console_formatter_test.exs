@@ -93,6 +93,43 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
     end
   end
 
+  defmodule RouterTestHostRoutes do
+    use Phoenix.Router
+
+    scope host: "api.example.com" do
+      get "/users", RouteFormatter.PageController, :index, as: :api_users
+    end
+
+    scope host: "admin.example.com" do
+      get "/users", RouteFormatter.ImageController, :index, as: :admin_users
+    end
+  end
+
+  test "format routes with host constraints" do
+    assert draw(RouterTestHostRoutes) == """
+           [api.example.com]      api_users_path  GET  /users  RouteFormatter.PageController :index
+           [admin.example.com]  admin_users_path  GET  /users  RouteFormatter.ImageController :index
+           """
+  end
+
+  defmodule RouterTestMixedHostRoutes do
+    use Phoenix.Router
+
+    scope host: "api.example.com" do
+      get "/users", RouteFormatter.PageController, :index, as: :api_users
+    end
+
+    get "/health", RouteFormatter.PageController, :index, as: :health
+  end
+
+  test "format routes with mixed host constraints" do
+    expected =
+      "[api.example.com]  api_users_path  GET  /users   RouteFormatter.PageController :index\n" <>
+        "                      health_path  GET  /health  RouteFormatter.PageController :index\n"
+
+    assert draw(RouterTestMixedHostRoutes) == expected
+  end
+
   defmodule HelpersFalseRouter do
     use Phoenix.Router, helpers: false
     resources "/image", RouteFormatter.ImageController
