@@ -1837,6 +1837,17 @@ describe("with transports", function (){
         expect(connections.length).toBe(2)
       })
 
+      it("does not let a scheduled reconnect replace a connection created after a normal close", function (){
+        socket.reconnectTimer.scheduleTimeout()
+        connections[0].finishClose(1000)
+
+        socket.connect()
+        jest.advanceTimersByTime(5000)
+
+        expect(connections.length).toBe(2)
+        expect(socket.conn).toBe(connections[1])
+      })
+
       it("connects again when asked to after a normal close", function (){
         connections[0].finishClose(1000)
 
