@@ -2082,7 +2082,6 @@ describe("with transports", function (){
   })
 
   describe("custom encoder and decoder", function (){
-
     describe("when codecs finish asynchronously", function (){
       let encodings, decodings
 
