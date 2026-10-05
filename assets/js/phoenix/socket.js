@@ -667,10 +667,8 @@ export default class Socket {
     this.stateChangeCallbacks.error.forEach(([, callback]) => {
       callback(error, transportBefore, establishedBefore)
     })
-    // callbacks can replace the connection, including with the same transport class
-    if(this.stillUses(connection)){
-      this.triggerChanError("connection_error", connection)
-    }
+    // callbacks can replace the connection, in which case only its own joins are errored
+    this.triggerChanError("connection_error", connection)
   }
 
   /**

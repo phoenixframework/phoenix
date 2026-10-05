@@ -1131,6 +1131,21 @@ describe("with transports", function (){
         expect(channel.state).toBe("joined")
       })
 
+      it("rejoins channels when an onError callback replaces the transport of a failed connection", function (){
+        connections[0].open()
+        const channel = socket.channel("topic")
+        channel.join().trigger("ok", {})
+        socket.onError(() => socket.replaceTransport(StubWebSocket))
+
+        // a WebSocket that failed is already closed when it emits its error
+        connections[0].readyState = SOCKET_STATES.closed
+        connections[0].onerror("error")
+        socket.connect()
+        connections[1].open()
+
+        expect(sentJoins(connections[1]).length).toBe(1)
+      })
+
       it("does not error channels created for a new connection by an onError callback", function (){
         connections[0].open()
         let channel
