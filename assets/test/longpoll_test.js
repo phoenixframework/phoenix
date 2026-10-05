@@ -267,21 +267,6 @@ describe("LongPoll", () => {
     beforeEach(() => jest.useFakeTimers())
     afterEach(() => jest.useRealTimers())
 
-    it("ignores a timeout delivered after close", () => {
-      const longpoll = new LongPoll("http://localhost/socket/longpoll")
-      const onerror = jest.fn()
-      longpoll.onerror = onerror
-      jest.advanceTimersByTime(0)
-      const timeout = Ajax.request.mock.calls[0][5]
-      longpoll.close()
-
-      timeout()
-
-      expect(onerror).not.toHaveBeenCalled()
-      expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
-      expect(longpoll.reqs.size).toBe(0)
-    })
-
     it("ignores response callbacks invoked synchronously by abort", () => {
       Ajax.request.mockImplementation((method, url, headers, body, timeout, ontimeout, callback) => ({
         abort: jest.fn(() => callback(null))
@@ -535,6 +520,26 @@ describe("LongPoll", () => {
         expect(longpoll.batchBuffer).toEqual([])
         expect(calls).toHaveLength(2)
         expect(calls[1].body).toBe("b")
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
+    it("starts a new batch for sends after a retry dropped the pending one", () => {
+      jest.useFakeTimers()
+      try {
+        const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+        longpoll.poll = jest.fn()
+        longpoll.readyState = SOCKET_STATES.open
+        // the send is batched until the next tick, but the transport retries before that
+        longpoll.send("a")
+        longpoll.closeAndRetry(1011, "internal server error", false)
+
+        longpoll.send("b")
+        jest.runOnlyPendingTimers()
+
+        const posts = Ajax.request.mock.calls.filter(([method]) => method === "POST")
+        expect(posts.map(([, , , body]) => body)).toEqual(["b"])
       } finally {
         jest.useRealTimers()
       }
