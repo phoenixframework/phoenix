@@ -136,6 +136,7 @@ defmodule Phoenix.Integration.EndpointTest do
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
       assert resp.status == 404
       assert resp.body == "404.html from Phoenix.ErrorView"
+      refute List.keyfind(resp.headers, ~c"connection", 0)
 
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown?_format=json", %{})
       assert resp.status == 404
@@ -145,10 +146,12 @@ defmodule Phoenix.Integration.EndpointTest do
         {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
         assert resp.status == 500
         assert resp.body == "500.html from Phoenix.ErrorView"
+        assert {~c"connection", ~c"close"} in resp.headers
 
         {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/router/oops", %{})
         assert resp.status == 500
         assert resp.body == "500.html from Phoenix.ErrorView"
+        assert {~c"connection", ~c"close"} in resp.headers
 
         Supervisor.stop(ProdEndpoint)
       end)
