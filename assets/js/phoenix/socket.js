@@ -465,15 +465,15 @@ export default class Socket {
     let connectClock
     const isCurrent = () => connectClock === this.connectClock && !this.closeWasClean
     let fallbackTransportName = this.transportName(fallbackTransport)
+    // the fallback timer is cleared whenever the attempt ends, and the callbacks below
+    // only fall back while the attempt is current
     let fallback = (reason) => {
-      if(connectClock !== undefined && !isCurrent()){ return }
       this.log("transport", `falling back to ${fallbackTransportName}...`, reason)
       this.off([openRef, errorRef])
       primaryTransport = false
       const replaceClock = this.replaceTransport(fallbackTransport)
       if(replaceClock !== this.connectClock){ return }
       this.transportConnect()
-      connectClock = this.connectClock
     }
     if(this.getSession(`phx:fallback:${fallbackTransportName}`)){ return fallback("memorized") }
 
@@ -503,7 +503,6 @@ export default class Socket {
       clearTimeout(this.fallbackTimer)
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
       this.ping(rtt => {
-        if(!isCurrent()){ return }
         this.log("transport", "connected to primary after", rtt)
         this.primaryPassedHealthCheck = true
         clearTimeout(this.fallbackTimer)
