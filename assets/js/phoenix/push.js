@@ -40,7 +40,7 @@ export default class Push {
       payload: this.payload(),
       ref: this.ref,
       join_ref: this.channel.joinRef()
-    })
+    }, this.channel)
   }
 
   /**

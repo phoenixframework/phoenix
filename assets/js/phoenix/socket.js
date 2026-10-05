@@ -758,42 +758,50 @@ export default class Socket {
 
   /**
    * @param {Object} data
+   * @param {Channel} [channel] - The channel the push belongs to, if any
    */
-  push(data){
+  push(data, channel){
     if(this.hasLogger()){
       let {topic, event, payload, ref, join_ref} = data
       this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload)
     }
 
-    const send = () => {
-      const connection = this.connection
-      const channel = this.channels.find(c => c.topic === data.topic && c.joinRef() === data.join_ref)
-      // the join counts as carried by this connection while it is still encoded, so that the
-      // channel rejoins when the connection is torn down before the encoding finished
-      if(data.event === CHANNEL_EVENTS.join && channel){ connection.joins.set(channel, data.join_ref) }
-      this.encode(data, result => {
-        // let encodes finish while this connection drains, but never send on a
-        // replacement or after the original connection has started closing
-        if(!connection.isCurrent() || !connection.isOpen()){ return }
-        // a leave still needs to reach the server after its channel was removed locally
-        if(channel && data.event !== CHANNEL_EVENTS.leave &&
-          (channel.joinRef() !== data.join_ref || !this.channels.includes(channel))){ return }
-        connection.transport.send(result)
-      })
-    }
-
     if(this.isConnected()){
-      send()
+      this.send(data, channel)
     } else {
       this.sendBuffer.push(() => {
         // the channel may have errored or left while the push was buffered, e.g. when the
         // connection failed before opening, in which case its rejoin supersedes the buffered join
-        if(data.join_ref && !this.channels.some(c => c.topic === data.topic && c.joinRef() === data.join_ref)){
-          return
-        }
-        send()
+        if(!this.isOutdated(data, channel)){ this.send(data, channel) }
       })
     }
+  }
+
+  /**
+   * @private
+   */
+  send(data, channel){
+    const connection = this.connection
+    // the join counts as carried by this connection while it is still encoded, so that the
+    // channel rejoins when the connection is torn down before the encoding finished
+    if(channel && data.event === CHANNEL_EVENTS.join){ connection.joins.set(channel, data.join_ref) }
+    this.encode(data, result => {
+      // let encodes finish while this connection drains, but never send on a
+      // replacement or after the original connection has started closing
+      if(!connection.isCurrent() || !connection.isOpen()){ return }
+      // a leave still needs to reach the server after its channel was removed locally
+      if(data.event !== CHANNEL_EVENTS.leave && this.isOutdated(data, channel)){ return }
+      connection.transport.send(result)
+    })
+  }
+
+  /**
+   * @private
+   *
+   * Whether the push was made for an earlier join of its channel, or the channel left since.
+   */
+  isOutdated(data, channel){
+    return !!channel && (data.join_ref !== channel.joinRef() || channel.isClosed())
   }
 
   /**
