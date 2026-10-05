@@ -264,7 +264,6 @@ export default class Socket {
       // the old transport closes asynchronously, but its events no longer concern us
       this.connection = null
       connection.ended = true
-      connection.dispose()
       connection.close()
       this.clearHeartbeats()
       // any in-flight pushes on the old connection are lost, so channels need to rejoin
@@ -605,7 +604,6 @@ export default class Socket {
       if(wasOpened){ this.triggerChanError("connection_closed", connection) }
 
       this.waitForSocketClosed(connection.transport, () => {
-        connection.dispose()
         if(this.connection === connection){ this.connection = null }
         callback && callback()
       })

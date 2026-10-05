@@ -67,14 +67,4 @@ export default class Connection {
     this.transport.onerror = function (){ } // noop
     if(code){ this.transport.close(code, reason || "") } else { this.transport.close() }
   }
-
-  /**
-   * Detaches the transport, which can still emit events while it finishes closing.
-   */
-  dispose(){
-    this.transport.onopen = function (){ } // noop
-    this.transport.onerror = function (){ } // noop
-    this.transport.onmessage = function (){ } // noop
-    this.transport.onclose = function (){ } // noop
-  }
 }
