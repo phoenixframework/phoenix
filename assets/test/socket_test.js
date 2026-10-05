@@ -1051,6 +1051,8 @@ describe("with transports", function (){
       it("does not error channels when the connection never opened", function (){
         const channel = socket.channel("topic")
         channel.join()
+        const errorSpy = jest.fn()
+        channel.onError(errorSpy)
 
         socket.disconnect()
         jest.advanceTimersByTime(2000)
@@ -1058,6 +1060,7 @@ describe("with transports", function (){
         connections[1].open()
 
         // the buffered join is sent once, without an additional rejoin
+        expect(errorSpy).not.toHaveBeenCalled()
         expect(channel.state).toBe("joining")
         expect(sentJoins(connections[1]).length).toBe(1)
       })
@@ -1092,6 +1095,8 @@ describe("with transports", function (){
         connections[0].open()
         const channel = socket.channel("topic")
         channel.join().trigger("ok", {})
+        // the old connection is not closed yet while its buffer drains
+        connections[0].bufferedAmount = 1
         socket.disconnect()
         socket.connect()
         connections[1].open()
@@ -1188,6 +1193,17 @@ describe("with transports", function (){
         expect(connections[0].readyState).toBe(SOCKET_STATES.closing)
 
         socket.disconnect()
+        jest.advanceTimersByTime(10000)
+
+        expect(connections.length).toBe(1)
+        expect(socket.conn).toBeNull()
+      })
+
+      it("does not reconnect after a visibility change when the transport was replaced meanwhile", function (){
+        Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+        socket.handleVisibilityChange()
+
+        socket.replaceTransport(StubWebSocket)
         jest.advanceTimersByTime(10000)
 
         expect(connections.length).toBe(1)
@@ -1861,6 +1877,7 @@ describe("with transports", function (){
         connections[0].finishClose(1006)
 
         socket.connect()
+        expect(connections.length).toBe(1)
         jest.advanceTimersByTime(10)
 
         expect(connections.length).toBe(2)
@@ -2131,14 +2148,18 @@ describe("with transports", function (){
         expect(socket.connection.carried(channel)).toBe(true)
       })
 
-      it("does not throw when encoding finishes after disconnect completed", function (){
-        socket.channel("topic").join()
+      it("does not send an encoded push once its connection was replaced", function (){
+        // the old connection is still open while its buffer drains
+        connections[0].bufferedAmount = 1
+        socket.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: "1"})
         socket.disconnect()
-        jest.advanceTimersByTime(2000)
+        socket.connect()
+        connections[1].open()
 
-        expect(socket.conn).toBeNull()
-        expect(() => encodings[0]()).not.toThrow()
+        encodings[0]()
+
         expect(connections[0].sent).toEqual([])
+        expect(connections[1].sent).toEqual([])
       })
 
       it.each(["before", "during"])("sends a push started %s disconnect while the connection drains", function (when){
