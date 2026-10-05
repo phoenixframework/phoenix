@@ -37,7 +37,7 @@ defmodule <%= @app_module %>.MixProject do
   defp deps do
     [
       {:dns_cluster, "~> 0.2.0"},
-      {:phoenix_pubsub, "~> 2.1"}<%= if @ecto do %>,
+      {:phoenix_pubsub, github: "phoenixframework/phoenix_pubsub", branch: "sd-sender"}<%= if @ecto do %>,
       {:ecto_sql, "~> 3.13"},
       {:<%= @adapter_app %>, ">= 0.0.0"}<% end %><%= if @mailer do %>,
       {:swoosh, "~> 1.16"},
