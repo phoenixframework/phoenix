@@ -79,22 +79,6 @@ defmodule Phoenix.Presence do
 
   See `c:list/1` for more information on the presence data structure.
 
-  ## Custom dispatcher
-
-  It's possible to customize the dispatcher module used to broadcast.
-  By default, presence uses the default `Phoenix.PubSub` dispatching,
-  which respects the `:sender` given when subscribing. To customize the
-  dispatcher, pass the `:dispatcher` option when using `Phoenix.Presence`:
-
-      use Phoenix.Presence,
-        otp_app: :my_app,
-        pubsub_server: MyApp.PubSub,
-        dispatcher: MyApp.CustomDispatcher
-
-  Custom dispatchers are deprecated in `Phoenix.PubSub`. Prefer customizing
-  delivery per subscription with the `:sender` option of `Phoenix.PubSub.subscribe/3`
-  instead. See `Phoenix.PubSub.Sender` for more information.
-
   ## Fetching Presence Information
 
   Presence metadata should be minimized and used to store small,
