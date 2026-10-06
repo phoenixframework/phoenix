@@ -52,6 +52,15 @@ defmodule Phoenix.PresenceTest do
     end
   end
 
+  defmodule TaggingSender do
+    @behaviour Phoenix.PubSub.Sender
+
+    def send(pid, tag, message, state) do
+      Kernel.send(pid, {tag, message})
+      state
+    end
+  end
+
   defmodule CustomDispatcherPresence do
     use Phoenix.Presence, otp_app: :phoenix, dispatcher: CustomDispatcher
   end
@@ -187,6 +196,21 @@ defmodule Phoenix.PresenceTest do
     }
 
     assert MyPresence.list(topic) == %{}
+  end
+
+  test "handle_diff broadcasts through the subscription sender", %{topic: topic} = config do
+    pid = spawn(fn -> :timer.sleep(:infinity) end)
+    Phoenix.PubSub.subscribe(config.pubsub, topic, sender: {TaggingSender, :tagged})
+    MyPresence.track(pid, topic, "u1", %{name: "u1"})
+
+    assert_receive {:tagged,
+                    %Broadcast{
+                      topic: ^topic,
+                      event: "presence_diff",
+                      payload: %{joins: %{"u1" => _}, leaves: %{}}
+                    }}
+
+    refute_received %Broadcast{}
   end
 
   test "handle_diff with custom dispatcher", %{topic: topic} = config do
