@@ -287,7 +287,8 @@ describe("with transports", function (){
 
           expect(socket.conn).toBeNull()
           expect(socket.closeWasClean).toBe(true)
-          expect(socket.transport).toBe(StubWebSocket)
+          // the transport was still replaced, as disconnecting does not conflict with that
+          expect(socket.transport).toBe(LongPoll)
           expect(connections.length).toBe(1)
         })
 
@@ -296,18 +297,20 @@ describe("with transports", function (){
           connections[0].open()
           const channel = socket.channel("topic")
           channel.join().trigger("ok", {})
+          let created
           const errorRef = channel.onError(() => {
             channel.off("phx_error", errorRef)
             socket.connect()
+            created = socket.conn
           })
 
           jest.advanceTimersByTime(2500)
 
-          expect(socket.conn).toBe(connections[1])
-          expect(socket.transport).toBe(StubWebSocket)
-          expect(connections.length).toBe(2)
-          connections[1].open()
-          expect(sentJoins(connections[1]).length).toBe(1)
+          // the callback already connects over the fallback transport
+          expect(created).toBeInstanceOf(LongPoll)
+          expect(socket.conn).toBe(created)
+          expect(socket.transport).toBe(LongPoll)
+          expect(connections.length).toBe(1)
         })
       })
     })
@@ -433,6 +436,141 @@ describe("with transports", function (){
         expect(connections.length).toBe(3)
         expect(socket.conn).toBe(connections[2])
       })
+    })
+
+    describe("while the connection is still connecting", function (){
+      const connect = (reconnectAfterMs) => {
+        socket = new Socket("/socket", {transport: StubWebSocket, reconnectAfterMs: () => reconnectAfterMs})
+        socket.connect()
+      }
+
+      beforeEach(function (){
+        connections = []
+        jest.useFakeTimers()
+        Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+      })
+
+      afterEach(function (){
+        jest.useRealTimers()
+      })
+
+      it("does not let the close event of the torn down connection replace the new one", function (){
+        // the reconnect delay is longer than the teardown takes
+        connect(1000)
+        socket.handleVisibilityChange()
+        // the close event arrives while the teardown waits for it
+        connections[0].finishClose(1006)
+        jest.advanceTimersByTime(150)
+        expect(socket.conn).toBe(connections[1])
+
+        jest.advanceTimersByTime(5000)
+
+        expect(connections.length).toBe(2)
+        expect(socket.conn).toBe(connections[1])
+      })
+
+      it("does not let the close event of the torn down connection reconnect before the teardown finishes", function (){
+        // the reconnect delay is shorter than the teardown takes
+        connect(10)
+        socket.handleVisibilityChange()
+        jest.advanceTimersByTime(50)
+        connections[0].finishClose(1006)
+        // visibilitychange can follow resume, and must keep the connection created for the page being shown
+        jest.advanceTimersByTime(50)
+        socket.handleVisibilityChange()
+        jest.advanceTimersByTime(5000)
+
+        expect(connections.length).toBe(2)
+        expect(socket.conn).toBe(connections[1])
+      })
+    })
+  })
+
+  describe("pagehide and pageshow", function (){
+    let listeners
+
+    beforeEach(function (){
+      connections = []
+      jest.useFakeTimers()
+      // the listeners of earlier sockets are still registered on the window, so we call this socket's directly
+      listeners = {}
+      const addEventListener = jest.spyOn(window, "addEventListener").mockImplementation((event, listener) => {
+        listeners[event] = listener
+      })
+      socket = new Socket("/socket", {transport: StubWebSocket})
+      addEventListener.mockRestore()
+      socket.connect()
+      connections[0].open()
+    })
+
+    afterEach(function (){
+      jest.useRealTimers()
+    })
+
+    it("reconnects when the page is shown again", function (){
+      listeners.pagehide()
+      listeners.pageshow()
+
+      expect(connections.length).toBe(2)
+      expect(socket.conn).toBe(connections[1])
+    })
+
+    it("does not reconnect after the server closed the connection normally", function (){
+      connections[0].finishClose(1000)
+
+      listeners.pagehide()
+      listeners.pageshow()
+      jest.advanceTimersByTime(5000)
+
+      expect(connections.length).toBe(1)
+    })
+
+    it("does not reconnect after a disconnect that is still closing the connection", function (){
+      socket.disconnect()
+
+      listeners.pagehide()
+      listeners.pageshow()
+      jest.advanceTimersByTime(5000)
+
+      expect(connections.length).toBe(1)
+      expect(socket.conn).toBeNull()
+    })
+  })
+
+  describe("replaceTransport", function (){
+    let channel
+
+    beforeEach(function (){
+      connections = []
+      jest.useFakeTimers()
+      socket = new Socket("/socket", {transport: StubWebSocket})
+      socket.connect()
+      connections[0].open()
+      channel = socket.channel("topic")
+      channel.join().trigger("ok", {})
+    })
+
+    afterEach(function (){
+      jest.useRealTimers()
+    })
+
+    it("replaces the transport when a channel error callback disconnects", function (){
+      channel.onError(() => socket.disconnect())
+
+      socket.replaceTransport(LongPoll)
+
+      expect(socket.transport).toBe(LongPoll)
+      expect(socket.conn).toBeNull()
+    })
+
+    it("connects over the new transport when a channel error callback connects", function (){
+      channel.onError(() => socket.connect())
+
+      socket.replaceTransport(LongPoll)
+
+      expect(socket.transport).toBe(LongPoll)
+      expect(socket.conn).toBeInstanceOf(LongPoll)
+      expect(connections.length).toBe(1)
     })
   })
 
@@ -864,18 +1002,35 @@ describe("with transports", function (){
           expect(channel.state).toBe("joined")
         })
 
-        it("rejoins channels that were joined over the old connection", function (){
+        it("rejoins channels that were joined over the old connection once the new one opens", function (){
           const channel = socket.channel("topic")
           channel.join().trigger("ok", {})
           socket.disconnect()
           socket.connect()
           connections[1].open()
 
-          jest.advanceTimersByTime(2000)
-
-          expect(channel.state).toBe("errored")
-          jest.advanceTimersByTime(socket.rejoinAfterMs(1))
+          expect(channel.state).toBe("joining")
           expect(sentJoins(connections[1]).length).toBe(1)
+          // the old connection finishing its close does not error the channel again
+          jest.advanceTimersByTime(2000)
+          expect(channel.state).toBe("joining")
+          expect(sentJoins(connections[1]).length).toBe(1)
+        })
+
+        it("does not push with the join ref of the old connection on the new one", function (){
+          const channel = socket.channel("topic")
+          channel.join().trigger("ok", {})
+          const oldJoinRef = channel.joinRef()
+          socket.disconnect()
+          socket.connect()
+          connections[1].open()
+
+          channel.push("event", {})
+          channel.joinPush.trigger("ok", {})
+
+          const events = connections[1].sent.filter(([, , , event]) => event === "event")
+          expect(events.map(([joinRef]) => joinRef)).toEqual([channel.joinRef()])
+          expect(channel.joinRef()).not.toBe(oldJoinRef)
         })
 
         it("rejoins channels that joined over the old connection while it drained", function (){
@@ -899,10 +1054,7 @@ describe("with transports", function (){
           socket.connect()
           connections[1].open()
 
-          jest.advanceTimersByTime(2000)
-
-          expect(channel.state).toBe("errored")
-          jest.advanceTimersByTime(socket.rejoinAfterMs(1))
+          expect(channel.state).toBe("joining")
           expect(sentJoins(connections[1]).length).toBe(1)
         })
 
@@ -916,10 +1068,7 @@ describe("with transports", function (){
           socket.connect()
           connections[1].open()
 
-          jest.advanceTimersByTime(1000)
-
-          expect(channel.state).toBe("errored")
-          jest.advanceTimersByTime(socket.rejoinAfterMs(1))
+          expect(channel.state).toBe("joining")
           expect(sentJoins(connections[1]).length).toBe(1)
         })
 
@@ -1206,6 +1355,24 @@ describe("with transports", function (){
         // the connection is still connecting, so the visibility change tears it down
         socket.handleVisibilityChange()
         expect(connections[0].readyState).toBe(SOCKET_STATES.closing)
+
+        socket.disconnect()
+        jest.advanceTimersByTime(10000)
+
+        expect(connections.length).toBe(1)
+        expect(socket.conn).toBeNull()
+      })
+
+      it("does not reconnect after overlapping teardowns when disconnected in between", function (){
+        Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+        connections[0].open()
+        // the heartbeat times out, and the page is shown before the close event arrives
+        jest.advanceTimersByTime(2 * socket.heartbeatIntervalMs)
+        jest.advanceTimersByTime(500)
+        socket.handleVisibilityChange()
+        // the first teardown gives up waiting for the close event before the second one does
+        jest.advanceTimersByTime(1000)
+        expect(socket.conn).toBeNull()
 
         socket.disconnect()
         jest.advanceTimersByTime(10000)
@@ -1608,6 +1775,27 @@ describe("with transports", function (){
         jest.advanceTimersByTime(1500 + 10)
 
         expect(connections.length).toBe(2)
+      })
+
+      it("closes the connection only once", function (){
+        const closeSpy = jest.spyOn(connections[0], "close")
+
+        jest.advanceTimersByTime(2 * socket.heartbeatIntervalMs + 1500)
+
+        expect(closeSpy).toHaveBeenCalledTimes(1)
+      })
+
+      it("does not let the scheduled reconnect replace a connection created by connect", function (){
+        jest.advanceTimersByTime(2 * socket.heartbeatIntervalMs)
+        // the teardown gives up waiting for the close event and schedules the reconnect
+        jest.advanceTimersByTime(1500)
+        expect(socket.conn).toBeNull()
+
+        socket.connect()
+        jest.advanceTimersByTime(5000)
+
+        expect(connections.length).toBe(2)
+        expect(socket.conn).toBe(connections[1])
       })
 
       it("does not reconnect when a heartbeat error callback disconnects", function (){
@@ -2222,7 +2410,7 @@ describe("with transports", function (){
         expect(connections[0].sent).toEqual([])
       })
 
-      it("rejoins a pending encode after the old connection finishes draining", function (){
+      it("rejoins a channel whose join was still encoding when the draining connection was replaced", function (){
         const channel = socket.channel("topic")
         channel.join()
         connections[0].bufferedAmount = 1
@@ -2230,16 +2418,15 @@ describe("with transports", function (){
         socket.connect()
         connections[1].open()
         encodings[0]()
-        expect(connections[1].sent).toEqual([])
-
-        connections[0].bufferedAmount = 0
-        jest.advanceTimersByTime(150)
-        expect(channel.state).toBe("errored")
-        jest.advanceTimersByTime(socket.rejoinAfterMs(1))
         encodings[1]()
 
         expect(channel.state).toBe("joining")
+        expect(sentJoins(connections[0])).toEqual([])
         expect(sentJoins(connections[1]).map(([ref]) => ref)).toEqual([channel.joinRef()])
+
+        connections[0].bufferedAmount = 0
+        jest.advanceTimersByTime(150)
+        expect(channel.state).toBe("joining")
       })
 
       it("drops a join superseded while encoding on the same connection", function (){

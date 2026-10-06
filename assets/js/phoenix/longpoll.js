@@ -55,17 +55,18 @@ export default class LongPoll {
     return this.pollEndpoint
   }
 
-  closeAndRetry(code, reason, wasClean){
+  closeAndRetry(error, code, reason, wasClean){
     if(!this.isActive()){ return }
-    // we are connecting again before the close callbacks run, so that they can
-    // still close us for good, e.g. when they disconnect the socket
+    // like a failed WebSocket, we are no longer open when we emit the error and then the close.
+    // We are connecting again before their callbacks run, so that they can still close us for
+    // good, e.g. when they disconnect the socket
     this.stop(SOCKET_STATES.connecting)
-    this.emitClose(code, reason, wasClean)
+    this.onerror(error)
+    if(this.isActive()){ this.emitClose(code, reason, wasClean) }
   }
 
   ontimeout(){
-    this.onerror("timeout")
-    this.closeAndRetry(1005, "timeout", false)
+    this.closeAndRetry("timeout", 1005, "timeout", false)
   }
 
   isActive(){ return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting }
@@ -84,8 +85,7 @@ export default class LongPoll {
         if(status === 410 && this.token !== null){
           // In case we already have a token, this means that our existing session
           // is gone. We fail so that the client rejoins its channels.
-          this.onerror(410)
-          this.closeAndRetry(3410, "session_gone", false)
+          this.closeAndRetry(410, 3410, "session_gone", false)
           return
         }
         this.token = token
@@ -139,8 +139,7 @@ export default class LongPoll {
           break
         case 0:
         case 500:
-          this.onerror(500)
-          this.closeAndRetry(1011, "internal server error", 500)
+          this.closeAndRetry(500, 1011, "internal server error", 500)
           break
         default: throw new Error(`unhandled poll status ${status}`)
       }
@@ -172,9 +171,8 @@ export default class LongPoll {
     const batch = messages.slice(offset, next)
     this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), () => this.ontimeout(), resp => {
       if(!resp || resp.status !== 200){
-        this.awaitingBatchAck = false
-        this.onerror(resp && resp.status)
-        this.closeAndRetry(1011, "internal server error", false)
+        // this calls stop which already clears awaitingBatchAck
+        this.closeAndRetry(resp && resp.status, 1011, "internal server error", false)
       } else if(next < messages.length){
         this.batchSend(messages, next)
       } else if(this.batchBuffer.length > 0){

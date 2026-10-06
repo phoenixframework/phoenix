@@ -150,7 +150,8 @@ export default class Socket {
     let awaitingConnectionOnPageShow = null
     if(phxWindow && phxWindow.addEventListener){
       phxWindow.addEventListener("pagehide", _e => {
-        if(this.conn){
+        // an ended connection only finishes closing, e.g. after disconnect or a normal close by the server
+        if(this.connection && !this.connection.ended){
           this.disconnect()
           awaitingConnectionOnPageShow = this.connectClock
         }
@@ -258,6 +259,8 @@ export default class Socket {
     this.closeWasClean = true
     clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
+    // replaced first, as channel error callbacks below can already connect again
+    this.transport = newTransport
     const connection = this.connection
     if(connection){
       const wasOpen = connection.isOpen()
@@ -269,8 +272,6 @@ export default class Socket {
       // any in-flight pushes on the old connection are lost, so channels need to rejoin
       if(wasOpen){ this.triggerChanError("connection_closed", connection) }
     }
-    // channel error callbacks can disconnect or connect before replacement finishes
-    if(connectClock === this.connectClock){ this.transport = newTransport }
     return connectClock
   }
 
@@ -436,8 +437,12 @@ export default class Socket {
    * @private
    */
   transportConnect(){
+    const previous = this.connection
     this.connectClock++
     this.closeWasClean = false
+    // a reconnect scheduled before would tear down the new connection, but we keep
+    // its tries, which only reset once a connection opens
+    clearTimeout(this.reconnectTimer.timer)
     let protocols = undefined
     // Sec-WebSocket-Protocol based token
     // (longpoll uses Authorization header instead)
@@ -448,6 +453,9 @@ export default class Socket {
     transport.binaryType = this.binaryType
     transport.timeout = this.longpollerTimeout
     this.connection = new Connection(this, transport)
+    // connect can replace an ended connection that is still open while its buffer drains, but the
+    // channels joined over it need to rejoin on the new connection instead of waiting for it to close
+    if(previous && previous.isOpen()){ this.triggerChanError("connection_closed", previous) }
   }
 
   getSession(key){ return this.sessionStore && this.sessionStore.getItem(key) }
@@ -455,13 +463,12 @@ export default class Socket {
   storeSession(key, val){ this.sessionStore && this.sessionStore.setItem(key, val) }
 
   connectWithFallback(fallbackTransport, fallbackThreshold = 2500){
-    clearTimeout(this.fallbackTimer)
     // the callbacks of a previous attempt must not act on this one, e.g. an attempt
     // that never opened would otherwise fall back again on the next error
-    this.off([this.fallbackRef, this.fallbackErrorRef])
+    this.cancelFallback()
     let established = false
     let primaryTransport = true
-    let openRef, errorRef
+    let errorRef
     let connectClock
     const isCurrent = () => connectClock === this.connectClock && !this.closeWasClean
     let fallbackTransportName = this.transportName(fallbackTransport)
@@ -469,7 +476,8 @@ export default class Socket {
     // only fall back while the attempt is current
     let fallback = (reason) => {
       this.log("transport", `falling back to ${fallbackTransportName}...`, reason)
-      this.off([openRef, errorRef])
+      // the open callback stays registered to remember the fallback once it connects
+      this.off([errorRef])
       primaryTransport = false
       const replaceClock = this.replaceTransport(fallbackTransport)
       if(replaceClock !== this.connectClock){ return }
@@ -512,6 +520,16 @@ export default class Socket {
     connectClock = this.connectClock
   }
 
+  /**
+   * @private
+   *
+   * Stops the fallback of the current connection attempt, see connectWithFallback
+   */
+  cancelFallback(){
+    clearTimeout(this.fallbackTimer)
+    this.off([this.fallbackRef, this.fallbackErrorRef])
+  }
+
   clearHeartbeats(){
     clearTimeout(this.heartbeatTimer)
     clearTimeout(this.heartbeatTimeoutTimer)
@@ -548,7 +566,7 @@ export default class Socket {
       if(!this.stillUses(connection)){ return }
       this.triggerChanError("heartbeat_timeout")
       if(!this.stillUses(connection)){ return }
-      this.teardownAndReconnect(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout")
+      this.teardownAndReconnect(() => this.reconnectTimer.scheduleTimeout())
     }
   }
 
@@ -564,13 +582,15 @@ export default class Socket {
    * Tears down the current connection to reconnect afterwards, unless the socket was
    * disconnected or connected again in the meantime, which takes precedence.
    */
-  teardownAndReconnect(reconnect, code, reason){
+  teardownAndReconnect(reconnect){
     const connection = this.connection
+    const connectClock = this.connectClock
     this.teardown(() => {
-      // the socket gave up on the connection, or another one replaced it
-      if(connection && (connection.ended || this.connection)){ return }
+      // the socket was disconnected or connected again in the meantime, which the connection does not
+      // tell once an overlapping teardown gave up on it, or the server closed the connection normally
+      if(connectClock !== this.connectClock || (connection && connection.ended)){ return }
       reconnect()
-    }, code, reason)
+    })
   }
 
   /**
@@ -595,12 +615,16 @@ export default class Socket {
     this.clearHeartbeats()
 
     this.waitForBufferDone(connection.transport, () => {
-      const wasOpened = !connection.isConnecting()
-      connection.close(code, reason)
-      // channels joined over this connection need to rejoin on the next one, but we cannot rely
-      // on onConnClose for that, as the close event may arrive after we stopped waiting for it
-      // or after a new connection already replaced this one
-      if(wasOpened){ this.triggerChanError("connection_closed", connection) }
+      // a connection we already closed, e.g. on a heartbeat timeout or in an
+      // overlapping teardown, also errored its channels already
+      if(!connection.closing){
+        const wasOpened = !connection.isConnecting()
+        connection.close(code, reason)
+        // channels joined over this connection need to rejoin on the next one, but we cannot rely
+        // on onConnClose for that, as the close event may arrive after we stopped waiting for it
+        // or after a new connection already replaced this one
+        if(wasOpened){ this.triggerChanError("connection_closed", connection) }
+      }
 
       this.waitForSocketClosed(connection.transport, () => {
         if(this.connection === connection){ this.connection = null }
@@ -637,19 +661,21 @@ export default class Socket {
     let closeCode = event && event.code
     if(this.hasLogger()) this.log("transport", "close", event)
     this.clearHeartbeats()
-    // the server closes with 1000 when we should not reconnect, which also applies to reconnecting
-    // on visibility change, unless we closed the connection ourselves and the server only confirmed it
-    if(closeCode === 1000 && !(connection && connection.closing)){
+    // we only close a connection to disconnect or to reconnect, which the code closing it takes
+    // care of, so its close event only confirms our close, even when the server sends 1000
+    const closedByUs = !!(connection && connection.closing)
+    // the server closes with 1000 when we should not reconnect, which also applies to
+    // reconnecting on visibility change
+    if(closeCode === 1000 && !closedByUs){
       this.closeWasClean = true
       if(connection){ connection.ended = true }
-      clearTimeout(this.fallbackTimer)
-      this.off([this.fallbackRef, this.fallbackErrorRef])
+      this.cancelFallback()
       this.reconnectTimer.reset()
     }
     // channel callbacks may disconnect or create a new connection, so finish cleaning up
     // this connection first and do not schedule a reconnect for its replacement
     this.triggerChanError("connection_closed", connection)
-    if(this.stillUses(connection) && !this.closeWasClean && closeCode !== 1000){
+    if(this.stillUses(connection) && !closedByUs && !this.closeWasClean && closeCode !== 1000){
       this.reconnectTimer.scheduleTimeout()
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))
