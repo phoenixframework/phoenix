@@ -461,6 +461,7 @@ defmodule Phoenix.Test.ChannelTest do
     assert_push "default", %{"foo" => "bar"}
   end
 
+  # TODO: Remove in Phoenix 1.10
   test "handles broadcasts dispatched by Phoenix.Channel.Server from older nodes" do
     Process.flag(:trap_exit, true)
     {:ok, _, socket} = subscribe_and_join(socket(UserSocket), Channel, "foo:ok")

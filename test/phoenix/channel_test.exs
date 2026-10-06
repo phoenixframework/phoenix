@@ -117,8 +117,7 @@ defmodule Phoenix.Channel.ChannelTest do
     }
   end
 
-  # TODO: Remove in Phoenix 1.10
-  test "broadcasts to other nodes with Phoenix.Channel.Server as dispatcher" do
+  test "broadcasts to other nodes with the default dispatcher" do
     pubsub = __MODULE__.ClusterPubSub
     start_supervised!({Phoenix.PubSub, name: pubsub, adapter: ClusterAdapter, test_pid: self()})
 
@@ -132,22 +131,22 @@ defmodule Phoenix.Channel.ChannelTest do
     broadcast(socket, "event1", %{key: :val})
 
     assert_receive {:cluster_broadcast, "sometopic", %Phoenix.Socket.Broadcast{event: "event1"},
-                    Phoenix.Channel.Server}
+                    Phoenix.PubSub}
 
     broadcast!(socket, "event2", %{key: :val})
 
     assert_receive {:cluster_broadcast, "sometopic", %Phoenix.Socket.Broadcast{event: "event2"},
-                    Phoenix.Channel.Server}
+                    Phoenix.PubSub}
 
     broadcast_from(socket, "event3", %{key: :val})
 
     assert_receive {:cluster_broadcast, "sometopic", %Phoenix.Socket.Broadcast{event: "event3"},
-                    Phoenix.Channel.Server}
+                    Phoenix.PubSub}
 
     broadcast_from!(socket, "event4", %{key: :val})
 
     assert_receive {:cluster_broadcast, "sometopic", %Phoenix.Socket.Broadcast{event: "event4"},
-                    Phoenix.Channel.Server}
+                    Phoenix.PubSub}
   end
 
   test "pushing to transport" do

@@ -6,6 +6,10 @@
     header instead of the query string. If you do rolling deploys where both
     old and new nodes are active at the same time, ensure that you deploy
     Phoenix v1.8.10 or a later v1.8 release first.
+  * Channels now use the `Phoenix.PubSub.Sender` behaviour for fastlaning,
+    which requires `phoenix_pubsub` v2.4. If you do rolling deploys where both
+    old and new nodes are active at the same time, ensure that you deploy
+    Phoenix v1.8.16 or a later v1.8 release first.
 
 ## v1.8
 

@@ -121,11 +121,10 @@ defmodule Phoenix.Channel.Server do
 
   # TODO: Remove in Phoenix 1.10
   #
-  # Nodes running Phoenix < 1.9 expect cluster-wide channel broadcasts to use
-  # this module as dispatcher, otherwise their channels receive broadcasts
-  # they cannot handle. Therefore we still broadcast with it, and it is also
-  # invoked for broadcasts coming from older nodes. Subscriptions carry their
-  # own sender, so we delegate to the default dispatching.
+  # Nodes running Phoenix 1.8 broadcast with this module as dispatcher,
+  # so it is still invoked for broadcasts coming from those nodes.
+  # Subscriptions carry their own sender, so we delegate to the default
+  # dispatching.
   @doc false
   def dispatch(entries, from, message) do
     PubSub.dispatch(entries, from, message)
@@ -145,8 +144,7 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
 
-    # TODO: Stop passing the dispatcher in 1.10, see the comment on dispatch/3
-    PubSub.broadcast(pubsub_server, topic, broadcast, __MODULE__)
+    PubSub.broadcast(pubsub_server, topic, broadcast)
   end
 
   @doc """
@@ -163,8 +161,7 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
 
-    # TODO: Stop passing the dispatcher in 1.10, see the comment on dispatch/3
-    PubSub.broadcast!(pubsub_server, topic, broadcast, __MODULE__)
+    PubSub.broadcast!(pubsub_server, topic, broadcast)
   end
 
   @doc """
@@ -181,8 +178,7 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
 
-    # TODO: Stop passing the dispatcher in 1.10, see the comment on dispatch/3
-    PubSub.broadcast_from(pubsub_server, from, topic, broadcast, __MODULE__)
+    PubSub.broadcast_from(pubsub_server, from, topic, broadcast)
   end
 
   @doc """
@@ -199,8 +195,7 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
 
-    # TODO: Stop passing the dispatcher in 1.10, see the comment on dispatch/3
-    PubSub.broadcast_from!(pubsub_server, from, topic, broadcast, __MODULE__)
+    PubSub.broadcast_from!(pubsub_server, from, topic, broadcast)
   end
 
   @doc """
