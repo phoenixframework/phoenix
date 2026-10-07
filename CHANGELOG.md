@@ -1,5 +1,13 @@
 # Changelog for v1.9
 
+## Bug fixes
+
+  * [Phoenix.ChannelTest] Fix test sockets violating the Phoenix.Socket.t
+    typespec, which made Dialyzer treat every test join as never returning
+    ([#5509](https://github.com/phoenixframework/phoenix/issues/5509))
+  * [Phoenix.Socket] Type `topic` and `channel_pid` as possibly `nil` in
+    `Phoenix.Socket.t`, as they are before a channel is joined
+
 ## Enhancements
 
   * The longpoll session token is now sent in a `x-phoenix-longpoll-token`

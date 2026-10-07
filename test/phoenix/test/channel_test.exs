@@ -234,11 +234,12 @@ defmodule Phoenix.Test.ChannelTest do
     assert socket.endpoint == @endpoint
     assert socket.pubsub_server == Phoenix.Test.ChannelTest.PubSub
     assert socket.topic == "foo:socket"
-    assert {Phoenix.ChannelTest, _} = socket.transport
+    assert socket.transport == Phoenix.ChannelTest
     assert socket.transport_pid == self()
     assert socket.serializer == Phoenix.ChannelTest.NoopSerializer
     assert socket.assigns == %{hello: :world, original: :assign}
     assert %{socket | joined: true} == client
+    assert {:ok, _, _} = join(client, Channel, "foo:socket")
 
     {:links, links} = Process.info(self(), :links)
     assert client.channel_pid in links
@@ -366,6 +367,7 @@ defmodule Phoenix.Test.ChannelTest do
   test "connects and joins topics directly" do
     :error = connect(UserSocket, %{"reject" => true})
     {:ok, socket} = connect(UserSocket, %{})
+    assert socket.transport == Phoenix.ChannelTest
     socket = subscribe_and_join!(socket, "foo:ok")
     push(socket, "broadcast", %{"foo" => "bar"})
     assert socket.id == "123"

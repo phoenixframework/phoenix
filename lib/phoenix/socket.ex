@@ -275,7 +275,7 @@ defmodule Phoenix.Socket do
   @type t :: %Socket{
           assigns: map,
           channel: atom,
-          channel_pid: pid,
+          channel_pid: pid | nil,
           endpoint: atom,
           handler: atom,
           id: String.t() | nil,
@@ -284,7 +284,7 @@ defmodule Phoenix.Socket do
           private: map,
           pubsub_server: atom,
           serializer: atom,
-          topic: String.t(),
+          topic: String.t() | nil,
           transport: atom,
           transport_pid: pid
         }
