@@ -125,7 +125,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(app_path(@app, "mix.exs"), fn file ->
         assert file =~ "mod: {PhxUmb.Application, []}"
-        assert file =~ "{:phoenix_pubsub, \"~> 2.1\"}"
+        assert file =~ "{:phoenix_pubsub, \"~> 2.4\"}"
       end)
 
       assert_file(app_path(@app, "test/test_helper.exs"))
