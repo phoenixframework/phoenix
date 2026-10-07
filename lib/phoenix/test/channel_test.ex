@@ -261,7 +261,8 @@ defmodule Phoenix.ChannelTest do
       id: id,
       pubsub_server: endpoint.config(:pubsub_server),
       serializer: NoopSerializer,
-      transport: {__MODULE__, fetch_test_supervisor!(options)},
+      private: %{phoenix_test_supervisor: fetch_test_supervisor!(options)},
+      transport: __MODULE__,
       transport_pid: self()
     }
   end
@@ -335,9 +336,11 @@ defmodule Phoenix.ChannelTest do
         Keyword.pop(options, :connect_info, %{})
       end
 
+    sup = fetch_test_supervisor!(options)
+
     map = %{
       endpoint: endpoint,
-      transport: {__MODULE__, fetch_test_supervisor!(options)},
+      transport: __MODULE__,
       options: [serializer: [{NoopSerializer, "~> 1.0.0"}]],
       params: __stringify__(params),
       connect_info: connect_info
@@ -345,7 +348,7 @@ defmodule Phoenix.ChannelTest do
 
     with {:ok, state} <- handler.connect(map),
          {:ok, {_, socket}} = handler.init(state),
-         do: {:ok, socket}
+         do: {:ok, %{socket | private: Map.put(socket.private, :phoenix_test_supervisor, sup)}}
   end
 
   @doc "See `subscribe_and_join!/4`."
@@ -441,7 +444,7 @@ defmodule Phoenix.ChannelTest do
         match_topic_to_channel!(socket, topic)
       end
 
-    %Socket{transport: {__MODULE__, sup}} = socket
+    %Socket{private: %{phoenix_test_supervisor: sup}} = socket
 
     starter =
       fn _, _, spec ->
