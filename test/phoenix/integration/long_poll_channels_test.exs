@@ -148,6 +148,14 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         check_origin: ["//example.com"]
       ]
 
+    socket "/ws/limited", UserSocket,
+      longpoll: [
+        window_ms: 200,
+        pubsub_timeout_ms: 200,
+        check_origin: ["//example.com"]
+      ],
+      max_channels_per_transport: 1
+
     socket "/ws/connect_info", UserSocketConnectInfo,
       longpoll: [
         window_ms: 200,
@@ -451,6 +459,44 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
                        "status" => "error"
                      },
                      ref: "101",
+                     topic: ^overflow_topic
+                   }
+                 ] = resp.body["messages"]
+        end
+
+        test "#{@mode}: honors max_channels_per_transport given to socket/3" do
+          prefix = "room:limited-#{System.unique_integer([:positive])}"
+          first_topic = "#{prefix}-1"
+          session = join("/ws/limited", first_topic, @vsn, "1", @mode)
+
+          resp = poll(:get, "/ws/limited", @vsn, session)
+          assert resp.body["status"] == 200
+
+          assert [
+                   %Message{
+                     event: "phx_reply",
+                     payload: %{"response" => %{}, "status" => "ok"},
+                     topic: ^first_topic
+                   },
+                   %Message{event: "user_entered", topic: ^first_topic},
+                   %Message{event: "joined", topic: ^first_topic}
+                 ] = resp.body["messages"]
+
+          overflow_topic = "#{prefix}-2"
+          resp = join_existing_session("/ws/limited", session, overflow_topic, @vsn, "2", "2")
+          assert resp.body["status"] == 200
+
+          resp = poll(:get, "/ws/limited", @vsn, session)
+          assert resp.body["status"] == 200
+
+          assert [
+                   %Message{
+                     event: "phx_reply",
+                     payload: %{
+                       "response" => %{"reason" => "too many channels joined"},
+                       "status" => "error"
+                     },
+                     ref: "2",
                      topic: ^overflow_topic
                    }
                  ] = resp.body["messages"]
