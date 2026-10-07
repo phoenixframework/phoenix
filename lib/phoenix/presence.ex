@@ -79,20 +79,6 @@ defmodule Phoenix.Presence do
 
   See `c:list/1` for more information on the presence data structure.
 
-  ## Custom dispatcher
-
-  It's possible to customize the dispatcher module used to broadcast.
-  By default, presence uses the same dispatcher as channels. To customize the
-  dispatcher, pass the `:dispatcher` option when using `Phoenix.Presence`:
-
-      use Phoenix.Presence,
-        otp_app: :my_app,
-        pubsub_server: MyApp.PubSub,
-        dispatcher: MyApp.CustomDispatcher
-
-  See `m:Phoenix.PubSub#module-custom-dispatching` for more information on
-  custom dispatchers.
-
   ## Fetching Presence Information
 
   Presence metadata should be minimized and used to store small,
@@ -431,7 +417,7 @@ defmodule Phoenix.Presence do
       pubsub_server =
         opts[:pubsub_server] || raise "use Phoenix.Presence expects :pubsub_server to be given"
 
-      dispatcher = opts[:dispatcher] || Phoenix.Channel.Server
+      dispatcher = opts[:dispatcher]
 
       Phoenix.Tracker.start_link(
         __MODULE__,
@@ -530,7 +516,11 @@ defmodule Phoenix.Presence do
         payload: presence_diff
       }
 
-      Phoenix.PubSub.local_broadcast(state.pubsub_server, topic, broadcast, state.dispatcher)
+      if dispatcher = state.dispatcher do
+        Phoenix.PubSub.local_broadcast(state.pubsub_server, topic, broadcast, dispatcher)
+      else
+        Phoenix.PubSub.local_broadcast(state.pubsub_server, topic, broadcast)
+      end
     end)
 
     new_state =
