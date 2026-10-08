@@ -137,8 +137,13 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp socket_children(endpoint, conf, fun) do
-    for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__(), &elem(&1, 1)),
-        _ = check_origin_or_csrf_checked!(conf, opts),
+    sockets =
+      Enum.uniq_by(endpoint.__sockets__(), fn {_, socket, opts} ->
+        check_origin_or_csrf_checked!(conf, opts)
+        socket
+      end)
+
+    for {_, socket, opts} <- sockets,
         spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
         spec != :ignore do
       spec

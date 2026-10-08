@@ -197,6 +197,25 @@ defmodule Phoenix.Endpoint.SupervisorTest do
       end
     end
 
+    defmodule DuplicateSocketEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      # Socket entries are returned in reverse declaration order.
+      socket "/unsafe", TestSocket, websocket: [check_csrf: false, check_origin: false]
+      socket "/ws", TestSocket, websocket: [check_csrf: false]
+    end
+
+    Application.put_env(:phoenix, DuplicateSocketEndpoint, [])
+
+    test "fails when CSRF and origin checks both disabled in a second mount of the same socket" do
+      assert [{"/ws", TestSocket, _}, {"/unsafe", TestSocket, _}] =
+               DuplicateSocketEndpoint.__sockets__()
+
+      assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
+        Supervisor.init({:phoenix, DuplicateSocketEndpoint, []})
+      end
+    end
+
     defmodule SocketEndpointOriginCheckDisabled do
       use Phoenix.Endpoint, otp_app: :phoenix
 
