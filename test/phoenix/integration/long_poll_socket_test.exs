@@ -73,6 +73,10 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     socket "/custom/:socket_var", UserSocket,
       longpoll: [path: ":path_var/path", check_origin: ["//example.com"], pubsub_timeout_ms: 200],
       custom: :value
+
+    socket "/shortlived", UserSocket,
+      longpoll: [window_ms: 200, pubsub_timeout_ms: 200, crypto: [max_age: 1]],
+      custom: :value
   end
 
   setup %{adapter: adapter} do
@@ -106,6 +110,24 @@ defmodule Phoenix.Integration.LongPollSocketTest do
 
   def poll_with_token_in_params(method, path, params, body \\ nil, headers \\ %{}) do
     do_poll(method, path, params, body, headers)
+  end
+
+  # Re-signs a live session with the private topic format used before session
+  # tokens were bound to their mount. The session is reached through the pid in
+  # the token -- the topic is only consulted when the owning node is remote --
+  # so the rewritten topic still resolves to the same session.
+  defp downgrade_token(token) do
+    salt = Atom.to_string(Endpoint.config(:pubsub_server))
+
+    {:ok, {:v1, id, pid, _topic}} =
+      Phoenix.Token.verify(Endpoint, salt, token, max_age: 1_209_600)
+
+    legacy_topic =
+      "phx:lp:" <>
+        Base.encode64(:crypto.strong_rand_bytes(16)) <>
+        (System.system_time(:millisecond) |> Integer.to_string())
+
+    Phoenix.Token.sign(Endpoint, salt, {:v1, id, pid, legacy_topic})
   end
 
   defp do_poll(method, path, params, body, headers) do
@@ -205,6 +227,60 @@ defmodule Phoenix.Integration.LongPollSocketTest do
 
         resp = poll(:get, "ws/longpoll", secret, nil)
         assert resp.body["messages"] == ["pong"]
+      end
+
+      test "binds the session token to the mount that issued it" do
+        resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
+        secret = Map.take(resp.body, ["token"])
+
+        resp = poll(:post, "ws/longpoll", secret, "ping")
+        assert resp.body["status"] == 200
+
+        # the very same token is not accepted at a sibling mount
+        resp = poll(:post, "custom/123/456/path", secret, "ping")
+        assert resp.body["status"] == 410
+
+        # and a poll there starts a fresh session instead of resuming it
+        resp = poll(:get, "custom/123/456/path", secret, nil)
+        assert resp.body["status"] == 410
+        assert resp.body["messages"] == []
+        assert resp.body["token"] != secret["token"]
+
+        # the original session is left untouched throughout
+        resp = poll(:get, "ws/longpoll", secret, nil)
+        assert resp.body["messages"] == ["pong"]
+      end
+
+      test "accepts legacy tokens that carry no mount tag" do
+        resp = poll(:get, "ws/longpoll", %{"hello" => "world"}, nil)
+        legacy = %{"token" => downgrade_token(resp.body["token"])}
+
+        resp = poll(:post, "ws/longpoll", legacy, "params")
+        assert resp.body["status"] == 200
+
+        resp = poll(:get, "ws/longpoll", legacy, nil)
+        assert resp.body["messages"] == [~s(%{"hello" => "world"})]
+      end
+
+      test "does not let a sibling mount extend a token past its max_age" do
+        resp = poll(:get, "shortlived/longpoll", %{}, nil)
+        salt = Atom.to_string(Endpoint.config(:pubsub_server))
+
+        {:ok, payload} = Phoenix.Token.verify(Endpoint, salt, resp.body["token"], max_age: 1)
+
+        # the same session, signed as if it had been issued two minutes ago
+        stale = %{
+          "token" =>
+            Phoenix.Token.sign(Endpoint, salt, payload, signed_at: System.os_time(:second) - 120)
+        }
+
+        # the issuing mount rejects it, since its max_age is one second
+        resp = poll(:post, "shortlived/longpoll", stale, "ping")
+        assert resp.body["status"] == 410
+
+        # and it cannot be laundered through a mount with a longer max_age
+        resp = poll(:post, "ws/longpoll", stale, "ping")
+        assert resp.body["status"] == 410
       end
     end
   end

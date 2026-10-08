@@ -758,7 +758,12 @@ defmodule Phoenix.Endpoint do
     paths =
       if longpoll do
         longpoll = put_auth_token(longpoll, opts[:auth_token])
-        config = Phoenix.Socket.Transport.load_config(longpoll, Phoenix.Transports.LongPoll)
+
+        config =
+          longpoll
+          |> Phoenix.Socket.Transport.load_config(Phoenix.Transports.LongPoll)
+          |> Phoenix.Transports.LongPoll.put_mount_tag(socket, path)
+
         plug_init = {endpoint, socket, config}
         {conn_ast, match_path} = socket_path(path, config)
         [{match_path, Phoenix.Transports.LongPoll, conn_ast, plug_init} | paths]
