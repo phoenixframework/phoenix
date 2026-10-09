@@ -4,6 +4,7 @@ defmodule Phx.New.Interactive do
   @databases [
     {"postgres", "PostgreSQL (postgrex)"},
     {"mysql", "MySQL (myxql)"},
+    {"mongodb", "MongoDB (mongodb_ecto)"},
     {"mssql", "MSSQL (tds)"},
     {"sqlite3", "SQLite3 (ecto_sqlite3)"},
     {"none", "None"}

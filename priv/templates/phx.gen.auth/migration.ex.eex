@@ -17,7 +17,9 @@ defmodule <%= inspect schema.repo %>.Migrations.Create<%= Macro.camelize(schema.
 
     create table(:<%= schema.table %>_tokens<%= if schema.binary_id do %>, primary_key: false<% end %>) do
 <%= if schema.binary_id do %>      add :id, :binary_id, primary_key: true
-<% end %>      add :<%= schema.singular %>_id, references(:<%= schema.table %>, <%= if schema.binary_id do %>type: :binary_id, <% end %>on_delete: :delete_all), null: false
+<% end %><%= if mongo_adapter? do %>      add :<%= schema.singular %>_id, :binary_id, null: false
+<% else %>      add :<%= schema.singular %>_id, references(:<%= schema.table %>, <%= if schema.binary_id do %>type: :binary_id, <% end %>on_delete: :delete_all), null: false
+<% end %>
       <%= migration.column_definitions[:token] %>
       add :context, :string, null: false
       add :sent_to, :string
