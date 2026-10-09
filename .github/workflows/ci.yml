@@ -243,18 +243,24 @@ jobs:
     env:
       ELIXIR_ASSERT_TIMEOUT: 10000
       PHX_CI: true
-      # Set to half of the runner vCPU cores to compile deps/NIFs
-      # concurrently across OS processes without CPU oversubscription.
-      # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
-      # and https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/
-      MIX_OS_DEPS_COMPILE_PARTITION_COUNT: 2
-      MAKEFLAGS: "-j2"
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Configure runner concurrency
+        run: |
+          CORES=$(nproc)
+          HALF_CORES=$(( CORES > 2 ? CORES / 2 : 2 ))
+          echo "CORES=$CORES" >> "$GITHUB_ENV"
+          echo "HALF_CORES=$HALF_CORES" >> "$GITHUB_ENV"
+          # Set to half of the runner vCPU cores to compile deps/NIFs
+          # concurrently across OS processes without CPU oversubscription.
+          # See https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/
+          echo "MIX_OS_DEPS_COMPILE_PARTITION_COUNT=$HALF_CORES" >> "$GITHUB_ENV"
+          echo "MAKEFLAGS=-j$HALF_CORES" >> "$GITHUB_ENV"
 
       - name: Mount installer/tmp on tmpfs
         run: |
@@ -303,6 +309,7 @@ jobs:
           fi
 
           mix test $FLAGS \
+            --max-cases "$CORES" \
             --formatter ExUnit.CLIFormatter \
             --formatter Phoenix.Integration.SummaryFormatter
         env:

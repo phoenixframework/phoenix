@@ -36,6 +36,7 @@ TEST_EXIT=0
 docker compose run --build --rm \
   -e PHX_INTEGRATION_SUMMARY_JSON="$SUMMARY_JSON" \
   runner \
+  --max-cases "$CORES" \
   --formatter ExUnit.CLIFormatter \
   --formatter Phoenix.Integration.SummaryFormatter \
   "${@:---include=database}" || TEST_EXIT=$?
