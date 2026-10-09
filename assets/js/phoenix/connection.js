@@ -20,6 +20,9 @@ export default class Connection {
     // the join ref of each channel whose join was sent over this connection, weakly held
     // as a connection can outlive many channels, e.g. when navigating between LiveViews
     this.joins = new WeakMap()
+    // the callbacks of the pings sent over this connection by ref, as their replies can only
+    // arrive over it, so they are gone together with it instead of accumulating on the socket
+    this.pings = new Map()
     // set when we close the connection, as opposed to the server or the network
     this.closing = false
     // set when the socket does not want this connection anymore, e.g. on disconnect,

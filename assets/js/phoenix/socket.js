@@ -405,13 +405,8 @@ export default class Socket {
     if(!this.isConnected()){ return false }
     let ref = this.makeRef()
     let startTime = Date.now()
+    this.connection.pings.set(ref, () => callback(Date.now() - startTime))
     this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: ref})
-    let onMsgRef = this.onMessage(msg => {
-      if(msg.ref === ref){
-        this.off([onMsgRef])
-        callback(Date.now() - startTime)
-      }
-    })
     return true
   }
 
@@ -879,6 +874,12 @@ export default class Socket {
       for(let i = 0; i < callbacks.length; i++){
         let [, callback] = callbacks[i]
         callback(msg)
+      }
+
+      const ping = ref && connection.pings.get(ref)
+      if(ping){
+        connection.pings.delete(ref)
+        ping()
       }
     })
   }

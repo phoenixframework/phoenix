@@ -196,6 +196,19 @@ describe("with transports", function (){
           expect(socket.stateChangeCallbacks.error.length).toBe(1)
         })
 
+        it("does not accumulate the health check pings of connections that dropped", function (){
+          socket.connect()
+          for(let i = 0; i < 3; i++){
+            connections[i].open()
+            // the connection drops before the ping is answered
+            connections[i].finishClose(1006)
+            jest.advanceTimersByTime(10)
+          }
+
+          expect(socket.stateChangeCallbacks.message.length).toBe(0)
+          expect(socket.connection.pings.size).toBe(0)
+        })
+
         it("falls back once when a previous attempt failed without an error", function (){
           const replaceSpy = jest.spyOn(socket, "replaceTransport")
           socket.connect()
