@@ -746,7 +746,7 @@ defmodule Phoenix.Endpoint do
 
     paths =
       if websocket do
-        websocket = put_auth_token(websocket, opts[:auth_token])
+        websocket = put_socket_opts(websocket, opts)
         config = Phoenix.Socket.Transport.load_config(websocket, Phoenix.Transports.WebSocket)
         plug_init = {endpoint, socket, config}
         {conn_ast, match_path} = socket_path(path, config)
@@ -757,7 +757,7 @@ defmodule Phoenix.Endpoint do
 
     paths =
       if longpoll do
-        longpoll = put_auth_token(longpoll, opts[:auth_token])
+        longpoll = put_socket_opts(longpoll, opts)
         config = Phoenix.Socket.Transport.load_config(longpoll, Phoenix.Transports.LongPoll)
         plug_init = {endpoint, socket, config}
         {conn_ast, match_path} = socket_path(path, config)
@@ -769,8 +769,25 @@ defmodule Phoenix.Endpoint do
     paths
   end
 
-  defp put_auth_token(true, enabled), do: [auth_token: enabled]
-  defp put_auth_token(opts, enabled), do: Keyword.put(opts, :auth_token, enabled)
+  # Copies top-level socket options into the transport config,
+  # which is what the socket receives on connect.
+  defp put_socket_opts(true, opts), do: put_socket_opts([], opts)
+
+  defp put_socket_opts(transport_opts, opts) do
+    transport_opts = Keyword.put(transport_opts, :auth_token, opts[:auth_token])
+
+    case Keyword.fetch(opts, :max_channels_per_transport) do
+      {:ok, max} when is_integer(max) and max > 0 ->
+        Keyword.put(transport_opts, :max_channels_per_transport, max)
+
+      {:ok, other} ->
+        raise ArgumentError,
+              ":max_channels_per_transport must be a positive integer, got: #{inspect(other)}"
+
+      :error ->
+        transport_opts
+    end
+  end
 
   defp socket_path(path, config) do
     end_path_fragment = Keyword.fetch!(config, :path)
@@ -864,6 +881,15 @@ defmodule Phoenix.Endpoint do
       The token is available in the `connect_info` as `:auth_token`.
 
       Custom transports might implement their own mechanism.
+
+    * `:max_channels_per_transport` - the maximum number of channels that may be
+      joined per transport process. Overrides the value given to `use Phoenix.Socket`,
+      which defaults to `100`. This is useful for sockets you don't define yourself,
+      such as `Phoenix.LiveView.Socket`:
+
+          socket "/live", Phoenix.LiveView.Socket,
+            websocket: [connect_info: [session: @session_options]],
+            max_channels_per_transport: 200
 
   You can also pass the options below on `use Phoenix.Socket`.
   The values specified here override the value in `use Phoenix.Socket`.

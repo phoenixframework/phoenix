@@ -438,5 +438,21 @@ defmodule Phoenix.Endpoint.EndpointTest do
         socket "/ws", UserSocket, longpoll: [path: "/ws", check_origin: false, drainer: []]
       end
     end
+
+    assert_raise ArgumentError, ~r/:max_channels_per_transport must be a positive integer/, fn ->
+      defmodule MyInvalidSocketEndpoint3 do
+        use Phoenix.Endpoint, otp_app: :phoenix
+
+        socket "/ws", UserSocket, max_channels_per_transport: nil
+      end
+    end
+
+    assert_raise ArgumentError, ~r/:max_channels_per_transport must be a positive integer/, fn ->
+      defmodule MyInvalidSocketEndpoint4 do
+        use Phoenix.Endpoint, otp_app: :phoenix
+
+        socket "/ws", UserSocket, longpoll: true, max_channels_per_transport: 0
+      end
+    end
   end
 end
