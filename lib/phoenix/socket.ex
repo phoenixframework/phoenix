@@ -80,7 +80,9 @@ defmodule Phoenix.Socket do
       to handle channels. Defaults to the number of cores.
 
     * `:max_channels_per_transport` - the maximum number of channels that may be
-      joined per transport process. Defaults to `100`.
+      joined per transport process. Defaults to `100`. It can also be set when
+      mounting the socket in your endpoint, which overrides the value given here.
+      See `Phoenix.Endpoint.socket/3`.
 
   ## Garbage collection
 
