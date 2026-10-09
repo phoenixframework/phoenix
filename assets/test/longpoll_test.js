@@ -76,9 +76,65 @@ describe("LongPoll", () => {
       // Verify auth token was extracted correctly
       expect(longpoll.authToken).toBe(authToken)
     })
+
+    it("does not poll when closed before polling started", () => {
+      jest.useFakeTimers()
+      try {
+        const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+        longpoll.close()
+        jest.runOnlyPendingTimers()
+
+        expect(Ajax.request).not.toHaveBeenCalled()
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
+    it("emits a close without a status code when closed without one", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      let event
+      longpoll.onclose = e => { event = e }
+
+      longpoll.close()
+
+      expect(event.code).toBe(1005)
+      expect(event.wasClean).toBe(true)
+    })
+
+    it("emits the given close code and clean flag", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      let event
+      longpoll.onclose = e => { event = e }
+
+      longpoll.close(1008, "forbidden", false)
+
+      expect(event.code).toBe(1008)
+      expect(event.reason).toBe("forbidden")
+      expect(event.wasClean).toBe(false)
+    })
   })
 
   describe("poll", () => {
+    it("does not start another request when an onOpen callback disconnects", () => {
+      jest.useFakeTimers()
+      try {
+        const socket = new Socket("/socket", {transport: LongPoll})
+        socket.onOpen(() => socket.disconnect())
+        socket.connect()
+        const longpoll = socket.conn
+        jest.advanceTimersByTime(0)
+        const response = Ajax.request.mock.calls[0][6]
+
+        response({status: 410, token: "token", messages: []})
+
+        expect(socket.conn).toBeNull()
+        expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
+        expect(Ajax.request).toHaveBeenCalledTimes(1)
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
     it("should include auth token in headers when present", () => {
       const authToken = "my-auth-token"
       const encodedToken = btoa(authToken)
@@ -162,9 +218,7 @@ describe("LongPoll", () => {
       longpoll.timeout = 1000
       longpoll.token = "existing-token"
 
-      const mockOnerror = jest.fn()
       const mockCloseAndRetry = jest.fn()
-      longpoll.onerror = mockOnerror
       longpoll.closeAndRetry = mockCloseAndRetry
 
       Ajax.request.mockImplementation((method, url, headers, body, timeout, ontimeout, callback) => {
@@ -174,8 +228,249 @@ describe("LongPoll", () => {
 
       longpoll.poll()
 
-      expect(mockOnerror).toHaveBeenCalledWith(410)
-      expect(mockCloseAndRetry).toHaveBeenCalledWith(3410, "session_gone", false)
+      expect(mockCloseAndRetry).toHaveBeenCalledWith(410, 3410, "session_gone", false)
+    })
+  })
+
+  describe("queued messages", () => {
+    let longpoll, events
+
+    beforeEach(() => {
+      jest.useFakeTimers()
+      longpoll = new LongPoll("http://localhost/socket/longpoll")
+      events = []
+      longpoll.onmessage = ({data}) => events.push(data)
+      longpoll.onerror = () => events.push("error")
+      longpoll.onclose = () => events.push("close")
+      jest.advanceTimersByTime(0)
+      // the first poll opens the transport and polls again
+      Ajax.request.mock.calls[0][6]({status: 410, token: "token", messages: []})
+    })
+
+    afterEach(() => jest.useRealTimers())
+
+    it("delivers each message in its own task", () => {
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["first", "second"]})
+      expect(events).toEqual([])
+
+      jest.advanceTimersByTime(0)
+
+      expect(events).toEqual(["first", "second"])
+    })
+
+    it("does not deliver messages after a POST timeout closed the transport", () => {
+      longpoll.send("push")
+      jest.advanceTimersByTime(0)
+      const post = Ajax.request.mock.calls.find(([method]) => method === "POST")
+
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["message"]})
+      post[5]()
+      jest.advanceTimersByTime(0)
+
+      expect(events).toEqual(["error", "close"])
+    })
+
+    it("does not deliver the remaining messages after a message handler closed the transport", () => {
+      longpoll.onmessage = ({data}) => {
+        events.push(data)
+        longpoll.close()
+      }
+
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["first", "second"]})
+      jest.advanceTimersByTime(0)
+
+      expect(events).toEqual(["first", "close"])
+    })
+  })
+
+  describe("when it fails after opening", () => {
+    let longpoll, events
+
+    beforeEach(() => {
+      jest.useFakeTimers()
+      longpoll = new LongPoll("http://localhost/socket/longpoll")
+      events = []
+      longpoll.onerror = () => events.push(["error", longpoll.readyState])
+      longpoll.onclose = () => events.push(["close", longpoll.readyState])
+      jest.advanceTimersByTime(0)
+      // the first poll opens the transport and polls again
+      Ajax.request.mock.calls[0][6]({status: 410, token: "token", messages: []})
+    })
+
+    afterEach(() => jest.useRealTimers())
+
+    const failBatch = () => {
+      longpoll.send("push")
+      jest.advanceTimersByTime(0)
+      Ajax.request.mock.calls.find(([method]) => method === "POST")[6]({status: 500})
+    }
+
+    it.each([
+      ["a poll fails", () => Ajax.request.mock.calls[1][6]({status: 500})],
+      ["a poll gets no response", () => Ajax.request.mock.calls[1][6](null)],
+      ["a poll times out", () => Ajax.request.mock.calls[1][5]()],
+      ["the session is gone", () => Ajax.request.mock.calls[1][6]({status: 410, token: "new-token", messages: []})],
+      ["a batch fails", failBatch]
+    ])("is no longer open when it emits the error after %s", (_, fail) => {
+      fail()
+
+      expect(events).toEqual([["error", SOCKET_STATES.connecting], ["close", SOCKET_STATES.connecting]])
+    })
+
+    it("reports an unclean close when a poll fails", () => {
+      let event
+      longpoll.onclose = e => { event = e }
+
+      Ajax.request.mock.calls[1][6]({status: 500})
+
+      expect(event.code).toBe(1011)
+      expect(event.wasClean).toBe(false)
+    })
+  })
+
+  describe("with a socket", () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+    })
+
+    afterEach(() => jest.useRealTimers())
+
+    it("errors channels once the socket is no longer connected", () => {
+      const socket = new Socket("/socket", {transport: LongPoll})
+      socket.connect()
+      jest.advanceTimersByTime(0)
+      Ajax.request.mock.calls[0][6]({status: 410, token: "token", messages: []})
+      const channel = socket.channel("topic")
+      channel.join().trigger("ok", {})
+      const connectedOnError = []
+      let other
+      channel.onError(() => {
+        connectedOnError.push(socket.isConnected())
+        other = socket.channel("other")
+        other.join()
+      })
+
+      Ajax.request.mock.calls[1][6]({status: 500})
+
+      expect(connectedOnError).toEqual([false])
+      // the close that follows the error does not error the channel joined by the error callback
+      expect(other.state).toBe("joining")
+    })
+
+    it("does not tear down the connection created when the page is shown again", () => {
+      const socket = new Socket("/socket", {transport: LongPoll})
+      socket.connect()
+      jest.advanceTimersByTime(0)
+
+      // the first poll is still pending when the page is shown
+      socket.handleVisibilityChange()
+      const longpoll = socket.conn
+      jest.advanceTimersByTime(5000)
+
+      expect(socket.conn).toBe(longpoll)
+    })
+  })
+
+  describe("request cancellation", () => {
+    beforeEach(() => jest.useFakeTimers())
+    afterEach(() => jest.useRealTimers())
+
+    it("ignores response callbacks invoked synchronously by abort", () => {
+      Ajax.request.mockImplementation((method, url, headers, body, timeout, ontimeout, callback) => ({
+        abort: jest.fn(() => callback(null))
+      }))
+      const longpoll = new LongPoll("http://localhost/socket/longpoll")
+      const onerror = jest.fn()
+      const onclose = jest.fn()
+      longpoll.onerror = onerror
+      longpoll.onclose = onclose
+      jest.advanceTimersByTime(0)
+
+      longpoll.close()
+
+      expect(onerror).not.toHaveBeenCalled()
+      expect(onclose).toHaveBeenCalledTimes(1)
+      expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
+    })
+
+    it("ignores cancelled requests after a retry makes the transport active again", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll")
+      jest.advanceTimersByTime(0)
+      const timeout = Ajax.request.mock.calls[0][5]
+      const response = Ajax.request.mock.calls[0][6]
+      longpoll.closeAndRetry(500, 1011, "retry", false)
+      const onerror = jest.fn()
+      longpoll.onerror = onerror
+      longpoll.poll()
+
+      timeout()
+      response({status: 410, token: "old-token", messages: []})
+
+      expect(onerror).not.toHaveBeenCalled()
+      expect(longpoll.readyState).toBe(SOCKET_STATES.connecting)
+      expect(longpoll.token).toBeNull()
+      expect(Ajax.request).toHaveBeenCalledTimes(2)
+      expect(longpoll.reqs.size).toBe(1)
+      Ajax.request.mock.calls[1][6]({status: 410, token: "new-token", messages: []})
+      expect(longpoll.readyState).toBe(SOCKET_STATES.open)
+      expect(longpoll.token).toBe("new-token")
+    })
+
+    it("does not retry when an error callback disconnects", () => {
+      const socket = new Socket("/socket", {transport: LongPoll})
+      socket.onError(() => socket.disconnect())
+      socket.connect()
+      const longpoll = socket.conn
+      jest.advanceTimersByTime(0)
+
+      Ajax.request.mock.calls[0][5]()
+
+      expect(socket.conn).toBeNull()
+      expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
+    })
+
+    it("does not retry when a close callback disconnects", () => {
+      const socket = new Socket("/socket", {transport: LongPoll})
+      socket.onClose(() => socket.disconnect())
+      socket.connect()
+      const longpoll = socket.conn
+      jest.advanceTimersByTime(0)
+
+      Ajax.request.mock.calls[0][5]()
+
+      expect(socket.conn).toBeNull()
+      expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
+    })
+
+    it("keeps LongPoll closed when disconnect aborts a fetch request", async () => {
+      Ajax.request.mockRestore()
+      const originalFetch = global.fetch
+      global.XMLHttpRequest = undefined
+      global.fetch = jest.fn((url, {signal}) => new Promise((resolve, reject) => {
+        signal.addEventListener("abort", () => {
+          const error = new Error("aborted")
+          error.name = "AbortError"
+          reject(error)
+        })
+      }))
+      try {
+        const socket = new Socket("/socket", {transport: LongPoll})
+        socket.connect()
+        const longpoll = socket.conn
+        jest.advanceTimersByTime(0)
+
+        socket.disconnect()
+        // drain the fetch response/error promise chain
+        for(let i = 0; i < 10; i++){ await Promise.resolve() }
+
+        expect(socket.conn).toBeNull()
+        expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
+        expect(longpoll.reqs.size).toBe(0)
+        expect(global.fetch).toHaveBeenCalledTimes(1)
+      } finally {
+        global.fetch = originalFetch
+      }
     })
   })
 
@@ -334,6 +629,26 @@ describe("LongPoll", () => {
         expect(longpoll.batchBuffer).toEqual([])
         expect(calls).toHaveLength(2)
         expect(calls[1].body).toBe("b")
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
+    it("starts a new batch for sends after a retry dropped the pending one", () => {
+      jest.useFakeTimers()
+      try {
+        const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+        longpoll.poll = jest.fn()
+        longpoll.readyState = SOCKET_STATES.open
+        // the send is batched until the next tick, but the transport retries before that
+        longpoll.send("a")
+        longpoll.closeAndRetry(500, 1011, "internal server error", false)
+
+        longpoll.send("b")
+        jest.runOnlyPendingTimers()
+
+        const posts = Ajax.request.mock.calls.filter(([method]) => method === "POST")
+        expect(posts.map(([, , , body]) => body)).toEqual(["b"])
       } finally {
         jest.useRealTimers()
       }

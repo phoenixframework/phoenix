@@ -19,6 +19,7 @@ import Channel from "./channel"
 import LongPoll from "./longpoll"
 import Serializer from "./serializer"
 import Timer from "./timer"
+import Connection from "./connection"
 
 /** Initializes the Socket *
  *
@@ -117,6 +118,7 @@ export default class Socket {
     this.sendBuffer = []
     this.ref = 0
     this.fallbackRef = null
+    this.fallbackErrorRef = null
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
     this.transport = opts.transport || global.WebSocket || LongPoll
     this.primaryPassedHealthCheck = false
@@ -130,9 +132,14 @@ export default class Socket {
     // logic from connecting if the socket was never connected in the first place.
     // transportConnect sets it to false on open.
     this.closeWasClean = true
-    this.disconnecting = false
     this.binaryType = opts.binaryType || "arraybuffer"
+    // the connection over the current transport instance, see Connection
+    this.connection = null
+    // changes whenever we connect, disconnect or replace the transport, for the code that needs
+    // to know whether that happened while there was no connection, see replaceTransport
     this.connectClock = 1
+    // the connection created when the page was shown, see handleVisibilityChange
+    this.visibilityConnection = null
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -143,7 +150,8 @@ export default class Socket {
     let awaitingConnectionOnPageShow = null
     if(phxWindow && phxWindow.addEventListener){
       phxWindow.addEventListener("pagehide", _e => {
-        if(this.conn){
+        // an ended connection only finishes closing, e.g. after disconnect or a normal close by the server
+        if(this.connection && !this.connection.ended){
           this.disconnect()
           awaitingConnectionOnPageShow = this.connectClock
         }
@@ -195,10 +203,15 @@ export default class Socket {
         this.teardown()
         return
       }
-      this.teardown(() => this.connect())
+      this.teardownAndReconnect(() => this.connect())
     }, this.reconnectAfterMs)
     this.authToken = opts.authToken && closure(opts.authToken)
   }
+
+  /**
+   * The transport instance of the current connection, for example a WebSocket
+   */
+  get conn(){ return this.connection && this.connection.transport }
 
   /**
    * @internal
@@ -211,11 +224,22 @@ export default class Socket {
    * @internal
    */
   handleVisibilityChange(){
-    if(!this.pageHidden){
-      // reconnect immediately
-      if(!this.isConnected() && !this.closeWasClean){
-        this.teardown(() => this.connect())
-      }
+    if(this.pageHidden){
+      this.visibilityConnection = null
+      return
+    }
+    // resume and visibilitychange can both fire when the page is shown again, so we keep
+    // the connection created for the first one while it is still connecting
+    const connection = this.connection
+    if(connection && connection === this.visibilityConnection && connection.isConnecting()){ return }
+    // reconnect immediately
+    if(!this.isConnected() && !this.closeWasClean){
+      // a reconnect that was scheduled before would tear down the connection we create here
+      this.reconnectTimer.reset()
+      this.teardownAndReconnect(() => {
+        this.connect()
+        this.visibilityConnection = this.connection
+      })
     }
   }
 
@@ -231,25 +255,24 @@ export default class Socket {
    *
    */
   replaceTransport(newTransport){
-    this.connectClock++
+    const connectClock = ++this.connectClock
     this.closeWasClean = true
     clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
-    if(this.conn){
-      const wasOpen = this.isConnected()
-      // the old conn closes asynchronously, so detach its handlers to prevent its
-      // events from being handled as if they belonged to the new transport
-      this.conn.onopen = function (){ } // noop
-      this.conn.onerror = function (){ } // noop
-      this.conn.onmessage = function (){ } // noop
-      this.conn.onclose = function (){ } // noop
-      this.conn.close()
-      this.conn = null
-      this.clearHeartbeats()
-      // any in-flight pushes on the old conn are lost, so channels need to rejoin
-      if(wasOpen){ this.triggerChanError("connection_closed") }
-    }
+    // replaced first, as channel error callbacks below can already connect again
     this.transport = newTransport
+    const connection = this.connection
+    if(connection){
+      const wasOpen = connection.isOpen()
+      // the old transport closes asynchronously, but its events no longer concern us
+      this.connection = null
+      connection.ended = true
+      connection.close()
+      this.clearHeartbeats()
+      // any in-flight pushes on the old connection are lost, so channels need to rejoin
+      if(wasOpen){ this.triggerChanError("connection_closed", connection) }
+    }
+    return connectClock
   }
 
   /**
@@ -284,14 +307,12 @@ export default class Socket {
    */
   disconnect(callback, code, reason){
     this.connectClock++
-    this.disconnecting = true
     this.closeWasClean = true
     clearTimeout(this.fallbackTimer)
     this.reconnectTimer.reset()
-    this.teardown(() => {
-      this.disconnecting = false
-      callback && callback()
-    }, code, reason)
+    // connecting again creates a new connection right away instead of waiting for this one to close
+    if(this.connection){ this.connection.ended = true }
+    this.teardown(callback, code, reason)
   }
 
   /**
@@ -306,7 +327,8 @@ export default class Socket {
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = closure(params)
     }
-    if(this.conn && !this.disconnecting){ return }
+    // the current connection is kept, including while it reconnects, until the socket is done with it
+    if(this.connection && !this.connection.ended){ return }
     if(this.longPollFallbackMs && this.transport !== LongPoll){
       this.connectWithFallback(LongPoll, this.longPollFallbackMs)
     } else {
@@ -383,13 +405,8 @@ export default class Socket {
     if(!this.isConnected()){ return false }
     let ref = this.makeRef()
     let startTime = Date.now()
+    this.connection.pings.set(ref, () => callback(Date.now() - startTime))
     this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: ref})
-    let onMsgRef = this.onMessage(msg => {
-      if(msg.ref === ref){
-        this.off([onMsgRef])
-        callback(Date.now() - startTime)
-      }
-    })
     return true
   }
 
@@ -415,21 +432,25 @@ export default class Socket {
    * @private
    */
   transportConnect(){
+    const previous = this.connection
     this.connectClock++
     this.closeWasClean = false
+    // a reconnect scheduled before would tear down the new connection, but we keep
+    // its tries, which only reset once a connection opens
+    clearTimeout(this.reconnectTimer.timer)
     let protocols = undefined
     // Sec-WebSocket-Protocol based token
     // (longpoll uses Authorization header instead)
     if(this.authToken){
       protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken()).replace(/=/g, "")}`]
     }
-    this.conn = new this.transport(this.endPointURL(), protocols)
-    this.conn.binaryType = this.binaryType
-    this.conn.timeout = this.longpollerTimeout
-    this.conn.onopen = () => this.onConnOpen()
-    this.conn.onerror = error => this.onConnError(error)
-    this.conn.onmessage = event => this.onConnMessage(event)
-    this.conn.onclose = event => this.onConnClose(event)
+    const transport = new this.transport(this.endPointURL(), protocols)
+    transport.binaryType = this.binaryType
+    transport.timeout = this.longpollerTimeout
+    this.connection = new Connection(this, transport)
+    // connect can replace an ended connection that is still open while its buffer drains, but the
+    // channels joined over it need to rejoin on the new connection instead of waiting for it to close
+    if(previous && previous.isOpen()){ this.triggerChanError("connection_closed", previous) }
   }
 
   getSession(key){ return this.sessionStore && this.sessionStore.getItem(key) }
@@ -437,40 +458,50 @@ export default class Socket {
   storeSession(key, val){ this.sessionStore && this.sessionStore.setItem(key, val) }
 
   connectWithFallback(fallbackTransport, fallbackThreshold = 2500){
-    clearTimeout(this.fallbackTimer)
+    // the callbacks of a previous attempt must not act on this one, e.g. an attempt
+    // that never opened would otherwise fall back again on the next error
+    this.cancelFallback()
     let established = false
     let primaryTransport = true
-    let openRef, errorRef
+    let errorRef
+    let connectClock
+    const isCurrent = () => connectClock === this.connectClock && !this.closeWasClean
     let fallbackTransportName = this.transportName(fallbackTransport)
+    // the fallback timer is cleared whenever the attempt ends, and the callbacks below
+    // only fall back while the attempt is current
     let fallback = (reason) => {
       this.log("transport", `falling back to ${fallbackTransportName}...`, reason)
-      this.off([openRef, errorRef])
+      // the open callback stays registered to remember the fallback once it connects
+      this.off([errorRef])
       primaryTransport = false
-      this.replaceTransport(fallbackTransport)
+      const replaceClock = this.replaceTransport(fallbackTransport)
+      if(replaceClock !== this.connectClock){ return }
       this.transportConnect()
     }
     if(this.getSession(`phx:fallback:${fallbackTransportName}`)){ return fallback("memorized") }
 
     this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
 
-    errorRef = this.onError(reason => {
+    errorRef = this.fallbackErrorRef = this.onError(reason => {
+      if(!isCurrent()){ return }
       this.log("transport", "error", reason)
       if(primaryTransport && !established){
         clearTimeout(this.fallbackTimer)
         fallback(reason)
       }
     })
-    if(this.fallbackRef){
-      this.off([this.fallbackRef])
-    }
     this.fallbackRef = this.onOpen(() => {
-      established = true
       if(!primaryTransport){
+        // reconnects keep using the fallback transport, so a later successful connection
+        // must still be remembered, unless an earlier callback disconnected it
+        if(this.transport !== fallbackTransport || this.closeWasClean){ return }
         let fallbackTransportName = this.transportName(fallbackTransport)
         // only memorize LP if we never connected to primary
         if(!this.primaryPassedHealthCheck){ this.storeSession(`phx:fallback:${fallbackTransportName}`, "true") }
         return this.log("transport", `established ${fallbackTransportName} fallback`)
       }
+      if(!isCurrent()){ return }
+      established = true
       // if we've established primary, give the fallback a new period to attempt ping
       clearTimeout(this.fallbackTimer)
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
@@ -481,17 +512,29 @@ export default class Socket {
       })
     })
     this.transportConnect()
+    connectClock = this.connectClock
+  }
+
+  /**
+   * @private
+   *
+   * Stops the fallback of the current connection attempt, see connectWithFallback
+   */
+  cancelFallback(){
+    clearTimeout(this.fallbackTimer)
+    this.off([this.fallbackRef, this.fallbackErrorRef])
   }
 
   clearHeartbeats(){
     clearTimeout(this.heartbeatTimer)
     clearTimeout(this.heartbeatTimeoutTimer)
+    // a late reply to the pending heartbeat must not start the heartbeats again
+    this.pendingHeartbeatRef = null
   }
 
   onConnOpen(){
     if(this.hasLogger()) this.log("transport", `${this.transportName(this.transport)} connected to ${this.endPointURL()}`)
     this.closeWasClean = false
-    this.disconnecting = false
     this.establishedConnections++
     this.flushSendBuffer()
     this.reconnectTimer.reset()
@@ -505,49 +548,89 @@ export default class Socket {
 
   heartbeatTimeout(){
     if(this.pendingHeartbeatRef){
+      const connection = this.connection
       this.pendingHeartbeatRef = null
       if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
-      this.triggerChanError("heartbeat_timeout")
       this.closeWasClean = false
-      this.teardown(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout")
+      // the connection is presumed dead, so we close it right away instead of waiting for its
+      // buffer to drain, which also ensures that it is no longer considered connected when the
+      // channels error (LiveView would report a server error otherwise)
+      if(connection){ connection.close(WS_CLOSE_NORMAL, "heartbeat timeout") }
+      // some transports emit their close event synchronously, and callbacks of it as well as
+      // channel error callbacks can disconnect or connect, which takes precedence over reconnecting
+      if(!this.stillUses(connection)){ return }
+      this.triggerChanError("heartbeat_timeout")
+      if(!this.stillUses(connection)){ return }
+      this.teardownAndReconnect(() => this.reconnectTimer.scheduleTimeout())
     }
   }
 
   resetHeartbeat(){
     if(this.conn && this.conn.skipHeartbeat){ return }
-    this.pendingHeartbeatRef = null
     this.clearHeartbeats()
     this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
   }
 
-  teardown(callback, code, reason){
-    if(!this.conn){
-      return callback && callback()
-    }
+  /**
+   * @private
+   *
+   * Tears down the current connection to reconnect afterwards, unless the socket was
+   * disconnected or connected again in the meantime, which takes precedence.
+   */
+  teardownAndReconnect(reconnect){
+    const connection = this.connection
+    const connectClock = this.connectClock
+    this.teardown(() => {
+      // the socket was disconnected or connected again in the meantime, which the connection does not
+      // tell once an overlapping teardown gave up on it, or the server closed the connection normally
+      if(connectClock !== this.connectClock || (connection && connection.ended)){ return }
+      reconnect()
+    })
+  }
 
+  /**
+   * @private
+   *
+   * Whether the socket still uses the connection and did not give up on it. User callbacks
+   * can disconnect or connect, so code continuing after them checks this first.
+   */
+  stillUses(connection){
+    return this.connection === connection && !(connection && connection.ended)
+  }
+
+  teardown(callback, code, reason){
     // If someone calls connect before we finish tearing down,
     // we create a new connection, but we still want to finish tearing down the old one.
-    const connToClose = this.conn
+    const connection = this.connection
+    if(!connection){
+      return callback && callback()
+    }
+    // onConnClose is not called when the close event arrives late, so we stop the
+    // heartbeats here, as a heartbeat timeout would otherwise reconnect the socket
+    this.clearHeartbeats()
 
-    this.waitForBufferDone(connToClose, () => {
-      if(code){ connToClose.close(code, reason || "") } else { connToClose.close() }
+    this.waitForBufferDone(connection.transport, () => {
+      // a connection we already closed, e.g. on a heartbeat timeout or in an
+      // overlapping teardown, also errored its channels already
+      if(!connection.closing){
+        const wasOpened = !connection.isConnecting()
+        connection.close(code, reason)
+        // channels joined over this connection need to rejoin on the next one, but we cannot rely
+        // on onConnClose for that, as the close event may arrive after we stopped waiting for it
+        // or after a new connection already replaced this one
+        if(wasOpened){ this.triggerChanError("connection_closed", connection) }
+      }
 
-      this.waitForSocketClosed(connToClose, () => {
-        if(this.conn === connToClose){
-          this.conn.onopen = function (){ } // noop
-          this.conn.onerror = function (){ } // noop
-          this.conn.onmessage = function (){ } // noop
-          this.conn.onclose = function (){ } // noop
-          this.conn = null
-        }
-
+      this.waitForSocketClosed(connection.transport, () => {
+        if(this.connection === connection){ this.connection = null }
         callback && callback()
       })
     })
   }
 
   waitForBufferDone(conn, callback, tries = 1){
-    if(tries === 5 || !conn.bufferedAmount){
+    // there is no point in waiting for a conn that is already closing
+    if(tries === 5 || !conn.bufferedAmount || conn.readyState !== SOCKET_STATES.open){
       callback()
       return
     }
@@ -569,12 +652,25 @@ export default class Socket {
   }
 
   onConnClose(event){
-    if(this.conn) this.conn.onclose = () => {} // noop to prevent recursive calls in teardown
+    const connection = this.connection
     let closeCode = event && event.code
     if(this.hasLogger()) this.log("transport", "close", event)
-    this.triggerChanError("connection_closed")
     this.clearHeartbeats()
-    if(!this.closeWasClean && closeCode !== 1000){
+    // we only close a connection to disconnect or to reconnect, which the code closing it takes
+    // care of, so its close event only confirms our close, even when the server sends 1000
+    const closedByUs = !!(connection && connection.closing)
+    // the server closes with 1000 when we should not reconnect, which also applies to
+    // reconnecting on visibility change
+    if(closeCode === 1000 && !closedByUs){
+      this.closeWasClean = true
+      if(connection){ connection.ended = true }
+      this.cancelFallback()
+      this.reconnectTimer.reset()
+    }
+    // channel callbacks may disconnect or create a new connection, so finish cleaning up
+    // this connection first and do not schedule a reconnect for its replacement
+    this.triggerChanError("connection_closed", connection)
+    if(this.stillUses(connection) && !closedByUs && !this.closeWasClean && closeCode !== 1000){
       this.reconnectTimer.scheduleTimeout()
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))
@@ -584,22 +680,38 @@ export default class Socket {
    * @private
    */
   onConnError(error){
+    const connection = this.connection
     if(this.hasLogger()) this.log("transport", "error", error)
     let transportBefore = this.transport
     let establishedBefore = this.establishedConnections
     this.stateChangeCallbacks.error.forEach(([, callback]) => {
       callback(error, transportBefore, establishedBefore)
     })
-    if(transportBefore === this.transport || establishedBefore > 0){
-      this.triggerChanError("connection_error")
-    }
+    // callbacks can replace the connection, in which case only its own joins are errored
+    this.triggerChanError("connection_error", connection)
   }
 
   /**
    * @private
+   *
+   * Errors the channels, as they need to rejoin once the given connection stopped being open.
    */
-  triggerChanError(reason){
-    this.channels.forEach(channel => {
+  triggerChanError(reason, connection = this.connection){
+    // several places notice that a connection stopped being open (onConnError, onConnClose,
+    // teardown and heartbeatTimeout). After the first, only channels whose join it carried
+    // are errored, as error callbacks may have joined channels that join over another connection.
+    let erroredBefore = false
+    if(connection && !connection.isOpen()){
+      erroredBefore = connection.channelsErrored
+      connection.channelsErrored = true
+    }
+    const joins = this.channels.map(channel => [channel, channel.joinRef()])
+    joins.forEach(([channel, joinRef]) => {
+      // an earlier error callback can rejoin a later channel, so check its join
+      // again immediately before dispatching rather than filtering the list first
+      if(channel.joinRef() !== joinRef){ return }
+      // the joins of a replaced connection are not the only ones anymore
+      if(connection && (erroredBefore || !connection.isCurrent()) && !connection.carried(channel, joinRef)){ return }
       if(!(channel.isErrored() || channel.isLeaving() || channel.isClosed())){
         channel.trigger(CHANNEL_EVENTS.error, {source: "transport", reason})
       }
@@ -662,18 +774,50 @@ export default class Socket {
 
   /**
    * @param {Object} data
+   * @param {Channel} [channel] - The channel the push belongs to, if any
    */
-  push(data){
+  push(data, channel){
     if(this.hasLogger()){
       let {topic, event, payload, ref, join_ref} = data
       this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload)
     }
 
     if(this.isConnected()){
-      this.encode(data, result => this.conn.send(result))
+      this.send(data, channel)
     } else {
-      this.sendBuffer.push(() => this.encode(data, result => this.conn.send(result)))
+      this.sendBuffer.push(() => {
+        // the channel may have errored or left while the push was buffered, e.g. when the
+        // connection failed before opening, in which case its rejoin supersedes the buffered join
+        if(!this.isOutdated(data, channel)){ this.send(data, channel) }
+      })
     }
+  }
+
+  /**
+   * @private
+   */
+  send(data, channel){
+    const connection = this.connection
+    // the join counts as carried by this connection while it is still encoded, so that the
+    // channel rejoins when the connection is torn down before the encoding finished
+    if(channel && data.event === CHANNEL_EVENTS.join){ connection.joins.set(channel, data.join_ref) }
+    this.encode(data, result => {
+      // let encodes finish while this connection drains, but never send on a
+      // replacement or after the original connection has started closing
+      if(!connection.isCurrent() || !connection.isOpen()){ return }
+      // a leave still needs to reach the server after its channel was removed locally
+      if(data.event !== CHANNEL_EVENTS.leave && this.isOutdated(data, channel)){ return }
+      connection.transport.send(result)
+    })
+  }
+
+  /**
+   * @private
+   *
+   * Whether the push was made for an earlier join of its channel, or the channel left since.
+   */
+  isOutdated(data, channel){
+    return !!channel && (data.join_ref !== channel.joinRef() || channel.isClosed())
   }
 
   /**
@@ -702,25 +846,40 @@ export default class Socket {
   }
 
   onConnMessage(rawMessage){
+    const connection = this.connection
+    const wasOpen = connection && connection.isOpen()
     this.decode(rawMessage.data, msg => {
+      // the transport event can be current even though its asynchronous decode is not, as the
+      // connection may have been replaced or closed in the meantime (browsers also drop messages
+      // that arrive once a WebSocket is closing)
+      if(connection !== this.connection || (wasOpen && !connection.isOpen())){ return }
       let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){
         this.clearHeartbeats()
-        this.pendingHeartbeatRef = null
         this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
       }
 
       if(this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
 
-      for(let i = 0; i < this.channels.length; i++){
-        const channel = this.channels[i]
+      // removing a channel or callback while dispatching replaces the list instead of
+      // changing it, so we iterate over the lists from before to not skip any of them
+      const channels = this.channels
+      for(let i = 0; i < channels.length; i++){
+        const channel = channels[i]
         if(!channel.isMember(topic, event, payload, join_ref)){ continue }
         channel.trigger(event, payload, ref, join_ref)
       }
 
-      for(let i = 0; i < this.stateChangeCallbacks.message.length; i++){
-        let [, callback] = this.stateChangeCallbacks.message[i]
+      const callbacks = this.stateChangeCallbacks.message
+      for(let i = 0; i < callbacks.length; i++){
+        let [, callback] = callbacks[i]
         callback(msg)
+      }
+
+      const ping = ref && connection.pings.get(ref)
+      if(ping){
+        connection.pings.delete(ref)
+        ping()
       }
     })
   }
