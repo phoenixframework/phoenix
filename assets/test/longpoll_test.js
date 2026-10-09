@@ -89,6 +89,29 @@ describe("LongPoll", () => {
         jest.useRealTimers()
       }
     })
+
+    it("emits a close without a status code when closed without one", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      let event
+      longpoll.onclose = e => { event = e }
+
+      longpoll.close()
+
+      expect(event.code).toBe(1005)
+      expect(event.wasClean).toBe(true)
+    })
+
+    it("emits the given close code and clean flag", () => {
+      const longpoll = new LongPoll("http://localhost/socket/longpoll", undefined)
+      let event
+      longpoll.onclose = e => { event = e }
+
+      longpoll.close(1008, "forbidden", false)
+
+      expect(event.code).toBe(1008)
+      expect(event.reason).toBe("forbidden")
+      expect(event.wasClean).toBe(false)
+    })
   })
 
   describe("poll", () => {
@@ -292,6 +315,16 @@ describe("LongPoll", () => {
       fail()
 
       expect(events).toEqual([["error", SOCKET_STATES.connecting], ["close", SOCKET_STATES.connecting]])
+    })
+
+    it("reports an unclean close when a poll fails", () => {
+      let event
+      longpoll.onclose = e => { event = e }
+
+      Ajax.request.mock.calls[1][6]({status: 500})
+
+      expect(event.code).toBe(1011)
+      expect(event.wasClean).toBe(false)
     })
   })
 

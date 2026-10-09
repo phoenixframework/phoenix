@@ -139,7 +139,7 @@ export default class LongPoll {
           break
         case 0:
         case 500:
-          this.closeAndRetry(500, 1011, "internal server error", 500)
+          this.closeAndRetry(500, 1011, "internal server error", false)
           break
         default: throw new Error(`unhandled poll status ${status}`)
       }
@@ -208,8 +208,12 @@ export default class LongPoll {
     this.currentBatch = null
   }
 
-  emitClose(code, reason, wasClean){
-    let opts = Object.assign({code: 1000, reason: undefined, wasClean: true}, {code, reason, wasClean})
+  /**
+   * Emits the close event. Like a WebSocket closed without a code, it reports 1005 (no status)
+   * unless one is given, as 1000 would look like the server closing the connection normally.
+   */
+  emitClose(code = 1005, reason, wasClean = true){
+    let opts = {code, reason, wasClean}
     if(typeof(CloseEvent) !== "undefined"){
       this.onclose(new CloseEvent("close", opts))
     } else {
