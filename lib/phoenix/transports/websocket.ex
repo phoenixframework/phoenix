@@ -96,6 +96,8 @@ defmodule Phoenix.Transports.WebSocket do
 
   def handle_error(conn, _reason), do: send_resp(conn, 403, "")
 
+  defp maybe_auth_token_from_header(%{halted: true} = conn, _), do: conn
+
   defp maybe_auth_token_from_header(conn, true) do
     case get_req_header(conn, "sec-websocket-protocol") do
       [] ->
@@ -109,11 +111,15 @@ defmodule Phoenix.Transports.WebSocket do
 
         case request_subprotocols do
           {[@auth_token_prefix <> encoded_token], actual_subprotocols} ->
-            token = Base.decode64!(encoded_token, padding: false)
+            case Base.decode64(encoded_token, padding: false) do
+              {:ok, token} ->
+                conn
+                |> put_private(:phoenix_transport_auth_token, token)
+                |> set_actual_subprotocols(actual_subprotocols)
 
-            conn
-            |> put_private(:phoenix_transport_auth_token, token)
-            |> set_actual_subprotocols(actual_subprotocols)
+              :error ->
+                conn |> send_resp(400, "") |> halt()
+            end
 
           _ ->
             conn
