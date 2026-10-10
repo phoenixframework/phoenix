@@ -236,24 +236,31 @@ jobs:
           - elixir: "1.18.4"
             otp: "27.3.4.3"
 
+          # keep version in sync with integration_test/.env
           - elixir: "1.20.4"
             otp: "29.0.5"
 
     env:
       ELIXIR_ASSERT_TIMEOUT: 10000
       PHX_CI: true
-      # Set to half of the runner vCPU cores to compile deps/NIFs
-      # concurrently across OS processes without CPU oversubscription.
-      # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
-      # and https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/
-      MIX_OS_DEPS_COMPILE_PARTITION_COUNT: 2
-      MAKEFLAGS: "-j2"
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Configure runner concurrency
+        run: |
+          CORES=$(nproc)
+          HALF_CORES=$(( CORES > 2 ? CORES / 2 : 2 ))
+          echo "CORES=$CORES" >> "$GITHUB_ENV"
+          echo "HALF_CORES=$HALF_CORES" >> "$GITHUB_ENV"
+          # Set to half of the runner vCPU cores to compile deps/NIFs
+          # concurrently across OS processes without CPU oversubscription.
+          # See https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/
+          echo "MIX_OS_DEPS_COMPILE_PARTITION_COUNT=$HALF_CORES" >> "$GITHUB_ENV"
+          echo "MAKEFLAGS=-j$HALF_CORES" >> "$GITHUB_ENV"
 
       - name: Mount installer/tmp on tmpfs
         run: |
@@ -262,8 +269,9 @@ jobs:
 
       - name: Start database container (${{ matrix.service }})
         if: matrix.service != 'none'
+        working-directory: integration_test
         run: |
-          docker compose -f integration_test/docker-compose.yml up -d --wait ${{ matrix.service }}
+          docker compose -f docker-compose.yml -f docker-compose.ports.yml up -d --wait ${{ matrix.service }}
 
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
@@ -297,14 +305,15 @@ jobs:
           if [ "${{ matrix.service }}" = "none" ]; then
             FLAGS="--include database:sqlite3"
           else
-            FLAGS="--include database:${{ matrix.service }} --only database:${{ matrix.service }}"
+            FLAGS="--only database:${{ matrix.service }}"
           fi
 
           mix test $FLAGS \
+            --max-cases "$CORES" \
             --formatter ExUnit.CLIFormatter \
             --formatter Phoenix.Integration.SummaryFormatter
         env:
-          PHX_TEST_SERVICE: ${{ matrix.service }}
+          PHX_TEST_JOB: ${{ matrix.service }}
           PHX_ELIXIR_VERSION: ${{ matrix.versions.elixir }}
           PHX_OTP_VERSION: ${{ matrix.versions.otp }}
           PHX_INTEGRATION_SUMMARY_JSON: ${{ runner.temp }}/summary-${{ matrix.service }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}.json
@@ -326,6 +335,7 @@ jobs:
     timeout-minutes: 2
     needs: integration-test-elixir
     if: always()
+    continue-on-error: true
 
     steps:
       - name: Checkout
@@ -344,9 +354,7 @@ jobs:
         with:
           pattern: summary-*
           merge-multiple: true
-          path: tmp/summaries
+          path: ${{ runner.temp }}/summaries
 
       - name: Aggregate test summaries
-        run: elixir integration_test/aggregate_summary.exs tmp/summaries
-        env:
-          MATRIX_RESULT: ${{ needs.integration-test-elixir.result }}
+        run: elixir integration_test/aggregate_summary.exs "${{ runner.temp }}/summaries" >> "$GITHUB_STEP_SUMMARY"

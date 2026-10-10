@@ -1,33 +1,66 @@
 ## Phoenix Integration Tests
 
-This project contains integration tests for phoenix's generated projects.
+This project contains integration tests for Phoenix's generated projects.
 
-## Running tests
+## Running Tests
 
-To install dependencies, run:
+### Option A: Using Docker & Docker Compose (Recommended)
+
+Run the integration test suite in an isolated container without needing local database or Elixir setup:
+
+    $ ./docker.sh
+
+Pass specific test files or tag filters to target individual tests:
+
+    $ ./docker.sh test/code_generation/app_with_defaults_test.exs --include database
+    $ ./docker.sh --include database:postgresql
+
+To test against different Elixir or Erlang/OTP versions:
+
+    $ ELIXIR_IMAGE_TAG=1.18.5-erlang-27.3.4.17-ubuntu-noble-20260810 ./docker.sh
+
+Find valid image tags (Ubuntu-based, `hexpm/elixir` repo) on [bob.hex.pm](https://bob.hex.pm/docker?repo=hexpm/elixir&os=ubuntu&os_version=noble-&sort=elixir_version,erlang_version,os_version).
+
+All databases (PostgreSQL, MySQL, and MSSQL) are started by default. Because the official MSSQL image supports only `amd64`, the MSSQL service and tests are automatically skipped on other platforms (e.g., `arm64`).
+
+When running tests repeatedly, backing database containers remain warm in the background for instant re-runs. To tear down the database services when finished:
+
+    $ ./docker.sh down
+
+### Option B: Running Natively on the Host
+
+Install dependencies and run the tests on your machine:
 
     $ mix deps.get
 
-Then run the basic test suite (no dependencies on the database) with:
+Run the basic test suite (without databases):
 
     $ mix test
 
-To run the test suite with tests that test a specific database, run:
+To run tests against a specific database:
 
     $ mix test --include database:postgresql
     $ mix test --include database:mysql
     $ mix test --include database:mssql
     $ mix test --include database:sqlite3
 
-For convenience, there is also a `docker-compose.yml` file that allows for starting up all of the supported databases locally.
-
-    $ docker-compose up
-
-This allows all tests to be run with the following command
+To run all tests including databases:
 
     $ mix test --include database
 
-Or alternatively, with docker and docker compose installed, you can just run `./docker.sh`.
+> [!NOTE]
+> **Running databases for host-native tests:**
+> `docker-compose.yml` does not publish database ports to the host by default. This avoids port collisions with local databases already running on your machine (e.g. PostgreSQL on 5432 or MySQL on 3306) and prevents exposing test databases with default credentials to the local network.
+>
+> When running tests directly on the host (`mix test`) rather than inside Docker (`./docker.sh`), include `docker-compose.ports.yml` to publish ports strictly to loopback (`127.0.0.1`):
+>
+> ```bash
+> # Start all databases with host ports published on 127.0.0.1
+> $ docker compose -f docker-compose.yml -f docker-compose.ports.yml up -d
+>
+> # Or start only a specific database (e.g. Postgres)
+> $ docker compose -f docker-compose.yml -f docker-compose.ports.yml up -d postgres
+> ```
 
 ## How tests are written
 

@@ -1,35 +1,49 @@
-#!/usr/bin/env sh -e
+#!/bin/sh
+set -e
 
-# adapt with versions from .github/versions/ci.yml if necessary;
-# you can also override these with environment variables
-ELIXIR="${ELIXIR:-1.20.2}"
-ERLANG="${ERLANG:-29.0.3}"
-SUFFIX="${SUFFIX:-alpine-3.24.1}"
+cd "$(dirname "$0")"
 
-# Get the directory of the script
-SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
-
-# Get the parent directory
-PARENT_DIR=$(dirname "$SCRIPT_DIR")
-
-# Check if docker-compose is available
-if command -v docker-compose &> /dev/null
-then
-    COMPOSE_CMD="docker-compose"
-elif docker compose version &> /dev/null
-then
-    COMPOSE_CMD="docker compose"
-else
-    echo "Error: Neither docker-compose nor the docker compose plugin is available."
-    exit 1
+# Handle "down" sub-command to easily stop backing services
+if [ "$1" = "down" ]; then
+  exec docker compose --profile "*" down
 fi
 
-# Start databases
-$COMPOSE_CMD up -d
+# MSSQL image only supports amd64
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64|amd64)
+    export COMPOSE_PROFILES=mssql
+    ;;
+  *)
+    echo "Skipping MSSQL container (unsupported arch: $ARCH)"
+    ;;
+esac
 
-# Run test script in container
-docker run --rm --network=integration_test_default \
-    -w $PARENT_DIR -v $PARENT_DIR:$PARENT_DIR \
-    -it hexpm/elixir:$ELIXIR-erlang-$ERLANG-$SUFFIX sh integration_test/test.sh
+# Derive compilation parallelism from available cores (half of CPU cores, min 2)
+CORES=$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4)
+HALF_CORES=$(( CORES > 2 ? CORES / 2 : 2 ))
 
-$COMPOSE_CMD down
+export MIX_OS_DEPS_COMPILE_PARTITION_COUNT="${MIX_OS_DEPS_COMPILE_PARTITION_COUNT:-$HALF_CORES}"
+export MAKEFLAGS="${MAKEFLAGS:--j$MIX_OS_DEPS_COMPILE_PARTITION_COUNT}"
+
+# Record test timings and timeline summary to timestamped directory
+TIMESTAMP=$(date -u +%Y%m%d_%H%M%S)
+SUMMARY_DIR="tmp/summary_${TIMESTAMP}"
+SUMMARY_JSON="${SUMMARY_DIR}/summary.json"
+SUMMARY_MD="${SUMMARY_DIR}/summary.md"
+
+TEST_EXIT=0
+docker compose run --build --rm \
+  -e PHX_INTEGRATION_SUMMARY_JSON="$SUMMARY_JSON" \
+  runner \
+  --max-cases "$CORES" \
+  --formatter ExUnit.CLIFormatter \
+  --formatter Phoenix.Integration.SummaryFormatter \
+  "${@:---include=database}" || TEST_EXIT=$?
+
+if [ -f "$SUMMARY_JSON" ]; then
+  docker compose run --no-deps --rm -T --entrypoint elixir runner aggregate_summary.exs "$SUMMARY_DIR" > "$SUMMARY_MD" || true
+  echo "Saved summary report to $SUMMARY_MD"
+fi
+
+exit $TEST_EXIT

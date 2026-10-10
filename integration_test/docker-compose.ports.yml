@@ -1,0 +1,12 @@
+services:
+  postgresql:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  mysql:
+    ports:
+      - "127.0.0.1:3306:3306"
+
+  mssql:
+    ports:
+      - "127.0.0.1:1433:1433"

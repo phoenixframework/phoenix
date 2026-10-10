@@ -1,43 +1,83 @@
 services:
   postgresql:
     image: postgres:18
-    ports:
-      - "5432:5432"
+    command: -c max_connections=300
     environment:
       POSTGRES_PASSWORD: postgres
     tmpfs:
       - /var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 2s
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      start_period: 60s
+      start_interval: 2s
+      interval: 120s
       timeout: 3s
-      retries: 10
+      retries: 1
 
   mysql:
     image: mysql:26
-    ports:
-      - "3306:3306"
+    command: --max-connections=300
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     tmpfs:
       - /var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
-      interval: 2s
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --protocol=TCP --silent"]
+      start_period: 60s
+      start_interval: 2s
+      interval: 120s
       timeout: 3s
-      retries: 10
+      retries: 1
 
   mssql:
+    profiles:
+      - mssql
     image: mcr.microsoft.com/mssql/server:2019-latest
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "some!Password"
-    ports:
-      - "1433:1433"
     tmpfs:
       - /var/opt/mssql
     healthcheck:
       test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -C -Q 'SELECT 1' 2>/dev/null || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -Q 'SELECT 1' 2>/dev/null"]
-      interval: 2s
+      start_period: 60s
+      start_interval: 2s
+      interval: 120s
       timeout: 3s
-      retries: 25
+      retries: 1
+
+  runner:
+    profiles:
+      - runner
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - ELIXIR_IMAGE_TAG
+    image: phoenix-integration-runner:${ELIXIR_IMAGE_TAG}
+    init: true
+    volumes:
+      - ..:/phoenix
+      - build_cache:/phoenix/integration_test/_build
+      - deps_cache:/phoenix/integration_test/deps
+      - installer_generated_apps_tmp:/phoenix/installer/tmp
+    working_dir: /phoenix/integration_test
+    environment:
+      ELIXIR_ASSERT_TIMEOUT: 10000
+      MIX_OS_DEPS_COMPILE_PARTITION_COUNT: ${MIX_OS_DEPS_COMPILE_PARTITION_COUNT:-2}
+      MAKEFLAGS: ${MAKEFLAGS:--j2}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      mssql:
+        condition: service_healthy
+        required: false
+
+volumes:
+  build_cache:
+    name: phoenix_integration_build_cache_${ELIXIR_IMAGE_TAG}
+  deps_cache:
+    name: phoenix_integration_deps_cache_${ELIXIR_IMAGE_TAG}
+  installer_generated_apps_tmp:

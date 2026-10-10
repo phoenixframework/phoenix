@@ -1,529 +1,442 @@
-# Script to aggregate integration test shard JSON summaries into a single GitHub Actions summary.
+# Script to aggregate integration test JSON summaries into a Markdown report.
 #
 # Usage:
-#   elixir integration_test/aggregate_summary.exs [directory_with_json_files]
+#   elixir integration_test/aggregate_summary.exs <directory_with_json_files>
 #
 
 defmodule Phoenix.Integration.AggregateSummary do
-  @service_order ["postgresql", "mysql", "mssql", "none"]
+  defmodule Summary do
+    defstruct [
+      :job,
+      :job_label,
+      :job_sort_key,
+      :elixir,
+      :otp,
+      :version_key,
+      :total,
+      :failed,
+      :invalid,
+      :passed?,
+      :wall_time_ms,
+      modules: [],
+      tests: []
+    ]
+  end
 
-  def run(argv) do
-    summaries_dir = List.first(argv) || "tmp/summaries"
+  defmodule ModuleRun do
+    defstruct [
+      :module,
+      :timeline_name,
+      :status,
+      :test_count,
+      :duration_ms,
+      :max_ms,
+      :start_ms,
+      :finish_ms,
+      :elixir,
+      :otp
+    ]
+  end
 
-    json_files = Path.wildcard(Path.join(summaries_dir, "**/*.json"))
+  defmodule TestRun do
+    defstruct [
+      :name,
+      :module,
+      :status,
+      :duration_ms,
+      :location,
+      :job,
+      :elixir,
+      :otp
+    ]
+  end
 
-    if json_files == [] do
-      IO.puts(:stderr, "No summary JSON files found in #{summaries_dir}")
+  defmodule AggregatedModule do
+    defstruct [
+      :module,
+      :timeline_name,
+      :status,
+      :test_count,
+      :durations,
+      :max_duration_ms,
+      :max_test_ms
+    ]
+  end
 
-      if summary_file = System.get_env("GITHUB_STEP_SUMMARY") do
-        File.write!(
-          summary_file,
-          "## Phoenix Integration Tests: No summary artifacts found\n\n",
-          [:append]
-        )
-      end
+  defmodule AggregatedTest do
+    defstruct [
+      :name,
+      :module,
+      :status,
+      :durations,
+      :max_duration_ms,
+      :location,
+      :job
+    ]
+  end
 
-      System.halt(1)
-    end
+  def run([summaries_dir]) do
+    case Path.wildcard(Path.join(summaries_dir, "**/*.json")) do
+      [] ->
+        IO.puts(:stderr, "No summary JSON files found in #{summaries_dir}")
+        System.halt(1)
 
-    summaries =
-      Enum.map(json_files, fn file ->
-        file
-        |> File.read!()
-        |> decode_json!()
-      end)
-
-    markdown = format_report(summaries)
-
-    if summary_file = System.get_env("GITHUB_STEP_SUMMARY") do
-      case File.write(summary_file, markdown, [:append]) do
-        :ok ->
-          :ok
-
-        {:error, reason} ->
-          IO.warn(
-            "Failed to write integration test summary to #{summary_file}: #{inspect(reason)}"
-          )
-      end
-    end
-
-    IO.puts(markdown)
-
-    any_failed? =
-      Enum.any?(summaries, fn s ->
-        s["status"] != "passed" or (s["total_failures"] || 0) > 0
-      end)
-
-    matrix_failed? = System.get_env("MATRIX_RESULT") in ["failure", "cancelled"]
-
-    if any_failed? or matrix_failed? do
-      System.halt(1)
-    else
-      System.halt(0)
+      json_files ->
+        json_files
+        |> Enum.map(fn file ->
+          file
+          |> File.read!()
+          |> JSON.decode!()
+          |> parse_summary()
+        end)
+        |> format_report()
+        |> IO.puts()
     end
   end
 
-  defp decode_json!(content) do
-    cond do
-      Code.ensure_loaded?(JSON) ->
-        apply(JSON, :decode!, [content])
+  def run(_argv) do
+    IO.puts(
+      :stderr,
+      "Usage: elixir integration_test/aggregate_summary.exs <directory_with_json_files>"
+    )
 
-      Code.ensure_loaded?(Jason) ->
-        apply(Jason, :decode!, [content])
+    System.halt(1)
+  end
 
-      true ->
-        raise "Neither JSON nor Jason available for decoding summary"
-    end
+  def parse_summary(%{
+        "config" => %{"elixir" => elixir, "otp" => otp} = config,
+        "suite_result" => %{"total" => total, "failed" => failed, "invalid" => invalid},
+        "wall_time_ms" => wall_time_ms,
+        "modules" => modules,
+        "tests" => tests
+      }) do
+    job = config["job"] || "job"
+
+    modules =
+      Enum.map(modules, fn %{
+                             "module" => module,
+                             "status" => status,
+                             "test_count" => test_count,
+                             "duration_ms" => duration_ms,
+                             "max_ms" => max_ms,
+                             "start_ms" => start_ms,
+                             "finish_ms" => finish_ms
+                           } ->
+        %ModuleRun{
+          module: module,
+          timeline_name: timeline_name(module),
+          status: parse_status(status),
+          test_count: test_count,
+          duration_ms: duration_ms,
+          max_ms: max_ms,
+          start_ms: start_ms,
+          finish_ms: finish_ms,
+          elixir: elixir,
+          otp: otp
+        }
+      end)
+
+    tests =
+      Enum.map(tests, fn %{
+                           "name" => name,
+                           "module" => module,
+                           "status" => status,
+                           "duration_ms" => duration_ms,
+                           "location" => location
+                         } ->
+        %TestRun{
+          name: name,
+          module: module,
+          status: parse_status(status),
+          duration_ms: duration_ms,
+          location: location,
+          job: job,
+          elixir: elixir,
+          otp: otp
+        }
+      end)
+
+    %Summary{
+      job: job,
+      job_label: format_job(job),
+      job_sort_key: job_sort_key(job),
+      elixir: elixir,
+      otp: otp,
+      version_key: {parse_version(elixir), parse_version(otp)},
+      total: total,
+      failed: failed,
+      invalid: invalid,
+      passed?: failed == 0 and invalid == 0,
+      wall_time_ms: wall_time_ms,
+      modules: modules,
+      tests: tests
+    }
   end
 
   def format_report(summaries) do
-    versions =
-      summaries
-      |> Enum.map(fn s -> {s["elixir"], s["otp"]} end)
-      |> Enum.uniq()
-      |> Enum.sort_by(fn {elixir, _otp} -> elixir end)
+    summaries = sort_summaries(summaries)
 
-    version_headers = format_version_headers(versions)
-
-    peak_wall_time =
-      summaries
-      |> Enum.map(&(&1["wall_time_ms"] || 0))
-      |> Enum.max(fn -> 0 end)
-
-    total_shards = length(summaries)
-    total_suites = length(versions)
-
-    any_failed? =
-      Enum.any?(summaries, fn s ->
-        s["status"] != "passed" or (s["total_failures"] || 0) > 0
-      end)
-
-    overall_status = if any_failed?, do: "Failed", else: "Passed"
-
-    summary_header = """
-    ## Phoenix Integration Tests Summary
-
-    | Total Suites | Total Shards | Overall Status | Peak Wall Time |
-    | :---: | :---: | :---: | :---: |
-    | **#{total_suites}** | **#{total_shards}** | **#{overall_status}** | **`#{format_duration(peak_wall_time)}`** |
-    """
-
-    overview_table = format_combined_overview_table(summaries, versions)
-    slowest_table = format_combined_slowest_table(summaries, versions, version_headers)
-    shard_details = format_combined_shard_details(summaries, versions, version_headers)
-
-    [summary_header, overview_table, slowest_table, shard_details]
-    |> Enum.reject(&(&1 in ["", nil]))
+    [
+      "## Phoenix Integration Tests Summary",
+      format_summary_table(summaries),
+      format_matrix_table(summaries),
+      format_slowest_tests_table(summaries),
+      format_jobs_details(summaries)
+    ]
     |> Enum.join("\n\n")
-    |> String.trim()
-    |> Kernel.<>("\n\n")
   end
 
-  defp format_combined_overview_table(summaries, versions) do
-    grouped =
+  defp format_summary_table(summaries) do
+    total_versions = length(extract_versions(summaries))
+    total_jobs = length(summaries)
+
+    passed? = passed?(summaries)
+    overall_status = if passed?, do: "Passed", else: "Failed"
+
+    overall_wall_time =
       summaries
-      |> Enum.group_by(fn s -> {s["elixir"], s["otp"]} end)
-
-    table_rows =
-      Enum.map_join(versions, "\n", fn {elixir, otp} = ver ->
-        shard_summaries = Map.get(grouped, ver, [])
-        sorted_shards = sort_shards(shard_summaries)
-
-        total_executed = Enum.sum(Enum.map(sorted_shards, &(&1["executed_tests"] || 0)))
-        total_passed = Enum.sum(Enum.map(sorted_shards, &(&1["passed_tests"] || 0)))
-        total_failed = Enum.sum(Enum.map(sorted_shards, &(&1["total_failures"] || 0)))
-        max_wall_time = Enum.max(Enum.map(sorted_shards, &(&1["wall_time_ms"] || 0)), fn -> 0 end)
-
-        status_str = if total_failed == 0, do: "Passed", else: "Failed (#{total_failed})"
-
-        overall_slowest =
-          sorted_shards
-          |> Enum.flat_map(&(&1["slowest_tests"] || []))
-          |> Enum.max_by(&(&1["time_us"] || 0), fn -> nil end)
-
-        overall_slowest_desc = format_test_desc(overall_slowest)
-
-        total_row =
-          "| **Elixir #{elixir} / OTP #{otp}** | **All** | **#{status_str}** | **#{total_passed}/#{total_executed}** | **`#{format_duration(max_wall_time)}`** | #{overall_slowest_desc} |"
-
-        shard_rows =
-          Enum.map_join(sorted_shards, "\n", fn shard ->
-            service_label = service_name(shard["service"])
-            status = shard_status_cell(shard)
-            executed = shard["executed_tests"] || 0
-            wall_time = format_duration(shard["wall_time_ms"] || 0)
-            slowest_desc = format_shard_slowest(shard["slowest_tests"])
-
-            "| | #{service_label} | #{status} | #{executed} | `#{wall_time}` | #{slowest_desc} |"
-          end)
-
-        "#{total_row}\n#{shard_rows}"
-      end)
+      |> Enum.map(& &1.wall_time_ms)
+      |> Enum.max()
+      |> format_duration()
 
     """
-    | Elixir / OTP | Database | Status | Tests | Wall Time | Slowest Test |
+    | Elixir/OTP Versions | Total Jobs | Overall Status | Wall Time |
+    | :---: | :---: | :---: | :---: |
+    | #{total_versions} | #{total_jobs} | #{overall_status} | `#{overall_wall_time}` |
+    """
+    |> String.trim()
+  end
+
+  defp format_matrix_table(summaries) do
+    table_rows =
+      summaries
+      |> Enum.chunk_by(&{&1.elixir, &1.otp})
+      |> Enum.map_join("\n", &format_matrix_version/1)
+
+    """
+    | Elixir/OTP | Job | Status | Tests | Wall Time | Slowest Test |
     | :--- | :--- | :---: | :---: | :---: | :--- |
     #{table_rows}
     """
     |> String.trim()
   end
 
-  defp format_combined_slowest_table(summaries, versions, version_headers) do
-    all_tests =
-      for s <- summaries,
-          t <- s["slowest_tests"] || [] do
-        Map.merge(t, %{
-          "service" => s["service"],
-          "elixir" => s["elixir"],
-          "otp" => s["otp"]
-        })
-      end
+  defp format_matrix_version([%Summary{elixir: elixir, otp: otp} | _] = jobs) do
+    status_str = format_summary_status(jobs)
 
-    grouped_tests =
-      all_tests
-      |> Enum.group_by(fn t -> {t["module"], t["name"]} end)
-      |> Enum.map(fn {{mod, name}, instances} ->
-        first = hd(instances)
+    total = Enum.sum(Enum.map(jobs, & &1.total))
 
-        durations_by_ver =
-          Enum.into(instances, %{}, fn inst ->
-            ms = inst["duration_ms"] || div(inst["time_us"] || 0, 1000)
-            {{inst["elixir"], inst["otp"]}, ms}
-          end)
+    max_wall_time =
+      jobs
+      |> Enum.map(& &1.wall_time_ms)
+      |> Enum.max()
+      |> format_duration()
 
-        max_duration_ms =
-          durations_by_ver
-          |> Map.values()
-          |> Enum.max(fn -> 0 end)
+    overall_slowest =
+      jobs
+      |> Enum.flat_map(& &1.tests)
+      |> Enum.max_by(& &1.duration_ms)
+      |> format_test_desc()
 
-        statuses = Enum.map(instances, & &1["status"])
-        all_passed? = Enum.all?(statuses, &(&1 == "passed"))
-        status = if all_passed?, do: "passed", else: "failed"
+    combined_row =
+      "| **#{elixir}/#{otp}** | **Combined** | #{status_str} | #{total} | `#{max_wall_time}` | #{overall_slowest} |"
 
-        %{
-          module: mod,
-          name: name,
-          service: first["service"],
-          file: first["file"],
-          line: first["line"],
-          durations_by_ver: durations_by_ver,
-          max_duration_ms: max_duration_ms,
-          status: status
-        }
+    job_rows =
+      Enum.map_join(jobs, "\n", fn job_summary ->
+        job_label = job_summary.job_label
+        status = format_summary_status(job_summary)
+        total = job_summary.total
+        wall_time = format_duration(job_summary.wall_time_ms)
+        slowest = format_test_desc(hd(job_summary.tests))
+
+        "| | #{job_label} | #{status} | #{total} | `#{wall_time}` | #{slowest} |"
       end)
-      |> Enum.sort_by(& &1.max_duration_ms, :desc)
+
+    "#{combined_row}\n#{job_rows}"
+  end
+
+  defp format_slowest_tests_table(summaries) do
+    versions = extract_versions(summaries)
+    {duration_header, duration_align} = duration_column_headers(versions)
+
+    rows =
+      summaries
+      |> Enum.flat_map(& &1.tests)
+      |> aggregate_tests()
       |> Enum.take(10)
+      |> Enum.with_index(1)
+      |> Enum.map_join("\n", fn {%AggregatedTest{} = t, idx} ->
+        status = format_status(t.status)
+        durations = format_duration_cells(t, versions)
+        test = escape_markdown(t.name)
+        job = format_job(t.job)
 
-    if grouped_tests != [] do
-      ver_header_cols = Enum.map_join(version_headers, " | ", fn {_, h} -> h end)
-      ver_align_cols = Enum.map_join(version_headers, " | ", fn _ -> ":---" end)
-
-      rows =
-        Enum.map_join(grouped_tests, "\n", fn t ->
-          ver_duration_cols =
-            Enum.map_join(versions, " | ", fn ver ->
-              case Map.get(t.durations_by_ver, ver) do
-                nil -> "-"
-                ms -> "`#{format_duration(ms)}`"
-              end
-            end)
-
-          "| #{t.status} | `#{format_duration(t.max_duration_ms)}` | #{ver_duration_cols} | #{escape_markdown(t.name)} | `#{t.module}` | #{service_name(t.service)} | `#{t.file}:#{t.line}` |"
-        end)
-
-      """
-      <details open>
-      <summary><b>Top 10 Slowest Tests</b></summary>
-
-      | Status | Max Duration | #{ver_header_cols} | Test | Module | Database | Location |
-      | :---: | :--- | #{ver_align_cols} | :--- | :--- | :---: | :--- |
-      #{rows}
-
-      </details>
-      """
-      |> String.trim()
-    else
-      ""
-    end
-  end
-
-  defp format_combined_shard_details(summaries, versions, version_headers) do
-    shards_by_service = Enum.group_by(summaries, & &1["service"])
-
-    services =
-      @service_order
-      |> Enum.filter(&Map.has_key?(shards_by_service, &1))
-      |> Kernel.++(Enum.sort(Map.keys(shards_by_service) -- @service_order))
-
-    Enum.map_join(services, "\n\n", fn service ->
-      service_summaries =
-        shards_by_service
-        |> Map.get(service, [])
-        |> Enum.sort_by(fn s -> {s["elixir"], s["otp"]} end)
-
-      format_service_accordion(service, service_summaries, versions, version_headers)
-    end)
-  end
-
-  defp format_service_accordion(service, service_summaries, versions, version_headers) do
-    service_label = service_name(service)
-
-    total_failures =
-      Enum.sum(Enum.map(service_summaries, &(&1["total_failures"] || 0)))
-
-    max_tests =
-      Enum.max(Enum.map(service_summaries, &(&1["executed_tests"] || 0)), fn -> 0 end)
-
-    details_tag = if total_failures > 0, do: "<details open>", else: "<details>"
-    status_label = if total_failures == 0, do: "passed", else: "failed (#{total_failures})"
-
-    wall_times_summary =
-      Enum.map_join(service_summaries, " | ", fn s ->
-        "#{format_duration(s["wall_time_ms"] || 0)} in #{short_version(s["elixir"])}"
+        "| #{idx} | #{status} | #{durations} | #{test} | `#{t.module}` | #{job} | `#{t.location}` |"
       end)
-
-    modules_section = format_service_modules_table(service_summaries, versions, version_headers)
-    timelines_section = format_service_timelines(service_summaries)
-    tests_section = format_service_tests_table(service_summaries, versions, version_headers)
 
     """
-    #{details_tag}
-    <summary><b>#{service_label} Details</b>: #{status_label} — #{max_tests} tests (#{wall_times_summary})</summary>
+    <details open>
+    <summary><b>Top 10 Slowest Tests</b></summary>
 
-    #{timelines_section}
+    | # | Status | #{duration_header} | Test | Module | Job | Location |
+    | :---: | :---: | #{duration_align} | :--- | :--- | :---: | :--- |
+    #{rows}
 
-    #{modules_section}
-
-    #{tests_section}
     </details>
     """
     |> String.trim()
   end
 
-  defp format_service_modules_table(service_summaries, versions, version_headers) do
-    all_modules =
-      for s <- service_summaries,
-          m <- s["modules"] || [] do
-        Map.merge(m, %{"elixir" => s["elixir"], "otp" => s["otp"]})
-      end
+  defp format_jobs_details(summaries) do
+    versions = extract_versions(summaries)
 
-    grouped_modules =
-      all_modules
-      |> Enum.group_by(& &1["module"])
-      |> Enum.map(fn {mod, instances} ->
-        test_count = Enum.max(Enum.map(instances, &(&1["test_count"] || 0)), fn -> 0 end)
-
-        durations_by_ver =
-          Enum.into(instances, %{}, fn inst ->
-            ms = div(inst["total_us"] || 0, 1000)
-            {{inst["elixir"], inst["otp"]}, ms}
-          end)
-
-        max_duration_ms =
-          durations_by_ver
-          |> Map.values()
-          |> Enum.max(fn -> 0 end)
-
-        avg_ms = if test_count > 0, do: div(max_duration_ms, test_count), else: 0
-        max_test_ms = Enum.max(Enum.map(instances, &div(&1["max_us"] || 0, 1000)), fn -> 0 end)
-
-        statuses = Enum.map(instances, & &1["status"])
-        all_passed? = Enum.all?(statuses, &(&1 == "passed"))
-        status = if all_passed?, do: "passed", else: "failed"
-
-        %{
-          module: mod,
-          status: status,
-          test_count: test_count,
-          durations_by_ver: durations_by_ver,
-          max_duration_ms: max_duration_ms,
-          avg_ms: avg_ms,
-          max_test_ms: max_test_ms
-        }
-      end)
-      |> Enum.sort_by(& &1.max_duration_ms, :desc)
-
-    if grouped_modules != [] do
-      ver_header_cols = Enum.map_join(version_headers, " | ", fn {_, h} -> h end)
-      ver_align_cols = Enum.map_join(version_headers, " | ", fn _ -> ":---" end)
-
-      rows =
-        Enum.map_join(grouped_modules, "\n", fn m ->
-          ver_duration_cols =
-            Enum.map_join(versions, " | ", fn ver ->
-              case Map.get(m.durations_by_ver, ver) do
-                nil -> "-"
-                ms -> "`#{format_duration(ms)}`"
-              end
-            end)
-
-          "| `#{m.module}` | #{m.status} | #{m.test_count} | #{ver_duration_cols} | `#{format_duration(m.avg_ms)}` | `#{format_duration(m.max_test_ms)}` |"
-        end)
-
-      """
-      <details open>
-      <summary><b>Module Breakdown</b></summary>
-
-      | Module | Status | Tests | #{ver_header_cols} | Avg / Test | Max / Test |
-      | :--- | :---: | :---: | #{ver_align_cols} | :--- | :--- |
-      #{rows}
-
-      </details>
-      """
-      |> String.trim()
-    else
-      ""
-    end
+    summaries
+    |> Enum.sort_by(&{&1.job_sort_key, &1.version_key})
+    |> Enum.chunk_by(& &1.job)
+    |> Enum.map_join("\n\n", fn job_summaries ->
+      format_job_details(job_summaries, versions)
+    end)
   end
 
-  defp format_service_timelines(service_summaries) do
-    timelines =
-      Enum.map(service_summaries, fn s ->
-        modules = s["modules"] || []
-        gantt = format_shard_mermaid_gantt(modules)
-        {s["elixir"], s["otp"], gantt}
+  defp format_job_details([%Summary{job_label: job_label} | _] = job_summaries, versions) do
+    max_tests =
+      job_summaries
+      |> Enum.map(& &1.total)
+      |> Enum.max()
+
+    status_label = format_summary_status(job_summaries)
+
+    wall_times_summary =
+      Enum.map_join(job_summaries, " | ", fn s ->
+        "#{format_duration(s.wall_time_ms)} in #{s.elixir}"
       end)
-      |> Enum.reject(fn {_, _, gantt} -> gantt == "" end)
 
-    if timelines != [] do
-      content =
-        Enum.map_join(timelines, "\n\n", fn {elixir, otp, gantt} ->
-          """
-          **Elixir #{elixir} / OTP #{otp}**
+    timelines_section = format_job_timelines(job_summaries)
+    modules_section = format_job_modules_table(job_summaries, versions)
+    tests_section = format_job_tests_table(job_summaries, versions)
 
-          #{gantt}
-          """
-        end)
+    sections =
+      [timelines_section, modules_section, tests_section]
+      |> Enum.join("\n\n")
 
-      """
-      <details open>
-      <summary><b>Module Execution Timelines</b></summary>
+    """
+    <details#{unless passed?(job_summaries), do: " open"}>
+    <summary><b>#{job_label} Details</b>: #{status_label} — #{max_tests} tests (#{wall_times_summary})</summary>
 
-      #{content}
-      </details>
-      """
-      |> String.trim()
-    else
-      ""
-    end
+    #{sections}
+    </details>
+    """
+    |> String.trim()
   end
 
-  defp format_service_tests_table(service_summaries, versions, version_headers) do
-    all_tests =
-      for s <- service_summaries,
-          t <- s["slowest_tests"] || [] do
-        Map.merge(t, %{
-          "elixir" => s["elixir"],
-          "otp" => s["otp"]
-        })
-      end
+  defp format_job_timelines(job_summaries) do
+    content =
+      Enum.map_join(job_summaries, "\n\n", fn s ->
+        gantt = format_mermaid_gantt(s.modules)
 
-    grouped_tests =
-      all_tests
-      |> Enum.group_by(fn t -> {t["module"], t["name"]} end)
-      |> Enum.map(fn {{mod, name}, instances} ->
-        first = hd(instances)
+        """
+        **#{s.elixir}/#{s.otp}**
 
-        durations_by_ver =
-          Enum.into(instances, %{}, fn inst ->
-            ms = inst["duration_ms"] || div(inst["time_us"] || 0, 1000)
-            {{inst["elixir"], inst["otp"]}, ms}
-          end)
-
-        max_duration_ms =
-          durations_by_ver
-          |> Map.values()
-          |> Enum.max(fn -> 0 end)
-
-        statuses = Enum.map(instances, & &1["status"])
-        all_passed? = Enum.all?(statuses, &(&1 == "passed"))
-        status = if all_passed?, do: "passed", else: "failed"
-
-        %{
-          module: mod,
-          name: name,
-          file: first["file"],
-          line: first["line"],
-          durations_by_ver: durations_by_ver,
-          max_duration_ms: max_duration_ms,
-          status: status
-        }
+        #{gantt}
+        """
       end)
-      |> Enum.sort_by(& &1.max_duration_ms, :desc)
 
-    if grouped_tests != [] do
-      ver_header_cols = Enum.map_join(version_headers, " | ", fn {_, h} -> h end)
-      ver_align_cols = Enum.map_join(version_headers, " | ", fn _ -> ":---" end)
+    """
+    <details open>
+    <summary><b>Module Execution Timelines</b></summary>
 
-      rows =
-        Enum.map_join(grouped_tests, "\n", fn t ->
-          ver_duration_cols =
-            Enum.map_join(versions, " | ", fn ver ->
-              case Map.get(t.durations_by_ver, ver) do
-                nil -> "-"
-                ms -> "`#{format_duration(ms)}`"
-              end
-            end)
-
-          "| #{t.status} | `#{format_duration(t.max_duration_ms)}` | #{ver_duration_cols} | #{escape_markdown(t.name)} | `#{t.module}` | `#{t.file}:#{t.line}` |"
-        end)
-
-      """
-      <details open>
-      <summary><b>Test Durations (Slowest to Fastest)</b></summary>
-
-      | Status | Max Duration | #{ver_header_cols} | Test | Module | Location |
-      | :---: | :--- | #{ver_align_cols} | :--- | :--- | :--- |
-      #{rows}
-
-      </details>
-      """
-      |> String.trim()
-    else
-      ""
-    end
+    #{content}
+    </details>
+    """
+    |> String.trim()
   end
 
-  defp format_shard_mermaid_gantt(modules) do
-    sorted_modules =
-      Enum.sort_by(modules, fn m ->
-        s = m["start_ms"] || 0
-        f = m["finish_ms"] || s
-        {s, f, m["module"]}
+  defp format_job_modules_table(job_summaries, versions) do
+    {duration_header, duration_align} = duration_column_headers(versions)
+
+    rows =
+      job_summaries
+      |> Enum.flat_map(& &1.modules)
+      |> aggregate_modules()
+      |> Enum.with_index(1)
+      |> Enum.map_join("\n", fn {%AggregatedModule{} = m, idx} ->
+        status = format_status(m.status)
+        durations = format_duration_cells(m, versions)
+
+        module = "`#{m.module}`<br><small>Timeline: `#{m.timeline_name}`</small>"
+        max_test = format_duration(m.max_test_ms)
+
+        "| #{idx} | #{status} | #{durations} | #{module} | #{m.test_count} | `#{max_test}` |"
       end)
+
+    """
+    <details open>
+    <summary><b>Module Durations</b></summary>
+
+    | # | Status | #{duration_header} | Module | Tests | Max / Test |
+    | :---: | :---: | #{duration_align} | :--- | :---: | :--- |
+    #{rows}
+
+    </details>
+    """
+    |> String.trim()
+  end
+
+  defp format_job_tests_table(job_summaries, versions) do
+    {duration_header, duration_align} = duration_column_headers(versions)
+
+    rows =
+      job_summaries
+      |> Enum.flat_map(& &1.tests)
+      |> aggregate_tests()
+      |> Enum.with_index(1)
+      |> Enum.map_join("\n", fn {%AggregatedTest{} = t, idx} ->
+        status = format_status(t.status)
+        durations = format_duration_cells(t, versions)
+        test = escape_markdown(t.name)
+
+        "| #{idx} | #{status} | #{durations} | #{test} | `#{t.module}` | `#{t.location}` |"
+      end)
+
+    """
+    <details open>
+    <summary><b>Test Durations</b></summary>
+
+    | # | Status | #{duration_header} | Test | Module | Location |
+    | :---: | :---: | #{duration_align} | :--- | :--- | :--- |
+    #{rows}
+
+    </details>
+    """
+    |> String.trim()
+  end
+
+  defp format_mermaid_gantt(modules) do
+    sorted_modules = Enum.sort_by(modules, &{&1.start_ms, &1.finish_ms, &1.module})
 
     lanes =
       Enum.reduce(sorted_modules, [], fn item, acc_lanes ->
-        assign_to_lane(acc_lanes, item, [])
+        assign_to_lane(acc_lanes, item)
       end)
       |> Enum.map(&Enum.reverse/1)
 
-    slowest_mod =
-      Enum.max_by(
-        modules,
-        fn m -> (m["finish_ms"] || m["start_ms"] || 0) - (m["start_ms"] || 0) end,
-        fn -> nil end
-      )
-
-    slowest_mod_name = slowest_mod && slowest_mod["module"]
+    slowest_mod = Enum.max_by(modules, & &1.duration_ms)
+    slowest_mod_name = slowest_mod.module
 
     section_rows =
       lanes
       |> Enum.with_index(1)
       |> Enum.map(fn {lane, idx} ->
         tasks =
-          Enum.map(lane, fn m ->
-            module_name = format_gantt_module_name(m["module"])
-            s = m["start_ms"] || 0
-            f = m["finish_ms"] || s
-            duration_ms = max(1000, f - s)
-            finish_ms = s + duration_ms
+          Enum.map(lane, fn %ModuleRun{} = item ->
+            duration_ms = max(1000, item.finish_ms - item.start_ms)
+            finish_ms = item.start_ms + duration_ms
 
-            start_str = format_gantt_time(s)
+            start_str = format_gantt_time(item.start_ms)
             finish_str = format_gantt_time(finish_ms)
-            tag = if m["module"] == slowest_mod_name, do: ":crit, active,", else: ":active,"
+            tags = if item.module == slowest_mod_name, do: "crit, active", else: "active"
 
-            "    #{module_name} #{tag} #{start_str}, #{finish_str}"
+            "    #{item.timeline_name} :#{tags}, #{start_str}, #{finish_str}"
           end)
 
         "    section Lane #{idx}\n" <> Enum.join(tasks, "\n")
@@ -545,99 +458,151 @@ defmodule Phoenix.Integration.AggregateSummary do
     |> String.trim()
   end
 
-  defp assign_to_lane([], item, acc) do
-    Enum.reverse([[item] | acc])
-  end
+  defp assign_to_lane(lanes, %ModuleRun{} = item) do
+    case Enum.split_while(lanes, fn [%ModuleRun{} = head | _] ->
+           head.finish_ms > item.start_ms
+         end) do
+      {prev_lanes, [compatible_lane | next_lanes]} ->
+        prev_lanes ++ [[item | compatible_lane] | next_lanes]
 
-  defp assign_to_lane(
-         [[last_item | _] = lane | rest],
-         item,
-         acc
-       ) do
-    last_finish = last_item["finish_ms"] || last_item["start_ms"] || 0
-    item_start = item["start_ms"] || 0
-
-    if last_finish <= item_start do
-      Enum.reverse(acc) ++ [[item | lane] | rest]
-    else
-      assign_to_lane(rest, item, [lane | acc])
+      {all_occupied, []} ->
+        all_occupied ++ [[item]]
     end
   end
 
-  defp format_gantt_module_name(nil), do: "Unknown"
+  defp aggregate_modules(module_runs) do
+    module_runs
+    |> Enum.group_by(& &1.module)
+    |> Enum.map(fn {mod, instances} ->
+      first = hd(instances)
+      test_count = Enum.max(Enum.map(instances, & &1.test_count))
 
-  defp format_gantt_module_name(mod) do
+      durations =
+        Enum.into(instances, %{}, fn %ModuleRun{} = r ->
+          {{r.elixir, r.otp}, r.duration_ms}
+        end)
+
+      max_duration_ms =
+        durations
+        |> Map.values()
+        |> Enum.max()
+
+      max_test_ms = Enum.max(Enum.map(instances, & &1.max_ms))
+      status = aggregate_status(instances)
+
+      %AggregatedModule{
+        module: mod,
+        timeline_name: first.timeline_name,
+        status: status,
+        test_count: test_count,
+        durations: durations,
+        max_duration_ms: max_duration_ms,
+        max_test_ms: max_test_ms
+      }
+    end)
+    |> Enum.sort_by(& &1.max_duration_ms, :desc)
+  end
+
+  defp aggregate_tests(test_runs) do
+    test_runs
+    |> Enum.group_by(&{&1.module, &1.name})
+    |> Enum.map(fn {{mod, name}, instances} ->
+      first = hd(instances)
+      status = aggregate_status(instances)
+
+      durations =
+        Enum.into(instances, %{}, fn %TestRun{} = r ->
+          {{r.elixir, r.otp}, r.duration_ms}
+        end)
+
+      max_duration_ms =
+        durations
+        |> Map.values()
+        |> Enum.max()
+
+      %AggregatedTest{
+        module: mod,
+        name: name,
+        status: status,
+        durations: durations,
+        max_duration_ms: max_duration_ms,
+        location: first.location,
+        job: first.job
+      }
+    end)
+    |> Enum.sort_by(& &1.max_duration_ms, :desc)
+  end
+
+  defp aggregate_status(instances) do
+    cond do
+      Enum.any?(instances, &(&1.status == :invalid)) -> :invalid
+      Enum.any?(instances, &(&1.status == :failed)) -> :failed
+      true -> :passed
+    end
+  end
+
+  defp sort_summaries(summaries) do
+    Enum.sort_by(summaries, &{&1.version_key, &1.job_sort_key})
+  end
+
+  defp extract_versions(summaries) do
+    summaries
+    |> Enum.map(&{&1.elixir, &1.otp})
+    |> Enum.uniq()
+  end
+
+  defp parse_status("passed"), do: :passed
+  defp parse_status("failed"), do: :failed
+  defp parse_status("invalid"), do: :invalid
+
+  defp timeline_name(mod) do
     mod
-    |> to_string()
     |> String.replace_prefix("UmbrellaAppWith", "Umbrella")
     |> String.replace_prefix("AppWith", "")
     |> String.replace("Adapter", "")
     |> String.replace_suffix("Test", "")
   end
 
-  defp format_gantt_time(ms) do
-    total_seconds = div(ms, 1000)
-    mins = div(total_seconds, 60)
-    secs = rem(total_seconds, 60)
+  defp job_sort_key("postgresql"), do: {0, "postgresql"}
+  defp job_sort_key("mysql"), do: {1, "mysql"}
+  defp job_sort_key("mssql"), do: {2, "mssql"}
+  defp job_sort_key(other), do: {3, other}
 
-    "#{String.pad_leading(Integer.to_string(mins), 2, "0")}:#{String.pad_leading(Integer.to_string(secs), 2, "0")}"
+  defp parse_version(version) do
+    ~r/\d+|\D+/
+    |> Regex.scan(version)
+    |> Enum.map(fn [part] ->
+      case Integer.parse(part) do
+        {num, ""} -> num
+        _ -> part
+      end
+    end)
   end
 
-  defp format_version_headers(versions) do
-    short_versions =
-      Enum.map(versions, fn {elixir, _otp} ->
-        short_version(elixir)
+  defp duration_column_headers([_]), do: {"Duration", ":---"}
+
+  defp duration_column_headers(versions) do
+    headers =
+      ["Max Duration" | Enum.map(versions, fn {elixir, _otp} -> "Duration (#{elixir})" end)]
+
+    {Enum.join(headers, " | "), Enum.map_join(headers, " | ", fn _ -> ":---" end)}
+  end
+
+  defp format_duration_cells(%{max_duration_ms: max_ms}, [_]) do
+    "`#{format_duration(max_ms)}`"
+  end
+
+  defp format_duration_cells(%{durations: durations, max_duration_ms: max_ms}, versions) do
+    version_cols =
+      Enum.map_join(versions, " | ", fn version ->
+        case durations[version] do
+          nil -> "-"
+          ms -> "`#{format_duration(ms)}`"
+        end
       end)
 
-    unique? = length(Enum.uniq(short_versions)) == length(versions)
-
-    Enum.map(versions, fn {elixir, otp} ->
-      label = if unique?, do: short_version(elixir), else: elixir
-      {{elixir, otp}, "Duration (#{label})"}
-    end)
+    "`#{format_duration(max_ms)}` | #{version_cols}"
   end
-
-  defp short_version(version) do
-    version
-    |> to_string()
-    |> String.split(".")
-    |> Enum.take(2)
-    |> Enum.join(".")
-  end
-
-  defp sort_shards(shards) do
-    Enum.sort_by(shards, fn s ->
-      idx = Enum.find_index(@service_order, &(&1 == s["service"]))
-      {idx || 99, s["service"]}
-    end)
-  end
-
-  defp shard_status_cell(shard) do
-    failures = shard["total_failures"] || 0
-    if failures == 0, do: "passed", else: "**failed (#{failures})**"
-  end
-
-  defp format_shard_slowest(nil), do: "-"
-  defp format_shard_slowest([]), do: "-"
-
-  defp format_shard_slowest([slowest | _]) do
-    format_test_desc(slowest)
-  end
-
-  defp format_test_desc(nil), do: "-"
-
-  defp format_test_desc(test) do
-    name = escape_markdown(test["name"] || "unknown")
-    mod = test["module"] || "unknown"
-    dur = format_duration(test["duration_ms"] || 0)
-    "`#{mod}`: #{truncate_text(name, 45)} (`#{dur}`)"
-  end
-
-  defp service_name("postgresql"), do: "PostgreSQL"
-  defp service_name("mysql"), do: "MySQL"
-  defp service_name("mssql"), do: "MSSQL"
-  defp service_name("none"), do: "sqlite3 + no-db"
-  defp service_name(other), do: to_string(other)
 
   defp format_duration(ms) when ms < 1000, do: "#{ms}ms"
 
@@ -649,8 +614,52 @@ defmodule Phoenix.Integration.AggregateSummary do
     if mins == 0 do
       "#{secs}s"
     else
-      "#{mins}m #{String.pad_leading(Integer.to_string(secs), 2, "0")}s"
+      "#{mins}m #{pad_zero(secs)}s"
     end
+  end
+
+  defp format_gantt_time(ms) do
+    total_seconds = div(ms, 1000)
+    mins = pad_zero(div(total_seconds, 60))
+    secs = pad_zero(rem(total_seconds, 60))
+
+    "#{mins}:#{secs}"
+  end
+
+  defp pad_zero(int), do: int |> Integer.to_string() |> String.pad_leading(2, "0")
+
+  defp format_job("postgresql"), do: "PostgreSQL"
+  defp format_job("mysql"), do: "MySQL"
+  defp format_job("mssql"), do: "MSSQL"
+  defp format_job("none"), do: "SQLite3 + no-DB"
+  defp format_job(other) when is_binary(other), do: String.capitalize(other)
+
+  defp passed?(%Summary{passed?: passed?}), do: passed?
+  defp passed?(summaries) when is_list(summaries), do: Enum.all?(summaries, &passed?/1)
+
+  defp format_summary_status(%Summary{failed: f, invalid: i}), do: format_summary_status(f, i)
+
+  defp format_summary_status(summaries) when is_list(summaries) do
+    failed = Enum.sum(Enum.map(summaries, & &1.failed))
+    invalid = Enum.sum(Enum.map(summaries, & &1.invalid))
+    format_summary_status(failed, invalid)
+  end
+
+  defp format_summary_status(0, 0), do: "Passed"
+  defp format_summary_status(f, 0), do: "Failed (#{f})"
+  defp format_summary_status(0, i), do: "Invalid (#{i})"
+  defp format_summary_status(f, i), do: "Failed (#{f}) / Invalid (#{i})"
+
+  defp format_status(status) when is_atom(status) do
+    status
+    |> Atom.to_string()
+    |> String.capitalize()
+  end
+
+  defp format_test_desc(%TestRun{} = t) do
+    duration = format_duration(t.duration_ms)
+    truncated_name = t.name |> truncate_text(45) |> escape_markdown()
+    "`#{t.module}`: #{truncated_name} (`#{duration}`)"
   end
 
   defp truncate_text(text, max_len) do
@@ -663,7 +672,6 @@ defmodule Phoenix.Integration.AggregateSummary do
 
   defp escape_markdown(text) do
     text
-    |> to_string()
     |> String.replace("&", "&amp;")
     |> String.replace("<", "&lt;")
     |> String.replace(">", "&gt;")

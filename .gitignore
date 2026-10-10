@@ -16,6 +16,7 @@
 
 /integration_test/_build/
 /integration_test/deps/
+/integration_test/tmp/
 
 erl_crash.dump
 phoenix-*.ez
