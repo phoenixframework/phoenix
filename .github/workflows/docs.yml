@@ -46,9 +46,9 @@ jobs:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-${{ hashFiles('**/mix.lock') }}-docs
+          key: mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-docs-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-
+            mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-docs-
 
       - name: Install dependencies
         run: mix deps.get --only docs

@@ -49,9 +49,9 @@ jobs:
           path: |
             deps
             _build
-          key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-test-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-
+            mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-test-
 
       - name: Install dependencies
         run: mix deps.get --only test
@@ -110,9 +110,9 @@ jobs:
             _build
             installer/deps
             installer/_build
-          key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-installer-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-
+            mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-installer-
 
       - name: Install installer dependencies
         run: mix deps.get
@@ -186,9 +186,9 @@ jobs:
           path: |
             deps
             _build
-          key: docs-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-${{ hashFiles('**/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-docs-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            docs-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-
+            mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-docs-
 
       - name: Install dependencies
         run: mix deps.get --only docs
@@ -259,9 +259,9 @@ jobs:
           path: |
             integration_test/deps
             integration_test/_build
-          key: integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-${{ hashFiles('integration_test/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-integration-${{ hashFiles('integration_test/mix.lock') }}
           restore-keys: |
-            integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-
+            mix-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-integration-
 
       - name: Install dependencies
         working-directory: integration_test
