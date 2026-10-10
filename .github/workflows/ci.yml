@@ -59,7 +59,7 @@ jobs:
       - name: Remove compiled application files
         run: mix clean
 
-      - name: Compile & lint dependencies
+      - name: Compile & lint
         run: mix compile --warnings-as-errors
         if: ${{ matrix.lint }}
 
