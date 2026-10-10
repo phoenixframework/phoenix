@@ -142,7 +142,7 @@ jobs:
           node-version: "24.x"
           cache: "npm"
 
-      - name: Install locked npm dependencies
+      - name: Install npm dependencies
         run: npm ci --no-audit --no-fund
 
       - name: Run tests
@@ -191,7 +191,7 @@ jobs:
       - name: Install dependencies
         run: mix deps.get --only docs
 
-      - name: Build the documentation
+      - name: Build docs
         run: mix docs --warnings-as-errors
 
   integration-test-elixir:
@@ -261,7 +261,7 @@ jobs:
           restore-keys: |
             integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-
 
-      - name: Fetch dependencies
+      - name: Install dependencies
         working-directory: integration_test
         run: mix deps.get
 
