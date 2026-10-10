@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      elixir: 1.20.4
-      otp: 29.0.5
+      elixir: "1.20.4"
+      otp: "29.0.5"
     permissions:
       contents: write # for stefanzweifel/git-auto-commit-action to push code in repo
     steps:
@@ -39,27 +39,20 @@ jobs:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-${{ hashFiles('**/mix.lock') }}-dev
+          key: mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-dev-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-
-      - name: Install Dependencies
+            mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-dev-
+      - name: Install dependencies
         run: mix deps.get --only dev
 
       - name: Set up Node.js 24.x
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.x
-
-      - name: Restore npm cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version: "24.x"
+          cache: "npm"
 
       - name: Install npm dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Build assets
         run: mix assets.build
