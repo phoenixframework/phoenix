@@ -318,7 +318,7 @@ DELETE  /admin/reviews/:id       HelloWeb.Admin.ReviewController :delete
 ...
 ```
 
-This looks good, but there is a problem here. Remember that we wanted both user-facing review routes `/reviews` and the admin ones `/admin/reviews`. If we now include the user-facing reviews in our router under the root scope like this:
+Remember that we wanted both user-facing review routes `/reviews` and the admin ones `/admin/reviews`. If we now include the user-facing reviews in our router under the root scope like this:
 
 ```elixir
 scope "/", HelloWeb do

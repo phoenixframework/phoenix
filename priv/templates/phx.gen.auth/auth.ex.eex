@@ -37,6 +37,7 @@ defmodule <%= inspect auth_module %> do
 
     conn
     |> create_or_extend_session(<%= schema.singular %>, params)
+    |> delete_session(:<%= schema.singular %>_return_to)
     |> redirect(to: <%= schema.singular %>_return_to || signed_in_path(conn))
   end
 

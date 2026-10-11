@@ -137,8 +137,13 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp socket_children(endpoint, conf, fun) do
-    for {_, socket, opts} <- Enum.uniq_by(endpoint.__sockets__(), &elem(&1, 1)),
-        _ = check_origin_or_csrf_checked!(conf, opts),
+    sockets =
+      Enum.uniq_by(endpoint.__sockets__(), fn {_, socket, opts} ->
+        check_origin_or_csrf_checked!(conf, opts)
+        socket
+      end)
+
+    for {_, socket, opts} <- sockets,
         spec = apply_or_ignore(socket, fun, [[endpoint: endpoint] ++ opts]),
         spec != :ignore do
       spec
@@ -283,31 +288,9 @@ defmodule Phoenix.Endpoint.Supervisor do
   The result is wrapped in a `{:cache | :nocache, value}` tuple so
   the `Phoenix.Config` layer knows how to cache it.
   """
-  @invalid_local_url_chars ["\\"]
-
-  def static_lookup(_endpoint, "//" <> _ = path) do
-    raise_invalid_path(path)
+  def static_lookup(_endpoint, path) do
+    {:nocache, {Phoenix.URL.validate_local_path!(path), nil}}
   end
-
-  def static_lookup(_endpoint, "/" <> _ = path) do
-    if String.contains?(path, @invalid_local_url_chars) do
-      raise ArgumentError, "unsafe characters detected for path #{inspect(path)}"
-    else
-      {:nocache, {path, nil}}
-    end
-  end
-
-  def static_lookup(_endpoint, path) when is_binary(path) do
-    raise_invalid_path(path)
-  end
-
-  defp raise_invalid_path(path) do
-    raise ArgumentError, "expected a path starting with a single / but got #{inspect(path)}"
-  end
-
-  # TODO: Remove the first function clause once {:system, env_var} tuples are removed
-  defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
-  defp host_to_binary(host), do: host
 
   # TODO: Remove the first function clause once {:system, env_var} tuples are removed
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
@@ -370,7 +353,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     static_url_config = endpoint.config(:static_url) || url_config
 
     struct_url = build_url(endpoint, url_config)
-    host = host_to_binary(url_config[:host] || "localhost")
+    host = host_to_binary(url_config[:host])
     path = empty_string_if_root(url_config[:path] || "/")
     script_name = String.split(path, "/", trim: true)
 
@@ -403,7 +386,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       end
 
     scheme = url[:scheme] || scheme
-    host = host_to_binary(url[:host] || "localhost")
+    host = host_to_binary(url[:host])
     port = port_to_integer(url[:port] || port)
 
     if host =~ ~r"[^:]:\d" do
@@ -485,4 +468,9 @@ defmodule Phoenix.Endpoint.Supervisor do
       System.cmd(cmd, args)
     end
   end
+
+  def host_to_binary(nil), do: "localhost"
+  # TODO: Remove this once {:system, env_var} deprecation is removed
+  def host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
+  def host_to_binary(host), do: host
 end

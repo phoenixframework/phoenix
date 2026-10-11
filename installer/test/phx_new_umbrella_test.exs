@@ -64,7 +64,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "--format=esm"
         assert file =~ "cd: Path.expand(\"../apps/phx_umb_web/assets\", __DIR__)"
         assert file =~ ~S[import_config "#{config_env()}.exs"]
-        assert file =~ "config :phoenix, :json_library, Jason"
+        assert file =~ "config :phoenix, :json_library, JSON"
+        assert file =~ "config :postgrex, :json_library, JSON"
+        assert file =~ "config :swoosh, :json_library, JSON"
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
         assert file =~ "generators: [context_app: :phx_umb]\n"
@@ -123,7 +125,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(app_path(@app, "mix.exs"), fn file ->
         assert file =~ "mod: {PhxUmb.Application, []}"
-        assert file =~ "{:phoenix_pubsub, \"~> 2.1\"}"
+        assert file =~ "{:phoenix_pubsub, \"~> 2.4\"}"
       end)
 
       assert_file(app_path(@app, "test/test_helper.exs"))
@@ -135,7 +137,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(web_path(@app, "mix.exs"), fn file ->
         assert file =~ "mod: {PhxUmbWeb.Application, []}"
-        assert file =~ "{:jason"
       end)
 
       assert_file(web_path(@app, "lib/#{@app}_web.ex"), fn file ->
@@ -221,7 +222,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # app deps
       assert_file(web_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:phoenix_ecto,"
-        assert file =~ "{:jason,"
       end)
 
       # Ecto
@@ -234,7 +234,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "aliases: aliases()"
         assert file =~ "ecto.setup"
         assert file =~ "ecto.reset"
-        assert file =~ "{:jason,"
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/repo.ex"), ~r"defmodule PhxUmb.Repo")
@@ -316,6 +315,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(@app, "config/prod.exs"), fn file ->
         assert file =~ "config :swoosh, :api_client, Swoosh.ApiClient.Req"
+        assert file =~ "config :swoosh, :local, false"
       end)
 
       # Install dependencies?
@@ -370,6 +370,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(app_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_ecto"))
 
       assert_file(root_path(@app, "config/config.exs"), fn file ->
+        assert file =~ "config :phoenix, :json_library, JSON"
+        refute file =~ "config :postgrex, :json_library, JSON"
+        refute file =~ "config :swoosh, :json_library, JSON"
         refute file =~ "config :esbuild"
         refute file =~ "config :phx_blog_web, :generators"
         refute file =~ "ecto_repos:"
@@ -629,6 +632,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mysql"])
 
       assert_file(app_path(app, "mix.exs"), ":myxql")
+      assert_file(root_path(app, "config/config.exs"), "config :myxql, :json_library, JSON")
       assert_file(app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.MyXQL")
 
       assert_file(root_path(app, "config/dev.exs"), [~r/username: "root"/, ~r/password: ""/])
@@ -656,6 +660,12 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "sqlite3"])
 
       assert_file(app_path(app, "mix.exs"), ":ecto_sqlite3")
+
+      assert_file(
+        root_path(app, "config/config.exs"),
+        "config :ecto_sqlite3, :json_library, JSON"
+      )
+
       assert_file(app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.SQLite3")
 
       assert_file(app_path(app, "lib/custom_path/application.ex"), fn file ->
@@ -695,6 +705,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mssql"])
 
       assert_file(app_path(app, "mix.exs"), ":tds")
+      assert_file(root_path(app, "config/config.exs"), "config :tds, :json_library, JSON")
       assert_file(app_path(app, "lib/custom_path/repo.ex"), "Ecto.Adapters.Tds")
 
       assert_file(root_path(app, "config/dev.exs"), [
@@ -821,9 +832,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
           File.cd!(dir, fn ->
             assert_raise Mix.Error,
                          ~r"The web task can only be run within an umbrella's apps directory",
-                         fn ->
-                           Mix.Tasks.Phx.New.Web.run(["valid"])
-                         end
+                         fn -> Mix.Tasks.Phx.New.Web.run(["web_app"]) end
           end)
         end
       end)
@@ -848,7 +857,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         end)
 
         assert_file("../config/config.exs", fn file ->
-          assert file =~ "ecto_repos: [Another.Repo]"
+          assert file =~ "config :another,\n  generators: [context_app: false]"
+          assert file =~ "config :another, Another.Endpoint,"
+          refute file =~ "ecto_repos: [Another.Repo]"
         end)
 
         assert_file("../config/prod.exs", fn file ->
@@ -865,7 +876,13 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file("another/test/another/controllers/page_controller_test.exs")
         assert_file("another/test/another/controllers/error_html_test.exs", "async: true")
         assert_file("another/test/another/controllers/error_json_test.exs", "async: true")
-        assert_file("another/test/support/conn_case.ex")
+
+        assert_file("another/test/support/conn_case.ex", fn file ->
+          assert file =~ "defmodule Another.ConnCase do"
+          assert file =~ "setup _tags do\n    {:ok, conn: Phoenix.ConnTest.build_conn()}\n  end"
+          refute file =~ "DataCase.setup_sandbox"
+        end)
+
         assert_file("another/test/test_helper.exs")
 
         assert_file(
@@ -895,7 +912,9 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         # Ecto
         assert_file("another/mix.exs", fn file ->
-          assert file =~ "{:phoenix_ecto,"
+          assert file =~ "{:phoenix,"
+          refute file =~ "{:phoenix_ecto,"
+          refute file =~ "ecto.create"
         end)
 
         assert_file("another/lib/another.ex", ~r"defmodule Another")

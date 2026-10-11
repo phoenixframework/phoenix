@@ -7,6 +7,23 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     end
   end
 
+  # The official Microsoft SQL Server image only supports the amd64 architecture.
+  # Returns a skip reason string on unsupported architectures (e.g. arm64 / Apple Silicon),
+  # or `nil` on supported architectures so tests execute normally.
+  def reason_if_mssql_unsupported do
+    [arch | _] = :erlang.system_info(:system_architecture) |> to_string() |> String.split("-")
+
+    if arch not in ["x86_64", "amd64"] do
+      "MSSQL is not supported on #{arch}"
+    end
+  end
+
+  # NOTE: Keep `app_name` short (as of writing, <= 10 characters excluding underscores,
+  # e.g. "pg_auth_live", "umb_a_html"). App names are converted to module names, and long names
+  # can cause lines in generated files to exceed Elixir's default 98-character formatter limit
+  # and fail `assert_passes_formatter_check/1`.
+  # Additionally, each concurrent test module must use a unique `app_name` to guarantee test
+  # database isolation (`<app_name>_test`) when running against shared database services.
   def generate_phoenix_app(tmp_dir, app_name, opts \\ [])
       when is_binary(app_name) and is_list(opts) do
     app_path = Path.expand(app_name, tmp_dir)
@@ -97,17 +114,51 @@ defmodule Phoenix.Integration.CodeGeneratorCase do
     mix_run!(["ecto.drop"], app_path, env: [{"MIX_ENV", "test"}])
   end
 
+  # Renames existing migration files in `app_path` to deterministic, sequentially ordered
+  # timestamps in the past (starting at 2000-01-01 00:00:00).
+  #
+  # Consecutive generator invocations in tests (e.g. `phx.gen.auth` followed by `phx.gen.live`)
+  # run fast enough to generate migrations within the same second, leading to timestamp
+  # collisions or unexpected execution order. Calling this helper between generator runs
+  # shifts existing migrations to earlier timestamps so subsequent generators can produce
+  # fresh, non-colliding migration versions with current timestamps immediately without sleeping.
+  #
+  # Preconditions & Limitations:
+  #
+  # - Must be called before migrations are executed against the database.
+  # - Only looks for migrations under `priv/repo/migrations`.
+  def adjust_migration_timestamps(app_path) when is_binary(app_path) do
+    [
+      Path.join(app_path, "priv/repo/migrations/*_*.exs"),
+      Path.join(app_path, "apps/*/priv/repo/migrations/*_*.exs")
+    ]
+    |> Enum.flat_map(&Path.wildcard/1)
+    |> Enum.with_index()
+    |> Enum.each(fn {path, idx} ->
+      dir = Path.dirname(path)
+      name = Path.basename(path)
+      [_, rest] = Regex.run(~r"^\d{14}_(.+)$", name)
+      new_timestamp = Integer.to_string(20_000_101_000_000 + idx)
+      new_path = Path.join(dir, "#{new_timestamp}_#{rest}")
+
+      if path != new_path do
+        File.rename!(path, new_path)
+      end
+    end)
+  end
+
   def with_installer_tmp(name, opts \\ [], function)
       when is_list(opts) and is_function(function, 1) do
     autoremove? = Keyword.get(opts, :autoremove?, true)
-    path = Path.join([installer_tmp_path(), random_string(10), to_string(name)])
+    base = Path.join([installer_tmp_path(), random_string(10)])
+    path = Path.join([base, to_string(name)])
 
     try do
       File.rm_rf!(path)
       File.mkdir_p!(path)
       function.(path)
     after
-      if autoremove?, do: File.rm_rf!(path)
+      if autoremove?, do: File.rm_rf!(base)
     end
   end
 

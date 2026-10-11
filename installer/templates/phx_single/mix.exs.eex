@@ -9,7 +9,7 @@ defmodule <%= @app_module %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",<% end %>
-      elixir: "~> 1.17",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -74,7 +74,6 @@ defmodule <%= @app_module %>.MixProject do
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
       {:gettext, "~> 1.0"},<% end %>
-      {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {<%= inspect @web_adapter_app %>, "<%= @web_adapter_vsn %>"}
     ]

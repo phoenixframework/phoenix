@@ -18,11 +18,29 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(_), do: nil
   end
 
+  # TODO: Remove this once {:system, env_var} tuples are removed (Phoenix 2.0)
   defmodule HTTPEnvVarEndpoint do
     def config(:otp_app), do: :phoenix
     def config(:https), do: false
     def config(:http), do: [port: {:system, "PHOENIX_PORT"}]
     def config(:url), do: [host: {:system, "PHOENIX_HOST"}]
+    def config(_), do: nil
+  end
+
+  # TODO: Remove this once {:system, env_var} tuples are removed (Phoenix 2.0)
+  defmodule HTTPUnsetEnvVarEndpoint do
+    def config(:otp_app), do: :phoenix
+    def config(:https), do: false
+    def config(:http), do: [port: 80]
+    def config(:url), do: [host: {:system, "UNSET_PHOENIX_HOST"}]
+    def config(_), do: nil
+  end
+
+  defmodule HTTPNilHostEndpoint do
+    def config(:otp_app), do: :phoenix
+    def config(:https), do: false
+    def config(:http), do: [port: 80]
+    def config(:url), do: [host: nil]
     def config(_), do: nil
   end
 
@@ -41,82 +59,104 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     def config(_), do: nil
   end
 
-  defmodule ServerEndpoint do
-    def __sockets__(), do: []
-  end
-
   setup_all do
-    Application.put_env(:phoenix, SupervisorApp.Endpoint, custom: true)
+    # TODO: Remove this once {:system, env_var} tuples are removed (Phoenix 2.0)
     System.put_env("PHOENIX_PORT", "8080")
     System.put_env("PHOENIX_HOST", "example.org")
+    System.delete_env("UNSET_PHOENIX_HOST")
 
-    [HTTPSEndpoint, HTTPEndpoint, HTTPEnvVarEndpoint, URLEndpoint, StaticURLEndpoint]
+    [
+      HTTPSEndpoint,
+      HTTPEndpoint,
+      HTTPEnvVarEndpoint,
+      HTTPUnsetEnvVarEndpoint,
+      HTTPNilHostEndpoint,
+      URLEndpoint,
+      StaticURLEndpoint
+    ]
     |> Enum.each(&Supervisor.warmup/1)
 
     :ok
   end
 
-  defp persistent!(endpoint), do: :persistent_term.get({Phoenix.Endpoint, endpoint})
+  describe "url configuration" do
+    defp persistent!(endpoint), do: :persistent_term.get({Phoenix.Endpoint, endpoint})
 
-  test "generates the static url based on the static host configuration" do
-    assert persistent!(StaticURLEndpoint).static_url == "http://static.example.com"
+    test "generates url" do
+      assert persistent!(URLEndpoint).url == "random://example.com:678"
+      assert persistent!(HTTPEndpoint).url == "http://example.com"
+      assert persistent!(HTTPSEndpoint).url == "https://example.com"
+      assert persistent!(HTTPEnvVarEndpoint).url == "http://example.org:8080"
+    end
+
+    test "defaults host to localhost when omitted, nil, or unset" do
+      assert persistent!(HTTPUnsetEnvVarEndpoint).url == "http://localhost"
+      assert persistent!(HTTPUnsetEnvVarEndpoint).host == "localhost"
+      assert persistent!(HTTPNilHostEndpoint).url == "http://localhost"
+      assert persistent!(HTTPNilHostEndpoint).host == "localhost"
+      assert persistent!(StaticURLEndpoint).url == "http://localhost"
+      assert persistent!(StaticURLEndpoint).host == "localhost"
+    end
+
+    test "generates the static url based on the static host configuration" do
+      assert persistent!(StaticURLEndpoint).static_url == "http://static.example.com"
+    end
+
+    test "static url fallbacks to url when there is no configuration for static_url" do
+      assert persistent!(URLEndpoint).static_url == "random://example.com:678"
+    end
+
+    test "static_path/2 returns file's path with lookup cache" do
+      assert {:nocache, {"/phoenix.png", nil}} =
+               Supervisor.static_lookup(HTTPEndpoint, "/phoenix.png")
+
+      assert {:nocache, {"/images/unknown.png", nil}} =
+               Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
+    end
   end
 
-  test "static url fallbacks to url when there is no configuration for static_url" do
-    assert persistent!(URLEndpoint).static_url == "random://example.com:678"
-  end
+  describe "server configuration" do
+    defmodule ServerEndpoint do
+      def __sockets__(), do: []
+    end
 
-  test "generates url" do
-    assert persistent!(URLEndpoint).url == "random://example.com:678"
-    assert persistent!(HTTPEndpoint).url == "http://example.com"
-    assert persistent!(HTTPSEndpoint).url == "https://example.com"
-    assert persistent!(HTTPEnvVarEndpoint).url == "http://example.org:8080"
-  end
+    import ExUnit.CaptureLog
 
-  test "static_path/2 returns file's path with lookup cache" do
-    assert {:nocache, {"/phoenix.png", nil}} =
-             Supervisor.static_lookup(HTTPEndpoint, "/phoenix.png")
+    test "logs info if :http or :https configuration is set but not :server when running in release" do
+      # simulate running inside release
+      System.put_env("RELEASE_NAME", "phoenix-test")
+      Application.put_env(:phoenix, ServerEndpoint, server: false, http: [], https: [])
 
-    assert {:nocache, {"/images/unknown.png", nil}} =
-             Supervisor.static_lookup(HTTPEndpoint, "/images/unknown.png")
-  end
+      assert capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-  import ExUnit.CaptureLog
+      Application.put_env(:phoenix, ServerEndpoint, server: false, http: [])
 
-  test "logs info if :http or :https configuration is set but not :server when running in release" do
-    # simulate running inside release
-    System.put_env("RELEASE_NAME", "phoenix-test")
-    Application.put_env(:phoenix, ServerEndpoint, server: false, http: [], https: [])
+      assert capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-    assert capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
+      Application.put_env(:phoenix, ServerEndpoint, server: false, https: [])
 
-    Application.put_env(:phoenix, ServerEndpoint, server: false, http: [])
+      assert capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-    assert capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
+      Application.put_env(:phoenix, ServerEndpoint, server: false)
 
-    Application.put_env(:phoenix, ServerEndpoint, server: false, https: [])
+      refute capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-    assert capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
+      Application.put_env(:phoenix, ServerEndpoint, server: true)
 
-    Application.put_env(:phoenix, ServerEndpoint, server: false)
+      refute capture_log(fn ->
+               {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
+             end) =~ "Configuration :server"
 
-    refute capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
-
-    Application.put_env(:phoenix, ServerEndpoint, server: true)
-
-    refute capture_log(fn ->
-             {:ok, {_, _children}} = Supervisor.init({:phoenix, ServerEndpoint, []})
-           end) =~ "Configuration :server"
-
-    Application.delete_env(:phoenix, ServerEndpoint)
+      Application.delete_env(:phoenix, ServerEndpoint)
+    end
   end
 
   describe "watchers" do
@@ -194,6 +234,25 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     test "fails when CSRF and origin checks both disabled in transport" do
       assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
         Supervisor.init({:phoenix, SocketEndpoint, []})
+      end
+    end
+
+    defmodule DuplicateSocketEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      # Socket entries are returned in reverse declaration order.
+      socket "/unsafe", TestSocket, websocket: [check_csrf: false, check_origin: false]
+      socket "/ws", TestSocket, websocket: [check_csrf: false]
+    end
+
+    Application.put_env(:phoenix, DuplicateSocketEndpoint, [])
+
+    test "fails when CSRF and origin checks both disabled in a second mount of the same socket" do
+      assert [{"/ws", TestSocket, _}, {"/unsafe", TestSocket, _}] =
+               DuplicateSocketEndpoint.__sockets__()
+
+      assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
+        Supervisor.init({:phoenix, DuplicateSocketEndpoint, []})
       end
     end
 

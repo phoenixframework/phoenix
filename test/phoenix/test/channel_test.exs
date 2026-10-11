@@ -234,11 +234,12 @@ defmodule Phoenix.Test.ChannelTest do
     assert socket.endpoint == @endpoint
     assert socket.pubsub_server == Phoenix.Test.ChannelTest.PubSub
     assert socket.topic == "foo:socket"
-    assert {Phoenix.ChannelTest, _} = socket.transport
+    assert socket.transport == Phoenix.ChannelTest
     assert socket.transport_pid == self()
     assert socket.serializer == Phoenix.ChannelTest.NoopSerializer
     assert socket.assigns == %{hello: :world, original: :assign}
     assert %{socket | joined: true} == client
+    assert {:ok, _, _} = join(client, Channel, "foo:socket")
 
     {:links, links} = Process.info(self(), :links)
     assert client.channel_pid in links
@@ -366,6 +367,7 @@ defmodule Phoenix.Test.ChannelTest do
   test "connects and joins topics directly" do
     :error = connect(UserSocket, %{"reject" => true})
     {:ok, socket} = connect(UserSocket, %{})
+    assert socket.transport == Phoenix.ChannelTest
     socket = subscribe_and_join!(socket, "foo:ok")
     push(socket, "broadcast", %{"foo" => "bar"})
     assert socket.id == "123"
@@ -452,6 +454,29 @@ defmodule Phoenix.Test.ChannelTest do
     pid = socket.channel_pid
     assert_receive {:terminate, :shutdown}
     assert_graceful_exit(pid)
+  end
+
+  test "push broadcasts sent directly through pubsub" do
+    subscribe_and_join!(socket(UserSocket), Channel, "foo:ok")
+    broadcast = %Broadcast{topic: "foo:ok", event: "default", payload: %{"foo" => "bar"}}
+    Phoenix.PubSub.broadcast!(Phoenix.Test.ChannelTest.PubSub, "foo:ok", broadcast)
+    assert_push "default", %{"foo" => "bar"}
+  end
+
+  # TODO: Remove in Phoenix 1.10
+  test "handles broadcasts dispatched by Phoenix.Channel.Server from older nodes" do
+    Process.flag(:trap_exit, true)
+    {:ok, _, socket} = subscribe_and_join(socket(UserSocket), Channel, "foo:ok")
+    pubsub = Phoenix.Test.ChannelTest.PubSub
+
+    broadcast = %Broadcast{topic: "foo:ok", event: "default", payload: %{"foo" => "bar"}}
+    Phoenix.PubSub.local_broadcast(pubsub, "foo:ok", broadcast, Phoenix.Channel.Server)
+    assert_push "default", %{"foo" => "bar"}
+
+    broadcast = %Broadcast{topic: "foo:ok", event: "stop", payload: %{"foo" => "bar"}}
+    Phoenix.PubSub.local_broadcast(pubsub, "foo:ok", broadcast, Phoenix.Channel.Server)
+    assert_receive {:terminate, :shutdown}
+    assert_graceful_exit(socket.channel_pid)
   end
 
   ## handle_info

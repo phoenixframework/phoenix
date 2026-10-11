@@ -197,6 +197,20 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
         timeout: 200
       ]
 
+    socket "/ws/endpoint_limited", UserSocket,
+      websocket: [
+        check_origin: ["//example.com"],
+        timeout: 200
+      ],
+      max_channels_per_transport: 1
+
+    socket "/ws/endpoint_override", LimitedUserSocket,
+      websocket: [
+        check_origin: ["//example.com"],
+        timeout: 200
+      ],
+      max_channels_per_transport: 2
+
     socket "/ws/connect_info", UserSocketConnectInfo,
       websocket: [
         check_origin: ["//example.com"],
@@ -394,6 +408,68 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
             },
             ref: "2",
             topic: "room:limited-2"
+          }
+        end
+
+        test "honors max_channels_per_transport given to socket/3" do
+          {:ok, sock} =
+            WebsocketClient.connect(
+              self(),
+              "ws://127.0.0.1:#{@port}/ws/endpoint_limited/websocket?vsn=#{@vsn}",
+              @serializer
+            )
+
+          WebsocketClient.join(sock, "room:limited-1", %{})
+
+          assert_receive %Message{
+            event: "phx_reply",
+            payload: %{"response" => %{}, "status" => "ok"},
+            ref: "1",
+            topic: "room:limited-1"
+          }
+
+          WebsocketClient.join(sock, "room:limited-2", %{})
+
+          assert_receive %Message{
+            event: "phx_reply",
+            payload: %{
+              "response" => %{"reason" => "too many channels joined"},
+              "status" => "error"
+            },
+            ref: "2",
+            topic: "room:limited-2"
+          }
+        end
+
+        test "max_channels_per_transport given to socket/3 overrides the use Phoenix.Socket value" do
+          {:ok, sock} =
+            WebsocketClient.connect(
+              self(),
+              "ws://127.0.0.1:#{@port}/ws/endpoint_override/websocket?vsn=#{@vsn}",
+              @serializer
+            )
+
+          for index <- 1..2 do
+            topic = "room:limited-#{index}"
+            WebsocketClient.join(sock, topic, %{})
+
+            assert_receive %Message{
+              event: "phx_reply",
+              payload: %{"response" => %{}, "status" => "ok"},
+              topic: ^topic
+            }
+          end
+
+          WebsocketClient.join(sock, "room:limited-3", %{})
+
+          assert_receive %Message{
+            event: "phx_reply",
+            payload: %{
+              "response" => %{"reason" => "too many channels joined"},
+              "status" => "error"
+            },
+            ref: "3",
+            topic: "room:limited-3"
           }
         end
 

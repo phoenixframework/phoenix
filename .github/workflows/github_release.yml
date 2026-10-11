@@ -5,31 +5,33 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
-      contents: write
+      contents: write # to create the release
     env:
       GITHUB_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Extract version from tag
-        id: version
-        run: echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+        with:
+          persist-credentials: false
 
       - name: Extract changelog for version
-        run: bash .github/extract-changelog.sh "${{ steps.version.outputs.version }}" > release_notes.md
+        run: bash .github/extract-changelog.sh "$GITHUB_REF_NAME" > release_notes.md
 
       - name: Create GitHub Release
         run: |
           PRERELEASE_FLAG=""
-          if [[ "${{ steps.version.outputs.version }}" == *-rc* ]]; then
+          if [[ "$GITHUB_REF_NAME" == *-rc* ]]; then
             PRERELEASE_FLAG="--prerelease"
           fi
-          gh release create "${{ steps.version.outputs.version }}" \
-            --title "${{ steps.version.outputs.version }}" \
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
             --notes-file release_notes.md \
             $PRERELEASE_FLAG

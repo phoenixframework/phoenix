@@ -26,7 +26,9 @@ export default class LongPoll {
     this.endPoint = null
     this.token = null
     this.skipHeartbeat = true
+    // the pending requests and queued messages, which are cancelled when we stop
     this.reqs = new Set()
+    this.messageTimers = new Set()
     this.awaitingBatchAck = false
     this.currentBatch = null
     this.currentBatchTimer = null
@@ -37,7 +39,8 @@ export default class LongPoll {
     this.onclose = function (){ } // noop
     this.pollEndpoint = this.normalizeEndpoint(endPoint)
     this.readyState = SOCKET_STATES.connecting
-    // we must wait for the caller to finish setting up our callbacks and timeout properties
+    // we must wait for the caller to finish setting up our callbacks and timeout properties,
+    // and it might close us before that, e.g. when disconnecting right after connecting
     setTimeout(() => this.poll(), 0)
   }
 
@@ -52,19 +55,26 @@ export default class LongPoll {
     return this.pollEndpoint
   }
 
-  closeAndRetry(code, reason, wasClean){
-    this.close(code, reason, wasClean)
-    this.readyState = SOCKET_STATES.connecting
+  closeAndRetry(error, code, reason, wasClean){
+    if(!this.isActive()){ return }
+    // like a failed WebSocket, we are no longer open when we emit the error and then the close.
+    // We are connecting again before their callbacks run, so that they can still close us for
+    // good, e.g. when they disconnect the socket
+    this.stop(SOCKET_STATES.connecting)
+    this.onerror(error)
+    if(this.isActive()){ this.emitClose(code, reason, wasClean) }
   }
 
   ontimeout(){
-    this.onerror("timeout")
-    this.closeAndRetry(1005, "timeout", false)
+    this.closeAndRetry("timeout", 1005, "timeout", false)
   }
 
   isActive(){ return this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting }
 
   poll(){
+    // onopen can close us before the next poll, just as the caller can close us
+    // before the constructor's deferred first poll
+    if(!this.isActive()){ return }
     const headers = {"Accept": "application/json"}
     if(this.authToken){
       headers["X-Phoenix-AuthToken"] = this.authToken
@@ -75,8 +85,7 @@ export default class LongPoll {
         if(status === 410 && this.token !== null){
           // In case we already have a token, this means that our existing session
           // is gone. We fail so that the client rejoins its channels.
-          this.onerror(410)
-          this.closeAndRetry(3410, "session_gone", false)
+          this.closeAndRetry(410, 3410, "session_gone", false)
           return
         }
         this.token = token
@@ -105,7 +114,14 @@ export default class LongPoll {
             //
             // In order to emulate this behaviour, we need to make sure each
             // onmessage handler is run within its own macrotask.
-            setTimeout(() => this.onmessage({data: msg}), 0)
+            //
+            // We might stop before that, e.g. when a POST times out or a message
+            // handler disconnects, which cancels the remaining messages.
+            const timer = setTimeout(() => {
+              this.messageTimers.delete(timer)
+              this.onmessage({data: msg})
+            }, 0)
+            this.messageTimers.add(timer)
           })
           this.poll()
           break
@@ -123,8 +139,7 @@ export default class LongPoll {
           break
         case 0:
         case 500:
-          this.onerror(500)
-          this.closeAndRetry(1011, "internal server error", 500)
+          this.closeAndRetry(500, 1011, "internal server error", false)
           break
         default: throw new Error(`unhandled poll status ${status}`)
       }
@@ -156,9 +171,8 @@ export default class LongPoll {
     const batch = messages.slice(offset, next)
     this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), () => this.ontimeout(), resp => {
       if(!resp || resp.status !== 200){
-        this.awaitingBatchAck = false
-        this.onerror(resp && resp.status)
-        this.closeAndRetry(1011, "internal server error", false)
+        // this calls stop which already clears awaitingBatchAck
+        this.closeAndRetry(resp && resp.status, 1011, "internal server error", false)
       } else if(next < messages.length){
         this.batchSend(messages, next)
       } else if(this.batchBuffer.length > 0){
@@ -171,13 +185,35 @@ export default class LongPoll {
   }
 
   close(code, reason, wasClean){
-    for(let req of this.reqs){ req.abort() }
-    this.readyState = SOCKET_STATES.closed
-    let opts = Object.assign({code: 1000, reason: undefined, wasClean: true}, {code, reason, wasClean})
+    this.stop(SOCKET_STATES.closed)
+    this.emitClose(code, reason, wasClean)
+  }
+
+  /**
+   * Cancels the pending requests, queued messages and outgoing batches.
+   */
+  stop(readyState){
+    this.readyState = readyState
+    // the requests are no longer ours before we abort them, as aborting can invoke their
+    // callbacks, synchronously for XHR and asynchronously for fetch
+    const reqs = this.reqs
+    this.reqs = new Set()
+    for(let {req} of reqs){ req && req.abort() }
+    for(let timer of this.messageTimers){ clearTimeout(timer) }
+    this.messageTimers.clear()
     this.batchBuffer = []
     this.awaitingBatchAck = false
     clearTimeout(this.currentBatchTimer)
     this.currentBatchTimer = null
+    this.currentBatch = null
+  }
+
+  /**
+   * Emits the close event. Like a WebSocket closed without a code, it reports 1005 (no status)
+   * unless one is given, as 1000 would look like the server closing the connection normally.
+   */
+  emitClose(code = 1005, reason, wasClean = true){
+    let opts = {code, reason, wasClean}
     if(typeof(CloseEvent) !== "undefined"){
       this.onclose(new CloseEvent("close", opts))
     } else {
@@ -186,18 +222,19 @@ export default class LongPoll {
   }
 
   ajax(method, headers, body, onCallerTimeout, callback){
-    let req
+    // the request is ours until it completes or we stop, and the callbacks of a request
+    // that is not ours anymore are ignored. It is ours before it starts, as a request can
+    // complete while it starts.
+    const request = {req: null}
+    this.reqs.add(request)
     let ontimeout = () => {
-      this.reqs.delete(req)
-      onCallerTimeout()
+      if(this.reqs.delete(request)){ onCallerTimeout() }
     }
     if(this.token !== null){
       headers = Object.assign({}, headers, {"X-Phoenix-Longpoll-Token": this.token})
     }
-    req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, resp => {
-      this.reqs.delete(req)
-      if(this.isActive()){ callback(resp) }
+    request.req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, resp => {
+      if(this.reqs.delete(request)){ callback(resp) }
     })
-    this.reqs.add(req)
   }
 }

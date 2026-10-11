@@ -6,5 +6,8 @@ File.cp_r!(
   Path.expand("../_build/dev", __DIR__)
 )
 
-ExUnit.configure(timeout: 180_000, exclude: [:database])
-ExUnit.start()
+# Prevent typos in `@tag database: ...` causing tests to be silently ignored.
+Path.wildcard(Path.join(__DIR__, "**/*_test.exs"))
+|> Phoenix.Integration.DatabaseTagValidator.validate!()
+
+ExUnit.start(timeout: 180_000, exclude: [:database])

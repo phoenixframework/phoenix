@@ -64,6 +64,17 @@ defmodule <%= inspect auth_module %>Test do
       assert redirected_to(conn) == "/hello"
     end
 
+    test "clears the return-to path from the session after logging in", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
+      conn =
+        conn
+        |> assign(:<%= scope_config.scope.assign_key %>, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
+        |> put_session(:<%= schema.singular %>_return_to, "/hello")
+        |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>)
+
+      assert redirected_to(conn) == "/hello"
+      refute get_session(conn, :<%= schema.singular %>_return_to)
+    end
+
     test "writes a cookie if remember_me is configured", %{conn: conn, <%= schema.singular %>: <%= schema.singular %>} do
       conn = conn |> fetch_cookies() |> <%= inspect schema.alias %>Auth.log_in_<%= schema.singular %>(<%= schema.singular %>, %{"remember_me" => "true"})
       assert get_session(conn, :<%= schema.singular %>_token) == conn.cookies[@remember_me_cookie]

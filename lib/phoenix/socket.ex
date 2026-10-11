@@ -25,11 +25,11 @@ defmodule Phoenix.Socket do
 
   Socket handlers are mounted in Endpoints and must define two callbacks:
 
-    * `connect/3` - receives the socket params, connection info if any, and
+    * `c:connect/3` - receives the socket params, connection info if any, and
       authenticates the connection. Must return a `Phoenix.Socket` struct,
       often with custom assigns
 
-    * `id/1` - receives the socket returned by `connect/3` and returns the
+    * `c:id/1` - receives the socket returned by `c:connect/3` and returns the
       id of this connection as a string. The `id` is used to identify socket
       connections, often to a particular user, allowing us to force disconnections.
       For sockets requiring no authentication, `nil` can be returned
@@ -80,7 +80,9 @@ defmodule Phoenix.Socket do
       to handle channels. Defaults to the number of cores.
 
     * `:max_channels_per_transport` - the maximum number of channels that may be
-      joined per transport process. Defaults to `100`.
+      joined per transport process. Defaults to `100`. It can also be set when
+      mounting the socket in your endpoint, which overrides the value given here.
+      See `Phoenix.Endpoint.socket/3`.
 
   ## Garbage collection
 
@@ -225,7 +227,7 @@ defmodule Phoenix.Socket do
               {:ok, Socket.t()} | {:error, term} | :error
 
   @doc """
-  Shortcut version of `connect/3` which does not receive `connect_info`.
+  Shortcut version of `c:connect/3` which does not receive `connect_info`.
 
   Provided for backwards compatibility.
   """
@@ -275,7 +277,7 @@ defmodule Phoenix.Socket do
   @type t :: %Socket{
           assigns: map,
           channel: atom,
-          channel_pid: pid,
+          channel_pid: pid | nil,
           endpoint: atom,
           handler: atom,
           id: String.t() | nil,
@@ -284,7 +286,7 @@ defmodule Phoenix.Socket do
           private: map,
           pubsub_server: atom,
           serializer: atom,
-          topic: String.t(),
+          topic: String.t() | nil,
           transport: atom,
           transport_pid: pid
         }
@@ -791,8 +793,8 @@ defmodule Phoenix.Socket do
     %{topic: topic, join_ref: join_ref} = msg
 
     case state.channels_inverse do
-      # we need to match on nil to handle v1 protocol
-      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+      %{^pid => {^topic, existing_join_ref}}
+      when is_nil(join_ref) or join_ref === existing_join_ref ->
         send(pid, msg)
         {:ok, {update_channel_status(state, pid, topic, :leaving), socket}}
 
@@ -806,8 +808,11 @@ defmodule Phoenix.Socket do
     %{topic: topic, join_ref: join_ref} = msg
 
     case state.channels_inverse do
-      # we need to match on nil to handle v1 protocol
-      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+      # a nil join_ref is valid on non-join messages;
+      # phoenix.js also sends it on each message, but the protocol does not
+      # require it. Also, v1 protocol clients may send nil.
+      %{^pid => {^topic, existing_join_ref}}
+      when is_nil(join_ref) or join_ref === existing_join_ref ->
         send(pid, msg)
         {:ok, {state, socket}}
 

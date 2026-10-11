@@ -6,6 +6,32 @@ defmodule Mix.Tasks.Phx.CertTest do
   import MixHelper
   alias Mix.Tasks.Phx.Gen
 
+  require Record
+
+  Record.defrecordp(
+    :otp_certificate,
+    :OTPCertificate,
+    Record.extract(:OTPCertificate, from_lib: "public_key/include/OTP-PUB-KEY.hrl")
+  )
+
+  Record.defrecordp(
+    :otp_tbs_certificate,
+    :OTPTBSCertificate,
+    Record.extract(:OTPTBSCertificate, from_lib: "public_key/include/OTP-PUB-KEY.hrl")
+  )
+
+  Record.defrecordp(
+    :otp_subject_public_key_info,
+    :OTPSubjectPublicKeyInfo,
+    Record.extract(:OTPSubjectPublicKeyInfo, from_lib: "public_key/include/OTP-PUB-KEY.hrl")
+  )
+
+  Record.defrecordp(
+    :public_key_algorithm,
+    :PublicKeyAlgorithm,
+    Record.extract(:PublicKeyAlgorithm, from_lib: "public_key/include/OTP-PUB-KEY.hrl")
+  )
+
   @timeout 5_000
 
   test "write certificate and key files" do
@@ -60,5 +86,21 @@ defmodule Mix.Tasks.Phx.CertTest do
       :ssl.close(client)
       :ssl.close(server)
     end)
+  end
+
+  test "subjectPublicKeyInfo algorithm carries the RFC 3279 NULL parameters Chrome requires" do
+    {cert_der, _private_key} = Gen.Cert.certificate_and_key(2048, "Test", ["localhost"])
+
+    otp_certificate(tbsCertificate: tbs_certificate) =
+      :public_key.pkix_decode_cert(cert_der, :otp)
+
+    otp_tbs_certificate(subjectPublicKeyInfo: subject_public_key_info) = tbs_certificate
+    otp_subject_public_key_info(algorithm: algorithm) = subject_public_key_info
+
+    # RFC 3279 2.3.1 requires the rsaEncryption AlgorithmIdentifier's parameters
+    # field to be present with ASN.1 type NULL. Chrome's BoringSSL enforces
+    # this on decode and aborts the TLS handshake (ERR_SSL_PROTOCOL_ERROR)
+    # when it is missing, even though curl/OpenSSL accept the certificate.
+    assert public_key_algorithm(algorithm, :parameters) == :NULL
   end
 end

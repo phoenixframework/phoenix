@@ -433,6 +433,18 @@ defmodule Phoenix.Controller.ControllerTest do
       assert_raise ArgumentError, ~r/unsafe/, fn ->
         redirect(conn(:get, "/"), to: "/\t/example.com")
       end
+
+      assert_raise ArgumentError, ~r/unsafe/, fn ->
+        redirect(conn(:get, "/"), to: "/\n/example.com")
+      end
+
+      assert_raise ArgumentError, ~r/unsafe/, fn ->
+        redirect(conn(:get, "/"), to: "/\r/example.com")
+      end
+
+      assert_raise ArgumentError, ~r/unsafe/, fn ->
+        redirect(conn(:get, "/"), to: "/\n\t/example.com")
+      end
     end
 
     test "with :external" do
