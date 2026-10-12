@@ -10,15 +10,22 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     env:
-      elixir: 1.20.4
-      otp: 29.0.5
+      elixir: "1.20.4"
+      otp: "29.0.5"
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
@@ -30,7 +37,8 @@ jobs:
       - name: Set up Node.js 24.x
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.x
+          node-version: "24.x"
+          cache: "npm"
 
       - name: Restore deps and _build cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -38,10 +46,11 @@ jobs:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-${{ hashFiles('**/mix.lock') }}-docs
+          key: mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-docs-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-${{ env.elixir }}-${{ env.otp }}-
-      - name: Install Dependencies
+            mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-docs-
+
+      - name: Install dependencies
         run: mix deps.get --only docs
 
       - name: Build docs
@@ -57,7 +66,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{steps.deployment.outputs.page_url}}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     needs: build
     steps:
       - name: Deploy to GitHub Pages

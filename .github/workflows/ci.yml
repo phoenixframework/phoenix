@@ -49,9 +49,9 @@ jobs:
           path: |
             deps
             _build
-          key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-test-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+            mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-test-
 
       - name: Install dependencies
         run: mix deps.get --only test
@@ -59,7 +59,7 @@ jobs:
       - name: Remove compiled application files
         run: mix clean
 
-      - name: Compile & lint dependencies
+      - name: Compile & lint
         run: mix compile --warnings-as-errors
         if: ${{ matrix.lint }}
 
@@ -108,9 +108,11 @@ jobs:
           path: |
             deps
             _build
-          key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+            installer/deps
+            installer/_build
+          key: mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-installer-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+            mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-installer-
 
       - name: Install installer dependencies
         run: mix deps.get
@@ -128,7 +130,7 @@ jobs:
 
   npm_test:
     name: npm test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -136,31 +138,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Restore deps and _build cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            deps
-            _build
-          key: deps-${{ runner.os }}-npm-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            deps-${{ runner.os }}-npm
-
       - name: Set up Node.js 24.x
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.x
+          node-version: "24.x"
+          cache: "npm"
 
-      - name: Restore npm cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install locked npm dependencies
-        run: npm ci
+      - name: Install npm dependencies
+        run: npm ci --no-audit --no-fund
 
       - name: Run tests
         run: npm test
@@ -170,12 +155,8 @@ jobs:
 
     env:
       MIX_ENV: docs
-
-    strategy:
-      matrix:
-        include:
-          - elixir: "1.20.4"
-            otp: "29.0.5"
+      elixir: "1.20.4"
+      otp: "29.0.5"
 
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -189,14 +170,15 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ env.elixir }}
+          otp-version: ${{ env.otp }}
 
       # the docs alias also builds the JavaScript documentation with npm
       - name: Set up Node.js 24.x
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.x
+          node-version: "24.x"
+          cache: "npm"
 
       - name: Restore deps and _build cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -204,22 +186,14 @@ jobs:
           path: |
             deps
             _build
-          key: docs-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-docs-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            docs-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
-
-      - name: Restore npm cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+            mix-${{ runner.os }}-${{ env.otp }}-${{ env.elixir }}-docs-
 
       - name: Install dependencies
         run: mix deps.get --only docs
 
-      - name: Build the documentation
+      - name: Build docs
         run: mix docs --warnings-as-errors
 
   integration-test-elixir:
@@ -285,11 +259,11 @@ jobs:
           path: |
             integration_test/deps
             integration_test/_build
-          key: integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-${{ hashFiles('integration_test/mix.lock') }}
+          key: mix-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-integration-${{ hashFiles('integration_test/mix.lock') }}
           restore-keys: |
-            integration-deps-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}
+            mix-${{ runner.os }}-${{ matrix.versions.otp }}-${{ matrix.versions.elixir }}-integration-
 
-      - name: Fetch dependencies
+      - name: Install dependencies
         working-directory: integration_test
         run: mix deps.get
 
