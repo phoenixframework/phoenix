@@ -8,6 +8,8 @@ defmodule Phoenix.Transports.LongPoll do
   @max_poll_batch_size 100
   @connect_info_opts [:check_csrf]
   @token_header "x-phoenix-longpoll-token"
+  # Statuses the client interprets as part of the long polling protocol.
+  @protocol_statuses [200, 204, 410]
 
   import Plug.Conn
   alias Phoenix.Socket.{V1, V2, Transport}
@@ -18,6 +20,7 @@ defmodule Phoenix.Transports.LongPoll do
       path: "/longpoll",
       pubsub_timeout_ms: 2_000,
       serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
+      error_handler: {__MODULE__, :handle_error, []},
       transport_log: false,
       crypto: [max_age: 1_209_600]
     ]
@@ -155,7 +158,32 @@ defmodule Phoenix.Transports.LongPoll do
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = sign_token(endpoint, data, opts)
         conn |> put_status(:gone) |> status_token_messages_json(token, [])
+
+      {:error, {:shutdown, {:connect_error, reason}}} ->
+        {m, f, args} = error_handler = opts[:error_handler]
+        status = error_status!(apply(m, f, [reason | args]), error_handler)
+        conn |> put_status(status) |> status_json()
     end
+  end
+
+  def handle_error(_reason), do: :forbidden
+
+  defp error_status!(status, error_handler) do
+    code =
+      try do
+        Plug.Conn.Status.code(status)
+      rescue
+        FunctionClauseError -> nil
+      end
+
+    if code in [nil | @protocol_statuses] do
+      raise ArgumentError,
+            "longpoll :error_handler #{inspect(error_handler)} must return an integer " <>
+              "or atom status accepted by Plug.Conn.put_status/2, other than " <>
+              "#{Enum.join(@protocol_statuses, ", ")}, got: #{inspect(status)}"
+    end
+
+    code
   end
 
   defp listen(conn, server_ref, token, endpoint, opts) do
