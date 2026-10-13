@@ -11,6 +11,7 @@ defmodule Phoenix.Controller.Pipeline do
 
       Module.register_attribute(__MODULE__, :plugs, accumulate: true)
       @before_compile Phoenix.Controller.Pipeline
+      @after_compile Phoenix.Controller.Pipeline
       @phoenix_fallback :unregistered
 
       @doc false
@@ -38,6 +39,7 @@ defmodule Phoenix.Controller.Pipeline do
   @doc false
   def __action_fallback__(plug, caller) do
     plug = Macro.expand(plug, %{caller | function: {:init, 1}})
+
     quote bind_quoted: [plug: plug] do
       @phoenix_fallback Phoenix.Controller.Pipeline.validate_fallback(
                           plug,
@@ -154,6 +156,48 @@ defmodule Phoenix.Controller.Pipeline do
 
   def __catch__(%Plug.Conn{} = conn, reason, _controller, _action, stack) do
     Plug.Conn.WrapperError.reraise(conn, :error, reason, stack)
+  end
+
+  @doc false
+  defmacro __after_compile__(env, _bytecode) do
+    guards =
+      for {_plug, _opts, guard} <- Module.get_attribute(env.module, :plugs),
+          guard != true,
+          do: guard
+
+    actions =
+      guards
+      |> Macro.prewalk([], fn node, acc ->
+        acc =
+          case node do
+            {:in, _, [{:action, _, _}, actions]} when is_list(actions) ->
+              actions |> Enum.filter(&is_atom/1) |> Enum.concat(acc)
+
+            {:==, _, [{:action, _, _}, action]} when is_atom(action) ->
+              [action | acc]
+
+            {:!=, _, [{:action, _, _}, action]} when is_atom(action) ->
+              [action | acc]
+
+            _ ->
+              acc
+          end
+
+        {node, acc}
+      end)
+      |> elem(1)
+      |> Enum.uniq()
+
+    unknown = actions -- (:functions |> env.module.__info__() |> Keyword.keys())
+
+    if unknown != [] do
+      IO.warn(
+        "Unknown action(s) referenced in #{inspect(env.module)} plug guards: #{inspect(unknown)}",
+        env
+      )
+    end
+
+    :ok
   end
 
   @doc """

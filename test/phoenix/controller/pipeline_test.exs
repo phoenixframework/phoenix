@@ -232,6 +232,38 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
+  describe "unknown actions in plug guards" do
+    test "warns when unknown actions are found" do
+      warning =
+        ExUnit.CaptureIO.capture_io(:stderr, fn ->
+          defmodule UnknownActionsController do
+            use Phoenix.Controller, formats: []
+
+            @module_attribute [:unknown3]
+
+            plug :identity when action == :unknown0
+            plug :identity when action in [:index, :unknown1, :unknown2]
+            plug :identity when action in @module_attribute
+            plug :identity when action != :unknown4
+            plug :identity when action not in [:unknown5]
+
+            defp identity(conn, _), do: conn
+
+            def index(conn, _), do: conn
+          end
+        end)
+
+      assert warning =~
+               "Unknown action(s) referenced in Phoenix.Controller.PipelineTest.UnknownActionsController plug guards: ["
+
+      for n <- 0..5 do
+        assert warning =~ ":unknown#{n}"
+      end
+
+      refute warning =~ ":index"
+    end
+  end
+
   defp stack_conn() do
     conn(:get, "/")
     |> fetch_query_params()
