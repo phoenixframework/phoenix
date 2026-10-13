@@ -4,8 +4,8 @@ defmodule Phx.New.Umbrella do
   alias Phx.New.{Ecto, Web, Project, Mailer}
 
   template(:new, [
+    {:text, :project, "phx_common/gitignore": ".gitignore"},
     {:eex, :project,
-     "phx_umbrella/gitignore.eex": ".gitignore",
      "phx_umbrella/config/config.exs.eex": "config/config.exs",
      "phx_umbrella/config/dev.exs.eex": "config/dev.exs",
      "phx_umbrella/config/test.exs.eex": "config/test.exs",
