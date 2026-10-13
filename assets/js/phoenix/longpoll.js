@@ -7,6 +7,9 @@ import {
 
 import Ajax from "./ajax"
 
+// how long we wait before retrying a failed request of a session we can resume
+const RETRY_DELAYS = [100, 500, 1000, 2000, 5000]
+
 let arrayBufferToBase64 = (buffer) => {
   let binary = ""
   let bytes = new Uint8Array(buffer)
@@ -33,6 +36,14 @@ export default class LongPoll {
     this.currentBatch = null
     this.currentBatchTimer = null
     this.batchBuffer = []
+    // set once the server tells us that it keeps the messages until we acknowledge them,
+    // so we can retry a failed request instead of starting a new session
+    this.resumable = false
+    // the last batch we received, and the seq of the last message we sent
+    this.ack = 0
+    this.seq = 0
+    this.retries = 0
+    this.retryTimers = new Set()
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
@@ -51,8 +62,8 @@ export default class LongPoll {
       .replace(new RegExp("(.*)\/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll))
   }
 
-  endpointURL(){
-    return this.pollEndpoint
+  endpointURL(params = {}){
+    return Ajax.appendParams(this.pollEndpoint, params)
   }
 
   closeAndRetry(error, code, reason, wasClean){
@@ -79,9 +90,10 @@ export default class LongPoll {
     if(this.authToken){
       headers["X-Phoenix-AuthToken"] = this.authToken
     }
-    this.ajax("GET", headers, null, () => this.ontimeout(), resp => {
+    const params = this.resumable ? {ack: this.ack} : {}
+    this.ajax("GET", headers, null, params, () => this.retryOr(() => this.poll(), () => this.ontimeout()), resp => {
       if(resp){
-        var {status, token, messages} = resp
+        var {status, token, messages, batch} = resp
         if(status === 410 && this.token !== null){
           // In case we already have a token, this means that our existing session
           // is gone. We fail so that the client rejoins its channels.
@@ -89,12 +101,16 @@ export default class LongPoll {
           return
         }
         this.token = token
+        if(batch !== undefined){ this.resumable = true }
       } else {
         status = 0
       }
+      if(status !== 0){ this.retries = 0 }
 
       switch(status){
         case 200:
+          // the server sends these messages again until we acknowledge them with the next poll
+          if(batch !== undefined){ this.ack = batch }
           messages.forEach(msg => {
             // Tasks are what things like event handlers, setTimeout callbacks,
             // promise resolves and more are run within.
@@ -138,6 +154,9 @@ export default class LongPoll {
           this.close(1008, "forbidden", false)
           break
         case 0:
+          // the connection failed, but the server still has our session and messages
+          this.retryOr(() => this.poll(), () => this.closeAndRetry(500, 1011, "internal server error", false))
+          break
         case 500:
           this.closeAndRetry(500, 1011, "internal server error", false)
           break
@@ -152,36 +171,65 @@ export default class LongPoll {
 
   send(body){
     if(typeof(body) !== "string"){ body = arrayBufferToBase64(body) }
+    // messages are numbered, so the server drops the ones it received when we send
+    // them again. A batch is sent with the seq of its first message.
+    this.seq++
     if(this.currentBatch){
       this.currentBatch.push(body)
     } else if(this.awaitingBatchAck){
+      if(this.batchBuffer.length === 0){ this.batchBufferSeq = this.seq }
       this.batchBuffer.push(body)
     } else {
       this.currentBatch = [body]
+      const seq = this.seq
       this.currentBatchTimer = setTimeout(() => {
-        this.batchSend(this.currentBatch)
+        this.batchSend(this.currentBatch, seq)
         this.currentBatch = null
       }, 0)
     }
   }
 
-  batchSend(messages, offset = 0){
+  batchSend(messages, seq, offset = 0){
     this.awaitingBatchAck = true
     const next = offset + MAX_LONGPOLL_BATCH_SIZE
     const batch = messages.slice(offset, next)
-    this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), () => this.ontimeout(), resp => {
-      if(!resp || resp.status !== 200){
+    const retry = () => this.batchSend(messages, seq, offset)
+    const params = {seq: seq + offset}
+    this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), params, () => this.retryOr(retry, () => this.ontimeout()), resp => {
+      if(!resp){
+        this.retryOr(retry, () => this.closeAndRetry(null, 1011, "internal server error", false))
+      } else if(resp.status !== 200){
         // this calls stop which already clears awaitingBatchAck
         this.closeAndRetry(resp && resp.status, 1011, "internal server error", false)
       } else if(next < messages.length){
-        this.batchSend(messages, next)
+        this.retries = 0
+        this.batchSend(messages, seq, next)
       } else if(this.batchBuffer.length > 0){
-        this.batchSend(this.batchBuffer)
+        this.retries = 0
+        this.batchSend(this.batchBuffer, this.batchBufferSeq)
         this.batchBuffer = []
       } else {
+        this.retries = 0
         this.awaitingBatchAck = false
       }
     })
+  }
+
+  /**
+   * @private
+   *
+   * Retries a failed request with backoff when the server keeps our session,
+   * otherwise fails.
+   */
+  retryOr(retry, fail){
+    if(!this.resumable){ return fail() }
+    const delay = RETRY_DELAYS[Math.min(this.retries, RETRY_DELAYS.length - 1)]
+    this.retries++
+    const timer = setTimeout(() => {
+      this.retryTimers.delete(timer)
+      retry()
+    }, delay)
+    this.retryTimers.add(timer)
   }
 
   close(code, reason, wasClean){
@@ -201,6 +249,8 @@ export default class LongPoll {
     for(let {req} of reqs){ req && req.abort() }
     for(let timer of this.messageTimers){ clearTimeout(timer) }
     this.messageTimers.clear()
+    for(let timer of this.retryTimers){ clearTimeout(timer) }
+    this.retryTimers.clear()
     this.batchBuffer = []
     this.awaitingBatchAck = false
     clearTimeout(this.currentBatchTimer)
@@ -221,7 +271,7 @@ export default class LongPoll {
     }
   }
 
-  ajax(method, headers, body, onCallerTimeout, callback){
+  ajax(method, headers, body, params, onCallerTimeout, callback){
     // the request is ours until it completes or we stop, and the callbacks of a request
     // that is not ours anymore are ignored. It is ours before it starts, as a request can
     // complete while it starts.
@@ -233,7 +283,7 @@ export default class LongPoll {
     if(this.token !== null){
       headers = Object.assign({}, headers, {"X-Phoenix-Longpoll-Token": this.token})
     }
-    request.req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, resp => {
+    request.req = Ajax.request(method, this.endpointURL(params), headers, body, this.timeout, ontimeout, resp => {
       if(this.reqs.delete(request)){ callback(resp) }
     })
   }

@@ -24,7 +24,16 @@ defmodule Phoenix.Transports.LongPoll.Server do
         {:ok, handler_state} = handler.init(handler_state)
 
         state = %{
-          buffer: [],
+          # the messages we did not send yet, newest first
+          pending: [],
+          # the messages we sent with the last batch that the client did not acknowledge yet,
+          # newest first, and when we first sent them
+          sent: [],
+          sent_at: nil,
+          # the number of the last batch we sent
+          batch: 0,
+          # the seq of the last message we received, to drop the ones the client resends
+          last_in: 0,
           handler: {handler, handler_state},
           window_ms: trunc(window_ms * 1.5),
           pubsub_server: endpoint.config(:pubsub_server),
@@ -43,6 +52,17 @@ defmodule Phoenix.Transports.LongPoll.Server do
       {:error, _reason} ->
         :ignore
     end
+  end
+
+  # The client sends the same message again when it did not get the response to its POST.
+  def handle_info({:dispatch, client_ref, _body, ref, seq}, %{last_in: last_in} = state)
+      when seq <= last_in do
+    broadcast_from!(state, client_ref, {:ok, ref})
+    {:noreply, state}
+  end
+
+  def handle_info({:dispatch, client_ref, body, ref, seq}, state) do
+    handle_info({:dispatch, client_ref, body, ref}, %{state | last_in: seq})
   end
 
   def handle_info({:dispatch, client_ref, {body, opcode}, ref}, state) do
@@ -72,14 +92,53 @@ defmodule Phoenix.Transports.LongPoll.Server do
     {:noreply, state}
   end
 
+  # The client acknowledges the last batch it received with each poll, so we send the
+  # messages again until it did, as the response of a poll can get lost.
+  def handle_info({:flush, client_ref, ref, ack}, state) do
+    state = %{state | last_client_poll: now_ms()}
+
+    state =
+      if ack == state.batch do
+        # The client received the last batch, so we can drop it.
+        %{state | sent: [], sent_at: nil}
+      else
+        # The response with the last batch got lost,
+        # so we send its messages again.
+        state
+      end
+
+    case state do
+      %{sent: [], pending: []} ->
+        {:noreply, %{state | client_ref: {client_ref, ref}}}
+
+      %{sent: sent, pending: pending} ->
+        # The unacknowledged ones go first and we increment the batch number
+        # only if there are any new messages
+        batch = if pending == [], do: state.batch, else: state.batch + 1
+        sent = pending ++ sent
+        broadcast_from!(state, client_ref, {:messages, Enum.reverse(sent), ref, batch})
+
+        {:noreply,
+         %{
+           state
+           | sent: sent,
+             sent_at: state.sent_at || now_ms(),
+             pending: [],
+             batch: batch,
+             client_ref: nil
+         }}
+    end
+  end
+
+  # Backwards compat: clients that don't acknowledge get each message once
   def handle_info({:flush, client_ref, ref}, state) do
-    case state.buffer do
+    case state.pending do
       [] ->
         {:noreply, %{state | client_ref: {client_ref, ref}, last_client_poll: now_ms()}}
 
-      buffer ->
-        broadcast_from!(state, client_ref, {:messages, Enum.reverse(buffer), ref})
-        {:noreply, %{state | client_ref: nil, last_client_poll: now_ms(), buffer: []}}
+      pending ->
+        broadcast_from!(state, client_ref, {:messages, Enum.reverse(pending), ref, nil})
+        {:noreply, %{state | client_ref: nil, last_client_poll: now_ms(), pending: []}}
     end
   end
 
@@ -94,11 +153,16 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   def handle_info(:shutdown_if_inactive, state) do
-    if now_ms() - state.last_client_poll > state.window_ms do
-      {:stop, {:shutdown, :inactive}, state}
-    else
-      schedule_inactive_shutdown(state.window_ms)
-      {:noreply, state}
+    cond do
+      now_ms() - state.last_client_poll > state.window_ms ->
+        {:stop, {:shutdown, :inactive}, state}
+
+      unacknowledged?(state) ->
+        {:stop, {:shutdown, :unacknowledged}, state}
+
+      true ->
+        schedule_inactive_shutdown(state.window_ms)
+        {:noreply, state}
     end
   end
 
@@ -146,9 +210,19 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   defp publish_reply(state, reply) do
-    notify_client_now_available(state)
-    {:noreply, update_in(state.buffer, &[IO.iodata_to_binary(reply) | &1])}
+    # A malicious client that does not acknowledge must now be able to
+    # grow the buffer indefinitely, so we close when it did not acknowledge
+    # a batch within the window.
+    if unacknowledged?(state) do
+      {:stop, {:shutdown, :unacknowledged}, state}
+    else
+      notify_client_now_available(state)
+      {:noreply, %{state | pending: [IO.iodata_to_binary(reply) | state.pending]}}
+    end
   end
+
+  defp unacknowledged?(%{sent_at: nil}), do: false
+  defp unacknowledged?(state), do: now_ms() - state.sent_at > state.window_ms
 
   defp notify_client_now_available(state) do
     case state.client_ref do

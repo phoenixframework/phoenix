@@ -85,21 +85,25 @@ defmodule Phoenix.Transports.LongPoll do
         status =
           case get_req_header(conn, "content-type") do
             ["application/x-ndjson"] ->
+              # the seq of the first message, sent by clients that resend messages
+              seq = int_param(conn, "seq")
+
               body
               |> String.splitter(["\n", "\r\n"])
               |> Stream.take(@max_poll_batch_size)
-              |> Enum.find_value(fn part ->
+              |> Stream.with_index()
+              |> Enum.find_value(fn {part, index} ->
                 msg =
                   case part do
                     "[" <> _ = txt -> {txt, :text}
                     base64 -> {safe_decode64!(base64), :binary}
                   end
 
-                transport_dispatch(endpoint, server_ref, msg, opts)
+                transport_dispatch(endpoint, server_ref, msg, seq && seq + index, opts)
               end)
 
             _ ->
-              transport_dispatch(endpoint, server_ref, {body, :text}, opts)
+              transport_dispatch(endpoint, server_ref, {body, :text}, nil, opts)
           end
 
         conn |> put_status(status || :ok) |> status_json()
@@ -117,9 +121,15 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  defp transport_dispatch(endpoint, server_ref, body, opts) do
+  defp transport_dispatch(endpoint, server_ref, body, seq, opts) do
     ref = make_ref()
-    broadcast_from!(endpoint, server_ref, {:dispatch, client_ref(server_ref), body, ref})
+
+    message =
+      if seq,
+        do: {:dispatch, client_ref(server_ref), body, ref, seq},
+        else: {:dispatch, client_ref(server_ref), body, ref}
+
+    broadcast_from!(endpoint, server_ref, message)
 
     receive do
       {:ok, ^ref} -> nil
@@ -154,39 +164,58 @@ defmodule Phoenix.Transports.LongPoll do
       {:ok, server_pid} ->
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = sign_token(endpoint, data, opts)
-        conn |> put_status(:gone) |> status_token_messages_json(token, [])
+        # the batch tells clients that we keep messages until they acknowledge them
+        conn |> put_status(:gone) |> status_token_messages_json(token, [], 0)
     end
   end
 
   defp listen(conn, server_ref, token, endpoint, opts) do
     ref = make_ref()
     client_ref = client_ref(server_ref)
-    broadcast_from!(endpoint, server_ref, {:flush, client_ref, ref})
 
-    {status, messages} =
+    # the last batch the client received, sent by clients that acknowledge
+    flush =
+      case int_param(conn, "ack") do
+        # We keep the nil case for backwards compat
+        nil -> {:flush, client_ref, ref}
+        ack -> {:flush, client_ref, ref, ack}
+      end
+
+    broadcast_from!(endpoint, server_ref, flush)
+
+    {status, messages, batch} =
       receive do
-        {:messages, messages, ^ref} ->
-          {:ok, messages}
+        {:messages, messages, ^ref, batch} ->
+          {:ok, messages, batch}
 
         {:now_available, ^ref} ->
-          broadcast_from!(endpoint, server_ref, {:flush, client_ref, ref})
+          broadcast_from!(endpoint, server_ref, flush)
 
           receive do
-            {:messages, messages, ^ref} -> {:ok, messages}
+            {:messages, messages, ^ref, batch} -> {:ok, messages, batch}
           after
             opts[:window_ms] ->
               broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-              {:no_content, []}
+              {:no_content, [], nil}
           end
       after
         opts[:window_ms] ->
           broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-          {:no_content, []}
+          {:no_content, [], nil}
       end
 
     conn
     |> put_status(status)
-    |> status_token_messages_json(token, messages)
+    |> status_token_messages_json(token, messages, batch)
+  end
+
+  defp int_param(conn, key) do
+    with value when is_binary(value) <- conn.params[key],
+         {int, ""} <- Integer.parse(value) do
+      int
+    else
+      _ -> nil
+    end
   end
 
   # Accept the token from either location so that newer clients can use the
@@ -290,8 +319,17 @@ defmodule Phoenix.Transports.LongPoll do
     send_json(conn, %{"status" => conn.status || 200})
   end
 
-  defp status_token_messages_json(conn, token, messages) do
+  defp status_token_messages_json(conn, token, messages, nil) do
     send_json(conn, %{"status" => conn.status || 200, "token" => token, "messages" => messages})
+  end
+
+  defp status_token_messages_json(conn, token, messages, batch) do
+    send_json(conn, %{
+      "status" => conn.status || 200,
+      "token" => token,
+      "messages" => messages,
+      "batch" => batch
+    })
   end
 
   defp send_json(conn, data) do
