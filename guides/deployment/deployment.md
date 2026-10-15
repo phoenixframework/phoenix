@@ -18,6 +18,8 @@ There are also many providers with official documentation for deploying Phoenix 
 
   * [Railway](https://railway.com) - deploy with [Mix releases](https://docs.railway.com/guides/phoenix).
 
-  * [Seenode](https://seenode.com) - deploy with [Mix relaeses](https://seenode.com/docs/frameworks/elixir/phoenix/) or try the [quickstart template](https://github.com/seenode/example-phoenix).
+  * [Seenode](https://seenode.com) - deploy with [Mix releases](https://seenode.com/docs/frameworks/elixir/phoenix/) or try the [quickstart template](https://github.com/seenode/example-phoenix).
+
+  * [Miren](https://miren.dev) - use Miren's [native integration](https://miren.md/guides/elixir). Clustering is automatically managed, just set the number of instances.
 
 We also provide relevant documentation for [clustering](clustering.md).
