@@ -653,26 +653,18 @@ export default class Socket {
 
   onConnClose(event){
     const connection = this.connection
-    let closeCode = event && event.code
     if(this.hasLogger()) this.log("transport", "close", event)
     this.clearHeartbeats()
-    // we only close a connection to disconnect or to reconnect, which the code closing it takes
-    // care of, so its close event only confirms our close, even when the server sends 1000
+
+    // Locally initiated closures are handled by disconnect/reconnect.
     const closedByUs = !!(connection && connection.closing)
-    // the server closes with 1000 when we should not reconnect, which also applies to
-    // reconnecting on visibility change
-    if(closeCode === 1000 && !closedByUs){
-      this.closeWasClean = true
-      if(connection){ connection.ended = true }
-      this.cancelFallback()
-      this.reconnectTimer.reset()
-    }
-    // channel callbacks may disconnect or create a new connection, so finish cleaning up
-    // this connection first and do not schedule a reconnect for its replacement
+
     this.triggerChanError("connection_closed", connection)
-    if(this.stillUses(connection) && !closedByUs && !this.closeWasClean && closeCode !== 1000){
+
+    if(this.stillUses(connection) && !closedByUs && !this.closeWasClean){
       this.reconnectTimer.scheduleTimeout()
     }
+
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))
   }
 
