@@ -150,7 +150,7 @@ export default class Socket {
     let awaitingConnectionOnPageShow = null
     if(phxWindow && phxWindow.addEventListener){
       phxWindow.addEventListener("pagehide", _e => {
-        // an ended connection only finishes closing, e.g. after disconnect or a normal close by the server
+        // an ended connection only finishes closing, e.g. after disconnect
         if(this.connection && !this.connection.ended){
           this.disconnect()
           awaitingConnectionOnPageShow = this.connectClock
@@ -582,7 +582,7 @@ export default class Socket {
     const connectClock = this.connectClock
     this.teardown(() => {
       // the socket was disconnected or connected again in the meantime, which the connection does not
-      // tell once an overlapping teardown gave up on it, or the server closed the connection normally
+      // tell once an overlapping teardown gave up on it
       if(connectClock !== this.connectClock || (connection && connection.ended)){ return }
       reconnect()
     })
@@ -655,16 +655,16 @@ export default class Socket {
     const connection = this.connection
     if(this.hasLogger()) this.log("transport", "close", event)
     this.clearHeartbeats()
-
-    // Locally initiated closures are handled by disconnect/reconnect.
+    // we only close a connection to disconnect or to reconnect, which the code closing it takes
+    // care of, so its close event only confirms our close. Any other close is reconnected, whatever
+    // its code, as the server, proxies and load balancers also close with 1000 (normal closure)
     const closedByUs = !!(connection && connection.closing)
-
+    // channel callbacks may disconnect or create a new connection, so finish cleaning up
+    // this connection first and do not schedule a reconnect for its replacement
     this.triggerChanError("connection_closed", connection)
-
     if(this.stillUses(connection) && !closedByUs && !this.closeWasClean){
       this.reconnectTimer.scheduleTimeout()
     }
-
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event))
   }
 
