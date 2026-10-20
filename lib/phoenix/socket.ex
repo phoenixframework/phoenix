@@ -569,11 +569,7 @@ defmodule Phoenix.Socket do
   end
 
   def __info__(%Broadcast{event: "disconnect"}, state) do
-    # Close code 1001 ("Going Away") signals the client that the connection
-    # is intentionally closed but a reconnect is expected — phoenix.js gates
-    # reconnects behind a closeCode !== 1000 check.
-    # See https://github.com/mtrudel/bandit/issues/582.
-    {:stop, {:shutdown, :disconnected}, 1001, state}
+    {:stop, {:shutdown, :disconnected}, state}
   end
 
   def __info__(:socket_drain, state) do
