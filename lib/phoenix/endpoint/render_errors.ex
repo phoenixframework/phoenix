@@ -110,6 +110,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   defp render(conn, status, kind, reason, stack, opts) do
     conn =
       conn
+      |> maybe_put_connection_close(kind, reason)
       |> maybe_fetch_query_params()
       |> fetch_view_format(opts)
       |> Plug.Conn.put_status(status)
@@ -122,6 +123,21 @@ defmodule Phoenix.Endpoint.RenderErrors do
     assigns = %{kind: kind, reason: reason, stack: stack, status: conn.status, __changed__: nil}
 
     Controller.render(conn, template, assigns)
+  end
+
+  # Reraised errors cause HTTP/1 adapters to close the connection after the
+  # response is sent, so we must advertise the closure upfront. HTTP/2+
+  # forbids connection headers and only resets the stream on errors.
+  defp maybe_put_connection_close(conn, :error, %NoRouteError{}), do: conn
+
+  defp maybe_put_connection_close(conn, _kind, _reason) do
+    case get_http_protocol(conn) do
+      protocol when protocol in [:"HTTP/1.0", :"HTTP/1.1"] ->
+        put_resp_header(conn, "connection", "close")
+
+      _ ->
+        conn
+    end
   end
 
   defp maybe_fetch_query_params(%Plug.Conn{} = conn) do
