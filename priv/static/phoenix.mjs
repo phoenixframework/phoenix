@@ -1690,20 +1690,11 @@ var Socket = class {
   }
   onConnClose(event) {
     const connection = this.connection;
-    let closeCode = event && event.code;
     if (this.hasLogger()) this.log("transport", "close", event);
     this.clearHeartbeats();
     const closedByUs = !!(connection && connection.closing);
-    if (closeCode === 1e3 && !closedByUs) {
-      this.closeWasClean = true;
-      if (connection) {
-        connection.ended = true;
-      }
-      this.cancelFallback();
-      this.reconnectTimer.reset();
-    }
     this.triggerChanError("connection_closed", connection);
-    if (this.stillUses(connection) && !closedByUs && !this.closeWasClean && closeCode !== 1e3) {
+    if (this.stillUses(connection) && !closedByUs && !this.closeWasClean) {
       this.reconnectTimer.scheduleTimeout();
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event));
