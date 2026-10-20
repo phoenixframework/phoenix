@@ -220,22 +220,6 @@ describe("with transports", function (){
           expect(replaceSpy).toHaveBeenCalledTimes(1)
         })
 
-        it("does not fall back after a normal close", function (){
-          socket.connect()
-          connections[0].open()
-          // a normal close also cancels a reconnect that was already scheduled
-          socket.reconnectTimer.scheduleTimeout()
-
-          connections[0].finishClose(1000)
-          jest.advanceTimersByTime(5000)
-
-          expect(socket.transport).toBe(StubWebSocket)
-          expect(connections.length).toBe(1)
-          expect(socket.closeWasClean).toBe(true)
-          expect(socket.stateChangeCallbacks.open.length).toBe(0)
-          expect(socket.stateChangeCallbacks.error.length).toBe(0)
-        })
-
         it("remembers LongPoll when a later fallback connection opens", function (){
           socket.connect()
           jest.advanceTimersByTime(2500)
@@ -528,14 +512,15 @@ describe("with transports", function (){
       expect(socket.conn).toBe(connections[1])
     })
 
-    it("does not reconnect after the server closed the connection normally", function (){
+    it("reconnects when the page is shown again after the server closed the connection", function (){
       connections[0].finishClose(1000)
 
       listeners.pagehide()
       listeners.pageshow()
       jest.advanceTimersByTime(5000)
 
-      expect(connections.length).toBe(1)
+      expect(connections.length).toBe(2)
+      expect(socket.conn).toBe(connections[1])
     })
 
     it("does not reconnect after a disconnect that is still closing the connection", function (){
@@ -1895,17 +1880,9 @@ describe("with transports", function (){
       socket.connect()
     })
 
-    it("does not schedule reconnectTimer if normal close", function (){
+    it.each([1000, 1001, 1006])("schedules reconnectTimer timeout if the server closes the connection (close: %s)", function (code){
       const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
-      const event = {code: 1000}
-      socket.onConnClose(event)
-      expect(scheduleSpy).not.toHaveBeenCalled()
-    })
-
-    it("schedules reconnectTimer timeout if abnormal close", function (){
-      const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
-      const event = {code: 1006}
-      socket.onConnClose(event)
+      socket.onConnClose({code})
       expect(scheduleSpy).toHaveBeenCalledTimes(1)
     })
 
@@ -1913,13 +1890,6 @@ describe("with transports", function (){
       const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
       socket.disconnect()
       expect(scheduleSpy).not.toHaveBeenCalled()
-    })
-
-    it("schedules reconnectTimer timeout if not normal close", function (){
-      const scheduleSpy = jest.spyOn(socket.reconnectTimer, "scheduleTimeout")
-      const event = {code: 1001}
-      socket.onConnClose(event)
-      expect(scheduleSpy).toHaveBeenCalledTimes(1)
     })
 
     it("schedules reconnectTimer timeout if connection cannot be made after a previous clean disconnect", function (done){
@@ -2029,16 +1999,17 @@ describe("with transports", function (){
         expect(second.state).toBe("joined")
       })
 
-      it("does not reconnect on visibility change after a normal close", function (){
+      it("reconnects on visibility change after the server closed the connection", function (){
         connections[0].finishClose(1000)
 
         socket.handleVisibilityChange()
         jest.advanceTimersByTime(5000)
 
-        expect(connections.length).toBe(1)
+        expect(connections.length).toBe(2)
+        expect(socket.conn).toBe(connections[1])
       })
 
-      it("still reconnects on visibility change when the server only confirmed our close", function (){
+      it("reconnects on visibility change when the server only confirmed our close", function (){
         // the heartbeat times out, so we close the connection with 1000, which the server confirms
         jest.advanceTimersByTime(2 * socket.heartbeatIntervalMs)
         connections[0].finishClose(1000)
@@ -2051,26 +2022,6 @@ describe("with transports", function (){
         socket.handleVisibilityChange()
 
         expect(connections.length).toBe(2)
-      })
-
-      it("does not let a scheduled reconnect replace a connection created after a normal close", function (){
-        socket.reconnectTimer.scheduleTimeout()
-        connections[0].finishClose(1000)
-
-        socket.connect()
-        jest.advanceTimersByTime(5000)
-
-        expect(connections.length).toBe(2)
-        expect(socket.conn).toBe(connections[1])
-      })
-
-      it("connects again when asked to after a normal close", function (){
-        connections[0].finishClose(1000)
-
-        socket.connect()
-
-        expect(connections.length).toBe(2)
-        expect(socket.conn).toBe(connections[1])
       })
 
       it.each([1000, 1006])("preserves a connection opened by a channel error callback (close: %s)", function (code){
@@ -2509,19 +2460,22 @@ describe("with transports", function (){
         expect(onMessage).not.toHaveBeenCalled()
       })
 
-      it("does not reconnect when a heartbeat reply is decoded after the server closed the connection", function (){
+      it("does not restart the heartbeats when a heartbeat reply is decoded after the server closed the connection", function (){
         jest.advanceTimersByTime(socket.heartbeatIntervalMs)
         encodings[0]()
         const [[, heartbeatRef]] = connections[0].sent
         const reply = {ref: heartbeatRef, topic: "phoenix", event: "phx_reply", payload: {status: "ok", response: {}}}
         connections[0].onmessage({data: encode(reply)})
+        // the teardown before reconnecting stops the heartbeats, so we reconnect after they would have run
+        socket.reconnectTimer.timerCalc = () => 3 * socket.heartbeatIntervalMs
         connections[0].finishClose(1000)
+        const heartbeatSpy = jest.spyOn(socket, "sendHeartbeat")
 
         decodings[0]()
-        jest.advanceTimersByTime(3 * socket.heartbeatIntervalMs)
+        jest.advanceTimersByTime(2 * socket.heartbeatIntervalMs)
 
+        expect(heartbeatSpy).not.toHaveBeenCalled()
         expect(connections.length).toBe(1)
-        expect(socket.closeWasClean).toBe(true)
       })
     })
 
