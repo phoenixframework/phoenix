@@ -868,11 +868,11 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
 
           assert_receive {:DOWN, _, :process, ^sock, :normal}
           assert_receive {:DOWN, _, :process, ^chan1, shutdown}
-          # :shutdown for cowboy, {:shutdown, :closed} for cowboy 2, {:shutdown, :disconnected}
-          # for bandit
-          assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :disconnected}]
+          # :shutdown for cowboy, {:shutdown, :closed} for cowboy 2, {:shutdown, :peer_closed}
+          # for bandit, which closes normally and waits for the client to close the connection
+          assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :peer_closed}]
           assert_receive {:DOWN, _, :process, ^chan2, shutdown}
-          assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :disconnected}]
+          assert shutdown in [:shutdown, {:shutdown, :closed}, {:shutdown, :peer_closed}]
         end
 
         test "duplicate join event closes existing channel" do
