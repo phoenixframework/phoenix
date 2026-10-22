@@ -656,6 +656,159 @@ describe("LongPoll", () => {
   })
 })
 
+describe("LongPoll resuming", () => {
+  let longpoll, events
+
+  const requests = method => Ajax.request.mock.calls.filter(([m]) => m === method)
+  const last = method => requests(method).at(-1)
+  const params = call => Object.fromEntries(new URL(call[1]).searchParams)
+  const respond = (call, resp) => call[6](resp)
+
+  // the server keeps the messages until we acknowledge them when it announces a batch
+  const open = (resp = {status: 410, token: "token", messages: [], batch: 0}) => {
+    longpoll = new LongPoll("http://localhost/socket/longpoll")
+    events = []
+    longpoll.onopen = () => events.push("open")
+    longpoll.onmessage = ({data}) => events.push(data)
+    longpoll.onerror = () => events.push("error")
+    longpoll.onclose = () => events.push("close")
+    longpoll.oninterrupt = () => events.push("interrupt")
+    longpoll.onrestore = () => events.push("restore")
+    jest.advanceTimersByTime(0)
+    respond(last("GET"), resp)
+  }
+
+  beforeEach(() => {
+    jest.useFakeTimers()
+    jest.spyOn(Ajax, "request").mockImplementation(() => ({abort: jest.fn()}))
+  })
+
+  afterEach(() => {
+    longpoll.close()
+    jest.useRealTimers()
+    jest.restoreAllMocks()
+  })
+
+  it("acknowledges the last batch it received with the next poll", () => {
+    open()
+    expect(params(last("GET")).ack).toBe("0")
+
+    respond(last("GET"), {status: 200, token: "token", messages: ["a"], batch: 1})
+    expect(params(last("GET")).ack).toBe("1")
+
+    // a poll without new messages keeps the ack
+    respond(last("GET"), {status: 204, token: "token"})
+    expect(params(last("GET")).ack).toBe("1")
+  })
+
+  it("does not acknowledge when the server does not announce batches", () => {
+    open({status: 410, token: "token", messages: []})
+    expect(params(last("GET")).ack).toBeUndefined()
+  })
+
+  it.each([
+    ["gets no response", call => respond(call, null)],
+    ["times out", call => call[5]()]
+  ])("polls again with the same ack when a poll %s", (_, fail) => {
+    open()
+    respond(last("GET"), {status: 200, token: "token", messages: ["a"], batch: 1})
+    const polls = requests("GET").length
+
+    fail(last("GET"))
+    jest.advanceTimersByTime(99)
+    expect(requests("GET")).toHaveLength(polls)
+    jest.advanceTimersByTime(1)
+
+    expect(requests("GET")).toHaveLength(polls + 1)
+    expect(params(last("GET")).ack).toBe("1")
+    expect(events).not.toContain("error")
+    expect(events).not.toContain("close")
+  })
+
+  it("backs off while requests keep failing", () => {
+    open()
+    const delays = []
+    for(let i = 0; i < 6; i++){
+      const polls = requests("GET").length
+      respond(last("GET"), null)
+      let waited = 0
+      while(requests("GET").length === polls){
+        jest.advanceTimersByTime(100)
+        waited += 100
+      }
+      delays.push(waited)
+    }
+
+    expect(delays).toEqual([100, 500, 1000, 2000, 5000, 5000])
+  })
+
+  it("reports the interruption once a retry failed as well, and the restoration once a request succeeds", () => {
+    open()
+    respond(last("GET"), null)
+    jest.advanceTimersByTime(100)
+    expect(events).toEqual(["open"])
+
+    respond(last("GET"), null)
+    jest.advanceTimersByTime(500)
+    respond(last("GET"), null)
+    jest.advanceTimersByTime(1000)
+    expect(events).toEqual(["open", "interrupt"])
+
+    respond(last("GET"), {status: 204, token: "token"})
+    expect(events).toEqual(["open", "interrupt", "restore"])
+
+    // a single failure after that is not an interruption yet
+    respond(last("GET"), null)
+    jest.advanceTimersByTime(100)
+    expect(events).toEqual(["open", "interrupt", "restore"])
+  })
+
+  it("closes when the session is gone", () => {
+    open()
+    respond(last("GET"), {status: 410, token: "new-token", messages: [], batch: 0})
+
+    expect(events).toEqual(["open", "error", "close"])
+  })
+
+  it("does not retry after it was closed", () => {
+    open()
+    respond(last("GET"), null)
+    longpoll.close()
+    const polls = requests("GET").length
+    jest.advanceTimersByTime(10_000)
+
+    expect(requests("GET")).toHaveLength(polls)
+  })
+
+  it("numbers the messages it sends and sends a batch again when it gets no response", () => {
+    open()
+    longpoll.send("a")
+    longpoll.send("b")
+    jest.advanceTimersByTime(0)
+    expect(params(last("POST")).seq).toBe("1")
+    expect(last("POST")[3]).toBe("a\nb")
+
+    longpoll.send("c")
+    respond(last("POST"), null)
+    jest.advanceTimersByTime(100)
+    expect(requests("POST")).toHaveLength(2)
+    expect(params(last("POST")).seq).toBe("1")
+    expect(last("POST")[3]).toBe("a\nb")
+
+    respond(last("POST"), {status: 200})
+    expect(params(last("POST")).seq).toBe("3")
+    expect(last("POST")[3]).toBe("c")
+  })
+
+  it("does not number the messages when the server does not announce batches", () => {
+    open({status: 410, token: "token", messages: []})
+    longpoll.send("a")
+    jest.advanceTimersByTime(0)
+
+    expect(params(last("POST")).seq).toBeUndefined()
+  })
+})
+
 describe("Socket with LongPoll", () => {
   describe("transportConnect", () => {
     it("should initialize with undefined protocols when no auth token", () => {

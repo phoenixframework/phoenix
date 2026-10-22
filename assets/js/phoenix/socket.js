@@ -98,6 +98,11 @@ import Connection from "./connection"
  *
  * Defaults to DEFAULT_VSN.
  *
+ * @param {boolean} [opts.resumable] - When true, channels the server marks as resumable
+ * are suspended instead of errored when the connection is lost, and resumed on the next
+ * connection, receiving everything they missed. Requires `resume: true` in the server's
+ * websocket options. Defaults to false.
+ *
  * @param {Object} [opts.sessionStorage] - An optional Storage compatible object
  * Phoenix uses sessionStorage for longpoll fallback history. Overriding the store is
  * useful when Phoenix won't have access to `sessionStorage`. For example, This could
@@ -206,6 +211,10 @@ export default class Socket {
       this.teardownAndReconnect(() => this.connect())
     }, this.reconnectAfterMs)
     this.authToken = opts.authToken && closure(opts.authToken)
+    // resumable channels survive a lost connection, see `resumable` option
+    this.resumable = !!opts.resumable
+    // the token of the server's resume session, received with phx_resumable
+    this.resumeToken = null
   }
 
   /**
@@ -289,7 +298,8 @@ export default class Socket {
    */
   endPointURL(){
     let uri = Ajax.appendParams(
-      Ajax.appendParams(this.endPoint, this.params()), {vsn: this.vsn})
+      Ajax.appendParams(this.endPoint, this.params()),
+      this.resumable ? {vsn: this.vsn, phx_resumable: "true"} : {vsn: this.vsn})
     if(uri.charAt(0) !== "/"){ return uri }
     if(uri.charAt(1) === "/"){ return `${this.protocol()}:${uri}` }
 
@@ -536,6 +546,8 @@ export default class Socket {
     if(this.hasLogger()) this.log("transport", `${this.transportName(this.transport)} connected to ${this.endPointURL()}`)
     this.closeWasClean = false
     this.establishedConnections++
+    // the server must handle the resume before anything else on this connection
+    this.sendResume()
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     this.resetHeartbeat()
@@ -694,6 +706,37 @@ export default class Socket {
   /**
    * @private
    *
+   * Tells the joined channels that the transport lost the connection but keeps retrying,
+   * which LongPoll does without losing messages. Unlike a suspended channel, the channel
+   * keeps pushing, as the transport sends the pushes once it reaches the server.
+   */
+  onConnInterrupt(connection){
+    if(this.hasLogger()) this.log("transport", "interrupted")
+    connection.interrupted = this.channels
+      .filter(channel => channel.isJoined())
+      .map(channel => [channel, channel.joinRef()])
+    connection.interrupted.forEach(([channel]) => {
+      channel.trigger(CHANNEL_EVENTS.suspend, "connection_interrupted")
+    })
+  }
+
+  /**
+   * @private
+   */
+  onConnRestore(connection){
+    if(this.hasLogger()) this.log("transport", "restored")
+    const interrupted = connection.interrupted
+    connection.interrupted = []
+    interrupted.forEach(([channel, joinRef]) => {
+      if(channel.isJoined() && channel.joinRef() === joinRef){
+        channel.trigger(CHANNEL_EVENTS.resume)
+      }
+    })
+  }
+
+  /**
+   * @private
+   *
    * Errors the channels, as they need to rejoin once the given connection stopped being open.
    */
   triggerChanError(reason, connection = this.connection){
@@ -712,6 +755,10 @@ export default class Socket {
       if(channel.joinRef() !== joinRef){ return }
       // the joins of a replaced connection are not the only ones anymore
       if(connection && (erroredBefore || !connection.isCurrent()) && !connection.carried(channel, joinRef)){ return }
+      if(channel.isResumable() && this.resumeToken){
+        channel.suspend(reason)
+        return
+      }
       if(!(channel.isErrored() || channel.isLeaving() || channel.isClosed())){
         channel.trigger(CHANNEL_EVENTS.error, {source: "transport", reason})
       }
@@ -854,6 +901,14 @@ export default class Socket {
       // that arrive once a WebSocket is closing)
       if(connection !== this.connection || (wasOpen && !connection.isOpen())){ return }
       let {topic, event, payload, ref, join_ref} = msg
+      if(topic === "phoenix" && ref && ref === connection.resumeRef){
+        return this.onResumeReply(connection, payload)
+      }
+      if(event === "phx_resumable"){
+        this.onResumable(topic, join_ref, payload)
+      } else {
+        this.countResumable(connection, topic, join_ref)
+      }
       if(ref && ref === this.pendingHeartbeatRef){
         this.clearHeartbeats()
         this.heartbeatTimer = setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
@@ -882,6 +937,94 @@ export default class Socket {
         ping()
       }
     })
+  }
+
+  /**
+   * @private
+   *
+   * The server made the channel's current join resumable. From now on, we count
+   * the frames we receive for the join, the server counts the frames it sends.
+   */
+  onResumable(topic, joinRef, {token}){
+    const channel = this.channels.find(c => c.topic === topic && c.joinRef() === joinRef)
+    if(!channel){ return }
+    this.resumeToken = token
+    channel.resumableJoinRef = joinRef
+    channel.received = 0
+  }
+
+  /**
+   * @private
+   */
+  countResumable(connection, topic, joinRef){
+    if(!joinRef){ return }
+    const channel = this.channels.find(c => c.topic === topic && c.resumableJoinRef === joinRef)
+    if(!channel){ return }
+    channel.received++
+    this.scheduleAck(connection)
+  }
+
+  /**
+   * @private
+   */
+  sendResume(){
+    if(!this.resumeToken){ return }
+    const suspended = this.channels.filter(c => c.isSuspended())
+    if(suspended.length === 0){ return }
+    const ref = this.makeRef()
+    this.connection.resumeRef = ref
+    this.push({
+      topic: "phoenix",
+      event: "phx_resume",
+      ref,
+      payload: {
+        token: this.resumeToken,
+        channels: suspended.map(c => [c.topic, c.joinRef(), c.received])
+      }
+    })
+  }
+
+  /**
+   * @private
+   */
+  onResumeReply(connection, {status, response}){
+    connection.resumeRef = null
+    let resumed = new Set()
+    if(status === "ok"){
+      resumed = new Set(response.channels.map(([topic, joinRef]) => `${topic}:${joinRef}`))
+    } else {
+      this.resumeToken = null
+    }
+    // the session released the channels to this connection, which keeps them itself
+    const released = status === "ok" && response.released
+    if(released){ this.resumeToken = null }
+    this.channels.filter(c => c.isSuspended()).forEach(channel => {
+      if(resumed.has(`${channel.topic}:${channel.joinRef()}`)){
+        channel.resume()
+        if(released){ channel.resumableJoinRef = null }
+      } else {
+        channel.abandonSuspension({source: "transport", reason: "resume_failed"})
+      }
+    })
+    if(status === "ok" && !released){ this.scheduleAck(connection) }
+  }
+
+  /**
+   * @private
+   *
+   * Tells the server how many frames we received for each resumable join, so
+   * it can drop the frames it keeps for resuming.
+   */
+  scheduleAck(connection){
+    if(connection.ackTimer){ return }
+    connection.ackTimer = setTimeout(() => {
+      connection.ackTimer = null
+      if(!connection.isCurrent() || !connection.isOpen()){ return }
+      const channels = this.channels
+        .filter(c => c.resumableJoinRef && c.resumableJoinRef === c.joinRef())
+        .map(c => [c.topic, c.joinRef(), c.received])
+      this.push({topic: "phoenix", event: "phx_ack", payload: {channels}, ref: null})
+    }, 1000)
   }
 
   leaveOpenTopic(topic){

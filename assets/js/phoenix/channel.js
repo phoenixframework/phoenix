@@ -26,6 +26,14 @@ export default class Channel {
     this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout)
     this.pushBuffer = []
     this.stateChangeRefs = []
+    // the join the server made resumable, see Socket.onResumable
+    this.resumableJoinRef = null
+    // the number of frames received for the resumable join
+    this.received = 0
+    // set while the connection is lost and the channel waits to be resumed
+    this.suspended = false
+    // pushes sent for the resumable join that did not get a reply yet, by ref
+    this.inflight = new Map()
 
     this.rejoinTimer = new Timer(() => {
       if(this.socket.isConnected()){ this.rejoin() }
@@ -54,6 +62,8 @@ export default class Channel {
     })
     this.onError(reason => {
       if(this.socket.hasLogger()) this.socket.log("channel", `error ${this.topic}`, reason)
+      this.suspended = false
+      this.inflight.clear()
       if(this.isJoining()){ this.joinPush.reset() }
       this.state = CHANNEL_STATES.errored
       if(this.socket.isConnected()){ this.rejoinTimer.scheduleTimeout() }
@@ -101,6 +111,24 @@ export default class Channel {
    */
   onError(callback){
     return this.on(CHANNEL_EVENTS.error, reason => callback(reason))
+  }
+
+  /**
+   * Hook into the channel being suspended, when the connection is lost
+   * and the channel waits to be resumed instead of erroring, or while
+   * a LongPoll transport retries after losing the connection
+   * @param {Function} callback
+   */
+  onSuspend(callback){
+    return this.on(CHANNEL_EVENTS.suspend, reason => callback(reason))
+  }
+
+  /**
+   * Hook into the channel being resumed after it was suspended
+   * @param {Function} callback
+   */
+  onResume(callback){
+    return this.on(CHANNEL_EVENTS.resume, () => callback())
   }
 
   /**
@@ -153,7 +181,53 @@ export default class Channel {
   /**
    * @private
    */
-  canPush(){ return this.socket.isConnected() && this.isJoined() }
+  canPush(){ return this.socket.isConnected() && this.isJoined() && !this.suspended }
+
+  /**
+   * @private
+   */
+  isResumable(){ return this.isJoined() && this.resumableJoinRef === this.joinRef() }
+
+  /**
+   * @private
+   */
+  isSuspended(){ return this.suspended && this.isJoined() }
+
+  /**
+   * @private
+   */
+  suspend(reason){
+    if(this.suspended){ return }
+    if(this.socket.hasLogger()) this.socket.log("channel", `suspend ${this.topic}`, reason)
+    this.suspended = true
+    this.trigger(CHANNEL_EVENTS.suspend, reason)
+  }
+
+  /**
+   * @private
+   */
+  resume(){
+    if(this.socket.hasLogger()) this.socket.log("channel", `resume ${this.topic}`)
+    this.suspended = false
+    // the server drops the pushes it already handled, and replays their replies
+    Array.from(this.inflight.values())
+      .sort((a, b) => parseInt(a.ref) - parseInt(b.ref))
+      .forEach(push => push.resendForResume())
+    this.pushBuffer.forEach(pushEvent => pushEvent.send())
+    this.pushBuffer = []
+    this.trigger(CHANNEL_EVENTS.resume)
+  }
+
+  /**
+   * @private
+   */
+  abandonSuspension(reason){
+    this.trigger(CHANNEL_EVENTS.error, reason)
+    if(this.socket.isConnected()){
+      this.rejoinTimer.reset()
+      this.rejoin()
+    }
+  }
 
   /**
    * Sends a message `event` to phoenix with the payload `payload`.

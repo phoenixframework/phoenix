@@ -130,15 +130,19 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
-  # Backwards compat: clients that don't acknowledge get each message once
+  # Backwards compat: clients that don't acknowledge get each message once.
+  # Plugs of an older version, for example during a rolling deploy, flush like
+  # this as well and expect the old reply.
   def handle_info({:flush, client_ref, ref}, state) do
+    state = %{state | sent: [], sent_at: nil, last_client_poll: now_ms()}
+
     case state.pending do
       [] ->
-        {:noreply, %{state | client_ref: {client_ref, ref}, last_client_poll: now_ms()}}
+        {:noreply, %{state | client_ref: {client_ref, ref}}}
 
       pending ->
-        broadcast_from!(state, client_ref, {:messages, Enum.reverse(pending), ref, nil})
-        {:noreply, %{state | client_ref: nil, last_client_poll: now_ms(), pending: []}}
+        broadcast_from!(state, client_ref, {:messages, Enum.reverse(pending), ref})
+        {:noreply, %{state | client_ref: nil, pending: []}}
     end
   end
 
@@ -173,6 +177,10 @@ defmodule Phoenix.Transports.LongPoll.Server do
       {:push, {_, reply}, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
         publish_reply(state, reply)
+
+      {:push, frames, handler_state} when is_list(frames) ->
+        state = %{state | handler: {handler, handler_state}}
+        publish_replies(state, frames)
 
       {:ok, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
@@ -218,6 +226,15 @@ defmodule Phoenix.Transports.LongPoll.Server do
     else
       notify_client_now_available(state)
       {:noreply, %{state | pending: [IO.iodata_to_binary(reply) | state.pending]}}
+    end
+  end
+
+  defp publish_replies(state, []), do: {:noreply, state}
+
+  defp publish_replies(state, [{_, reply} | frames]) do
+    case publish_reply(state, reply) do
+      {:noreply, state} -> publish_replies(state, frames)
+      stop -> stop
     end
   end
 

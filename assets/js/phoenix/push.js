@@ -34,10 +34,27 @@ export default class Push {
     if(this.hasReceived("timeout")){ return }
     this.startTimeout()
     this.sent = true
+    this.sentPayload = this.payload()
+    if(this.channel.isResumable()){ this.channel.inflight.set(this.ref, this) }
     this.channel.socket.push({
       topic: this.channel.topic,
       event: this.event,
-      payload: this.payload(),
+      payload: this.sentPayload,
+      ref: this.ref,
+      join_ref: this.channel.joinRef()
+    }, this.channel)
+  }
+
+  /**
+   * @private
+   *
+   * Sends the push again with the same ref after its channel resumed.
+   */
+  resendForResume(){
+    this.channel.socket.push({
+      topic: this.channel.topic,
+      event: this.event,
+      payload: this.sentPayload,
       ref: this.ref,
       join_ref: this.channel.joinRef()
     }, this.channel)
@@ -62,6 +79,7 @@ export default class Push {
    */
   reset(){
     this.cancelRefEvent()
+    this.channel.inflight.delete(this.ref)
     this.ref = null
     this.refEvent = null
     this.receivedResp = null
@@ -101,7 +119,9 @@ export default class Push {
     this.ref = this.channel.socket.makeRef()
     this.refEvent = this.channel.replyEventName(this.ref)
 
+    const ref = this.ref
     this.channel.on(this.refEvent, payload => {
+      this.channel.inflight.delete(ref)
       this.cancelRefEvent()
       this.cancelTimeout()
       this.receivedResp = payload

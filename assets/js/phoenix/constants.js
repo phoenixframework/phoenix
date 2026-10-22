@@ -18,7 +18,10 @@ export const CHANNEL_EVENTS = {
   error: "phx_error",
   join: "phx_join",
   reply: "phx_reply",
-  leave: "phx_leave"
+  leave: "phx_leave",
+  // channel events for resumable channels, not sent over the wire
+  suspend: "phx_suspended",
+  resume: "phx_resumed"
 }
 
 export const TRANSPORTS = {

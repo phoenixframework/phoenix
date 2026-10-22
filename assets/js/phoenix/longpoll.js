@@ -44,10 +44,14 @@ export default class LongPoll {
     this.seq = 0
     this.retries = 0
     this.retryTimers = new Set()
+    // set once a retry failed as well, until a request succeeds again
+    this.interrupted = false
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
     this.onclose = function (){ } // noop
+    this.oninterrupt = function (){ } // noop
+    this.onrestore = function (){ } // noop
     this.pollEndpoint = this.normalizeEndpoint(endPoint)
     this.readyState = SOCKET_STATES.connecting
     // we must wait for the caller to finish setting up our callbacks and timeout properties,
@@ -105,7 +109,7 @@ export default class LongPoll {
       } else {
         status = 0
       }
-      if(status !== 0){ this.retries = 0 }
+      if(status !== 0){ this.succeeded() }
 
       switch(status){
         case 200:
@@ -194,7 +198,8 @@ export default class LongPoll {
     const next = offset + MAX_LONGPOLL_BATCH_SIZE
     const batch = messages.slice(offset, next)
     const retry = () => this.batchSend(messages, seq, offset)
-    const params = {seq: seq + offset}
+    // servers that don't announce batches don't know about seq either
+    const params = this.resumable ? {seq: seq + offset} : {}
     this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), params, () => this.retryOr(retry, () => this.ontimeout()), resp => {
       if(!resp){
         this.retryOr(retry, () => this.closeAndRetry(null, 1011, "internal server error", false))
@@ -202,14 +207,14 @@ export default class LongPoll {
         // this calls stop which already clears awaitingBatchAck
         this.closeAndRetry(resp && resp.status, 1011, "internal server error", false)
       } else if(next < messages.length){
-        this.retries = 0
+        this.succeeded()
         this.batchSend(messages, seq, next)
       } else if(this.batchBuffer.length > 0){
-        this.retries = 0
+        this.succeeded()
         this.batchSend(this.batchBuffer, this.batchBufferSeq)
         this.batchBuffer = []
       } else {
-        this.retries = 0
+        this.succeeded()
         this.awaitingBatchAck = false
       }
     })
@@ -225,11 +230,28 @@ export default class LongPoll {
     if(!this.resumable){ return fail() }
     const delay = RETRY_DELAYS[Math.min(this.retries, RETRY_DELAYS.length - 1)]
     this.retries++
+    // a single failed request is retried quickly, so we only report the interruption
+    // once its retry failed as well
+    if(this.retries > 1 && !this.interrupted){
+      this.interrupted = true
+      this.oninterrupt()
+    }
     const timer = setTimeout(() => {
       this.retryTimers.delete(timer)
       retry()
     }, delay)
     this.retryTimers.add(timer)
+  }
+
+  /**
+   * @private
+   */
+  succeeded(){
+    this.retries = 0
+    if(this.interrupted){
+      this.interrupted = false
+      this.onrestore()
+    }
   }
 
   close(code, reason, wasClean){
@@ -251,6 +273,7 @@ export default class LongPoll {
     this.messageTimers.clear()
     for(let timer of this.retryTimers){ clearTimeout(timer) }
     this.retryTimers.clear()
+    this.interrupted = false
     this.batchBuffer = []
     this.awaitingBatchAck = false
     clearTimeout(this.currentBatchTimer)

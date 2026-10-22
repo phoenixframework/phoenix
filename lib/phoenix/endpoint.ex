@@ -728,7 +728,8 @@ defmodule Phoenix.Endpoint do
             :error_handler,
             :validate_utf8,
             :active_n,
-            :deflate_options
+            :deflate_options,
+            :resume
           ]
       )
 
@@ -1054,6 +1055,20 @@ defmodule Phoenix.Endpoint do
 
     * `:compress` - whether to enable per message compression on
       all data frames, defaults to false
+
+    * `:resume` - allows channels to survive a lost connection, see
+      `Phoenix.Channel.resumable/1`. Long polling does not need this, as it
+      is resumable by construction. Either `true` or a keyword list with:
+
+        * `:timeout` - how long resumable channels are kept after the
+          connection was lost, defaults to 20_000ms. It also limits how
+          long frames are kept for a connected client that does not
+          acknowledge them, at most twice the timeout, after which the
+          channels stop. Clients acknowledge about every second, so
+          the timeout should be well above that
+
+      Requires a client that supports resuming, such as phoenix.js with
+      the `resumable: true` socket option. Defaults to `false`
 
     * `:subprotocols` - a list of supported websocket subprotocols.
       Used for handshake `Sec-WebSocket-Protocol` response header, defaults to nil.

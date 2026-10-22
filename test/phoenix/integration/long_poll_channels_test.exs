@@ -656,6 +656,27 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
         end
 
+        test "#{@mode}: works with plugs of an older version" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          assert resp.body["status"] == 200
+
+          {:ok, {:v1, _id, server, _topic}} =
+            Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+          # an older plug flushes without acknowledging and expects the reply without batch
+          Endpoint.broadcast!("room:lobby", "new_msg", %{"body" => "hi"})
+          Process.sleep(50)
+          ref = make_ref()
+          send(server, {:flush, self(), ref})
+          assert_receive {:messages, [_new_msg], ^ref}
+
+          # it does not acknowledge the messages we sent before, which we drop
+          # like we drop the ones we send to it, so we don't wait for an ack
+          assert %{sent: [], sent_at: nil} = :sys.get_state(server)
+        end
+
         test "#{@mode}: resends messages until the client acknowledges them" do
           vsn = "2.0.0"
 
@@ -734,6 +755,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           vsn = "2.0.0"
           Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
           session = join("/ws", "room:lobby", vsn, "1", @mode)
+
           # Publish successfully
           resp =
             poll(:post, "/ws", vsn, session, [

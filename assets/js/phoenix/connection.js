@@ -32,9 +32,16 @@ export default class Connection {
     this.channelsErrored = false
     // set once the close event was handled, as LongPoll can emit it more than once
     this.closeHandled = false
+    // the ref of the resume we sent over this connection, if any
+    this.resumeRef = null
+    this.ackTimer = null
+    // the [channel, joinRef] we told that the transport is interrupted while it retries
+    this.interrupted = []
     transport.onopen = () => { if(this.isCurrent()){ socket.onConnOpen() } }
     transport.onerror = error => { if(this.isCurrent()){ socket.onConnError(error) } }
     transport.onmessage = event => { if(this.isCurrent()){ socket.onConnMessage(event) } }
+    transport.oninterrupt = () => { if(this.isCurrent()){ socket.onConnInterrupt(this) } }
+    transport.onrestore = () => { if(this.isCurrent()){ socket.onConnRestore(this) } }
     transport.onclose = event => {
       if(this.isCurrent() && !this.closeHandled){
         this.closeHandled = true

@@ -692,6 +692,54 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
+  Marks the channel as resumable. Call it on the socket returned from `c:join/3`.
+
+  When the client loses its connection, a resumable channel is kept alive for a while
+  instead of stopping. If the client reconnects in time, it resumes the channel: it
+  receives everything it missed and the channel continues without a new join.
+
+  Only has an effect on WebSocket connections, when the socket was mounted with
+  `resume: true` in the websocket options and the client supports it. Otherwise
+  the channel behaves as usual.
+
+  Long polling is resumable by construction: its session outlives the HTTP requests,
+  and clients that support it retry failed requests and acknowledge the messages they
+  received. All channels of a long poll socket survive a lost connection as long as
+  the session does, whether they are marked resumable or not.
+
+  A client that falls back from WebSocket to long polling resumes its channels over
+  the long poll connection, which keeps them from then on. Resuming works across nodes
+  as long as they are connected, otherwise the channels join again.
+
+  Resumable channels have some differences:
+
+    * broadcasts are pushed by the channel process instead of being encoded once
+      and sent directly to the transport
+
+    * their frames are sent to a session process shared by the resumable channels
+      of the socket, which keeps them until the client acknowledges them. Only
+      the `Phoenix.Socket.V2.JSONSerializer` supports this
+
+    * the session keeps all frames sent within the resume `:timeout`, so channels
+      that push a lot of data should either not be resumable or use a socket with
+      a lower timeout
+
+    * the `transport_pid` changes after joining, so socket refs generated during
+      `c:join/3` cannot be used to reply
+
+  ## Examples
+
+      def join("room:" <> _id, _params, socket) do
+        {:ok, Phoenix.Channel.resumable(socket)}
+      end
+
+  """
+  @spec resumable(Socket.t()) :: Socket.t()
+  def resumable(%Socket{} = socket) do
+    put_in(socket.private[:phoenix_resumable], true)
+  end
+
+  @doc """
   Generates a `socket_ref` for an async reply.
 
   See `reply/2` for example usage.

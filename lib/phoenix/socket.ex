@@ -202,7 +202,7 @@ defmodule Phoenix.Socket do
 
   require Logger
   alias Phoenix.Socket
-  alias Phoenix.Socket.{Broadcast, Message, Reply}
+  alias Phoenix.Socket.{Broadcast, Message, Reply, ResumeSession}
 
   @doc """
   Receives the socket params and authenticates the connection.
@@ -557,15 +557,163 @@ defmodule Phoenix.Socket do
     handle_in(Map.get(state.channels, topic), message, state, socket)
   end
 
+  def __info__({:DOWN, ref, _, pid, _}, {%{session: %{ref: ref, pid: pid}} = state, socket}) do
+    # resumable channels stop together with their session, but the session
+    # cannot tell the client anymore
+    {resumable, channels} =
+      Enum.split_with(state.channels, fn {_, {_, mref, _}} -> mref == nil end)
+
+    errors =
+      for {topic, {pid, _, _}} <- resumable do
+        {^topic, join_ref} = Map.fetch!(state.channels_inverse, pid)
+        encode_on_exit(socket, topic, join_ref, :closed)
+      end
+
+    channels_inverse =
+      Map.drop(state.channels_inverse, Enum.map(resumable, fn {_, {pid, _, _}} -> pid end))
+
+    held = state.held |> Map.values() |> Enum.flat_map(&Enum.reverse/1)
+
+    state = %{
+      state
+      | session: nil,
+        handovers: %{},
+        held: %{},
+        channels: Map.new(channels),
+        channels_inverse: channels_inverse
+    }
+
+    push_frames(held ++ errors, {state, socket})
+  end
+
+  def __info__({:DOWN, ref, _, _, _}, {%{release_ref: ref} = state, socket}) do
+    held = state.releasing |> Map.values() |> Enum.flat_map(&Enum.reverse/1)
+    push_frames(held, {%{state | release_ref: nil, releasing: %{}}, socket})
+  end
+
   def __info__({:DOWN, ref, _, pid, reason}, {state, socket}) do
     case state.channels_inverse do
       %{^pid => {topic, join_ref}} ->
+        {held, handed_over?, state} = drop_handover(state, pid)
         state = delete_channel(state, pid, topic, ref)
-        {:push, encode_on_exit(socket, topic, join_ref, reason), {state, socket}}
+        error = encode_on_exit(socket, topic, join_ref, reason)
+
+        cond do
+          # once handed over, the session tells the client
+          handed_over? ->
+            push_frames(held, {state, socket})
+
+          # only sent if the channel stopped after the session released it
+          is_map_key(state.releasing, topic) ->
+            {:ok, {update_in(state.releasing[topic], &[error | &1]), socket}}
+
+          true ->
+            {:push, error, {state, socket}}
+        end
 
       %{} ->
         {:ok, {state, socket}}
     end
+  end
+
+  # A channel asks to become resumable after it joined, see Phoenix.Socket.ResumeSession.
+  def __info__({:socket_resumable, pid}, {state, socket}) do
+    with %{resume: opts} when opts != nil <- state,
+         %{^pid => {topic, join_ref}} <- state.channels_inverse,
+         {:ok, state} <- ensure_session(state, socket, opts) do
+      %{pid: session_pid} = state.session
+      send(session_pid, {:socket_adopt, pid, topic, join_ref})
+      send(pid, {:socket_handover, session_pid, ResumeSession.serializer(socket.serializer)})
+
+      state = %{
+        state
+        | handovers: Map.put(state.handovers, pid, topic),
+          held: Map.put(state.held, topic, [])
+      }
+
+      {:ok, {state, socket}}
+    else
+      _ -> {:ok, {state, socket}}
+    end
+  end
+
+  # The last message a handed over channel sends to us. Its frames before it arrive
+  # before it, its frames after it come from the session and are held until now.
+  def __info__({:socket_handed_over, pid}, {state, socket}) do
+    case drop_handover(state, pid) do
+      {held, true, state} ->
+        {topic, join_ref} = Map.fetch!(state.channels_inverse, pid)
+        {^pid, monitor_ref, status} = Map.fetch!(state.channels, topic)
+        # the session reports when the channel stops from now on
+        Process.demonitor(monitor_ref, [:flush])
+        state = put_in(state.channels[topic], {pid, nil, status})
+
+        # the client counts the frames of the join after this marker
+        marker = %Message{
+          join_ref: join_ref,
+          topic: topic,
+          event: "phx_resumable",
+          payload: %{token: state.session.token}
+        }
+
+        push_frames([encode_reply(socket, marker) | held], {state, socket})
+
+      {_, false, state} ->
+        {:ok, {state, socket}}
+    end
+  end
+
+  def __info__({:socket_session_push, topic, frame}, {state, socket}) do
+    case state.held do
+      %{^topic => held} -> {:ok, {put_in(state.held[topic], [frame | held]), socket}}
+      %{} -> {:push, frame, {state, socket}}
+    end
+  end
+
+  def __info__({:socket_session_closed, pid} = message, {state, socket}) do
+    case state.channels_inverse do
+      # the session can be faster than the channel's handed_over, which must come first
+      %{^pid => _} when is_map_key(state.handovers, pid) ->
+        send(self(), message)
+        {:ok, {state, socket}}
+
+      %{^pid => {topic, _join_ref}} ->
+        {:ok, {delete_channel(state, pid, topic, nil), socket}}
+
+      %{} ->
+        {:ok, {state, socket}}
+    end
+  end
+
+  # A released channel sends its frames to us once handed over, but the session may still
+  # pass on frames it sent before.
+  def __info__({:socket_resumable_push, topic, _join_ref, frame}, {state, socket}) do
+    case state.releasing do
+      %{^topic => held} -> {:ok, {put_in(state.releasing[topic], [frame | held]), socket}}
+      %{} -> {:push, frame, {state, socket}}
+    end
+  end
+
+  def __info__({:socket_session_released, topic, how}, {state, socket}) do
+    {held, releasing} = Map.pop(state.releasing, topic, [])
+    state = %{state | releasing: releasing}
+
+    case {how, state.channels} do
+      {:handed_over, _} ->
+        push_frames(Enum.reverse(held), {state, socket})
+
+      # the session already told the client, held only has our own error then
+      {:stopped, %{^topic => {pid, monitor_ref, _}}} ->
+        {:ok, {delete_channel(state, pid, topic, monitor_ref), socket}}
+
+      {:stopped, _} ->
+        {:ok, {state, socket}}
+    end
+  end
+
+  # The client resumed the session on another connection while this one still seemed alive.
+  def __info__({:socket_detach, _session_pid}, {state, socket}) do
+    {:stop, {:shutdown, :resumed_elsewhere}, {%{state | session: nil}, socket}}
   end
 
   def __info__(%Broadcast{event: "disconnect"}, state) do
@@ -612,6 +760,123 @@ defmodule Phoenix.Socket do
     :ok
   end
 
+  ## Resume
+
+  defp ensure_session(%{session: %{}} = state, _socket, _opts), do: {:ok, state}
+
+  defp ensure_session(state, socket, opts) do
+    case ResumeSession.start(socket, opts) do
+      {:ok, pid, token} ->
+        {:ok, %{state | session: %{pid: pid, ref: Process.monitor(pid), token: token}}}
+
+      {:error, reason} ->
+        Logger.error("Could not start resume session: #{inspect(reason)}")
+        :error
+    end
+  end
+
+  # Returns the session frames held for the channel and whether it was being handed over.
+  defp drop_handover(state, pid) do
+    case Map.pop(state.handovers, pid) do
+      {nil, _} ->
+        {[], false, state}
+
+      {topic, handovers} ->
+        {held, held_map} = Map.pop(state.held, topic, [])
+        {Enum.reverse(held), true, %{state | handovers: handovers, held: held_map}}
+    end
+  end
+
+  defp push_frames([], state_socket), do: {:ok, state_socket}
+  defp push_frames([frame], state_socket), do: {:push, frame, state_socket}
+  defp push_frames(frames, state_socket), do: {:push, frames, state_socket}
+
+  defp resume(%{"token" => token, "channels" => claimed}, state, socket)
+       when is_binary(token) and is_list(claimed) do
+    with nil <- state.session,
+         nil <- state.release_ref,
+         {:ok, pid, nonce} <- ResumeSession.verify_token(socket.endpoint, token) do
+      monitor_ref = Process.monitor(pid)
+      ref = make_ref()
+
+      request = %{
+        nonce: nonce,
+        handler: socket.handler,
+        id: socket.id,
+        # a connection that does not keep resumable channels itself takes them over
+        release: state.resume == nil,
+        channels:
+          for(
+            [topic, join_ref, received] <- claimed,
+            is_binary(topic) and is_integer(received),
+            do: {topic, join_ref, received}
+          )
+      }
+
+      send(pid, {:socket_resume, self(), ref, request})
+
+      receive do
+        {:socket_resumed, ^ref, {:ok, channels}} when request.release ->
+          state =
+            Enum.reduce(channels, state, fn
+              {_topic, _join_ref, nil}, state ->
+                state
+
+              {topic, join_ref, channel_pid}, state ->
+                %{
+                  state
+                  | channels:
+                      Map.put(
+                        state.channels,
+                        topic,
+                        {channel_pid, Process.monitor(channel_pid), :joined}
+                      ),
+                    channels_inverse:
+                      Map.put(state.channels_inverse, channel_pid, {topic, join_ref}),
+                    releasing: Map.put(state.releasing, topic, [])
+                }
+            end)
+
+          resumed = for {topic, join_ref, _} <- channels, do: [topic, join_ref]
+          {:ok, %{channels: resumed, released: true}, %{state | release_ref: monitor_ref}}
+
+        {:socket_resumed, ^ref, {:ok, channels}} ->
+          state =
+            Enum.reduce(channels, state, fn
+              {_topic, _join_ref, nil}, state ->
+                state
+
+              {topic, join_ref, channel_pid}, state ->
+                %{
+                  state
+                  | channels: Map.put(state.channels, topic, {channel_pid, nil, :joined}),
+                    channels_inverse:
+                      Map.put(state.channels_inverse, channel_pid, {topic, join_ref})
+                }
+            end)
+
+          session = %{pid: pid, ref: monitor_ref, token: token}
+          resumed = for {topic, join_ref, _} <- channels, do: [topic, join_ref]
+          {:ok, %{channels: resumed}, %{state | session: session}}
+
+        {:socket_resumed, ^ref, {:error, reason}} ->
+          Process.demonitor(monitor_ref, [:flush])
+          {:error, reason}
+
+        {:DOWN, ^monitor_ref, _, _, _} ->
+          {:error, "session_closed"}
+      after
+        10_000 ->
+          Process.demonitor(monitor_ref, [:flush])
+          {:error, "timeout"}
+      end
+    else
+      _ -> {:error, "invalid_token"}
+    end
+  end
+
+  defp resume(_payload, _state, _socket), do: {:error, "invalid_request"}
+
   defp negotiate_serializer(serializers, vsn) when is_list(serializers) and is_binary(vsn) do
     case Version.parse(vsn) do
       {:ok, vsn} ->
@@ -642,20 +907,34 @@ defmodule Phoenix.Socket do
   end
 
   defp user_connect(handler, endpoint, transport, serializer, params, connect_info, options) do
+    resume = resume_options(transport, serializer, params, options)
+
     # The information in the Phoenix.Socket goes to userland and channels.
     socket = %Socket{
       handler: handler,
       endpoint: endpoint,
       pubsub_server: endpoint.config(:pubsub_server),
       serializer: serializer,
-      transport: transport
+      transport: transport,
+      private: if(resume, do: %{phoenix_resume: true}, else: %{})
     }
 
     # The information in the state is kept only inside the socket process.
     state = %{
       channels: %{},
       channels_inverse: %{},
-      max_channels_per_transport: Keyword.get(options, :max_channels_per_transport, 100)
+      max_channels_per_transport: Keyword.get(options, :max_channels_per_transport, 100),
+      resume: resume,
+      # the session of resumable channels, see Phoenix.Socket.ResumeSession
+      session: nil,
+      # the topics of channels handed over to the session that did not confirm it yet
+      handovers: %{},
+      # session frames held back until their channel confirmed the handover, by topic
+      held: %{},
+      # the monitor of a session that releases its channels to us, as we don't keep a session
+      release_ref: nil,
+      # frames of released channels held back until the session passed on all their frames
+      releasing: %{}
     }
 
     connect_result =
@@ -702,6 +981,43 @@ defmodule Phoenix.Socket do
 
         :error
     end
+  end
+
+  defp resume_options(:websocket, serializer, %{"phx_resumable" => "true"}, options) do
+    case {Keyword.get(options, :resume, false), ResumeSession.serializer(serializer)} do
+      {_, nil} -> nil
+      {false, _} -> nil
+      {true, _} -> []
+      {opts, _} when is_list(opts) -> opts
+    end
+  end
+
+  defp resume_options(_transport, _serializer, _params, _options), do: nil
+
+  defp handle_in(_, %{topic: "phoenix", event: "phx_ack", payload: payload}, state, socket) do
+    with %{session: %{pid: pid}} <- state,
+         %{"channels" => channels} when is_list(channels) <- payload do
+      acks =
+        for [topic, join_ref, received] <- channels,
+            is_binary(topic) and is_integer(received),
+            do: {topic, join_ref, received}
+
+      send(pid, {:socket_ack, acks})
+    end
+
+    {:ok, {state, socket}}
+  end
+
+  defp handle_in(_, %{ref: ref, topic: "phoenix", event: "phx_resume"} = msg, state, socket) do
+    {status, payload, state} =
+      case ResumeSession.serializer(socket.serializer) && resume(msg.payload, state, socket) do
+        {:ok, payload, state} -> {:ok, payload, state}
+        {:error, reason} -> {:error, %{reason: reason}, state}
+        nil -> {:error, %{reason: "not_resumable"}, state}
+      end
+
+    reply = %Reply{ref: ref, topic: "phoenix", status: status, payload: payload}
+    {:reply, status, encode_reply(socket, reply), {state, socket}}
   end
 
   defp handle_in(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, state, socket) do
@@ -857,8 +1173,9 @@ defmodule Phoenix.Socket do
   end
 
   defp delete_channel(state, pid, topic, monitor_ref) do
+    {_held, _handed_over?, state} = drop_handover(state, pid)
     %{channels: channels, channels_inverse: channels_inverse} = state
-    Process.demonitor(monitor_ref, [:flush])
+    monitor_ref && Process.demonitor(monitor_ref, [:flush])
 
     %{
       state

@@ -310,23 +310,30 @@ defmodule Phoenix.Channel.Server do
     metadata = %{params: auth_payload, socket: socket, result: elem(reply, 0)}
     :telemetry.execute([:phoenix, :channel_joined], %{duration: duration}, metadata)
     GenServer.reply(from, reply)
+
+    with {:noreply, %Socket{} = socket} <- state,
+         true <- resumable?(socket) do
+      send(socket.transport_pid, {:socket_resumable, self()})
+    end
+
     state
   end
 
-  def handle_info(%Message{topic: topic, event: "phx_leave", ref: ref}, %{topic: topic} = socket) do
-    handle_in({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)})
+  def handle_info(%Message{topic: topic, ref: ref} = msg, %{topic: topic} = socket) do
+    case accept_ref(socket, ref) do
+      {:ok, socket} -> handle_message(msg, socket)
+      :duplicate -> {:noreply, socket}
+    end
   end
 
-  def handle_info(
-        %Message{topic: topic, event: event, payload: payload, ref: ref},
-        %{topic: topic} = socket
-      ) do
-    start = System.monotonic_time()
-    result = socket.channel.handle_in(event, payload, put_in(socket.ref, ref))
-    duration = System.monotonic_time() - start
-    metadata = %{ref: ref, event: event, params: payload, socket: socket}
-    :telemetry.execute([:phoenix, :channel_handled_in], %{duration: duration}, metadata)
-    handle_in(result)
+  # See Phoenix.Socket.ResumeSession
+  def handle_info({:socket_handover, session, serializer}, socket) do
+    Process.demonitor(Process.get(:"$phx_transport_ref"), [:flush])
+    send(socket.transport_pid, {:socket_handed_over, self()})
+    Process.put(:"$phx_transport_ref", Process.monitor(session))
+    # a released channel keeps dropping the messages it has seen
+    Process.put(:"$phx_last_ref", Process.get(:"$phx_last_ref") || 0)
+    {:noreply, %{socket | transport_pid: session, serializer: serializer}}
   end
 
   def handle_info(
@@ -341,9 +348,16 @@ defmodule Phoenix.Channel.Server do
         %Broadcast{topic: topic, event: event, payload: payload},
         %Socket{topic: topic} = socket
       ) do
-    event
-    |> socket.channel.handle_out(payload, socket)
-    |> handle_result(:handle_out)
+    # resumable channels don't fastlane, as their transport changes
+    if resumable?(socket) and event not in socket.channel.__intercepts__() do
+      %{transport_pid: transport_pid, join_ref: join_ref, serializer: serializer} = socket
+      push(transport_pid, join_ref, topic, event, payload, serializer)
+      {:noreply, socket}
+    else
+      event
+      |> socket.channel.handle_out(payload, socket)
+      |> handle_result(:handle_out)
+    end
   end
 
   def handle_info({:DOWN, ref, _, _, reason}, ref) do
@@ -364,6 +378,40 @@ defmodule Phoenix.Channel.Server do
       warn_unexpected_msg(:handle_info, 2, msg, channel)
       {:noreply, socket}
     end
+  end
+
+  defp handle_message(%Message{event: "phx_leave", ref: ref}, socket) do
+    handle_in({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)})
+  end
+
+  defp handle_message(%Message{event: event, payload: payload, ref: ref}, socket) do
+    start = System.monotonic_time()
+    result = socket.channel.handle_in(event, payload, put_in(socket.ref, ref))
+    duration = System.monotonic_time() - start
+    metadata = %{ref: ref, event: event, params: payload, socket: socket}
+    :telemetry.execute([:phoenix, :channel_handled_in], %{duration: duration}, metadata)
+    handle_in(result)
+  end
+
+  # Once resumable, the client resends messages it has not received a reply for after
+  # resuming. Refs only grow on the client, so we drop the ones we've seen already.
+  defp accept_ref(socket, ref) do
+    with last when is_integer(last) <- Process.get(:"$phx_last_ref"),
+         true <- is_binary(ref),
+         {ref, ""} <- Integer.parse(ref) do
+      if ref <= last do
+        :duplicate
+      else
+        Process.put(:"$phx_last_ref", ref)
+        {:ok, socket}
+      end
+    else
+      _ -> {:ok, socket}
+    end
+  end
+
+  defp resumable?(%Socket{private: private}) do
+    Map.get(private, :phoenix_resume, false) and Map.get(private, :phoenix_resumable, false)
   end
 
   @doc false
@@ -432,10 +480,16 @@ defmodule Phoenix.Channel.Server do
       """
     end
 
-    Process.monitor(transport_pid)
-    sender = {__MODULE__, {transport_pid, serializer, channel.__intercepts__()}}
-    PubSub.subscribe(pubsub_server, topic, sender: sender)
+    transport_ref = Process.monitor(transport_pid)
 
+    if resumable?(socket) do
+      PubSub.subscribe(pubsub_server, topic)
+    else
+      sender = {__MODULE__, {transport_pid, serializer, channel.__intercepts__()}}
+      PubSub.subscribe(pubsub_server, topic, sender: sender)
+    end
+
+    Process.put(:"$phx_transport_ref", transport_ref)
     {:noreply, %{socket | joined: true}}
   end
 

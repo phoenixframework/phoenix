@@ -185,6 +185,10 @@ defmodule Phoenix.Transports.LongPoll do
 
     {status, messages, batch} =
       receive do
+        # servers of an older version reply without batch
+        {:messages, messages, ^ref} ->
+          {:ok, messages, nil}
+
         {:messages, messages, ^ref, batch} ->
           {:ok, messages, batch}
 
@@ -192,6 +196,7 @@ defmodule Phoenix.Transports.LongPoll do
           broadcast_from!(endpoint, server_ref, flush)
 
           receive do
+            {:messages, messages, ^ref} -> {:ok, messages, nil}
             {:messages, messages, ^ref, batch} -> {:ok, messages, batch}
           after
             opts[:window_ms] ->
