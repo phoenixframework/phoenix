@@ -469,7 +469,14 @@ defmodule Phoenix.Endpoint do
       end
 
       defp pubsub_server! do
-        config(:pubsub_server) ||
+        server =
+          try do
+            config(:pubsub_server)
+          rescue
+            ArgumentError -> Application.get_env(@otp_app, __MODULE__)[:pubsub_server]
+          end
+
+        server ||
           raise ArgumentError, "no :pubsub_server configured for #{inspect(__MODULE__)}"
       end
     end

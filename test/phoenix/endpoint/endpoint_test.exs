@@ -332,6 +332,21 @@ defmodule Phoenix.Endpoint.EndpointTest do
     refute_received %Phoenix.Socket.Broadcast{}
   end
 
+  test "pubsub uses the application environment when the endpoint is not started" do
+    defmodule PubSubEnvEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+    end
+
+    Application.put_env(:phoenix, PubSubEnvEndpoint, pubsub_server: :endpoint_pub)
+    PubSubEnvEndpoint.subscribe("envtopic")
+    PubSubEnvEndpoint.broadcast("envtopic", "event1", %{key: :val})
+    assert_receive %Phoenix.Socket.Broadcast{event: "event1", topic: "envtopic"}
+  after
+    Application.delete_env(:phoenix, __MODULE__.PubSubEnvEndpoint)
+    :code.purge(__MODULE__.PubSubEnvEndpoint)
+    :code.delete(__MODULE__.PubSubEnvEndpoint)
+  end
+
   test "loads cache manifest from specified application" do
     config =
       put_in(
