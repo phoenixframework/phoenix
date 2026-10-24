@@ -1,5 +1,7 @@
 # Changelog for v1.9
 
+This release requires Plug v1.21+.
+
 ## Bug fixes
 
   * [Phoenix.ChannelTest] Fix test sockets violating the Phoenix.Socket.t
@@ -18,6 +20,7 @@
     which requires `phoenix_pubsub` v2.4. If you do rolling deploys where both
     old and new nodes are active at the same time, ensure that you deploy
     Phoenix v1.8.16 or a later v1.8 release first.
+  * [Router] Add the `query` macro for routing HTTP QUERY (RFC 10008) requests ([#6737](https://github.com/phoenixframework/phoenix/pull/6737))
 
 ## v1.8
 
