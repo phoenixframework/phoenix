@@ -1542,42 +1542,56 @@ defmodule Phoenix.Controller do
   # In case there is a header, we need to parse it.
   # But before we check for */* because if one exists and we serve html,
   # we unfortunately need to assume it is a browser sending us a request.
+  # Formats the client refuses with q=0 are never picked, not even by a wildcard.
   defp handle_header_accept(conn, [header | _], accepted) do
-    if header =~ "*/*" and "html" in accepted do
+    media_types = String.split(header, ",")
+    allowed = accepted -- refused_formats(media_types)
+
+    if header =~ "*/*" and "html" in allowed do
       put_format(conn, "html")
     else
-      parse_header_accept(conn, String.split(header, ","), [], accepted)
+      parse_header_accept(conn, media_types, [], allowed, accepted)
     end
   end
 
-  defp parse_header_accept(conn, [h | t], acc, accepted) do
+  defp parse_header_accept(conn, [h | t], acc, allowed, accepted) do
     case Plug.Conn.Utils.media_type(h) do
       {:ok, type, subtype, args} ->
         exts = parse_exts(type, subtype)
         q = parse_q(args)
 
-        if format = q === 1.0 && find_format(exts, accepted) do
+        if format = q === 1.0 && find_format(exts, allowed) do
           put_format(conn, format)
         else
-          parse_header_accept(conn, t, [{-q, h, exts} | acc], accepted)
+          parse_header_accept(conn, t, [{-q, h, exts} | acc], allowed, accepted)
         end
 
       :error ->
-        parse_header_accept(conn, t, acc, accepted)
+        parse_header_accept(conn, t, acc, allowed, accepted)
     end
   end
 
-  defp parse_header_accept(conn, [], acc, accepted) do
+  defp parse_header_accept(conn, [], acc, allowed, accepted) do
     acc
     |> Enum.sort()
-    |> Enum.find_value(&parse_header_accept(conn, &1, accepted))
+    |> Enum.find_value(&parse_header_accept(conn, &1, allowed))
     |> Kernel.||(refuse(conn, acc, accepted))
   end
 
-  defp parse_header_accept(conn, {_, _, exts}, accepted) do
-    if format = find_format(exts, accepted) do
+  defp parse_header_accept(conn, {neg_q, _, exts}, allowed) when neg_q < 0 do
+    if format = find_format(exts, allowed) do
       put_format(conn, format)
     end
+  end
+
+  defp parse_header_accept(_conn, {_, _, _}, _allowed), do: nil
+
+  defp refused_formats(media_types) do
+    for h <- media_types,
+        {:ok, type, subtype, args} when subtype != "*" <- [Plug.Conn.Utils.media_type(h)],
+        parse_q(args) <= 0,
+        ext <- MIME.extensions(type <> "/" <> subtype),
+        do: ext
   end
 
   defp parse_q(args) do
@@ -1597,9 +1611,9 @@ defmodule Phoenix.Controller do
   defp parse_exts(type, "*"), do: type
   defp parse_exts(type, subtype), do: MIME.extensions(type <> "/" <> subtype)
 
-  defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
+  defp find_format(_exts, []), do: nil
+  defp find_format("*/*", [first | _]), do: first
   defp find_format(exts, accepted) when is_list(exts), do: Enum.find(exts, &(&1 in accepted))
-  defp find_format(_type_range, []), do: nil
 
   defp find_format(type_range, [h | t]) do
     mime_type = MIME.type(h)

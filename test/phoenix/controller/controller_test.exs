@@ -569,6 +569,28 @@ defmodule Phoenix.Controller.ControllerTest do
       assert Plug.Exception.status(exception) == 406
       assert exception.accepts == ["xml"]
     end
+
+    test "never picks a media type refused with q=0" do
+      conn = accepts(with_accept("application/json;q=0, */*"), ~w(json text))
+      assert get_format(conn) == "text"
+
+      conn = accepts(with_accept("*/*, application/json; q=0"), ~w(json text))
+      assert get_format(conn) == "text"
+
+      conn = accepts(with_accept("text/html;q=0, */*"), ~w(html json))
+      assert get_format(conn) == "json"
+
+      exception =
+        assert_raise Phoenix.NotAcceptableError, ~r/no supported media type in accept/, fn ->
+          accepts(with_accept("application/json;q=0"), ~w(json))
+        end
+
+      assert exception.accepts == ["json"]
+
+      assert_raise Phoenix.NotAcceptableError, fn ->
+        accepts(with_accept("*/*;q=0"), ~w(json))
+      end
+    end
   end
 
   describe "send_download/3" do
