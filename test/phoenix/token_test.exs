@@ -84,6 +84,16 @@ defmodule Phoenix.TokenTest do
       assert signed1 != signed2
     end
 
+    test "passes key_length options to key generator" do
+      signed1 = Token.sign(conn(), "id", 1, signed_at: 0, key_length: 16)
+      signed2 = Token.sign(conn(), "id", 1, signed_at: 0, key_length: 32)
+      assert signed1 != signed2
+      assert Token.verify(conn(), "id", signed1, key_length: 16, max_age: :infinity) == {:ok, 1}
+
+      assert Token.verify(conn(), "id", signed1, key_length: 32, max_age: :infinity) ==
+               {:error, :invalid}
+    end
+
     test "passes key_digest options to key generator" do
       signed1 = Token.sign(conn(), "id", 1, signed_at: 0, key_digest: :sha256)
       signed2 = Token.sign(conn(), "id", 1, signed_at: 0, key_digest: :sha512)
