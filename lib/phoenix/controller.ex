@@ -1545,9 +1545,10 @@ defmodule Phoenix.Controller do
   # Formats the client refuses with q=0 are never picked, not even by a wildcard.
   defp handle_header_accept(conn, [header | _], accepted) do
     media_types = String.split(header, ",")
-    allowed = accepted -- refused_formats(media_types)
+    ranges = media_ranges(media_types)
+    allowed = Enum.reject(accepted, &refused?(&1, ranges))
 
-    if header =~ "*/*" and "html" in allowed do
+    if "html" in allowed and Enum.any?(ranges, &match?({"*", "*", _, q} when q > 0, &1)) do
       put_format(conn, "html")
     else
       parse_header_accept(conn, media_types, [], allowed, accepted)
@@ -1586,13 +1587,35 @@ defmodule Phoenix.Controller do
 
   defp parse_header_accept(_conn, {_, _, _}, _allowed), do: nil
 
-  defp refused_formats(media_types) do
+  defp media_ranges(media_types) do
     for h <- media_types,
-        {:ok, type, subtype, args} when subtype != "*" <- [Plug.Conn.Utils.media_type(h)],
-        parse_q(args) <= 0,
-        ext <- MIME.extensions(type <> "/" <> subtype),
-        do: ext
+        {:ok, type, subtype, args} <- [Plug.Conn.Utils.media_type(h)],
+        do: {type, subtype, Map.delete(args, "q"), parse_q(args)}
   end
+
+  # The quality of a format is the one of the most specific media range that
+  # matches its media type (RFC 9110, section 12.5.1): type/subtype, then type/*,
+  # then */*. A range with parameters, such as text/html;level=1, doesn't match
+  # the media type of a format, which has none. A quality of 0 refuses the format.
+  defp refused?(format, ranges) do
+    {:ok, type, subtype, _} = Plug.Conn.Utils.media_type(MIME.type(format))
+
+    matching =
+      for {range_type, range_subtype, params, q} <- ranges,
+          params == %{},
+          {range_type, range_subtype} == {"*", "*"} or
+            (range_type == type and range_subtype in [subtype, "*"]),
+          do: {range_specificity(range_type, range_subtype), q}
+
+    case Enum.max(matching, fn -> nil end) do
+      {_specificity, q} -> q <= 0
+      nil -> false
+    end
+  end
+
+  defp range_specificity("*", "*"), do: 0
+  defp range_specificity(_type, "*"), do: 1
+  defp range_specificity(_type, _subtype), do: 2
 
   defp parse_q(args) do
     case Map.fetch(args, "q") do

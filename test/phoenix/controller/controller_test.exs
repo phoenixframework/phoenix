@@ -591,6 +591,24 @@ defmodule Phoenix.Controller.ControllerTest do
         accepts(with_accept("*/*;q=0"), ~w(json))
       end
     end
+
+    test "refuses a format when its most specific media range has q=0" do
+      assert_raise Phoenix.NotAcceptableError, fn ->
+        accepts(with_accept("*/*;q=0"), ~w(html json))
+      end
+
+      conn = accepts(with_accept("application/json, */*;q=0"), ~w(html json))
+      assert get_format(conn) == "json"
+
+      conn = accepts(with_accept("text/*;q=0, */*"), ~w(text json))
+      assert get_format(conn) == "json"
+
+      conn = accepts(with_accept("text/html;level=1;q=0, text/html"), ~w(html))
+      assert get_format(conn) == "html"
+
+      conn = accepts(with_accept("text/html, text/*;q=0"), ~w(text html))
+      assert get_format(conn) == "html"
+    end
   end
 
   describe "send_download/3" do
