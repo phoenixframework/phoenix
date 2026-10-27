@@ -68,6 +68,7 @@ describe("with transports", function (){
       expect(socket.logger).toBeNull()
       expect(socket.binaryType).toBe("arraybuffer")
       expect(typeof socket.reconnectAfterMs).toBe("function")
+      expect(socket.reconnectWhenHidden).toBe(false)
     })
 
     it("supports closure or literal params", function (){
@@ -347,6 +348,55 @@ describe("with transports", function (){
       window.dispatchEvent(new Event("visibilitychange"))
 
       expect(teardownSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("when the connection drops while the page is hidden", function (){
+    const dropConnection = (opts = {}) => {
+      socket = new Socket("/socket", {transport: StubWebSocket, reconnectAfterMs: () => 10, ...opts})
+      socket.connect()
+      connections[0].open()
+      Object.defineProperty(document, "visibilityState", {value: "hidden", writable: true})
+      connections[0].finishClose(1006)
+    }
+
+    beforeEach(function (){
+      connections = []
+      jest.useFakeTimers()
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+    })
+
+    afterEach(function (){
+      jest.useRealTimers()
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+    })
+
+    it("does not reconnect by default", function (){
+      dropConnection()
+      jest.advanceTimersByTime(5000)
+
+      expect(connections.length).toBe(1)
+      expect(socket.conn).toBeNull()
+    })
+
+    it("reconnects with reconnectWhenHidden", function (){
+      dropConnection({reconnectWhenHidden: true})
+      jest.advanceTimersByTime(5000)
+
+      expect(connections.length).toBe(2)
+      expect(socket.conn).toBe(connections[1])
+    })
+
+    it("replaces a connection that is still connecting when the page is visible again with reconnectWhenHidden", function (){
+      dropConnection({reconnectWhenHidden: true})
+      jest.advanceTimersByTime(5000)
+
+      Object.defineProperty(document, "visibilityState", {value: "visible", writable: true})
+      socket.handleVisibilityChange()
+      jest.advanceTimersByTime(5000)
+
+      expect(connections.length).toBe(3)
+      expect(socket.conn).toBe(connections[2])
     })
   })
 
