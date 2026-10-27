@@ -66,6 +66,13 @@ import Connection from "./connection"
  * }
  * ````
  *
+ * @param {boolean} [opts.reconnectWhenHidden] - When true, the socket also reconnects while the
+ * page is hidden, for example in a background tab or on a sleeping phone.
+ *
+ * Defaults to false. The socket then waits until the page is visible again before it reconnects.
+ * This avoids reconnect attempts that stall on mobile devices and delay the connection after the
+ * device wakes up.
+ *
  * @param {Function} [opts.rejoinAfterMs] - The optional function that returns the millisec
  * rejoin interval for individual channels.
  *
@@ -186,6 +193,7 @@ export default class Socket {
         return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
       }
     }
+    this.reconnectWhenHidden = opts.reconnectWhenHidden || false
     this.logger = opts.logger || null
     if(!this.logger && opts.debug){
       this.logger = (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
@@ -198,7 +206,8 @@ export default class Socket {
     this.heartbeatTimer = null
     this.pendingHeartbeatRef = null
     this.reconnectTimer = new Timer(() => {
-      if(this.pageHidden){
+      // handleVisibilityChange reconnects once the page is visible again
+      if(this.pageHidden && !this.reconnectWhenHidden){
         this.log("Not reconnecting as page is hidden!")
         this.teardown()
         return
