@@ -1276,6 +1276,7 @@ var Socket = class {
         return [10, 50, 100, 150, 200, 250, 500, 1e3, 2e3][tries - 1] || 5e3;
       }
     };
+    this.reconnectWhenHidden = opts.reconnectWhenHidden || false;
     this.logger = opts.logger || null;
     if (!this.logger && opts.debug) {
       this.logger = (kind, msg, data) => {
@@ -1290,7 +1291,7 @@ var Socket = class {
     this.heartbeatTimer = null;
     this.pendingHeartbeatRef = null;
     this.reconnectTimer = new Timer(() => {
-      if (this.pageHidden) {
+      if (this.pageHidden && !this.reconnectWhenHidden) {
         this.log("Not reconnecting as page is hidden!");
         this.teardown();
         return;
