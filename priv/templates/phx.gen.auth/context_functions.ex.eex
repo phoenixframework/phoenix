@@ -176,17 +176,27 @@
   If the token is valid `{<%= schema.singular %>, token_inserted_at}` is returned, otherwise `nil` is returned.
   """
   def get_<%= schema.singular %>_by_session_token(token) do
-    {:ok, query} = <%= inspect schema.alias %>Token.verify_session_token_query(token)
-    Repo.one(query)
+    {:ok, query} = <%= inspect schema.alias %>Token.verify_session_token_query(token)<%= if mongo_adapter? do %>
+    case Repo.one(query) do
+      nil -> nil
+      token_record ->
+        <%= schema.singular %> = Repo.get(<%= inspect schema.alias %>, token_record.<%= schema.singular %>_id)
+        <%= schema.singular %> && {%{<%= schema.singular %> | authenticated_at: token_record.authenticated_at}, token_record.inserted_at}
+    end<% else %>
+    Repo.one(query)<% end %>
   end
 
   @doc """
   Gets the <%= schema.singular %> with the given magic link token.
   """
   def get_<%= schema.singular %>_by_magic_link_token(token) do
-    with {:ok, query} <- <%= inspect schema.alias %>Token.verify_magic_link_token_query(token),
+    with {:ok, query} <- <%= inspect schema.alias %>Token.verify_magic_link_token_query(token),<%= if mongo_adapter? do %>
+         %<%= inspect schema.alias %>Token{} = token_record <- Repo.one(query),
+         %<%= inspect schema.alias %>{} = <%= schema.singular %> <- Repo.get(<%= inspect schema.alias %>, token_record.<%= schema.singular %>_id),
+         true <- <%= schema.singular %>.email == token_record.sent_to do
+      <%= schema.singular %><% else %>
          {<%= schema.singular %>, _token} <- Repo.one(query) do
-      <%= schema.singular %>
+      <%= schema.singular %><% end %>
     else
       _ -> nil
     end
@@ -211,7 +221,33 @@
      `mix help phx.gen.auth`.
   """
   def login_<%= schema.singular %>_by_magic_link(token) do
-    {:ok, query} = <%= inspect schema.alias %>Token.verify_magic_link_token_query(token)
+    {:ok, query} = <%= inspect schema.alias %>Token.verify_magic_link_token_query(token)<%= if mongo_adapter? do %>
+
+    with %<%= inspect schema.alias %>Token{} = token_record <- Repo.one(query),
+         %<%= inspect schema.alias %>{} = <%= schema.singular %> <- Repo.get(<%= inspect schema.alias %>, token_record.<%= schema.singular %>_id),
+         true <- <%= schema.singular %>.email == token_record.sent_to do
+      # Prevent session fixation attacks by disallowing magic links for unconfirmed users with password
+      if is_nil(<%= schema.singular %>.confirmed_at) and not is_nil(<%= schema.singular %>.hashed_password) do
+        raise """
+        magic link log in is not allowed for unconfirmed users with a password set!
+
+        This cannot happen with the default implementation, which indicates that you
+        might have adapted the code to a different use case. Please make sure to read the
+        "Mixing magic link and password registration" section of `mix help phx.gen.auth`.
+        """
+      end
+
+      if is_nil(<%= schema.singular %>.confirmed_at) do
+        <%= schema.singular %>
+        |> <%= inspect schema.alias %>.confirm_changeset()
+        |> update_<%= schema.singular %>_and_delete_all_tokens()
+      else
+        Repo.delete!(token_record)
+        {:ok, {<%= schema.singular %>, []}}
+      end
+    else
+      _ -> {:error, :not_found}
+    end<% else %>
 
     case Repo.one(query) do
       # Prevent session fixation attacks by disallowing magic links for unconfirmed users with password
@@ -235,7 +271,7 @@
 
       nil ->
         {:error, :not_found}
-    end
+    end<% end %>
   end
 
   @doc ~S"""
