@@ -32,9 +32,12 @@ export default class Connection {
     this.channelsErrored = false
     // set once the close event was handled, as LongPoll can emit it more than once
     this.closeHandled = false
+    this.suspended = false
     transport.onopen = () => { if(this.isCurrent()){ socket.onConnOpen() } }
     transport.onerror = error => { if(this.isCurrent()){ socket.onConnError(error) } }
     transport.onmessage = event => { if(this.isCurrent()){ socket.onConnMessage(event) } }
+    transport.onsuspend = () => { if(this.isCurrent()){ socket.onConnSuspend(this) } }
+    transport.onresume = () => { if(this.isCurrent()){ socket.onConnResume(this) } }
     transport.onclose = event => {
       if(this.isCurrent() && !this.closeHandled){
         this.closeHandled = true
