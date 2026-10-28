@@ -116,6 +116,10 @@ import Connection from "./connection"
  *       removeItem(keyName) { delete this.storage[keyName] }
  *       setItem(keyName, keyValue) { this.storage[keyName] = keyValue }
  *     }
+ * 
+ * @param {boolean} [opts.disableAutoDisconnectOnPageHide] - Boolean that determines if the socket should auto disconnect on page hide
+ *
+ * Defaults to false.
  *
 */
 export default class Socket {
@@ -155,7 +159,8 @@ export default class Socket {
       this.decode = this.defaultDecoder
     }
     let awaitingConnectionOnPageShow = null
-    if(phxWindow && phxWindow.addEventListener){
+    this.disableAutoDisconnectOnPageHide = opts.disableAutoDisconnectOnPageHide || false
+    if(!this.disableAutoDisconnectOnPageHide && phxWindow && phxWindow.addEventListener){
       phxWindow.addEventListener("pagehide", _e => {
         // an ended connection only finishes closing, e.g. after disconnect
         if(this.connection && !this.connection.ended){
