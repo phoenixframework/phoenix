@@ -113,7 +113,7 @@ import Connection from "./connection"
 */
 export default class Socket {
   constructor(endPoint, opts = {}){
-    this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
+    this.stateChangeCallbacks = {open: [], close: [], error: [], message: [], suspend: [], resume: []}
     this.channels = []
     this.sendBuffer = []
     this.ref = 0
@@ -382,6 +382,28 @@ export default class Socket {
   onError(callback){
     let ref = this.makeRef()
     this.stateChangeCallbacks.error.push([ref, callback])
+    return ref
+  }
+
+  /**
+   * Registers a callback when the transport is interrupted but keeps its session
+   * and retries. Channels remain joined and pushes are buffered by the transport.
+   * Currently supported by LongPoll. A lost session instead emits error/close.
+   * @param {Function} callback
+   */
+  onSuspend(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.suspend.push([ref, callback])
+    return ref
+  }
+
+  /**
+   * Registers a callback when a suspended transport recovers the same session.
+   * @param {Function} callback
+   */
+  onResume(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.resume.push([ref, callback])
     return ref
   }
 
@@ -689,6 +711,28 @@ export default class Socket {
     })
     // callbacks can replace the connection, in which case only its own joins are errored
     this.triggerChanError("connection_error", connection)
+  }
+
+  /** @private */
+  onConnSuspend(connection){
+    if(!this.stillUses(connection) || !connection.isOpen() || connection.suspended){ return }
+    connection.suspended = true
+    if(this.hasLogger()) this.log("transport", "suspended")
+    for(let [, callback] of this.stateChangeCallbacks.suspend.slice()){
+      if(!this.stillUses(connection) || !connection.isOpen()){ break }
+      callback()
+    }
+  }
+
+  /** @private */
+  onConnResume(connection){
+    if(!this.stillUses(connection) || !connection.isOpen() || !connection.suspended){ return }
+    connection.suspended = false
+    if(this.hasLogger()) this.log("transport", "resumed")
+    for(let [, callback] of this.stateChangeCallbacks.resume.slice()){
+      if(!this.stillUses(connection) || !connection.isOpen()){ break }
+      callback()
+    }
   }
 
   /**
