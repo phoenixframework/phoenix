@@ -107,7 +107,17 @@ defmodule Phoenix.Channel.Server do
           cache
 
         _ ->
-          encoded_msg = serializer.fastlane!(msg)
+          encoded_msg =
+            case serializer.fastlane!(msg) do
+              # Flatten so every subscriber shares one binary
+              # instead of getting its own copy of the iodata.
+              {:socket_push, opcode, payload} ->
+                {:socket_push, opcode, IO.iodata_to_binary(payload)}
+
+              encoded ->
+                encoded
+            end
+
           send(transport_pid, encoded_msg)
           Map.put(cache || %{}, serializer, encoded_msg)
       end
