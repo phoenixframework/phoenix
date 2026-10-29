@@ -1,4 +1,5 @@
 import {
+  CLOSE_SESSION_GONE,
   global,
   SOCKET_STATES
 } from "./constants"
@@ -359,7 +360,7 @@ export default class ResumableWebSocket {
     if(code){
       this.onclose({code, reason: "", wasClean: true})
     } else {
-      this.onclose({code: 3410, reason: "session_gone", wasClean: false})
+      this.onclose({code: CLOSE_SESSION_GONE, reason: "session_gone", wasClean: false})
     }
   }
 

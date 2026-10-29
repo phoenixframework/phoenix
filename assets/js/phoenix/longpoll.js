@@ -2,7 +2,8 @@ import {
   SOCKET_STATES,
   TRANSPORTS,
   AUTH_TOKEN_PREFIX,
-  MAX_LONGPOLL_BATCH_SIZE
+  MAX_LONGPOLL_BATCH_SIZE,
+  CLOSE_SESSION_GONE
 } from "./constants"
 
 import Ajax from "./ajax"
@@ -133,7 +134,7 @@ export default class LongPoll {
         if(status === 410 && this.token !== null){
           // In case we already have a token, this means that our existing session
           // is gone. We fail so that the client rejoins its channels.
-          this.closeAndRetry(410, 3410, "session_gone", false)
+          this.closeAndRetry(410, CLOSE_SESSION_GONE, "session_gone", false)
           return
         }
         this.token = token
@@ -143,7 +144,7 @@ export default class LongPoll {
           // TODO: Remove in Phoenix 1.10, together with degrade()
           //
           // a node with an older server cannot resume a session of another transport
-          this.closeAndRetry(410, 3410, "session_gone", false)
+          this.closeAndRetry(410, CLOSE_SESSION_GONE, "session_gone", false)
           return
         } else if(this.resumable && (status === 200 || status === 204)){
           // TODO: Remove in Phoenix 1.10, when no cluster mixes 1.8 and newer nodes.
