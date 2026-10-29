@@ -17,6 +17,7 @@ import {
 import Ajax from "./ajax"
 import Channel from "./channel"
 import LongPoll from "./longpoll"
+import ResumableWebSocket from "./resumable_websocket"
 import Serializer from "./serializer"
 import Timer from "./timer"
 import Connection from "./connection"
@@ -36,6 +37,10 @@ import Connection from "./connection"
  *
  * @param {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
  * before falling back to the LongPoll transport. Disabled by default.
+ *
+ * @param {boolean} [opts.resumable] - When true, uses the ResumableWebSocket transport, which
+ * resumes the socket over a new WebSocket when the connection fails, without rejoining channels.
+ * Requires the `:resumable` WebSocket option on the server. Disabled by default.
  *
  * @param {boolean} [opts.debug] - When true, enables debug logging. Default false.
  *
@@ -127,7 +132,7 @@ export default class Socket {
     this.fallbackRef = null
     this.fallbackErrorRef = null
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
-    this.transport = opts.transport || global.WebSocket || LongPoll
+    this.transport = opts.transport || (global.WebSocket && opts.resumable ? ResumableWebSocket : global.WebSocket) || LongPoll
     this.primaryPassedHealthCheck = false
     this.longPollFallbackMs = opts.longPollFallbackMs
     this.fallbackTimer = null
@@ -455,6 +460,7 @@ export default class Socket {
     // is native to browsers and does not need special handling.
     switch(transport){
       case LongPoll: return "LongPoll"
+      case ResumableWebSocket: return "ResumableWebSocket"
       default: return transport.name
     }
   }
@@ -581,6 +587,13 @@ export default class Socket {
     if(this.pendingHeartbeatRef){
       const connection = this.connection
       this.pendingHeartbeatRef = null
+      // a transport that keeps its session resumes it over a new connection instead
+      const transport = connection && connection.transport
+      if(transport && transport.resumeAfterHeartbeatTimeout && transport.resumeAfterHeartbeatTimeout()){
+        if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Resuming the session") }
+        this.resetHeartbeat()
+        return
+      }
       if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
       this.closeWasClean = false
       // the connection is presumed dead, so we close it right away instead of waiting for its

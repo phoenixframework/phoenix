@@ -17,8 +17,13 @@
     channel error. Older servers retain the existing reconnect behavior. During
     a rolling deploy, a session that reaches a node with an older server falls
     back to that behavior for the rest of the session.
+  * [Phoenix.Endpoint] Add the `:resumable` WebSocket option. Clients that use the
+    `resumable: true` option of the `phoenix.js` Socket resume the socket over a new
+    WebSocket after the connection failed or the heartbeat timed out, without
+    rejoining channels. Both sides send the messages the other side missed. Clients
+    connecting to servers without the option behave like before
   * [Phoenix.Socket] Add the optional `c:Phoenix.Socket.resume/3` callback to check
-    a client that resumes its long-poll session after a failed request, for example
+    a client that resumes its session after a failed request or WebSocket, for example
     to verify that the user is still logged in. Returning `:error` stops the socket,
     so the client connects again. Custom transports can implement the new optional
     `c:Phoenix.Socket.Transport.handle_resume/2` callback

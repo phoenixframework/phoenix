@@ -11,6 +11,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   import Plug.Conn
   alias Phoenix.Socket.{V1, V2, Transport}
+  alias Phoenix.Transports.Session
 
   def default_config() do
     [
@@ -151,10 +152,7 @@ defmodule Phoenix.Transports.LongPoll do
   ## Session handling
 
   defp new_session(conn, endpoint, handler, opts) do
-    priv_topic =
-      "phx:lp:" <>
-        Base.encode64(:crypto.strong_rand_bytes(16)) <>
-        (System.system_time(:millisecond) |> Integer.to_string())
+    priv_topic = Session.priv_topic()
 
     keys = Keyword.get(opts, :connect_info, [])
 
@@ -164,15 +162,15 @@ defmodule Phoenix.Transports.LongPoll do
       Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
 
     arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
-    spec = {Phoenix.Transports.Session, arg}
+    spec = {Session, arg}
 
-    case DynamicSupervisor.start_child(Phoenix.Transports.LongPoll.Supervisor, spec) do
+    case DynamicSupervisor.start_child(Session.Supervisor, spec) do
       :ignore ->
         conn |> put_status(:forbidden) |> status_json()
 
       {:ok, server_pid} ->
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
-        token = sign_token(endpoint, data, opts)
+        token = Session.sign_token(endpoint, data, opts)
         # the last message tells clients that we keep messages until they acknowledge them
         conn |> put_status(:gone) |> status_token_messages_json(token, [], 0)
     end
@@ -296,7 +294,7 @@ defmodule Phoenix.Transports.LongPoll do
   # by publishing a message in the encrypted private topic.
   defp resume_session(%Plug.Conn{} = conn, endpoint, opts) do
     with token when is_binary(token) <- fetch_token(conn),
-         {:ok, {:v1, id, pid, priv_topic}} <- verify_token(endpoint, token, opts) do
+         {:ok, {:v1, id, pid, priv_topic}} <- Session.verify_token(endpoint, token, opts) do
       server_ref = server_ref(endpoint.config(:endpoint_id), id, pid, priv_topic)
 
       new_conn =
@@ -349,24 +347,6 @@ defmodule Phoenix.Transports.LongPoll do
 
   defp broadcast_from!(_endpoint, pid, msg) when is_pid(pid),
     do: send(pid, msg)
-
-  defp sign_token(endpoint, data, opts) do
-    Phoenix.Token.sign(
-      endpoint,
-      Atom.to_string(endpoint.config(:pubsub_server)),
-      data,
-      opts[:crypto]
-    )
-  end
-
-  defp verify_token(endpoint, signed, opts) do
-    Phoenix.Token.verify(
-      endpoint,
-      Atom.to_string(endpoint.config(:pubsub_server)),
-      signed,
-      opts[:crypto]
-    )
-  end
 
   defp maybe_auth_token_from_header(conn, true) do
     case Plug.Conn.get_req_header(conn, "x-phoenix-authtoken") do

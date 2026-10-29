@@ -16,6 +16,8 @@ defmodule Phoenix.Integration.WebsocketClient do
     :sender,
     :serializer,
     closing?: false,
+    # frames that arrive together with the upgrade response, before we have the websocket
+    early_data: [],
     topics: %{},
     # Use different initial join_ref from ref to
     # make sure the server is not coupling them.
@@ -175,9 +177,12 @@ defmodule Phoenix.Integration.WebsocketClient do
   defp handle_responses(%{request_ref: ref} = state, [{:done, ref} | rest]) do
     case Mint.WebSocket.new(state.conn, ref, state.status, state.resp_headers) do
       {:ok, conn, websocket} ->
+        early_data = for data <- Enum.reverse(state.early_data), do: {:data, ref, data}
+
         %{state | conn: conn, websocket: websocket, status: nil, resp_headers: nil}
+        |> Map.put(:early_data, [])
         |> reply({:ok, :connected})
-        |> handle_responses(rest)
+        |> handle_responses(early_data ++ rest)
 
       {:error, conn, reason} ->
         put_in(state.conn, conn)
@@ -199,6 +204,10 @@ defmodule Phoenix.Integration.WebsocketClient do
         put_in(state.websocket, websocket)
         |> reply({:error, reason})
     end
+  end
+
+  defp handle_responses(%{request_ref: ref} = state, [{:data, ref, data} | rest]) do
+    handle_responses(%{state | early_data: [data | state.early_data]}, rest)
   end
 
   defp handle_responses(state, [_response | rest]) do
