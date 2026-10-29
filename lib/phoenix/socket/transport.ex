@@ -236,6 +236,21 @@ defmodule Phoenix.Socket.Transport do
               | {:stop, reason :: term, state}
 
   @doc """
+  Handles a client that resumes its session over a new connection.
+
+  Transports that keep the socket across connections, such as long polling,
+  invoke it when a client resumes after a failed request or connection, before
+  the client receives the messages it missed. It receives a map with the same
+  keys as `c:connect/1`, describing the new connection. It must return one of:
+
+    * `{:ok, state}` - continues the socket
+    * `{:error, reason}` - stops the socket, so the client connects again
+
+  If the callback is not implemented, the client resumes the socket.
+  """
+  @callback handle_resume(transport_info :: map, state) :: {:ok, state} | {:error, term()}
+
+  @doc """
   Invoked on termination.
 
   If `reason` is `:closed`, it means the client closed the socket. This is
@@ -244,7 +259,7 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback terminate(reason :: term, state) :: :ok
 
-  @optional_callbacks handle_control: 2, drainer_spec: 1
+  @optional_callbacks handle_control: 2, handle_resume: 2, drainer_spec: 1
 
   require Logger
 

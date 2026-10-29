@@ -40,7 +40,7 @@ export default class LongPoll {
     // so we can retry a failed request instead of starting a new session
     this.resumable = false
     this.degraded = false
-    // the last batch we received, and the seq of the last message we sent
+    // the number of the last message we received, and of the last message we sent
     this.ack = 0
     this.seq = 0
     this.retries = {GET: 0, POST: 0}
@@ -96,9 +96,11 @@ export default class LongPoll {
       headers["X-Phoenix-AuthToken"] = this.authToken
     }
     const params = this.resumable ? {ack: this.ack} : {}
+    // a poll after a failed one resumes the session, so the server checks it again
+    if(this.resumable && this.retries.GET > 0){ params.resume = 1 }
     this.ajax("GET", headers, null, params, () => this.retryOr("GET", () => this.poll(), () => this.ontimeout()), resp => {
       if(resp){
-        var {status, token, messages, batch} = resp
+        var {status, token, messages, last} = resp
         if(status === 410 && this.token !== null){
           // In case we already have a token, this means that our existing session
           // is gone. We fail so that the client rejoins its channels.
@@ -106,7 +108,7 @@ export default class LongPoll {
           return
         }
         this.token = token
-        if(batch !== undefined){
+        if(last !== undefined){
           this.resumable = !this.degraded
         } else if(this.resumable && (status === 200 || status === 204)){
           // TODO: Remove in Phoenix 1.10, when no cluster mixes 1.8 and newer nodes.
@@ -122,9 +124,18 @@ export default class LongPoll {
       }
       switch(status){
         case 200:
-          // A late poll may send a batch we already received. Batches are immutable.
-          if(batch !== undefined && batch <= this.ack){ messages = [] }
-          if(batch !== undefined){ this.ack = Math.max(this.ack, batch) }
+          if(last !== undefined){
+            // The server numbers its messages and sends all we did not acknowledge,
+            // so we drop the ones we already received, as when a late poll returns.
+            const first = last - messages.length + 1
+            if(first > this.ack + 1){
+              // we cannot deliver the messages, as we lost the ones before them
+              this.closeAndRetry(0, 1011, "lost messages", false)
+              return
+            }
+            messages = messages.slice(Math.max(0, this.ack + 1 - first))
+            this.ack = Math.max(this.ack, last)
+          }
           messages.forEach(msg => {
             // Tasks are what things like event handlers, setTimeout callbacks,
             // promise resolves and more are run within.
@@ -149,7 +160,7 @@ export default class LongPoll {
             // handler disconnects, which cancels the remaining messages.
             this.scheduleMessage(() => this.onmessage({data: msg}))
           })
-          // Restore only after delivering the batch, so hooks see its updates.
+          // Restore only after delivering the messages, so hooks see their updates.
           // Closing from a message callback cancels this task as well.
           this.scheduleMessage(() => {
             this.succeeded("GET")
@@ -219,7 +230,7 @@ export default class LongPoll {
     const next = offset + MAX_LONGPOLL_BATCH_SIZE
     const batch = messages.slice(offset, next)
     const retry = () => this.batchSend(messages, seq, offset)
-    // servers that don't announce batches don't know about seq either
+    // servers that don't number their messages don't know about seq either
     const params = this.resumable ? {seq: seq + offset} : {}
     this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), params, () => this.retryOr("POST", retry, () => this.ontimeout()), resp => {
       if(!resp){
