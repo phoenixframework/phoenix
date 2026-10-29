@@ -55,8 +55,8 @@ defmodule Phoenix.Transports.LongPoll do
   # Starts a new session or listen to a message if one already exists.
   defp dispatch(%{method: "GET"} = conn, endpoint, handler, opts) do
     case resume_session(conn, endpoint, opts) do
-      {:ok, new_conn, server_ref, token} ->
-        listen(new_conn, server_ref, token, endpoint, opts)
+      {:ok, new_conn, server_ref, priv_topic, token} ->
+        listen(new_conn, {server_ref, priv_topic}, token, endpoint, opts)
 
       :error ->
         new_session(conn, endpoint, handler, opts)
@@ -66,7 +66,7 @@ defmodule Phoenix.Transports.LongPoll do
   # Publish the message.
   defp dispatch(%{method: "POST"} = conn, endpoint, _, opts) do
     case resume_session(conn, endpoint, opts) do
-      {:ok, new_conn, server_ref, _token} ->
+      {:ok, new_conn, server_ref, _priv_topic, _token} ->
         publish(new_conn, server_ref, endpoint, opts)
 
       :error ->
@@ -176,8 +176,8 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  defp listen(conn, server_ref, token, endpoint, opts) do
-    case check_resume(conn, server_ref, endpoint, opts) do
+  defp listen(conn, {server_ref, priv_topic}, token, endpoint, opts) do
+    case check_resume(conn, server_ref, priv_topic, endpoint, opts) do
       :ok ->
         poll(conn, server_ref, token, endpoint, opts)
 
@@ -189,7 +189,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Clients resume the session with the first poll after a failed request,
   # so the socket can check the connection again.
-  defp check_resume(%{params: %{"resume" => _}} = conn, server_ref, endpoint, opts) do
+  defp check_resume(%{params: %{"resume" => _}} = conn, server_ref, priv_topic, endpoint, opts) do
     keys = Keyword.get(opts, :connect_info, [])
     conn = maybe_auth_token_from_header(conn, opts[:auth_token])
 
@@ -205,7 +205,8 @@ defmodule Phoenix.Transports.LongPoll do
     }
 
     ref = make_ref()
-    broadcast_from!(endpoint, server_ref, {:resume, client_ref(server_ref), ref, info})
+    resume = {:resume, client_ref(server_ref), ref, info, priv_topic}
+    broadcast_from!(endpoint, server_ref, resume)
 
     receive do
       {:resumed, ^ref} -> :ok
@@ -219,7 +220,7 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  defp check_resume(_conn, _server_ref, _endpoint, _opts), do: :ok
+  defp check_resume(_conn, _server_ref, _priv_topic, _endpoint, _opts), do: :ok
 
   defp poll(conn, server_ref, token, endpoint, opts) do
     ref = make_ref()
@@ -310,7 +311,7 @@ defmodule Phoenix.Transports.LongPoll do
       broadcast_from!(endpoint, server_ref, {:subscribe, client_ref(server_ref), ref})
 
       receive do
-        {:subscribe, ^ref} -> {:ok, new_conn, server_ref, token}
+        {:subscribe, ^ref} -> {:ok, new_conn, server_ref, priv_topic, token}
       after
         opts[:pubsub_timeout_ms] -> :error
       end

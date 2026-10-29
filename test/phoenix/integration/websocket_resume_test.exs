@@ -157,6 +157,16 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
     for message <- messages, do: V2.JSONSerializer.decode!(message, opcode: :text)
   end
 
+  # a token with the pid of the session, as when another session gets the pid
+  # of a session that stopped
+  defp forge_token(token, fun) do
+    {:ok, {:v1, endpoint_id, session, priv_topic}} =
+      Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), token)
+
+    data = fun.({:v1, endpoint_id, session, priv_topic})
+    Phoenix.Transports.Session.sign_token(Endpoint, data, crypto: [max_age: 1_209_600])
+  end
+
   defp session(token) do
     {:ok, {:v1, _id, session, _topic}} =
       Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), token)
@@ -396,6 +406,33 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         assert_receive %Message{event: "phx_reply", topic: "room:a"}
         assert_receive %Message{event: "joined", topic: "room:a"}
         assert Process.whereis(:"room:a") == channel
+      end
+
+      test "a WebSocket does not resume the session of another token with the same pid" do
+        {client, token} = new_session()
+        channel = join(client, "room:a")
+        session = session(token)
+        pipe = :sys.get_state(session).pipe
+        forged = forge_token(token, fn {:v1, id, pid, _topic} -> {:v1, id, pid, "other"} end)
+
+        _other = resume(forged, 0)
+        assert_receive %Message{event: "phx_gone"}
+        refute_received {:resume, _}
+
+        # the session keeps its client
+        assert :sys.get_state(session).pipe == pipe
+        echo(client, %{"still" => "here"})
+        assert_receive %Message{event: "echo", payload: %{"still" => "here"}}
+        assert Process.whereis(:"room:a") == channel
+      end
+
+      test "a WebSocket does not resume a session of an endpoint that restarted" do
+        {_client, token} = new_session()
+        forged = forge_token(token, fn {:v1, _id, pid, topic} -> {:v1, "old", pid, topic} end)
+
+        resume(forged, 0)
+        assert_receive %Message{event: "phx_gone"}
+        refute_received {:resume, _}
       end
 
       test "does not start a session for clients that don't resume" do

@@ -37,10 +37,10 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
   }
 
   @impl true
-  def init({:new, session, token, opts}) do
+  def init({:new, session, priv_topic, token, opts}) do
     state = new_state(opts)
 
-    case attach(state, session, 0) do
+    case attach(state, session, priv_topic, 0) do
       {:ok, state} -> {:push, [control("phx_session", %{token: token})], state}
       :error -> gone(state, @close_codes.internal_error)
     end
@@ -93,9 +93,9 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
     Process.cancel_timer(timer)
     state = %{state | resume: nil}
 
-    with {:ok, session} <- verify_token(endpoint, token, state.opts),
-         :ok <- check_resume(session, info, state.opts),
-         {:ok, state} <- attach(state, session, ack) do
+    with {:ok, session, priv_topic} <- verify_token(endpoint, token, state.opts),
+         :ok <- check_resume(session, priv_topic, info, state.opts),
+         {:ok, state} <- attach(state, session, priv_topic, ack) do
       {:push, [control("phx_resumed", %{seq: state.in_seq})], state}
     else
       _ -> gone(state, nil)
@@ -159,13 +159,17 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
     {:ok, state}
   end
 
-  defp attach(state, session, ack) do
+  defp attach(state, session, priv_topic, ack) do
     ref = Process.monitor(session)
-    send(session, {:pipe_attach, self(), ref, ack})
+    send(session, {:pipe_attach, self(), ref, ack, priv_topic})
 
     receive do
       {:attached, ^ref, in_seq} ->
         {:ok, %{state | session: session, session_ref: ref, in_seq: in_seq, confirmed: in_seq}}
+
+      {:rejected, ^ref} ->
+        Process.demonitor(ref, [:flush])
+        :error
 
       {:DOWN, ^ref, _, _, _} ->
         :error
@@ -178,12 +182,14 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
 
   defp verify_token(endpoint, token, opts) do
     case Session.verify_token(endpoint, token, opts) do
-      {:ok, {:v1, _id, session, _priv_topic}} when is_pid(session) ->
-        # we talk to the session directly, so it must run on a node we are connected to
-        if node(session) == node() or node(session) in Node.list() do
-          {:ok, session}
-        else
-          :error
+      {:ok, {:v1, endpoint_id, session, priv_topic}} when is_pid(session) ->
+        # We talk to the session directly, so it must run on a node we are connected to.
+        # Pids of this node look the same after a restart, so the endpoint that signed the
+        # token must still be running, and the session checks the topic as well.
+        cond do
+          node(session) in Node.list() -> {:ok, session, priv_topic}
+          endpoint_id == endpoint.config(:endpoint_id) -> {:ok, session, priv_topic}
+          true -> :error
         end
 
       _ ->
@@ -191,9 +197,9 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
     end
   end
 
-  defp check_resume(session, info, opts) do
+  defp check_resume(session, priv_topic, info, opts) do
     ref = Process.monitor(session)
-    send(session, {:resume, self(), ref, info})
+    send(session, {:resume, self(), ref, info, priv_topic})
 
     receive do
       {:resumed, ^ref} ->

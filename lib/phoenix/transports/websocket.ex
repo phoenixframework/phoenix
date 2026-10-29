@@ -89,7 +89,7 @@ defmodule Phoenix.Transports.WebSocket do
                 {:ok, session, priv_topic} ->
                   data = {:v1, endpoint.config(:endpoint_id), session, priv_topic}
                   token = Session.sign_token(endpoint, data, opts)
-                  upgrade(conn, Pipe, {:new, session, token, opts}, opts)
+                  upgrade(conn, Pipe, {:new, session, priv_topic, token, opts}, opts)
 
                 {:error, _} ->
                   send_resp(conn, 500, "")
