@@ -209,6 +209,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     assert_receive {:DOWN, ^ref, :process, _pid, _}
   end
 
+  # TODO: Number the messages in Phoenix 1.10, when the server requires ack and seq.
+  # The helpers below poll like Phoenix 1.8 clients, which most tests rely on.
   @doc """
   Helper method to maintain token session state when making HTTP requests.
 
@@ -672,6 +674,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
         end
 
+        # TODO: Remove in Phoenix 1.10, together with the flush without ack
+        # in Phoenix.Transports.Session
         test "#{@mode}: accepts legacy flushes without waiting for acknowledgements" do
           vsn = "2.0.0"
           session = join("/ws", "room:lobby", vsn, "1", @mode)
@@ -897,6 +901,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
             ])
 
           # clients that don't number their messages get no seq
+          #
+          # TODO: Remove in Phoenix 1.10, when the server requires seq
           assert resp.body["status"] == 200
           refute Map.has_key?(resp.body, "seq")
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi1"}}
