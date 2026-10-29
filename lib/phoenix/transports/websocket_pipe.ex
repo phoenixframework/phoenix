@@ -28,13 +28,21 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
 
   @control_prefix "[null,null,\"phoenix\",\"phx_"
 
+  # the WebSocket close codes we use, see RFC 6455
+  @close_codes %{
+    normal: 1000,
+    invalid_payload: 1007,
+    policy_violation: 1008,
+    internal_error: 1011
+  }
+
   @impl true
   def init({:new, session, token, opts}) do
     state = new_state(opts)
 
     case attach(state, session, 0) do
       {:ok, state} -> {:push, [control("phx_session", %{token: token})], state}
-      :error -> gone(state, 1011)
+      :error -> gone(state, @close_codes.internal_error)
     end
   end
 
@@ -64,7 +72,7 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
   def handle_in({@control_prefix <> _ = text, opcode: :text}, state) do
     case Phoenix.json_library().decode(text) do
       {:ok, [nil, nil, "phoenix", event, payload]} -> handle_control(event, payload, state)
-      _ -> {:stop, :normal, 1007, state}
+      _ -> {:stop, :normal, @close_codes.invalid_payload, state}
     end
   end
 
@@ -106,7 +114,7 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
   end
 
   defp handle_control(_event, _payload, state) do
-    {:stop, :normal, 1008, state}
+    {:stop, :normal, @close_codes.policy_violation, state}
   end
 
   @impl true
@@ -135,7 +143,7 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
   end
 
   def handle_info({:DOWN, ref, _, _, _}, %{session_ref: ref} = state) do
-    gone(state, 1011)
+    gone(state, @close_codes.internal_error)
   end
 
   def handle_info({:detached, session}, %{session: session} = state) do
@@ -144,7 +152,7 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
   end
 
   def handle_info(:resume_timeout, %{resume: {_, _, _}} = state) do
-    {:stop, :normal, 1008, state}
+    {:stop, :normal, @close_codes.policy_violation, state}
   end
 
   def handle_info(_message, state) do
@@ -214,7 +222,7 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
   # and closes with the code of the session if it stopped.
   defp gone(state, code) do
     payload = if code, do: %{code: code}, else: %{}
-    {:stop, :normal, code || 1000, [control("phx_gone", payload)], state}
+    {:stop, :normal, code || @close_codes.normal, [control("phx_gone", payload)], state}
   end
 
   defp control(event, payload) do

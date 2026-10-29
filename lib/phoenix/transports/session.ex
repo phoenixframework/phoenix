@@ -32,6 +32,9 @@ defmodule Phoenix.Transports.Session do
   use GenServer, restart: :temporary
   alias Phoenix.PubSub
 
+  # the WebSocket close codes we use when the session stops, see RFC 6455
+  @close_codes %{normal: 1000, internal_error: 1011, service_restart: 1012}
+
   @doc """
   Starts a session for a socket that its transport connected already.
   """
@@ -227,7 +230,7 @@ defmodule Phoenix.Transports.Session do
 
   def handle_info({:pipe_in, _pipe, seq, _frame}, %{in_seq: in_seq} = state)
       when seq > in_seq + 1 do
-    {:stop, {:shutdown, :out_of_order}, %{state | close_code: 1011}}
+    {:stop, {:shutdown, :out_of_order}, %{state | close_code: @close_codes.internal_error}}
   end
 
   def handle_info({:pipe_in, pipe, _seq, {body, opcode}}, state) do
@@ -253,7 +256,7 @@ defmodule Phoenix.Transports.Session do
 
   # The client closes the session, as opposed to losing its connection.
   def handle_info({:pipe_close, pipe}, %{pipe: {pipe, _}} = state) do
-    {:stop, {:shutdown, :closed}, %{state | close_code: 1000}}
+    {:stop, {:shutdown, :closed}, %{state | close_code: @close_codes.normal}}
   end
 
   def handle_info({:pipe_close, _pipe}, state) do
@@ -359,9 +362,9 @@ defmodule Phoenix.Transports.Session do
     :ok
   end
 
-  defp close_code(:normal), do: 1000
-  defp close_code({:shutdown, :restart}), do: 1012
-  defp close_code(_reason), do: 1011
+  defp close_code(:normal), do: @close_codes.normal
+  defp close_code({:shutdown, :restart}), do: @close_codes.service_restart
+  defp close_code(_reason), do: @close_codes.internal_error
 
   defp detach(%{pipe: {pipe, ref}} = state) do
     Process.demonitor(ref, [:flush])

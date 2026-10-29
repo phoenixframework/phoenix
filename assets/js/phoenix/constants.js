@@ -6,6 +6,8 @@ export const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 export const MAX_LONGPOLL_BATCH_SIZE = 100;
 export const DEFAULT_TIMEOUT = 10000
 export const WS_CLOSE_NORMAL = 1000
+// the close code of a transport whose session is gone, so the socket connects again
+export const CLOSE_SESSION_GONE = 3410
 export const CHANNEL_STATES = {
   closed: "closed",
   errored: "errored",
