@@ -172,9 +172,19 @@ defmodule Phoenix.Transports.Session do
     {:noreply, state}
   end
 
+  # Transports find the session by the pid in the token. A pid can belong to another
+  # session after this one stopped, so a client that resumes also sends the topic of
+  # the token, which only this session has. We reject a mismatch but keep running for
+  # our own client.
+  def handle_info({:resume, client_ref, ref, _info, priv_topic}, state)
+      when priv_topic != state.priv_topic do
+    broadcast_from!(state, client_ref, {:rejected, ref})
+    {:noreply, state}
+  end
+
   # A client that resumes the session after a failed request or connection
   # tells us about its new connection, so the socket can check it.
-  def handle_info({:resume, client_ref, ref, info}, state) do
+  def handle_info({:resume, client_ref, ref, info, _priv_topic}, state) do
     %{handler: {handler, handler_state}} = state
 
     result =
@@ -200,7 +210,13 @@ defmodule Phoenix.Transports.Session do
 
   # A connection that receives our messages as we send them, such as a WebSocket.
   # It replaces the previous one, which the client gave up on.
-  def handle_info({:pipe_attach, pipe, ref, ack}, state) do
+  def handle_info({:pipe_attach, pipe, ref, _ack, priv_topic}, state)
+      when priv_topic != state.priv_topic do
+    send(pipe, {:rejected, ref})
+    {:noreply, state}
+  end
+
+  def handle_info({:pipe_attach, pipe, ref, ack, _priv_topic}, state) do
     # the client resumed over a WebSocket, so it stopped polling
     state = %{detach(state) | client_ref: nil}
     send(pipe, {:attached, ref, state.in_seq})
