@@ -164,7 +164,7 @@ defmodule Phoenix.Transports.LongPoll do
       Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
 
     arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
-    spec = {Phoenix.Transports.LongPoll.Server, arg}
+    spec = {Phoenix.Transports.Session, arg}
 
     case DynamicSupervisor.start_child(Phoenix.Transports.LongPoll.Supervisor, spec) do
       :ignore ->
@@ -173,16 +173,59 @@ defmodule Phoenix.Transports.LongPoll do
       {:ok, server_pid} ->
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = sign_token(endpoint, data, opts)
-        # the batch tells clients that we keep messages until they acknowledge them
+        # the last message tells clients that we keep messages until they acknowledge them
         conn |> put_status(:gone) |> status_token_messages_json(token, [], 0)
     end
   end
 
   defp listen(conn, server_ref, token, endpoint, opts) do
+    case check_resume(conn, server_ref, endpoint, opts) do
+      :ok ->
+        poll(conn, server_ref, token, endpoint, opts)
+
+      :rejected ->
+        # the session is gone, so the client starts a new one
+        conn |> put_status(:gone) |> status_json()
+    end
+  end
+
+  # Clients resume the session with the first poll after a failed request,
+  # so the socket can check the connection again.
+  defp check_resume(%{params: %{"resume" => _}} = conn, server_ref, endpoint, opts) do
+    keys = Keyword.get(opts, :connect_info, [])
+    conn = maybe_auth_token_from_header(conn, opts[:auth_token])
+
+    connect_info =
+      Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
+
+    info = %{
+      endpoint: endpoint,
+      transport: :longpoll,
+      options: opts,
+      params: Map.drop(conn.params, ["ack", "resume"]),
+      connect_info: connect_info
+    }
+
+    ref = make_ref()
+    broadcast_from!(endpoint, server_ref, {:resume, client_ref(server_ref), ref, info})
+
+    receive do
+      {:resumed, ^ref} -> :ok
+      {:rejected, ^ref} -> :rejected
+    after
+      # A Phoenix 1.8 server does not answer. It ignores polls with an ack as well,
+      # so it stops as inactive and the client starts a new session.
+      opts[:pubsub_timeout_ms] -> :ok
+    end
+  end
+
+  defp check_resume(_conn, _server_ref, _endpoint, _opts), do: :ok
+
+  defp poll(conn, server_ref, token, endpoint, opts) do
     ref = make_ref()
     client_ref = client_ref(server_ref)
 
-    # the last batch the client received, sent by clients that acknowledge
+    # the last message the client received, sent by clients that acknowledge
     ack = int_param(conn, "ack")
 
     flush =
@@ -195,24 +238,24 @@ defmodule Phoenix.Transports.LongPoll do
 
     broadcast_from!(endpoint, server_ref, flush)
 
-    {status, messages, batch} =
+    {status, messages, last} =
       receive do
         # Phoenix 1.8 servers, and newer servers answering a flush without ack,
-        # reply without batch.
+        # reply without the number of the last message.
         #
-        # TODO: Remove the clauses without batch in Phoenix 1.10
+        # TODO: Remove the clauses without last in Phoenix 1.10
         {:messages, messages, ^ref} ->
           {:ok, messages, nil}
 
-        {:messages, messages, ^ref, batch} ->
-          {:ok, messages, batch}
+        {:messages, messages, ^ref, last} ->
+          {:ok, messages, last}
 
         {:now_available, ^ref} ->
           broadcast_from!(endpoint, server_ref, flush)
 
           receive do
             {:messages, messages, ^ref} -> {:ok, messages, nil}
-            {:messages, messages, ^ref, batch} -> {:ok, messages, batch}
+            {:messages, messages, ^ref, last} -> {:ok, messages, last}
           after
             opts[:window_ms] ->
               broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
@@ -220,15 +263,15 @@ defmodule Phoenix.Transports.LongPoll do
           end
       after
         opts[:window_ms] ->
-          # Without messages, the batch stays the one the client acknowledged. It tells
-          # the client that we keep the messages, like we do with messages.
+          # Without messages, the last message is the one the client acknowledged.
+          # It tells the client that we keep the messages, like we do with messages.
           broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
           {:no_content, [], ack}
       end
 
     conn
     |> put_status(status)
-    |> status_token_messages_json(token, messages, batch)
+    |> status_token_messages_json(token, messages, last)
   end
 
   defp int_param(conn, key) do
@@ -249,7 +292,7 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  # Retrieves the serialized `Phoenix.LongPoll.Server` pid
+  # Retrieves the serialized `Phoenix.Transports.Session` pid
   # by publishing a message in the encrypted private topic.
   defp resume_session(%Plug.Conn{} = conn, endpoint, opts) do
     with token when is_binary(token) <- fetch_token(conn),
@@ -341,17 +384,17 @@ defmodule Phoenix.Transports.LongPoll do
     send_json(conn, Map.put(extra, "status", conn.status || 200))
   end
 
-  # TODO: Remove in Phoenix 1.10, when every poll has a batch
+  # TODO: Remove in Phoenix 1.10, when every poll has a last message
   defp status_token_messages_json(conn, token, messages, nil) do
     send_json(conn, %{"status" => conn.status || 200, "token" => token, "messages" => messages})
   end
 
-  defp status_token_messages_json(conn, token, messages, batch) do
+  defp status_token_messages_json(conn, token, messages, last) do
     send_json(conn, %{
       "status" => conn.status || 200,
       "token" => token,
       "messages" => messages,
-      "batch" => batch
+      "last" => last
     })
   end
 

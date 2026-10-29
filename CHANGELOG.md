@@ -17,6 +17,11 @@
     channel error. Older servers retain the existing reconnect behavior. During
     a rolling deploy, a session that reaches a node with an older server falls
     back to that behavior for the rest of the session.
+  * [Phoenix.Socket] Add the optional `c:Phoenix.Socket.resume/3` callback to check
+    a client that resumes its long-poll session after a failed request, for example
+    to verify that the user is still logged in. Returning `:error` stops the socket,
+    so the client connects again. Custom transports can implement the new optional
+    `c:Phoenix.Socket.Transport.handle_resume/2` callback
   * The longpoll session token is now sent in a `x-phoenix-longpoll-token`
     header instead of the query string. If you do rolling deploys where both
     old and new nodes are active at the same time, ensure that you deploy
