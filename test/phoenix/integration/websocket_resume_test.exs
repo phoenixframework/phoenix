@@ -1,4 +1,5 @@
 Code.require_file("../../support/websocket_client.exs", __DIR__)
+Code.require_file("../../support/http_client.exs", __DIR__)
 
 defmodule Phoenix.Integration.WebSocketResumeTest do
   # TODO: use parameterized tests once we require Elixir 1.18
@@ -6,7 +7,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
 
   import ExUnit.CaptureLog
 
-  alias Phoenix.Integration.WebsocketClient
+  alias Phoenix.Integration.{HTTPClient, WebsocketClient}
   alias Phoenix.Socket.{Message, V2}
   alias __MODULE__.Endpoint
 
@@ -45,6 +46,11 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
       push(socket, "echo", payload)
       {:noreply, socket}
     end
+
+    def handle_in("binary", _payload, socket) do
+      push(socket, "binary", {:binary, <<1, 2, 3>>})
+      {:noreply, socket}
+    end
   end
 
   defmodule UserSocket do
@@ -72,7 +78,10 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
-    socket "/ws", UserSocket, websocket: [resumable: true, window_ms: 200]
+    socket "/ws", UserSocket,
+      websocket: [resumable: true, window_ms: 200],
+      longpoll: [window_ms: 200, pubsub_timeout_ms: 200]
+
     socket "/ws/plain", UserSocket, websocket: true
   end
 
@@ -129,6 +138,23 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
     client = connect(Map.merge(params, %{"resumable" => "1", "resume" => "1"}))
     control(client, "phx_resume", %{token: token, ack: ack})
     client
+  end
+
+  defp poll(method, token, params, body \\ nil) do
+    query = URI.encode_query(Map.merge(%{"vsn" => "2.0.0"}, params))
+    url = "http://127.0.0.1:#{@port}/ws/longpoll?" <> query
+
+    headers =
+      if token,
+        do: %{"x-phoenix-longpoll-token" => token, "content-type" => "application/x-ndjson"},
+        else: %{}
+
+    {:ok, resp} = HTTPClient.request(method, url, headers, body || "")
+    Phoenix.json_library().decode!(resp.body)
+  end
+
+  defp decode(messages) do
+    for message <- messages, do: V2.JSONSerializer.decode!(message, opcode: :text)
   end
 
   defp session(token) do
@@ -288,6 +314,88 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
 
         assert_receive {:DOWN, ^ref, _, _, {:shutdown, :unacknowledged}}, 1000
         assert_receive %Message{event: "phx_gone"}
+      end
+
+      test "long polling resumes a WebSocket session" do
+        {client, token} = new_session()
+        channel = join(client, "room:a")
+        drop(client)
+        send(channel, {:push, "missed", %{}})
+
+        body = poll(:get, token, %{"ack" => "2", "resume" => "1"})
+        assert body["status"] == 200
+        assert [%Message{event: "missed"}] = decode(body["messages"])
+        assert body["last"] == 3
+        assert_receive {:resume, _params}
+
+        assert {_, %Phoenix.Socket{transport: :longpoll}} =
+                 elem(:sys.get_state(session(token)).handler, 1)
+
+        # the client sends the messages the WebSocket did not deliver, numbered
+        # after the last one the session confirmed
+        frame = ~s(["11","9","room:a","echo",{"n":1}])
+        assert poll(:post, token, %{"seq" => "2"}, frame)["status"] == 200
+        assert poll(:post, token, %{"seq" => "2"}, frame)["status"] == 200
+
+        body = poll(:get, token, %{"ack" => "3"})
+        assert [%Message{event: "echo", payload: %{"n" => 1}}] = decode(body["messages"])
+        assert Process.whereis(:"room:a") == channel
+      end
+
+      test "long polling takes over from a WebSocket the client gave up on" do
+        {client, token} = new_session()
+        join(client, "room:a")
+        ref = Process.monitor(client)
+
+        body = poll(:get, token, %{"ack" => "2", "resume" => "1"})
+        assert body["status"] == 204
+        assert_receive {:DOWN, ^ref, _, _, _}
+        assert :sys.get_state(session(token)).pipe == nil
+      end
+
+      test "polls do not take the messages of a WebSocket" do
+        {client, token} = new_session()
+        channel = join(client, "room:a")
+
+        # a poll the client gave up on when it resumed over the WebSocket
+        task = Task.async(fn -> poll(:get, token, %{"ack" => "0"}) end)
+        Process.sleep(50)
+        send(channel, {:push, "new", %{}})
+        assert_receive %Message{event: "new"}
+        assert Task.await(task)["status"] == 204
+      end
+
+      test "long polling sends binary messages in base64" do
+        {client, token} = new_session()
+        join(client, "room:a")
+        drop(client)
+
+        assert poll(:post, token, %{"seq" => "2"}, ~s(["11","9","room:a","binary",{}]))
+        body = poll(:get, token, %{"ack" => "2", "resume" => "1"})
+        assert ["base64:" <> encoded] = body["messages"]
+
+        assert <<0, _join_ref_size, _topic_size, _event_size, rest::binary>> =
+                 Base.decode64!(encoded)
+
+        assert String.ends_with?(rest, <<1, 2, 3>>)
+      end
+
+      test "a WebSocket resumes a long polling session" do
+        body = poll(:get, nil, %{})
+        assert body["status"] == 410
+        token = body["token"]
+
+        join = ~s(["11","1","room:a","phx_join",{}])
+        assert poll(:post, token, %{"seq" => "1"}, join)["status"] == 200
+        channel = Process.whereis(:"room:a")
+        Process.sleep(50)
+
+        # the client did not receive the join reply and the joined push
+        resume(token, 0)
+        assert_receive %Message{event: "phx_resumed", payload: %{"seq" => 1}}
+        assert_receive %Message{event: "phx_reply", topic: "room:a"}
+        assert_receive %Message{event: "joined", topic: "room:a"}
+        assert Process.whereis(:"room:a") == channel
       end
 
       test "does not start a session for clients that don't resume" do

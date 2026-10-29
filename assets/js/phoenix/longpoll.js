@@ -7,8 +7,17 @@ import {
 
 import Ajax from "./ajax"
 
+const BINARY_PREFIX = "base64:"
+
 // how long we wait before retrying a failed request of a session we can resume
 const RETRY_DELAYS = [100, 500, 1000, 2000, 5000]
+
+let base64ToArrayBuffer = (base64) => {
+  let binary = atob(base64)
+  let bytes = new Uint8Array(binary.length)
+  for(let i = 0; i < binary.length; i++){ bytes[i] = binary.charCodeAt(i) }
+  return bytes.buffer
+}
 
 let arrayBufferToBase64 = (buffer) => {
   let binary = ""
@@ -47,6 +56,9 @@ export default class LongPoll {
     this.retryTimers = new Set()
     // set once a retry failed as well, until GET and POST have both recovered
     this.interrupted = false
+    // set while we resume a session that another transport started, see resumeSession
+    this.resuming = false
+    this.resumeBuffer = []
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
@@ -58,6 +70,23 @@ export default class LongPoll {
     // we must wait for the caller to finish setting up our callbacks and timeout properties,
     // and it might close us before that, e.g. when disconnecting right after connecting
     setTimeout(() => this.poll(), 0)
+  }
+
+  /**
+   * @private
+   *
+   * Continues a session that another transport started, such as a ResumableWebSocket,
+   * before the first poll. We resume the session with its token and the number of the
+   * last message we received, and send the messages the server did not confirm again,
+   * numbered after the last one it confirmed. The server drops the ones it received.
+   */
+  resumeSession({token, received, confirmed, unconfirmed}){
+    this.token = token
+    this.resumable = true
+    this.resuming = true
+    this.ack = received
+    this.seq = confirmed
+    this.resumeBuffer = unconfirmed.slice()
   }
 
   normalizeEndpoint(endPoint){
@@ -97,7 +126,7 @@ export default class LongPoll {
     }
     const params = this.resumable ? {ack: this.ack} : {}
     // a poll after a failed one resumes the session, so the server checks it again
-    if(this.resumable && this.retries.GET > 0){ params.resume = 1 }
+    if(this.resumable && (this.resuming || this.retries.GET > 0)){ params.resume = 1 }
     this.ajax("GET", headers, null, params, () => this.retryOr("GET", () => this.poll(), () => this.ontimeout()), resp => {
       if(resp){
         var {status, token, messages, last} = resp
@@ -110,6 +139,12 @@ export default class LongPoll {
         this.token = token
         if(last !== undefined){
           this.resumable = !this.degraded
+        } else if(this.resuming && (status === 200 || status === 204)){
+          // TODO: Remove in Phoenix 1.10, together with degrade()
+          //
+          // a node with an older server cannot resume a session of another transport
+          this.closeAndRetry(410, 3410, "session_gone", false)
+          return
         } else if(this.resumable && (status === 200 || status === 204)){
           // TODO: Remove in Phoenix 1.10, when no cluster mixes 1.8 and newer nodes.
           //
@@ -121,6 +156,16 @@ export default class LongPoll {
         }
       } else {
         status = 0
+      }
+      if(this.resuming && (status === 200 || status === 204)){
+        // we resumed the session, so we are open and send what we kept
+        this.resuming = false
+        this.readyState = SOCKET_STATES.open
+        this.onopen({})
+        if(!this.isActive()){ return }
+        const buffered = this.resumeBuffer
+        this.resumeBuffer = []
+        buffered.forEach(body => this.send(body))
       }
       switch(status){
         case 200:
@@ -158,7 +203,10 @@ export default class LongPoll {
             //
             // We might stop before that, e.g. when a POST times out or a message
             // handler disconnects, which cancels the remaining messages.
-            this.scheduleMessage(() => this.onmessage({data: msg}))
+            // the server sends binary messages in base64, such as the ones a session
+            // has when it started over a WebSocket
+            const data = msg.startsWith(BINARY_PREFIX) ? base64ToArrayBuffer(msg.slice(BINARY_PREFIX.length)) : msg
+            this.scheduleMessage(() => this.onmessage({data}))
           })
           // Restore only after delivering the messages, so hooks see their updates.
           // Closing from a message callback cancels this task as well.
@@ -205,6 +253,11 @@ export default class LongPoll {
   // pushes against an empty buffer
 
   send(body){
+    // we send once we resumed the session, numbered after the messages we kept
+    if(this.resuming){
+      this.resumeBuffer.push(body)
+      return
+    }
     if(typeof(body) !== "string"){ body = arrayBufferToBase64(body) }
     // messages are numbered, so the server drops the ones it received when we send
     // them again. A batch is sent with the seq of its first message.

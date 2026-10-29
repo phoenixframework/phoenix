@@ -20,8 +20,10 @@
   * [Phoenix.Endpoint] Add the `:resumable` WebSocket option. Clients that use the
     `resumable: true` option of the `phoenix.js` Socket resume the socket over a new
     WebSocket after the connection failed or the heartbeat timed out, without
-    rejoining channels. Both sides send the messages the other side missed. Clients
-    connecting to servers without the option behave like before
+    rejoining channels. Both sides send the messages the other side missed. With
+    `longPollFallbackMs`, clients continue the socket with long polling when they
+    cannot resume it over a WebSocket in time. Clients connecting to servers without
+    the option behave like before
   * [Phoenix.Socket] Add the optional `c:Phoenix.Socket.resume/3` callback to check
     a client that resumes its session after a failed request or WebSocket, for example
     to verify that the user is still logged in. Returning `:error` stops the socket,

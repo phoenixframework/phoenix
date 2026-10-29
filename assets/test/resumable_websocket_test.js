@@ -1,6 +1,7 @@
 import {jest} from "@jest/globals"
 import {ResumableWebSocket, Socket} from "../js/phoenix"
 import {SOCKET_STATES} from "../js/phoenix/constants"
+import Ajax from "../js/phoenix/ajax"
 
 const control = (event, payload) => JSON.stringify([null, null, "phoenix", event, payload])
 
@@ -238,6 +239,82 @@ describe("ResumableWebSocket", () => {
     last().drop()
     jest.advanceTimersByTime(10_000)
     expect(FakeWebSocket.instances).toHaveLength(2)
+  })
+
+  describe("with a long polling fallback", () => {
+    const polls = () => Ajax.request.mock.calls.filter(([method]) => method === "GET")
+    const posts = () => Ajax.request.mock.calls.filter(([method]) => method === "POST")
+    const params = call => Object.fromEntries(new URL(call[1]).searchParams)
+
+    beforeEach(() => {
+      jest.spyOn(Ajax, "request").mockImplementation(() => ({abort: jest.fn()}))
+    })
+
+    afterEach(() => jest.restoreAllMocks())
+
+    const interrupt = () => {
+      connect()
+      transport.longPollFallbackMs = 2000
+      last().receive("a")
+      transport.send("x")
+      last().drop()
+    }
+
+    it("continues the session with long polling when resuming takes too long", () => {
+      interrupt()
+      jest.advanceTimersByTime(100)
+      last().drop()
+      jest.advanceTimersByTime(1900)
+      expect(polls()).toHaveLength(0)
+      const ws = last()
+
+      jest.advanceTimersByTime(100)
+      expect(ws.closed).not.toBeNull()
+      jest.advanceTimersByTime(0)
+      expect(params(polls()[0])).toEqual({vsn: "2.0.0", ack: "1", resume: "1"})
+      expect(polls()[0][2]["X-Phoenix-Longpoll-Token"]).toBe("token")
+
+      // the session resumed over long polling
+      polls()[0][6]({status: 200, token: "token", messages: ["b"], last: 2})
+      expect(events).toEqual(["open", "a", "suspend", "resume"])
+      jest.advanceTimersByTime(0)
+      expect(events).toEqual(["open", "a", "suspend", "resume", "b"])
+      expect(params(posts()[0]).seq).toBe("1")
+      expect(posts()[0][3]).toBe("x")
+
+      // we keep long polling and do not open WebSockets anymore
+      transport.send("y")
+      jest.advanceTimersByTime(10_000)
+      expect(FakeWebSocket.instances).toHaveLength(3)
+    })
+
+    it("does not fall back once the session resumed over a WebSocket", () => {
+      interrupt()
+      jest.advanceTimersByTime(100)
+      last().open()
+      last().receive(control("phx_resumed", {seq: 1}))
+      jest.advanceTimersByTime(10_000)
+      expect(polls()).toHaveLength(0)
+    })
+
+    it("closes when the session is gone", () => {
+      interrupt()
+      // the first poll runs right after we fall back
+      jest.advanceTimersByTime(2001)
+      polls()[0][6]({status: 410, token: "new", messages: [], last: 0})
+      expect(events).toEqual(["open", "a", "error", {close: 3410}])
+      expect(transport.readyState).toBe(SOCKET_STATES.closed)
+    })
+
+    it("closes the LongPoll when it closes", () => {
+      interrupt()
+      // the first poll runs right after we fall back
+      jest.advanceTimersByTime(2001)
+      const longpoll = transport.longpoll
+      transport.close(1000, "bye")
+      expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
+      expect(events.at(-1)).toEqual({close: 1000})
+    })
   })
 
   describe("with a server that does not keep sessions", () => {

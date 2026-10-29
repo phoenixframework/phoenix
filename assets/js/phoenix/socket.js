@@ -41,6 +41,8 @@ import Connection from "./connection"
  * @param {boolean} [opts.resumable] - When true, uses the ResumableWebSocket transport, which
  * resumes the socket over a new WebSocket when the connection fails, without rejoining channels.
  * Requires the `:resumable` WebSocket option on the server. Disabled by default.
+ * With `longPollFallbackMs`, the socket continues with long polling when it cannot resume
+ * over a WebSocket within that time.
  *
  * @param {boolean} [opts.debug] - When true, enables debug logging. Default false.
  *
@@ -484,6 +486,8 @@ export default class Socket {
     const transport = new this.transport(this.endPointURL(), protocols)
     transport.binaryType = this.binaryType
     transport.timeout = this.longpollerTimeout
+    // a transport that keeps its session falls back to long polling to continue it
+    transport.longPollFallbackMs = this.longPollFallbackMs
     this.connection = new Connection(this, transport)
     // connect can replace an ended connection that is still open while its buffer drains, but the
     // channels joined over it need to rejoin on the new connection instead of waiting for it to close
