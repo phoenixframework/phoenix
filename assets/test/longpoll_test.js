@@ -1210,3 +1210,77 @@ describe("Ajax.request", () => {
     })
   })
 })
+
+describe("LongPoll continuing a session of another transport", () => {
+  let longpoll, events
+
+  const requests = method => Ajax.request.mock.calls.filter(([m]) => m === method)
+  const last = method => requests(method).at(-1)
+  const params = call => Object.fromEntries(new URL(call[1]).searchParams)
+  const respond = (call, resp) => call[6](resp)
+
+  const start = (session = {token: "token", received: 3, confirmed: 1, unconfirmed: ["b", "c"]}) => {
+    longpoll = new LongPoll("ws://localhost/socket/websocket?vsn=2.0.0")
+    longpoll.resumeSession(session)
+    events = []
+    longpoll.onopen = () => events.push("open")
+    longpoll.onmessage = ({data}) => events.push(data)
+    longpoll.onerror = () => events.push("error")
+    longpoll.onclose = event => events.push({close: event.code})
+    jest.advanceTimersByTime(0)
+  }
+
+  beforeEach(() => {
+    jest.useFakeTimers()
+    jest.spyOn(Ajax, "request").mockImplementation(() => ({abort: jest.fn()}))
+  })
+
+  afterEach(() => {
+    longpoll.close()
+    jest.useRealTimers()
+    jest.restoreAllMocks()
+  })
+
+  it("resumes the session with its first poll", () => {
+    start()
+    const poll = last("GET")
+    expect(poll[1]).toMatch(/^http:\/\/localhost\/socket\/longpoll\?/)
+    expect(params(poll)).toEqual({vsn: "2.0.0", ack: "3", resume: "1"})
+    expect(poll[2]["X-Phoenix-Longpoll-Token"]).toBe("token")
+    expect(longpoll.readyState).toBe(SOCKET_STATES.connecting)
+  })
+
+  it("sends the messages the server did not confirm once it resumed", () => {
+    start()
+    longpoll.send("d")
+    jest.advanceTimersByTime(0)
+    expect(requests("POST")).toHaveLength(0)
+
+    respond(last("GET"), {status: 200, token: "token", messages: ["x"], last: 4})
+    expect(events).toEqual(["open"])
+    jest.advanceTimersByTime(0)
+    expect(events).toEqual(["open", "x"])
+    expect(params(last("POST")).seq).toBe("2")
+    expect(last("POST")[3]).toBe("b\nc\nd")
+    expect(params(last("GET")).resume).toBeUndefined()
+  })
+
+  it("closes when the session is gone", () => {
+    start()
+    respond(last("GET"), {status: 410, token: "new-token", messages: [], last: 0})
+    expect(events).toEqual(["error", {close: 3410}])
+  })
+
+  it("closes when a node with an older server answers", () => {
+    start()
+    respond(last("GET"), {status: 204, token: "token"})
+    expect(events).toEqual(["error", {close: 3410}])
+  })
+
+  it("delivers binary messages", () => {
+    start()
+    respond(last("GET"), {status: 200, token: "token", messages: ["base64:AQID"], last: 4})
+    jest.advanceTimersByTime(0)
+    expect(new Uint8Array(events[1])).toEqual(new Uint8Array([1, 2, 3]))
+  })
+})

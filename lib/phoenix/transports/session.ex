@@ -184,7 +184,8 @@ defmodule Phoenix.Transports.Session do
     case result do
       {:ok, handler_state} ->
         broadcast_from!(state, client_ref, {:resumed, ref})
-        {:noreply, %{state | handler: {handler, handler_state}}}
+        # the client gave up on the WebSocket we have, for example to long poll instead
+        {:noreply, %{detach(state) | handler: {handler, handler_state}}}
 
       {:error, _reason} ->
         broadcast_from!(state, client_ref, {:rejected, ref})
@@ -197,7 +198,8 @@ defmodule Phoenix.Transports.Session do
   # A connection that receives our messages as we send them, such as a WebSocket.
   # It replaces the previous one, which the client gave up on.
   def handle_info({:pipe_attach, pipe, ref, ack}, state) do
-    state = detach(state)
+    # the client resumed over a WebSocket, so it stopped polling
+    state = %{detach(state) | client_ref: nil}
     send(pipe, {:attached, ref, state.in_seq})
     state = acknowledge(state, ack)
     state = %{state | pipe: {pipe, Process.monitor(pipe)}}
@@ -269,12 +271,19 @@ defmodule Phoenix.Transports.Session do
   def handle_info({:flush, client_ref, ref, ack}, state) do
     state = acknowledge(%{state | last_client_poll: now_ms()}, ack)
 
-    if :queue.is_empty(state.out) do
-      {:noreply, %{state | client_ref: {client_ref, ref}}}
-    else
-      payloads = for {_seq, _opcode, payload} <- :queue.to_list(state.out), do: payload
-      broadcast_from!(state, client_ref, {:messages, payloads, ref, state.out_seq})
-      {:noreply, %{sent(state) | client_ref: nil}}
+    cond do
+      # A poll the client gave up on when it resumed over a WebSocket. It must not
+      # take the messages, so it expires. A client that switches to long polling
+      # resumes the session first, which detaches the WebSocket.
+      state.pipe != nil ->
+        {:noreply, state}
+
+      :queue.is_empty(state.out) ->
+        {:noreply, %{state | client_ref: {client_ref, ref}}}
+
+      true ->
+        broadcast_from!(state, client_ref, {:messages, poll_payloads(state), ref, state.out_seq})
+        {:noreply, %{sent(state) | client_ref: nil}}
     end
   end
 
@@ -288,8 +297,7 @@ defmodule Phoenix.Transports.Session do
     if :queue.is_empty(state.out) do
       {:noreply, %{state | client_ref: {client_ref, ref}}}
     else
-      payloads = for {_seq, _opcode, payload} <- :queue.to_list(state.out), do: payload
-      broadcast_from!(state, client_ref, {:messages, payloads, ref})
+      broadcast_from!(state, client_ref, {:messages, poll_payloads(state), ref})
       {:noreply, %{acknowledge(sent(state), state.out_seq) | client_ref: nil}}
     end
   end
@@ -383,6 +391,14 @@ defmodule Phoenix.Transports.Session do
         state = %{state | handler: {handler, handler_state}}
         broadcast_from!(state, client_ref, {:error, ref})
         {:stop, reason, state}
+    end
+  end
+
+  # Long polling sends text messages as they are and binary messages in base64
+  # with a prefix, which a session can have when it started over a WebSocket.
+  defp poll_payloads(state) do
+    for {_seq, opcode, payload} <- :queue.to_list(state.out) do
+      if opcode == :binary, do: "base64:" <> Base.encode64(payload), else: payload
     end
   end
 

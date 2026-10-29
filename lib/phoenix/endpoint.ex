@@ -1094,7 +1094,10 @@ defmodule Phoenix.Endpoint do
       which keeps the messages the client did not acknowledge yet and stays alive for
       `:window_ms` times 1.5 after the WebSocket failed. A resumed socket does not invoke
       `c:Phoenix.Socket.connect/3`. Implement `c:Phoenix.Socket.resume/3` to check
-      the new connection instead.
+      the new connection instead. When the socket also enables `:longpoll`, clients
+      with the `longPollFallbackMs` option continue the socket with long polling
+      when they cannot resume it over a WebSocket in time. This requires the same
+      `:crypto` options for both transports.
 
     * `:window_ms` - with `:resumable`, how long the client can take to resume
       the socket in milliseconds (ms), times 1.5. Defaults to `10_000`.
