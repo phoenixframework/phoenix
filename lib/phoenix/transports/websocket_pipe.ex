@@ -159,11 +159,6 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
     {:ok, state}
   end
 
-  @impl true
-  def terminate(_reason, _state) do
-    :ok
-  end
-
   defp attach(state, session, ack) do
     ref = Process.monitor(session)
     send(session, {:pipe_attach, self(), ref, ack})
