@@ -238,9 +238,9 @@ defmodule Phoenix.Socket.Transport do
   @doc """
   Handles a client that resumes its session over a new connection.
 
-  Transports that keep the socket across connections, such as long polling,
-  invoke it when a client resumes after a failed request or connection, before
-  the client receives the messages it missed. It receives a map with the same
+  Transports that keep the socket across connections, such as long polling and
+  resumable WebSockets, invoke it when a client resumes after a failed request or
+  connection, before the client receives the messages it missed. It receives a map with the same
   keys as `c:connect/1`, describing the new connection. It must return one of:
 
     * `{:ok, state}` - continues the socket

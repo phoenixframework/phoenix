@@ -22,6 +22,10 @@ defmodule Phoenix.Transports.WebSocket do
   import Plug.Conn
 
   alias Phoenix.Socket.{V1, V2, Transport}
+  alias Phoenix.Transports.{Session, WebSocket.Pipe}
+
+  # the params of resumable clients, which we don't pass to the socket
+  @resume_params ["resumable", "resume"]
 
   def default_config() do
     [
@@ -30,7 +34,10 @@ defmodule Phoenix.Transports.WebSocket do
       error_handler: {__MODULE__, :handle_error, []},
       timeout: 60_000,
       transport_log: false,
-      compress: false
+      compress: false,
+      resumable: false,
+      window_ms: 10_000,
+      crypto: [max_age: 1_209_600]
     ]
   end
 
@@ -68,31 +75,69 @@ defmodule Phoenix.Transports.WebSocket do
           endpoint: endpoint,
           transport: :websocket,
           options: opts,
-          params: params,
+          params: Map.drop(params, @resume_params),
           connect_info: connect_info
         }
 
-        case handler.connect(config) do
-          {:ok, arg} ->
-            try do
-              conn
-              |> WebSockAdapter.upgrade(handler, arg, opts)
-              |> halt()
-            rescue
-              e in WebSockAdapter.UpgradeError -> send_resp(conn, 400, e.message)
-            end
+        case resumable(params, opts) do
+          :resume ->
+            upgrade(conn, Pipe, {:resume, endpoint, opts, config}, opts)
 
-          :error ->
-            send_resp(conn, 403, "")
+          :new ->
+            connect(conn, handler, config, opts, fn arg ->
+              case Session.start(endpoint, handler, arg, opts) do
+                {:ok, session, priv_topic} ->
+                  data = {:v1, endpoint.config(:endpoint_id), session, priv_topic}
+                  token = Session.sign_token(endpoint, data, opts)
+                  upgrade(conn, Pipe, {:new, session, token, opts}, opts)
 
-          {:error, reason} ->
-            {m, f, args} = opts[:error_handler]
-            apply(m, f, [conn, reason | args])
+                {:error, _} ->
+                  send_resp(conn, 500, "")
+              end
+            end)
+
+          nil ->
+            connect(conn, handler, config, opts, &upgrade(conn, handler, &1, opts))
         end
     end
   end
 
   def call(conn, _), do: send_resp(conn, 400, "")
+
+  # Resumable clients ask for a session that outlives the WebSocket. Only clients
+  # with the V2 serializer can resume, as the session talks to them with V2 messages.
+  defp resumable(%{"resumable" => _} = params, opts) do
+    with true <- Keyword.get(opts, :resumable, false),
+         "2." <> _ <- params["vsn"] do
+      if params["resume"], do: :resume, else: :new
+    else
+      _ -> nil
+    end
+  end
+
+  defp resumable(_params, _opts), do: nil
+
+  defp connect(conn, handler, config, opts, upgrade) do
+    case handler.connect(config) do
+      {:ok, arg} ->
+        upgrade.(arg)
+
+      :error ->
+        send_resp(conn, 403, "")
+
+      {:error, reason} ->
+        {m, f, args} = opts[:error_handler]
+        apply(m, f, [conn, reason | args])
+    end
+  end
+
+  defp upgrade(conn, handler, arg, opts) do
+    conn
+    |> WebSockAdapter.upgrade(handler, arg, opts)
+    |> halt()
+  rescue
+    e in WebSockAdapter.UpgradeError -> send_resp(conn, 400, e.message)
+  end
 
   def handle_error(conn, _reason), do: send_resp(conn, 403, "")
 

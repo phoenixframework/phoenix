@@ -187,8 +187,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   end
 
   setup config do
-    for {_, pid, _, _} <- DynamicSupervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
-      DynamicSupervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
+    for {_, pid, _, _} <- DynamicSupervisor.which_children(Phoenix.Transports.Session.Supervisor) do
+      DynamicSupervisor.terminate_child(Phoenix.Transports.Session.Supervisor, pid)
     end
 
     {:ok, topic: "room:" <> to_string(config.test)}

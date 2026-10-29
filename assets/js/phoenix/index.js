@@ -103,6 +103,17 @@
  * socket and channels rejoin. If the session expires, the usual error/close events
  * fire and channels rejoin. Push timeouts continue to apply while suspended.
  *
+ * WebSockets resume the same way with the `resumable` option, which requires
+ * the `:resumable` WebSocket option on the server:
+ *
+ * ```
+ * let socket = new Socket("/socket", {resumable: true})
+ * ```
+ *
+ * When the WebSocket fails, or the heartbeat times out, the socket resumes its
+ * session over a new WebSocket and both sides send the messages the other side
+ * missed. Servers that don't support it behave like before.
+ *
  *
  * ## Channel Hooks
  *
@@ -211,6 +222,7 @@
 import Channel from "./channel"
 import LongPoll from "./longpoll"
 import Presence from "./presence"
+import ResumableWebSocket from "./resumable_websocket"
 import Serializer from "./serializer"
 import Socket from "./socket"
 
@@ -218,6 +230,7 @@ export {
   Channel,
   LongPoll,
   Presence,
+  ResumableWebSocket,
   Serializer,
   Socket
 }

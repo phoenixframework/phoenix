@@ -252,8 +252,9 @@ defmodule Phoenix.Socket do
   @doc """
   Checks a client that resumes its socket over a new connection.
 
-  Transports keep the socket and its channels when a request or connection fails,
-  and the client resumes them over a new one. Only `c:connect/3` checks the first
+  Long polling, and WebSockets with the `:resumable` option, keep the socket and
+  its channels when a request or connection fails, and the client resumes them
+  over a new one. Only `c:connect/3` checks the first
   connection, so this callback lets you check the new one, for example to verify
   that the user is still logged in. It receives the params and `connect_info` of
   the new connection, and the socket returned by `c:connect/3`, with the
