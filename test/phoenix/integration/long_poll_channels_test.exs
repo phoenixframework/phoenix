@@ -112,6 +112,16 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
     def resume(%{"reject_resume" => "true"}, _socket, _connect_info), do: :error
 
+    # answers after the plug stopped waiting, which is 200ms in these tests
+    def resume(%{"slow_resume" => result} = params, socket, connect_info) do
+      Process.sleep(300)
+      params = Map.delete(params, "slow_resume")
+
+      if result == "reject",
+        do: :error,
+        else: resume(params, socket, connect_info)
+    end
+
     def resume(params, socket, _connect_info) do
       {:ok, assign(socket, :resumed_with, params["resumed_with"])}
     end
@@ -813,6 +823,30 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
           # the channel keeps running
           assert Process.whereis(:"room:lobby")
+        end
+
+        test "#{@mode}: does not send messages when a slow resume is rejected" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          params = Map.merge(session, %{"ack" => "0", "resume" => "1", "slow_resume" => "reject"})
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 204
+          assert resp.body["messages"] == []
+          assert_down("room:lobby")
+
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          assert resp.body["status"] == 410
+        end
+
+        test "#{@mode}: sends messages when a slow resume is accepted" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          params = Map.merge(session, %{"ack" => "0", "resume" => "1", "slow_resume" => "accept"})
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 200
+          assert [_reply, _user_entered, _joined] = resp.body["messages"]
         end
 
         test "#{@mode}: stops the socket when it rejects the resume" do

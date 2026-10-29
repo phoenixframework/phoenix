@@ -211,8 +211,10 @@ defmodule Phoenix.Transports.LongPoll do
       {:resumed, ^ref} -> :ok
       {:rejected, ^ref} -> :rejected
     after
-      # A Phoenix 1.8 server does not answer. It ignores polls with an ack as well,
-      # so it stops as inactive and the client starts a new session.
+      # The session handles the resume before the flush we send next, as both come from
+      # this process. If it is slow to answer, for example because resume/3 queries the
+      # database, we poll anyway: a session that rejects the resume stops before it sends
+      # us messages, so the poll expires and the next request gets 410.
       opts[:pubsub_timeout_ms] -> :ok
     end
   end
