@@ -735,7 +735,10 @@ defmodule Phoenix.Endpoint do
             :error_handler,
             :validate_utf8,
             :active_n,
-            :deflate_options
+            :deflate_options,
+            :resumable,
+            :window_ms,
+            :crypto
           ]
       )
 
@@ -1083,6 +1086,24 @@ defmodule Phoenix.Endpoint do
       and a `{:error, :rate_limit}` return may be handled on `MySocket` as:
 
           def handle_error(conn, :rate_limit), do: Plug.Conn.send_resp(conn, 429, "Too many requests")
+
+    * `:resumable` - whether clients can resume the socket over a new WebSocket
+      after the connection failed, without rejoining channels. Defaults to `false`.
+      Clients opt in with the `resumable: true` option of the `phoenix.js` Socket,
+      which requires the V2 serializer. Each socket then runs in its own process,
+      which keeps the messages the client did not acknowledge yet and stays alive for
+      `:window_ms` times 1.5 after the WebSocket failed. A resumed socket does not invoke
+      `c:Phoenix.Socket.connect/3`. Implement `c:Phoenix.Socket.resume/3` to check
+      the new connection instead. When the socket also enables `:longpoll`, clients
+      with the `longPollFallbackMs` option continue the socket with long polling
+      when they cannot resume it over a WebSocket in time. This requires the same
+      `:crypto` options for both transports.
+
+    * `:window_ms` - with `:resumable`, how long the client can take to resume
+      the socket in milliseconds (ms), times 1.5. Defaults to `10_000`.
+
+    * `:crypto` - with `:resumable`, options for verifying and signing the resume
+      token, accepted by `Phoenix.Token`. By default tokens are valid for 2 weeks
 
   ## Longpoll configuration
 

@@ -29,7 +29,7 @@ defmodule Phoenix do
     children = [
       # Code reloading must be serial across all Phoenix apps
       Phoenix.CodeReloader.Server,
-      {DynamicSupervisor, name: Phoenix.Transports.LongPoll.Supervisor, strategy: :one_for_one}
+      {DynamicSupervisor, name: Phoenix.Transports.Session.Supervisor, strategy: :one_for_one}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)

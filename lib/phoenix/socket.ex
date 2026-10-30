@@ -249,7 +249,30 @@ defmodule Phoenix.Socket do
   """
   @callback id(Socket.t()) :: String.t() | nil
 
-  @optional_callbacks connect: 2, connect: 3
+  @doc """
+  Checks a client that resumes its socket over a new connection.
+
+  Long polling, and WebSockets with the `:resumable` option, keep the socket and
+  its channels when a request or connection fails, and the client resumes them
+  over a new one. Only `c:connect/3` checks the first
+  connection, so this callback lets you check the new one, for example to verify
+  that the user is still logged in. It receives the params and `connect_info` of
+  the new connection, and the socket returned by `c:connect/3`, with the
+  `:transport` of the new connection.
+
+  Return `{:ok, socket}` to resume. The returned assigns apply to channels joined
+  afterwards. Channels that already joined keep their sockets. The socket id cannot change.
+
+  To deny the resume, return `:error` or `{:error, term}`. The socket and its
+  channels stop, and the client connects again and rejoins its channels,
+  which invokes `c:connect/3`.
+
+  If the callback is not implemented, the client resumes the socket.
+  """
+  @callback resume(params :: map, Socket.t(), connect_info :: map) ::
+              {:ok, Socket.t()} | {:error, term} | :error
+
+  @optional_callbacks connect: 2, connect: 3, resume: 3
 
   defmodule InvalidMessageError do
     @moduledoc """
@@ -326,6 +349,9 @@ defmodule Phoenix.Socket do
 
       @doc false
       def handle_info(message, state), do: Phoenix.Socket.__info__(message, state)
+
+      @doc false
+      def handle_resume(info, state), do: Phoenix.Socket.__resume__(info, state)
 
       @doc false
       def terminate(reason, state), do: Phoenix.Socket.__terminate__(reason, state)
@@ -602,6 +628,34 @@ defmodule Phoenix.Socket do
 
   def __info__(_, state) do
     {:ok, state}
+  end
+
+  def __resume__(info, {state, socket}) do
+    %{transport: transport, params: params, connect_info: connect_info} = info
+    %{handler: handler, id: id} = socket = %{socket | transport: transport}
+
+    result =
+      if function_exported?(handler, :resume, 3) do
+        handler.resume(params, socket, connect_info)
+      else
+        {:ok, socket}
+      end
+
+    case result do
+      {:ok, %Socket{} = socket} ->
+        {:ok, {state, %{socket | id: id}}}
+
+      :error ->
+        {:error, :rejected}
+
+      {:error, reason} ->
+        {:error, reason}
+
+      invalid ->
+        raise ArgumentError,
+              "#{inspect(handler)}.resume/3 must return {:ok, socket}, :error " <>
+                "or {:error, term}, got: #{inspect(invalid)}"
+    end
   end
 
   def __terminate__(_reason, _state_socket) do
