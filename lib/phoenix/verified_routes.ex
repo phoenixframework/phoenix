@@ -984,6 +984,9 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp warn_location(meta, %{line: line, file: file, function: function, module: module}) do
     column = if column = meta[:column], do: column + 2
+    # Relative to the project, so copies of the project (git worktrees,
+    # copy-on-write clones) that reuse the build point to their own files
+    file = Path.relative_to_cwd(file)
     [line: line, function: function, module: module, file: file, column: column]
   end
 
