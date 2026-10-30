@@ -10,6 +10,13 @@
 
 ## Enhancements
 
+  * [phoenix.js] Long polling retries interrupted requests without rejoining
+    channels while its server session remains alive. Messages are retained until
+    acknowledged and retried pushes are deduplicated. New `socket.onSuspend` and
+    `socket.onResume` callbacks report interruptions and recovery without a
+    channel error. Older servers retain the existing reconnect behavior. During
+    a rolling deploy, a session that reaches a node with an older server falls
+    back to that behavior for the rest of the session.
   * The longpoll session token is now sent in a `x-phoenix-longpoll-token`
     header instead of the query string. If you do rolling deploys where both
     old and new nodes are active at the same time, ensure that you deploy
