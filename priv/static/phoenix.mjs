@@ -19,6 +19,7 @@ var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var MAX_LONGPOLL_BATCH_SIZE = 100;
 var DEFAULT_TIMEOUT = 1e4;
 var WS_CLOSE_NORMAL = 1e3;
+var CLOSE_SESSION_GONE = 3410;
 var CHANNEL_STATES = {
   closed: "closed",
   errored: "errored",
@@ -612,6 +613,16 @@ var Ajax = class {
 };
 
 // js/phoenix/longpoll.js
+var BINARY_PREFIX = "base64:";
+var RETRY_DELAYS = [100, 500, 1e3, 2e3, 5e3];
+var base64ToArrayBuffer = (base64) => {
+  let binary = atob(base64);
+  let bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+};
 var arrayBufferToBase64 = (buffer) => {
   let binary = "";
   let bytes = new Uint8Array(buffer);
@@ -635,6 +646,15 @@ var LongPoll = class {
     this.currentBatch = null;
     this.currentBatchTimer = null;
     this.batchBuffer = [];
+    this.resumable = false;
+    this.degraded = false;
+    this.ack = 0;
+    this.seq = 0;
+    this.retries = { GET: 0, POST: 0 };
+    this.retryTimers = /* @__PURE__ */ new Set();
+    this.interrupted = false;
+    this.resuming = false;
+    this.resumeBuffer = [];
     this.onopen = function() {
     };
     this.onerror = function() {
@@ -643,15 +663,35 @@ var LongPoll = class {
     };
     this.onclose = function() {
     };
+    this.onsuspend = function() {
+    };
+    this.onresume = function() {
+    };
     this.pollEndpoint = this.normalizeEndpoint(endPoint);
     this.readyState = SOCKET_STATES.connecting;
     setTimeout(() => this.poll(), 0);
   }
+  /**
+   * @private
+   *
+   * Continues a session that another transport started, such as a ResumableWebSocket,
+   * before the first poll. We resume the session with its token and the number of the
+   * last message we received, and send the messages the server did not confirm again,
+   * numbered after the last one it confirmed. The server drops the ones it received.
+   */
+  resumeSession({ token, received, confirmed, unconfirmed }) {
+    this.token = token;
+    this.resumable = true;
+    this.resuming = true;
+    this.ack = received;
+    this.seq = confirmed;
+    this.resumeBuffer = unconfirmed.slice();
+  }
   normalizeEndpoint(endPoint) {
     return endPoint.replace("ws://", "http://").replace("wss://", "https://").replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll);
   }
-  endpointURL() {
-    return this.pollEndpoint;
+  endpointURL(params = {}) {
+    return Ajax.appendParams(this.pollEndpoint, params);
   }
   closeAndRetry(error, code, reason, wasClean) {
     if (!this.isActive()) {
@@ -677,29 +717,64 @@ var LongPoll = class {
     if (this.authToken) {
       headers["X-Phoenix-AuthToken"] = this.authToken;
     }
-    this.ajax("GET", headers, null, () => this.ontimeout(), (resp) => {
+    const params = this.resumable ? { ack: this.ack } : {};
+    if (this.resumable && (this.resuming || this.retries.GET > 0)) {
+      params.resume = 1;
+    }
+    this.ajax("GET", headers, null, params, () => this.retryOr("GET", () => this.poll(), () => this.ontimeout()), (resp) => {
       if (resp) {
-        var { status, token, messages } = resp;
+        var { status, token, messages, last } = resp;
         if (status === 410 && this.token !== null) {
-          this.closeAndRetry(410, 3410, "session_gone", false);
+          this.closeAndRetry(410, CLOSE_SESSION_GONE, "session_gone", false);
           return;
         }
         this.token = token;
+        if (last !== void 0) {
+          this.resumable = !this.degraded;
+        } else if (this.resuming && (status === 200 || status === 204)) {
+          this.closeAndRetry(410, CLOSE_SESSION_GONE, "session_gone", false);
+          return;
+        } else if (this.resumable && (status === 200 || status === 204)) {
+          if (!this.degrade()) {
+            return;
+          }
+        }
       } else {
         status = 0;
       }
+      if (this.resuming && (status === 200 || status === 204)) {
+        this.readyState = SOCKET_STATES.open;
+        this.onopen({});
+        if (!this.isActive()) {
+          return;
+        }
+        this.resuming = false;
+        const buffered = this.resumeBuffer;
+        this.resumeBuffer = [];
+        buffered.forEach((body) => this.send(body));
+      }
       switch (status) {
         case 200:
+          if (last !== void 0) {
+            const first = last - messages.length + 1;
+            if (first > this.ack + 1) {
+              this.closeAndRetry(0, 1011, "lost messages", false);
+              return;
+            }
+            messages = messages.slice(Math.max(0, this.ack + 1 - first));
+            this.ack = Math.max(this.ack, last);
+          }
           messages.forEach((msg) => {
-            const timer = setTimeout(() => {
-              this.messageTimers.delete(timer);
-              this.onmessage({ data: msg });
-            }, 0);
-            this.messageTimers.add(timer);
+            const data = msg.startsWith(BINARY_PREFIX) ? base64ToArrayBuffer(msg.slice(BINARY_PREFIX.length)) : msg;
+            this.scheduleMessage(() => this.onmessage({ data }));
           });
-          this.poll();
+          this.scheduleMessage(() => {
+            this.succeeded("GET");
+            this.poll();
+          });
           break;
         case 204:
+          this.succeeded("GET");
           this.poll();
           break;
         case 410:
@@ -712,6 +787,8 @@ var LongPoll = class {
           this.close(1008, "forbidden", false);
           break;
         case 0:
+          this.retryOr("GET", () => this.poll(), () => this.closeAndRetry(500, 1011, "internal server error", false));
+          break;
         case 500:
           this.closeAndRetry(500, 1011, "internal server error", false);
           break;
@@ -720,41 +797,126 @@ var LongPoll = class {
       }
     });
   }
+  scheduleMessage(callback) {
+    const timer = setTimeout(() => {
+      this.messageTimers.delete(timer);
+      callback();
+    }, 0);
+    this.messageTimers.add(timer);
+  }
   // we collect all pushes within the current event loop by
   // setTimeout 0, which optimizes back-to-back procedural
   // pushes against an empty buffer
   send(body) {
+    if (this.resuming) {
+      this.resumeBuffer.push(body);
+      return;
+    }
     if (typeof body !== "string") {
       body = arrayBufferToBase64(body);
     }
+    this.seq++;
     if (this.currentBatch) {
       this.currentBatch.push(body);
     } else if (this.awaitingBatchAck) {
+      if (this.batchBuffer.length === 0) {
+        this.batchBufferSeq = this.seq;
+      }
       this.batchBuffer.push(body);
     } else {
       this.currentBatch = [body];
+      const seq = this.seq;
       this.currentBatchTimer = setTimeout(() => {
-        this.batchSend(this.currentBatch);
+        this.batchSend(this.currentBatch, seq);
         this.currentBatch = null;
       }, 0);
     }
   }
-  batchSend(messages, offset = 0) {
+  batchSend(messages, seq, offset = 0) {
+    if (!this.isActive()) {
+      return;
+    }
     this.awaitingBatchAck = true;
     const next = offset + MAX_LONGPOLL_BATCH_SIZE;
     const batch = messages.slice(offset, next);
-    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), () => this.ontimeout(), (resp) => {
-      if (!resp || resp.status !== 200) {
+    const retry = () => this.batchSend(messages, seq, offset);
+    const params = this.resumable ? { seq: seq + offset } : {};
+    this.ajax("POST", { "Content-Type": "application/x-ndjson" }, batch.join("\n"), params, () => this.retryOr("POST", retry, () => this.ontimeout()), (resp) => {
+      if (!resp) {
+        this.retryOr("POST", retry, () => this.closeAndRetry(null, 1011, "internal server error", false));
+      } else if (resp.status !== 200) {
         this.closeAndRetry(resp && resp.status, 1011, "internal server error", false);
-      } else if (next < messages.length) {
-        this.batchSend(messages, next);
-      } else if (this.batchBuffer.length > 0) {
-        this.batchSend(this.batchBuffer);
-        this.batchBuffer = [];
       } else {
-        this.awaitingBatchAck = false;
+        if (this.resumable && resp.seq === void 0 && !this.degrade()) {
+          return;
+        }
+        this.succeeded("POST");
+        if (next < messages.length) {
+          this.batchSend(messages, seq, next);
+        } else if (this.batchBuffer.length > 0) {
+          this.batchSend(this.batchBuffer, this.batchBufferSeq);
+          this.batchBuffer = [];
+        } else {
+          this.awaitingBatchAck = false;
+        }
       }
     });
+  }
+  /**
+   * @private
+   *
+   * Stops resuming for the rest of the session. A node with an older server, as
+   * during a rolling deploy, does not forward our ack and seq. Retrying through it
+   * could lose or duplicate messages, so we fail like we do with an older server.
+   *
+   * TODO: Remove in Phoenix 1.10, when no cluster mixes 1.8 and newer nodes.
+   */
+  degrade() {
+    this.degraded = true;
+    this.resumable = false;
+    if (this.retries.GET > 0 || this.retries.POST > 0) {
+      this.closeAndRetry(0, 1011, "session no longer resumable", false);
+      return false;
+    }
+    return true;
+  }
+  /**
+   * @private
+   *
+   * Retries a failed request with backoff when the server keeps our session,
+   * otherwise fails.
+   */
+  retryOr(method, retry, fail) {
+    if (!this.resumable) {
+      return fail();
+    }
+    const delay = RETRY_DELAYS[Math.min(this.retries[method], RETRY_DELAYS.length - 1)];
+    this.retries[method]++;
+    if (this.retries[method] > 1 && !this.interrupted) {
+      this.interrupted = true;
+      this.onsuspend();
+    }
+    if (!this.isActive()) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      this.retryTimers.delete(timer);
+      if (!this.resumable) {
+        return fail();
+      }
+      retry();
+    }, delay);
+    this.retryTimers.add(timer);
+  }
+  /**
+   * @private
+   */
+  succeeded(method) {
+    this.retries[method] = 0;
+    if (this.interrupted && this.retries.GET === 0 && this.retries.POST === 0) {
+      this.interrupted = false;
+      this.onresume();
+    }
   }
   close(code, reason, wasClean) {
     this.stop(SOCKET_STATES.closed);
@@ -774,6 +936,11 @@ var LongPoll = class {
       clearTimeout(timer);
     }
     this.messageTimers.clear();
+    for (let timer of this.retryTimers) {
+      clearTimeout(timer);
+    }
+    this.retryTimers.clear();
+    this.interrupted = false;
     this.batchBuffer = [];
     this.awaitingBatchAck = false;
     clearTimeout(this.currentBatchTimer);
@@ -792,7 +959,7 @@ var LongPoll = class {
       this.onclose(opts);
     }
   }
-  ajax(method, headers, body, onCallerTimeout, callback) {
+  ajax(method, headers, body, params, onCallerTimeout, callback) {
     const request = { req: null };
     this.reqs.add(request);
     let ontimeout = () => {
@@ -803,7 +970,7 @@ var LongPoll = class {
     if (this.token !== null) {
       headers = Object.assign({}, headers, { "X-Phoenix-Longpoll-Token": this.token });
     }
-    request.req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, (resp) => {
+    request.req = Ajax.request(method, this.endpointURL(params), headers, body, this.timeout, ontimeout, (resp) => {
       if (this.reqs.delete(request)) {
         callback(resp);
       }
@@ -991,6 +1158,413 @@ var Presence = class _Presence {
   }
 };
 
+// js/phoenix/resumable_websocket.js
+var RETRY_DELAYS2 = [100, 500, 1e3, 2e3, 5e3];
+var ACK_INTERVAL_MS = 1e3;
+var DEFAULT_RESUME_TIMEOUT_MS = 1e4;
+var CONTROL_PREFIX = '[null,null,"phoenix","phx_';
+var control = (event, payload) => JSON.stringify([null, null, "phoenix", event, payload]);
+var ResumableWebSocket = class _ResumableWebSocket {
+  constructor(endPoint, protocols) {
+    this.endPoint = endPoint;
+    this.protocols = protocols;
+    this.binaryTypeValue = "arraybuffer";
+    this.timeout = DEFAULT_RESUME_TIMEOUT_MS;
+    this.readyState = SOCKET_STATES.connecting;
+    this.token = null;
+    this.unsupported = false;
+    this.received = 0;
+    this.unconfirmed = [];
+    this.confirmed = 0;
+    this.ws = null;
+    this.ready = false;
+    this.resuming = false;
+    this.retries = 0;
+    this.retryTimer = null;
+    this.resumeTimer = null;
+    this.ackTimer = null;
+    this.interrupted = false;
+    this.longPollFallbackMs = null;
+    this.fallbackTimer = null;
+    this.longpoll = null;
+    this.onopen = function() {
+    };
+    this.onerror = function() {
+    };
+    this.onmessage = function() {
+    };
+    this.onclose = function() {
+    };
+    this.onsuspend = function() {
+    };
+    this.onresume = function() {
+    };
+    this.connect(false);
+  }
+  get binaryType() {
+    return this.binaryTypeValue;
+  }
+  set binaryType(binaryType) {
+    this.binaryTypeValue = binaryType;
+    if (this.ws) {
+      this.ws.binaryType = binaryType;
+    }
+  }
+  get bufferedAmount() {
+    return this.ws ? this.ws.bufferedAmount : 0;
+  }
+  send(data) {
+    if (this.readyState !== SOCKET_STATES.open) {
+      return;
+    }
+    if (this.longpoll) {
+      this.longpoll.send(data);
+      return;
+    }
+    if (!this.unsupported) {
+      this.unconfirmed.push(data);
+    }
+    if (this.ready) {
+      this.ws.send(data);
+    }
+  }
+  close(code, reason) {
+    if (this.readyState === SOCKET_STATES.closed) {
+      return;
+    }
+    if (this.ready && this.token) {
+      this.ws.send(control("phx_close", {}));
+    }
+    if (this.longpoll) {
+      const longpoll = this.longpoll;
+      this.longpoll = null;
+      longpoll.onclose = function() {
+      };
+      longpoll.close(code, reason);
+    }
+    this.stop(code, reason);
+    this.onclose({ code: code || 1005, reason: reason || "", wasClean: true });
+  }
+  /**
+   * @private
+   *
+   * Resumes the session over a new WebSocket when the heartbeat timed out, as the
+   * current one is presumed dead. Returns whether we resume the session.
+   */
+  resumeAfterHeartbeatTimeout() {
+    if (this.readyState !== SOCKET_STATES.open || !this.token) {
+      return false;
+    }
+    if (this.longpoll) {
+      return true;
+    }
+    if (this.ws && !this.resuming) {
+      this.dropWebSocket();
+      this.retry();
+    }
+    return true;
+  }
+  /**
+   * @private
+   */
+  connect(resume) {
+    const WebSocket = _ResumableWebSocket.WebSocket || global.WebSocket;
+    const params = resume ? { resumable: 1, resume: 1 } : { resumable: 1 };
+    const ws = new WebSocket(Ajax.appendParams(this.endPoint, params), this.protocols);
+    ws.binaryType = this.binaryTypeValue;
+    this.ws = ws;
+    this.ready = false;
+    this.resuming = resume;
+    if (resume) {
+      this.resumeTimer = setTimeout(() => {
+        this.dropWebSocket();
+        this.retry();
+      }, this.timeout);
+    }
+    ws.onopen = () => {
+      if (this.ws !== ws) {
+        return;
+      }
+      if (resume) {
+        ws.send(control("phx_resume", { token: this.token, ack: this.received }));
+      } else {
+        this.ready = true;
+        this.readyState = SOCKET_STATES.open;
+        this.onopen();
+      }
+    };
+    ws.onerror = (error) => {
+      if (this.ws === ws && !this.token) {
+        this.onerror(error);
+      }
+    };
+    ws.onmessage = (event) => {
+      if (this.ws === ws) {
+        this.handleMessage(event);
+      }
+    };
+    ws.onclose = (event) => {
+      if (this.ws === ws) {
+        this.handleClose(event);
+      }
+    };
+  }
+  /**
+   * @private
+   */
+  handleMessage(event) {
+    const { data } = event;
+    if (typeof data === "string" && data.startsWith(CONTROL_PREFIX)) {
+      const [, , , name, payload] = JSON.parse(data);
+      this.handleControl(name, payload);
+      return;
+    }
+    if (this.resuming) {
+      this.end();
+      return;
+    }
+    if (this.token === null && !this.unsupported) {
+      this.unsupported = true;
+      this.unconfirmed = [];
+    }
+    this.received++;
+    this.scheduleAck();
+    this.onmessage(event);
+  }
+  /**
+   * @private
+   */
+  handleControl(name, payload) {
+    switch (name) {
+      case "phx_session":
+        this.token = payload.token;
+        break;
+      case "phx_resumed":
+        this.resumed(payload.seq);
+        break;
+      case "phx_ack":
+        this.confirm(payload.seq);
+        break;
+      case "phx_gone":
+        this.end(payload.code);
+        break;
+      default:
+        if (this.resuming) {
+          this.end();
+        }
+    }
+  }
+  /**
+   * @private
+   */
+  resumed(seq) {
+    if (!this.resuming) {
+      return;
+    }
+    if (seq < this.confirmed || seq > this.confirmed + this.unconfirmed.length) {
+      this.end();
+      return;
+    }
+    clearTimeout(this.resumeTimer);
+    this.confirm(seq);
+    this.resuming = false;
+    this.ready = true;
+    this.unconfirmed.forEach((data) => this.ws.send(data));
+    this.retries = 0;
+    this.recovered();
+  }
+  /**
+   * @private
+   */
+  interrupt() {
+    if (!this.interrupted) {
+      this.interrupted = true;
+      this.onsuspend();
+    }
+  }
+  /**
+   * @private
+   */
+  recovered() {
+    clearTimeout(this.fallbackTimer);
+    this.fallbackTimer = null;
+    if (this.interrupted) {
+      this.interrupted = false;
+      this.onresume();
+    }
+  }
+  /**
+   * @private
+   */
+  confirm(seq) {
+    if (seq > this.confirmed) {
+      this.unconfirmed.splice(0, seq - this.confirmed);
+      this.confirmed = seq;
+    }
+  }
+  /**
+   * @private
+   */
+  scheduleAck() {
+    if (this.ackTimer || !this.token) {
+      return;
+    }
+    this.ackTimer = setTimeout(() => {
+      this.ackTimer = null;
+      if (this.ready) {
+        this.ws.send(control("phx_ack", { ack: this.received }));
+      }
+    }, ACK_INTERVAL_MS);
+  }
+  /**
+   * @private
+   */
+  handleClose(event) {
+    this.ws = null;
+    this.ready = false;
+    clearTimeout(this.ackTimer);
+    clearTimeout(this.resumeTimer);
+    this.ackTimer = null;
+    if (this.readyState === SOCKET_STATES.open && this.token) {
+      this.retry();
+    } else {
+      this.stop();
+      this.onclose(event);
+    }
+  }
+  /**
+   * @private
+   *
+   * Resumes the session over a new WebSocket with backoff.
+   */
+  retry() {
+    this.resuming = false;
+    const delay = RETRY_DELAYS2[Math.min(this.retries, RETRY_DELAYS2.length - 1)];
+    this.retries++;
+    if (this.retries > 1) {
+      this.interrupt();
+    }
+    if (this.readyState !== SOCKET_STATES.open) {
+      return;
+    }
+    if (this.longPollFallbackMs && !this.fallbackTimer) {
+      this.fallbackTimer = setTimeout(() => this.fallBack(), this.longPollFallbackMs);
+    }
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      this.connect(true);
+    }, delay);
+  }
+  /**
+   * @private
+   *
+   * Continues the session with long polling, as resuming it over a WebSocket did not
+   * succeed in time. The LongPoll sends the messages the server did not confirm.
+   */
+  fallBack() {
+    this.fallbackTimer = null;
+    if (this.readyState !== SOCKET_STATES.open) {
+      return;
+    }
+    clearTimeout(this.retryTimer);
+    this.retryTimer = null;
+    this.dropWebSocket();
+    this.resuming = false;
+    const longpoll = new LongPoll(this.endPoint, this.protocols);
+    longpoll.timeout = this.timeout;
+    longpoll.resumeSession({
+      token: this.token,
+      received: this.received,
+      confirmed: this.confirmed,
+      unconfirmed: this.unconfirmed
+    });
+    this.unconfirmed = [];
+    this.longpoll = longpoll;
+    const current = () => this.longpoll === longpoll;
+    longpoll.onopen = () => {
+      if (current()) {
+        this.recovered();
+      }
+    };
+    longpoll.onmessage = (event) => {
+      if (current()) {
+        this.onmessage(event);
+      }
+    };
+    longpoll.onerror = (error) => {
+      if (current()) {
+        this.onerror(error);
+      }
+    };
+    longpoll.onsuspend = () => {
+      if (current()) {
+        this.interrupt();
+      }
+    };
+    longpoll.onresume = () => {
+      if (current()) {
+        this.recovered();
+      }
+    };
+    longpoll.onclose = (event) => {
+      if (!current()) {
+        return;
+      }
+      this.longpoll = null;
+      this.stop();
+      this.onclose(event);
+    };
+  }
+  /**
+   * @private
+   *
+   * Closes the transport when the session is gone, so the socket connects again.
+   */
+  end(code) {
+    this.stop();
+    if (code) {
+      this.onclose({ code, reason: "", wasClean: true });
+    } else {
+      this.onclose({ code: CLOSE_SESSION_GONE, reason: "session_gone", wasClean: false });
+    }
+  }
+  /**
+   * @private
+   */
+  dropWebSocket(code, reason) {
+    const ws = this.ws;
+    this.ws = null;
+    this.ready = false;
+    clearTimeout(this.resumeTimer);
+    if (!ws) {
+      return;
+    }
+    ws.onopen = ws.onerror = ws.onmessage = ws.onclose = function() {
+    };
+    if (ws.readyState === SOCKET_STATES.connecting || ws.readyState === SOCKET_STATES.open) {
+      if (code) {
+        ws.close(code, reason || "");
+      } else {
+        ws.close();
+      }
+    }
+  }
+  /**
+   * @private
+   */
+  stop(code, reason) {
+    this.readyState = SOCKET_STATES.closed;
+    clearTimeout(this.retryTimer);
+    clearTimeout(this.ackTimer);
+    clearTimeout(this.fallbackTimer);
+    this.retryTimer = null;
+    this.ackTimer = null;
+    this.fallbackTimer = null;
+    this.interrupted = false;
+    this.dropWebSocket(code, reason);
+  }
+};
+
 // js/phoenix/serializer.js
 var serializer_default = {
   HEADER_LENGTH: 1,
@@ -1125,6 +1699,7 @@ var Connection = class {
     this.ended = false;
     this.channelsErrored = false;
     this.closeHandled = false;
+    this.suspended = false;
     transport.onopen = () => {
       if (this.isCurrent()) {
         socket.onConnOpen();
@@ -1138,6 +1713,16 @@ var Connection = class {
     transport.onmessage = (event) => {
       if (this.isCurrent()) {
         socket.onConnMessage(event);
+      }
+    };
+    transport.onsuspend = () => {
+      if (this.isCurrent()) {
+        socket.onConnSuspend(this);
+      }
+    };
+    transport.onresume = () => {
+      if (this.isCurrent()) {
+        socket.onConnResume(this);
       }
     };
     transport.onclose = (event) => {
@@ -1184,14 +1769,14 @@ var Connection = class {
 // js/phoenix/socket.js
 var Socket = class {
   constructor(endPoint, opts = {}) {
-    this.stateChangeCallbacks = { open: [], close: [], error: [], message: [] };
+    this.stateChangeCallbacks = { open: [], close: [], error: [], message: [], suspend: [], resume: [] };
     this.channels = [];
     this.sendBuffer = [];
     this.ref = 0;
     this.fallbackRef = null;
     this.fallbackErrorRef = null;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
-    this.transport = opts.transport || global.WebSocket || LongPoll;
+    this.transport = opts.transport || (global.WebSocket && opts.resumable ? ResumableWebSocket : global.WebSocket) || LongPoll;
     this.primaryPassedHealthCheck = false;
     this.longPollFallbackMs = opts.longPollFallbackMs;
     this.fallbackTimer = null;
@@ -1449,6 +2034,26 @@ var Socket = class {
     return ref;
   }
   /**
+   * Registers a callback when the transport is interrupted but keeps its session
+   * and retries. Channels remain joined and pushes are buffered by the transport.
+   * Currently supported by LongPoll. A lost session instead emits error/close.
+   * @param {Function} callback
+   */
+  onSuspend(callback) {
+    let ref = this.makeRef();
+    this.stateChangeCallbacks.suspend.push([ref, callback]);
+    return ref;
+  }
+  /**
+   * Registers a callback when a suspended transport recovers the same session.
+   * @param {Function} callback
+   */
+  onResume(callback) {
+    let ref = this.makeRef();
+    this.stateChangeCallbacks.resume.push([ref, callback]);
+    return ref;
+  }
+  /**
    * Registers callbacks for connection message events
    * @param {Function} callback
    */
@@ -1482,6 +2087,8 @@ var Socket = class {
     switch (transport) {
       case LongPoll:
         return "LongPoll";
+      case ResumableWebSocket:
+        return "ResumableWebSocket";
       default:
         return transport.name;
     }
@@ -1501,6 +2108,7 @@ var Socket = class {
     const transport = new this.transport(this.endPointURL(), protocols);
     transport.binaryType = this.binaryType;
     transport.timeout = this.longpollerTimeout;
+    transport.longPollFallbackMs = this.longPollFallbackMs;
     this.connection = new Connection(this, transport);
     if (previous && previous.isOpen()) {
       this.triggerChanError("connection_closed", previous);
@@ -1600,6 +2208,14 @@ var Socket = class {
     if (this.pendingHeartbeatRef) {
       const connection = this.connection;
       this.pendingHeartbeatRef = null;
+      const transport = connection && connection.transport;
+      if (transport && transport.resumeAfterHeartbeatTimeout && transport.resumeAfterHeartbeatTimeout()) {
+        if (this.hasLogger()) {
+          this.log("transport", "heartbeat timeout. Resuming the session");
+        }
+        this.resetHeartbeat();
+        return;
+      }
       if (this.hasLogger()) {
         this.log("transport", "heartbeat timeout. Attempting to re-establish connection");
       }
@@ -1712,6 +2328,34 @@ var Socket = class {
       callback(error, transportBefore, establishedBefore);
     });
     this.triggerChanError("connection_error", connection);
+  }
+  /** @private */
+  onConnSuspend(connection) {
+    if (!this.stillUses(connection) || !connection.isOpen() || connection.suspended) {
+      return;
+    }
+    connection.suspended = true;
+    if (this.hasLogger()) this.log("transport", "suspended");
+    for (let [, callback] of this.stateChangeCallbacks.suspend.slice()) {
+      if (!this.stillUses(connection) || !connection.isOpen()) {
+        break;
+      }
+      callback();
+    }
+  }
+  /** @private */
+  onConnResume(connection) {
+    if (!this.stillUses(connection) || !connection.isOpen() || !connection.suspended) {
+      return;
+    }
+    connection.suspended = false;
+    if (this.hasLogger()) this.log("transport", "resumed");
+    for (let [, callback] of this.stateChangeCallbacks.resume.slice()) {
+      if (!this.stillUses(connection) || !connection.isOpen()) {
+        break;
+      }
+      callback();
+    }
   }
   /**
    * @private
@@ -1909,6 +2553,7 @@ export {
   Channel,
   LongPoll,
   Presence,
+  ResumableWebSocket,
   serializer_default as Serializer,
   Socket
 };
