@@ -160,10 +160,11 @@ export default class LongPoll {
       }
       if(this.resuming && (status === 200 || status === 204)){
         // we resumed the session, so we are open and send what we kept
-        this.resuming = false
         this.readyState = SOCKET_STATES.open
+        // keep callback pushes buffered after the messages we already kept
         this.onopen({})
         if(!this.isActive()){ return }
+        this.resuming = false
         const buffered = this.resumeBuffer
         this.resumeBuffer = []
         buffered.forEach(body => this.send(body))

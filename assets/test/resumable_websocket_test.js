@@ -288,6 +288,25 @@ describe("ResumableWebSocket", () => {
       expect(FakeWebSocket.instances).toHaveLength(3)
     })
 
+    it.each([
+      {status: 200, messages: ["b"], last: 2},
+      {status: 204, messages: [], last: 1}
+    ])("keeps replay order when a resume callback pushes after a $status poll", response => {
+      interrupt()
+      transport.onresume = () => transport.send("z")
+      jest.advanceTimersByTime(100)
+      last().drop()
+      jest.advanceTimersByTime(1901)
+      transport.send("y")
+
+      polls()[0][6]({...response, token: "token"})
+      jest.advanceTimersByTime(0)
+
+      expect(posts()).toHaveLength(1)
+      expect(params(posts()[0]).seq).toBe("1")
+      expect(posts()[0][3]).toBe("x\ny\nz")
+    })
+
     it("does not fall back once the session resumed over a WebSocket", () => {
       interrupt()
       jest.advanceTimersByTime(100)
