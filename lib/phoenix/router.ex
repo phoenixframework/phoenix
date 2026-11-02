@@ -397,7 +397,7 @@ defmodule Phoenix.Router do
         pipeline,
         _
       ) do
-    conn = prepare.(conn, metadata)
+    conn = Phoenix.Router.Route.prepare(conn, metadata, prepare)
 
     case pipes do
       :current -> pipeline.(conn)
@@ -406,11 +406,11 @@ defmodule Phoenix.Router do
   end
 
   def __call__(%{private: %{phoenix_bypass: :all}} = conn, metadata, prepare, _, _) do
-    prepare.(conn, metadata)
+    Phoenix.Router.Route.prepare(conn, metadata, prepare)
   end
 
   def __call__(conn, metadata, prepare, pipeline, {plug, opts}) do
-    conn = prepare.(conn, metadata)
+    conn = Phoenix.Router.Route.prepare(conn, metadata, prepare)
     start = System.monotonic_time()
     measurements = %{system_time: System.system_time()}
     metadata = %{metadata | conn: conn}
@@ -762,10 +762,8 @@ defmodule Phoenix.Router do
 
         quote line: route.line do
           unquote(kind)(unquote(name)(unquote_splicing(args))) do
-            {unquote(build_metadata(route, path_params)),
-             fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} ->
-               unquote(prepare)
-             end, &(unquote(Macro.var(pipe_name, __MODULE__)) / 1), unquote(dispatch)}
+            {unquote(build_metadata(route, path_params)), unquote(prepare),
+             &(unquote(Macro.var(pipe_name, __MODULE__)) / 1), unquote(dispatch)}
           end
         end
       end
