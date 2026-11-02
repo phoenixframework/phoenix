@@ -127,7 +127,7 @@ defmodule Phoenix.Router.Route do
       dispatch: build_dispatch(route),
       hosts: build_host_match(route.hosts),
       path_params: build_path_params(binding),
-      prepare: build_prepare(route)
+      prepare: Macro.escape({route.private, route.assigns})
     }
   end
 
@@ -165,28 +165,6 @@ defmodule Phoenix.Router.Route do
     {segments, Enum.reverse(binding)}
   end
 
-  defp build_prepare(route) do
-    {match_params, merge_params} = build_params()
-    {match_private, merge_private} = build_prepare_expr(:private, route.private)
-    {match_assigns, merge_assigns} = build_prepare_expr(:assigns, route.assigns)
-
-    match_all = match_params ++ match_private ++ match_assigns
-    merge_all = merge_params ++ merge_private ++ merge_assigns
-
-    quote do
-      %{unquote_splicing(match_all)} = var!(conn, :conn)
-      %{var!(conn, :conn) | unquote_splicing(merge_all)}
-    end
-  end
-
-  defp build_prepare_expr(_key, data) when data == %{}, do: {[], []}
-
-  defp build_prepare_expr(key, data) do
-    var = Macro.var(key, :conn)
-    merge = quote(do: Map.merge(unquote(var), unquote(Macro.escape(data))))
-    {[{key, var}], [{key, merge}]}
-  end
-
   defp build_dispatch(%Route{kind: :match, plug: plug, plug_opts: plug_opts}) do
     quote do
       {unquote(plug), unquote(Macro.escape(plug_opts))}
@@ -207,17 +185,14 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  defp build_params() do
-    params = Macro.var(:params, :conn)
-    path_params = Macro.var(:path_params, :conn)
-
-    merge_params =
-      quote(do: Phoenix.Router.Route.merge_params(unquote(params), unquote(path_params)))
-
-    {
-      [{:params, params}],
-      [{:params, merge_params}, {:path_params, path_params}]
-    }
+  @doc false
+  # Prepares the conn for the matched route. Every route shares this function
+  # and passes its compile-time private and assigns as data, instead of each
+  # route clause compiling its own closure: large routers compile faster.
+  def prepare(%{params: params} = conn, %{path_params: path_params}, {private, assigns}) do
+    conn = %{conn | params: merge_params(params, path_params), path_params: path_params}
+    conn = if private == %{}, do: conn, else: %{conn | private: Map.merge(conn.private, private)}
+    if assigns == %{}, do: conn, else: %{conn | assigns: Map.merge(conn.assigns, assigns)}
   end
 
   @doc """
