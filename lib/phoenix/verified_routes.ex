@@ -321,9 +321,12 @@ defmodule Phoenix.VerifiedRoutes do
       test_path = split_test_path(route.test_path)
 
       unless route.router.verified_route?([], test_path) do
+        # The file is stored relative to the project, so expand it against the
+        # current directory here, where the warning is emitted. Mix persists
+        # warnings by their absolute source path and drops relative ones.
         IO.warn(
           "no route path for #{inspect(route.router)} matches #{route.inspected_route}",
-          route.warn_location
+          Keyword.update!(route.warn_location, :file, &Path.expand/1)
         )
       end
     end)
@@ -984,6 +987,10 @@ defmodule Phoenix.VerifiedRoutes do
 
   defp warn_location(meta, %{line: line, file: file, function: function, module: module}) do
     column = if column = meta[:column], do: column + 2
+    # Relative to the project, so copies of the project (git worktrees,
+    # copy-on-write clones) that reuse the build point to their own files.
+    # It is expanded again when the warning is emitted, see __verify__/1.
+    file = Path.relative_to_cwd(file)
     [line: line, function: function, module: module, file: file, column: column]
   end
 
