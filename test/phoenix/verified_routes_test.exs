@@ -734,6 +734,35 @@ defmodule Phoenix.VerifiedRoutesTest do
       :code.delete(__MODULE__.Unmatched)
     end
 
+    test "~p warning location resolves to the current directory" do
+      {_, diagnostics} =
+        Code.with_diagnostics(fn ->
+          defmodule WarnLocation do
+            use Phoenix.VerifiedRoutes, endpoint: unquote(@endpoint), router: unquote(@router)
+
+            def test, do: ~p"/unknown"
+          end
+        end)
+
+      assert [%{file: file} = diagnostic] = diagnostics
+
+      assert diagnostic.message =~
+               ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/unknown"|
+
+      # the file is stored relative to the project and expanded when the
+      # warning is emitted, which Mix needs to persist the warning
+      assert Path.expand(file) == __ENV__.file
+
+      # Elixir 1.15 always reports IO.warn locations relative to the current directory
+      if Version.match?(System.version(), ">= 1.16.0") do
+        assert Path.type(file) == :absolute
+        assert diagnostic.source == file
+      end
+    after
+      :code.purge(__MODULE__.WarnLocation)
+      :code.delete(__MODULE__.WarnLocation)
+    end
+
     test "~p warns on warn_on_verify: true route" do
       warnings =
         ExUnit.CaptureIO.capture_io(:stderr, fn ->
