@@ -255,6 +255,23 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert PathPrefixes.images_baz() == "/images/baz"
   end
 
+  test ":statics match whole path segments" do
+    defmodule StaticSegments do
+      use Phoenix.VerifiedRoutes,
+        endpoint: unquote(@endpoint),
+        router: unquote(@router),
+        path_prefixes: [{__MODULE__, :locale, []}],
+        statics: ["fo"]
+
+      def locale, do: "en"
+      def foo, do: ~p"/foo"
+      def foo_url, do: url(~p"/foo")
+    end
+
+    assert StaticSegments.foo() == "/en/foo"
+    assert StaticSegments.foo_url() == "https://example.com/en/foo"
+  end
+
   test "unverified_path" do
     assert unverified_path(conn_with_script_name(), @router, "/posts") == "/api/posts"
     assert unverified_path(@endpoint, @router, "/posts") == "/posts"
@@ -732,6 +749,26 @@ defmodule Phoenix.VerifiedRoutesTest do
     after
       :code.purge(__MODULE__.Unmatched)
       :code.delete(__MODULE__.Unmatched)
+    end
+
+    test "~p warns on unmatched path starting with a static name" do
+      warnings =
+        ExUnit.CaptureIO.capture_io(:stderr, fn ->
+          defmodule UnmatchedStatic do
+            use Phoenix.VerifiedRoutes,
+              endpoint: unquote(@endpoint),
+              router: unquote(@router),
+              statics: ["images"]
+
+            def test, do: ~p"/images-unknown"
+          end
+        end)
+
+      assert warnings =~
+               ~s|no route path for Phoenix.VerifiedRoutesTest.Router matches "/images-unknown"|
+    after
+      :code.purge(__MODULE__.UnmatchedStatic)
+      :code.delete(__MODULE__.UnmatchedStatic)
     end
 
     test "~p warning location resolves to the current directory" do
