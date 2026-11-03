@@ -1076,10 +1076,12 @@ defmodule Phoenix.VerifiedRoutes do
     Module.get_attribute(env.module, name) || raise "expected @#{name} module attribute to be set"
   end
 
-  # Like Plug.Static's :only, the whole first segment must match
-  defp static_path?(path, statics) do
-    [_, segment | _] = String.split(path, ["/", "#"], parts: 3)
-    segment in statics
+  # Statics must match whole segments, so "images" matches
+  # "/images/logo.png" but not "/images-gallery"
+  defp static_path?("/" <> path, statics) do
+    Enum.any?(statics, fn static ->
+      path == static or String.starts_with?(path, [static <> "/", static <> "#"])
+    end)
   end
 
   defp build_own_forward_path(conn, router, path) do

@@ -261,15 +261,17 @@ defmodule Phoenix.VerifiedRoutesTest do
         endpoint: unquote(@endpoint),
         router: unquote(@router),
         path_prefixes: [{__MODULE__, :locale, []}],
-        statics: ["fo"]
+        statics: ["fo", "images/icons"]
 
       def locale, do: "en"
       def foo, do: ~p"/foo"
       def foo_url, do: url(~p"/foo")
+      def icon_url, do: url(~p"/images/icons/logo.png")
     end
 
     assert StaticSegments.foo() == "/en/foo"
     assert StaticSegments.foo_url() == "https://example.com/en/foo"
+    assert StaticSegments.icon_url() == "https://static.example.com/images/icons/logo.png"
   end
 
   test "unverified_path" do
