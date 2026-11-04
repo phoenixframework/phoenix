@@ -7,10 +7,6 @@
     ([#5509](https://github.com/phoenixframework/phoenix/issues/5509))
   * [Phoenix.Socket] Type `topic` and `channel_pid` as possibly `nil` in
     `Phoenix.Socket.t`, as they are before a channel is joined
-  * [Phoenix.VerifiedRoutes] Only treat paths as static when their first
-    segment is one of the `:statics`, so routes such as `~p"/images-gallery"`
-    are verified and get the path prefixes
-    ([#6895](https://github.com/phoenixframework/phoenix/issues/6895))
 
 ## Enhancements
 
