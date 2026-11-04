@@ -107,15 +107,13 @@ defmodule Phoenix.Socket.PoolDrainer do
         end
       end)
 
-    rounds = div(total, size) + 1
+    rounds = div(total + size - 1, size)
 
     for {pids, index} <-
           collection |> Stream.concat() |> Stream.chunk_every(size) |> Stream.with_index(1) do
-      count = if index == rounds, do: length(pids), else: size
-
       :telemetry.execute(
         [:phoenix, :socket_drain],
-        %{count: count, total: total, index: index, rounds: rounds},
+        %{count: length(pids), total: total, index: index, rounds: rounds},
         %{
           endpoint: endpoint,
           socket: name,
