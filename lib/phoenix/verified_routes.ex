@@ -257,7 +257,7 @@ defmodule Phoenix.VerifiedRoutes do
 
     statics =
       case Keyword.get(opts, :statics, []) do
-        list when is_list(list) -> list
+        list when is_list(list) -> Enum.map(list, &String.trim_trailing(&1, "/"))
         other -> raise ArgumentError, "expected statics to be a list, got: #{inspect(other)}"
       end
 
