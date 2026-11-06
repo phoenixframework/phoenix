@@ -135,7 +135,7 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   defp start_session(conn, endpoint, handler, arg, opts) do
-    case Session.start(endpoint, handler, arg, opts) do
+    case Session.start(endpoint, handler, arg, :websocket, opts) do
       {:ok, session, priv_topic} ->
         data = {:v1, endpoint.config(:endpoint_id), session, priv_topic}
         token = Session.sign_token(endpoint, data, opts)

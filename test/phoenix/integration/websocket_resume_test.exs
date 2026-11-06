@@ -378,16 +378,62 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         assert :sys.get_state(session(token)).pipe == nil
       end
 
-      test "polls do not take the messages of a WebSocket" do
+      test "long polling must resume a WebSocket session before it polls" do
         {client, token} = new_session()
         channel = join(client, "room:a")
+        drop(client)
+        send(channel, {:push, "missed", %{}})
 
-        # a poll the client gave up on when it resumed over the WebSocket
-        task = Task.async(fn -> poll(:get, token, %{"phx:ack" => "0"}) end)
-        Process.sleep(50)
+        # with the token alone, also without the ack that older clients don't send
+        assert poll(:get, token, %{"phx:ack" => "2"})["status"] == 410
+        assert poll(:get, token, %{})["status"] == 410
+        refute_received {:resume, _}
+
+        # the session keeps the messages for its client
+        body = poll(:get, token, %{"phx:ack" => "2", "phx:resume" => "1"})
+        assert [%Message{event: "missed"}] = decode(body["messages"])
+        assert_received {:resume, _}
+      end
+
+      test "long polling must resume a WebSocket session before it sends messages" do
+        {client, token} = new_session()
+        join(client, "room:a")
+
+        # with the token alone, also without the seq that older clients don't send
+        frame = ~s(["11","9","room:a","echo",{"from":"poll"}])
+        assert poll(:post, token, %{"phx:seq" => "2"}, frame)["status"] == 410
+        assert poll(:post, token, %{}, frame)["status"] == 410
+        refute_received {:resume, _}
+
+        # the session keeps running for the WebSocket and did not count the requests
+        echo(client, %{"from" => "ws"})
+        assert_receive %Message{event: "echo", payload: %{"from" => "ws"}}
+        refute_received %Message{event: "echo"}
+      end
+
+      test "polls do not take or acknowledge the messages of a WebSocket" do
+        {client, token} = new_session()
+        channel = join(client, "room:a")
         send(channel, {:push, "new", %{}})
         assert_receive %Message{event: "new"}
-        assert Task.await(task)["status"] == 204
+
+        # such as a poll the client gave up on when it resumed over the WebSocket
+        assert poll(:get, token, %{"phx:ack" => "3"})["status"] == 410
+
+        # the session still keeps the message for the WebSocket
+        drop(client)
+        resume(token, 2)
+        assert_receive %Message{event: "phx_resumed", payload: %{"last" => 3}}
+        assert_receive %Message{event: "new"}
+      end
+
+      test "long polling must resume its session again after a WebSocket resumed it" do
+        token = poll(:get, nil, %{})["token"]
+        client = resume(token, 0)
+        assert_receive %Message{event: "phx_resumed"}
+        drop(client)
+
+        assert poll(:get, token, %{"phx:ack" => "0"})["status"] == 410
       end
 
       test "long polling sends binary messages in base64" do
@@ -395,8 +441,9 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         join(client, "room:a")
         drop(client)
 
+        assert poll(:get, token, %{"phx:ack" => "2", "phx:resume" => "1"})["status"] == 204
         assert poll(:post, token, %{"phx:seq" => "2"}, ~s(["11","9","room:a","binary",{}]))
-        body = poll(:get, token, %{"phx:ack" => "2", "phx:resume" => "1"})
+        body = poll(:get, token, %{"phx:ack" => "2"})
         assert ["base64:" <> encoded] = body["messages"]
 
         assert <<0, _join_ref_size, _topic_size, _event_size, rest::binary>> =

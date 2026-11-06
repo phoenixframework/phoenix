@@ -145,6 +145,8 @@ defmodule Phoenix.Transports.LongPoll do
     receive do
       {:ok, ^ref} -> nil
       {:error, ^ref} -> nil
+      # the client uses another transport and did not resume the session to long poll
+      {:rejected, ^ref} -> :gone
     after
       opts[:window_ms] -> :request_timeout
     end
@@ -247,7 +249,7 @@ defmodule Phoenix.Transports.LongPoll do
 
     broadcast_from!(endpoint, server_ref, flush)
 
-    {status, messages, last} =
+    result =
       receive do
         # Phoenix 1.8 servers, and newer servers answering a flush without ack,
         # reply without the number of the last message.
@@ -259,12 +261,16 @@ defmodule Phoenix.Transports.LongPoll do
         {:messages, messages, ^ref, last} ->
           {:ok, messages, last}
 
+        {:rejected, ^ref} ->
+          :rejected
+
         {:now_available, ^ref} ->
           broadcast_from!(endpoint, server_ref, flush)
 
           receive do
             {:messages, messages, ^ref} -> {:ok, messages, nil}
             {:messages, messages, ^ref, last} -> {:ok, messages, last}
+            {:rejected, ^ref} -> :rejected
           after
             opts[:window_ms] ->
               broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
@@ -278,9 +284,17 @@ defmodule Phoenix.Transports.LongPoll do
           {:no_content, [], ack}
       end
 
-    conn
-    |> put_status(status)
-    |> status_token_messages_json(token, messages, last)
+    case result do
+      {status, messages, last} ->
+        conn
+        |> put_status(status)
+        |> status_token_messages_json(token, messages, last)
+
+      :rejected ->
+        # The client uses another transport and did not resume the session to long
+        # poll, so the socket did not check this request. The client starts a new session.
+        conn |> put_status(:gone) |> status_json()
+    end
   end
 
   defp int_param(conn, key) do
