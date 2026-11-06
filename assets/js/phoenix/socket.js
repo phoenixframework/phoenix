@@ -17,6 +17,7 @@ import {
 import Ajax from "./ajax"
 import Channel from "./channel"
 import LongPoll from "./longpoll"
+import ResumableWebSocket from "./resumable_websocket"
 import Serializer from "./serializer"
 import Timer from "./timer"
 import Connection from "./connection"
@@ -36,6 +37,12 @@ import Connection from "./connection"
  *
  * @param {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
  * before falling back to the LongPoll transport. Disabled by default.
+ *
+ * @param {boolean} [opts.resumable] - When true, uses the ResumableWebSocket transport, which
+ * resumes the socket over a new WebSocket when the connection fails, without rejoining channels.
+ * Requires the `:resumable` WebSocket option on the server. Disabled by default.
+ * With `longPollFallbackMs`, the socket continues with long polling when it cannot resume
+ * over a WebSocket within that time.
  *
  * @param {boolean} [opts.debug] - When true, enables debug logging. Default false.
  *
@@ -120,14 +127,14 @@ import Connection from "./connection"
 */
 export default class Socket {
   constructor(endPoint, opts = {}){
-    this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
+    this.stateChangeCallbacks = {open: [], close: [], error: [], message: [], suspend: [], resume: []}
     this.channels = []
     this.sendBuffer = []
     this.ref = 0
     this.fallbackRef = null
     this.fallbackErrorRef = null
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
-    this.transport = opts.transport || global.WebSocket || LongPoll
+    this.transport = opts.transport || (global.WebSocket && opts.resumable ? ResumableWebSocket : global.WebSocket) || LongPoll
     this.primaryPassedHealthCheck = false
     this.longPollFallbackMs = opts.longPollFallbackMs
     this.fallbackTimer = null
@@ -395,6 +402,28 @@ export default class Socket {
   }
 
   /**
+   * Registers a callback when the transport is interrupted but keeps its session
+   * and retries. Channels remain joined and pushes are buffered by the transport.
+   * Currently supported by LongPoll. A lost session instead emits error/close.
+   * @param {Function} callback
+   */
+  onSuspend(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.suspend.push([ref, callback])
+    return ref
+  }
+
+  /**
+   * Registers a callback when a suspended transport recovers the same session.
+   * @param {Function} callback
+   */
+  onResume(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.resume.push([ref, callback])
+    return ref
+  }
+
+  /**
    * Registers callbacks for connection message events
    * @param {Function} callback
    */
@@ -433,6 +462,7 @@ export default class Socket {
     // is native to browsers and does not need special handling.
     switch(transport){
       case LongPoll: return "LongPoll"
+      case ResumableWebSocket: return "ResumableWebSocket"
       default: return transport.name
     }
   }
@@ -456,6 +486,8 @@ export default class Socket {
     const transport = new this.transport(this.endPointURL(), protocols)
     transport.binaryType = this.binaryType
     transport.timeout = this.longpollerTimeout
+    // a transport that keeps its session falls back to long polling to continue it
+    transport.longPollFallbackMs = this.longPollFallbackMs
     this.connection = new Connection(this, transport)
     // connect can replace an ended connection that is still open while its buffer drains, but the
     // channels joined over it need to rejoin on the new connection instead of waiting for it to close
@@ -559,6 +591,13 @@ export default class Socket {
     if(this.pendingHeartbeatRef){
       const connection = this.connection
       this.pendingHeartbeatRef = null
+      // a transport that keeps its session resumes it over a new connection instead
+      const transport = connection && connection.transport
+      if(transport && transport.resumeAfterHeartbeatTimeout && transport.resumeAfterHeartbeatTimeout()){
+        if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Resuming the session") }
+        this.resetHeartbeat()
+        return
+      }
       if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
       this.closeWasClean = false
       // the connection is presumed dead, so we close it right away instead of waiting for its
@@ -690,6 +729,28 @@ export default class Socket {
     })
     // callbacks can replace the connection, in which case only its own joins are errored
     this.triggerChanError("connection_error", connection)
+  }
+
+  /** @private */
+  onConnSuspend(connection){
+    if(!this.stillUses(connection) || !connection.isOpen() || connection.suspended){ return }
+    connection.suspended = true
+    if(this.hasLogger()) this.log("transport", "suspended")
+    for(let [, callback] of this.stateChangeCallbacks.suspend.slice()){
+      if(!this.stillUses(connection) || !connection.isOpen()){ break }
+      callback()
+    }
+  }
+
+  /** @private */
+  onConnResume(connection){
+    if(!this.stillUses(connection) || !connection.isOpen() || !connection.suspended){ return }
+    connection.suspended = false
+    if(this.hasLogger()) this.log("transport", "resumed")
+    for(let [, callback] of this.stateChangeCallbacks.resume.slice()){
+      if(!this.stillUses(connection) || !connection.isOpen()){ break }
+      callback()
+    }
   }
 
   /**

@@ -87,6 +87,36 @@
  * socket.onClose( () => console.log("the connection dropped") )
  * ```
  *
+ * LongPoll automatically retries interrupted requests while the server keeps
+ * its session alive. During recovery, channels stay joined and outgoing messages
+ * are buffered. Use `onSuspend` and `onResume` to show connection status without
+ * resetting channel state:
+ *
+ * ```
+ * socket.onSuspend( () => console.log("recovering the connection") )
+ * socket.onResume( () => console.log("the connection recovered") )
+ * ```
+ *
+ * Recovery requires a server that supports acknowledged long-poll messages.
+ * With an older server, and for the rest of a session that reached a node
+ * with an older server during a rolling upgrade, failed requests close the
+ * socket and channels rejoin. If the session expires, the usual error/close events
+ * fire and channels rejoin. Push timeouts continue to apply while suspended.
+ *
+ * WebSockets resume the same way with the `resumable` option, which requires
+ * the `:resumable` WebSocket option on the server:
+ *
+ * ```
+ * let socket = new Socket("/socket", {resumable: true})
+ * ```
+ *
+ * When the WebSocket fails, or the heartbeat times out, the socket resumes its
+ * session over a new WebSocket and both sides send the messages the other side
+ * missed. With the `longPollFallbackMs` option, the socket continues the session
+ * with long polling when it cannot resume it over a WebSocket within that time,
+ * for example when a proxy stops allowing WebSockets. Servers that don't support
+ * it behave like before.
+ *
  *
  * ## Channel Hooks
  *
@@ -195,6 +225,7 @@
 import Channel from "./channel"
 import LongPoll from "./longpoll"
 import Presence from "./presence"
+import ResumableWebSocket from "./resumable_websocket"
 import Serializer from "./serializer"
 import Socket from "./socket"
 
@@ -202,6 +233,7 @@ export {
   Channel,
   LongPoll,
   Presence,
+  ResumableWebSocket,
   Serializer,
   Socket
 }

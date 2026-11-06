@@ -60,7 +60,7 @@ describe("with transports", function (){
       expect(socket.sendBuffer.length).toBe(0)
       expect(socket.ref).toBe(0)
       expect(socket.endPoint).toBe("/socket/websocket")
-      expect(socket.stateChangeCallbacks).toEqual({open: [], close: [], error: [], message: []})
+      expect(socket.stateChangeCallbacks).toEqual({open: [], close: [], error: [], message: [], suspend: [], resume: []})
       expect(socket.transport).toBe(WebSocket)
       expect(socket.timeout).toBe(10000)
       expect(socket.longpollerTimeout).toBe(20000)
