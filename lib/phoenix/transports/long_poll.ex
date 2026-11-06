@@ -8,6 +8,7 @@ defmodule Phoenix.Transports.LongPoll do
   @max_poll_batch_size 100
   @connect_info_opts [:check_csrf]
   @token_header "x-phoenix-longpoll-token"
+  @resume_params ["phx:ack", "phx:seq", "phx:resume"]
 
   import Plug.Conn
   alias Phoenix.Socket.{V1, V2, Transport}
@@ -90,7 +91,7 @@ defmodule Phoenix.Transports.LongPoll do
               #
               # TODO: Require seq in Phoenix 1.10. Phoenix 1.8 clients don't send it.
               # Phoenix 1.9 clients only omit it after their session reached a 1.8 node.
-              seq = int_param(conn, "seq")
+              seq = int_param(conn, "phx:seq")
 
               status =
                 body
@@ -161,7 +162,8 @@ defmodule Phoenix.Transports.LongPoll do
     connect_info =
       Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
 
-    arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
+    params = Map.drop(conn.params, @resume_params)
+    arg = {endpoint, handler, opts, params, priv_topic, connect_info}
     spec = {Session, arg}
 
     case DynamicSupervisor.start_child(Session.Supervisor, spec) do
@@ -189,7 +191,13 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Clients resume the session with the first poll after a failed request,
   # so the socket can check the connection again.
-  defp check_resume(%{params: %{"resume" => _}} = conn, server_ref, priv_topic, endpoint, opts) do
+  defp check_resume(
+         %{params: %{"phx:resume" => _}} = conn,
+         server_ref,
+         priv_topic,
+         endpoint,
+         opts
+       ) do
     keys = Keyword.get(opts, :connect_info, [])
     conn = maybe_auth_token_from_header(conn, opts[:auth_token])
 
@@ -200,7 +208,7 @@ defmodule Phoenix.Transports.LongPoll do
       endpoint: endpoint,
       transport: :longpoll,
       options: opts,
-      params: Map.drop(conn.params, ["ack", "resume"]),
+      params: Map.drop(conn.params, @resume_params),
       connect_info: connect_info
     }
 
@@ -227,7 +235,7 @@ defmodule Phoenix.Transports.LongPoll do
     client_ref = client_ref(server_ref)
 
     # the last message the client received, sent by clients that acknowledge
-    ack = int_param(conn, "ack")
+    ack = int_param(conn, "phx:ack")
 
     flush =
       case ack do

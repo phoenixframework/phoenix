@@ -80,7 +80,7 @@ describe("ResumableWebSocket", () => {
 
   it("asks the server for a session", () => {
     connect()
-    expect(last().params).toEqual({vsn: "2.0.0", resumable: "1"})
+    expect(last().params).toEqual({vsn: "2.0.0", "phx:resumable": "1"})
     expect(last().protocols).toEqual(["phoenix"])
     expect(transport.readyState).toBe(SOCKET_STATES.open)
     expect(transport.token).toBe("token")
@@ -107,7 +107,7 @@ describe("ResumableWebSocket", () => {
     jest.advanceTimersByTime(99)
     expect(FakeWebSocket.instances).toHaveLength(1)
     jest.advanceTimersByTime(1)
-    expect(last().params).toEqual({vsn: "2.0.0", resumable: "1", resume: "1"})
+    expect(last().params).toEqual({vsn: "2.0.0", "phx:resumable": "1", "phx:resume": "1"})
 
     last().open()
     expect(last().sent).toEqual([control("phx_resume", {token: "token", ack: 1})])
@@ -177,7 +177,7 @@ describe("ResumableWebSocket", () => {
     expect(ws.closed).not.toBeNull()
     jest.advanceTimersByTime(500)
     expect(last()).not.toBe(ws)
-    expect(last().params.resume).toBe("1")
+    expect(last().params["phx:resume"]).toBe("1")
   })
 
   it("closes with the code of the session when it stopped", () => {
@@ -271,7 +271,7 @@ describe("ResumableWebSocket", () => {
       jest.advanceTimersByTime(100)
       expect(ws.closed).not.toBeNull()
       jest.advanceTimersByTime(0)
-      expect(params(polls()[0])).toEqual({vsn: "2.0.0", ack: "1", resume: "1"})
+      expect(params(polls()[0])).toEqual({vsn: "2.0.0", "phx:ack": "1", "phx:resume": "1"})
       expect(polls()[0][2]["X-Phoenix-Longpoll-Token"]).toBe("token")
 
       // the session resumed over long polling
@@ -279,7 +279,7 @@ describe("ResumableWebSocket", () => {
       expect(events).toEqual(["open", "a", "suspend", "resume"])
       jest.advanceTimersByTime(0)
       expect(events).toEqual(["open", "a", "suspend", "resume", "b"])
-      expect(params(posts()[0]).seq).toBe("1")
+      expect(params(posts()[0])["phx:seq"]).toBe("1")
       expect(posts()[0][3]).toBe("x")
 
       // we keep long polling and do not open WebSockets anymore
@@ -303,7 +303,7 @@ describe("ResumableWebSocket", () => {
       jest.advanceTimersByTime(0)
 
       expect(posts()).toHaveLength(1)
-      expect(params(posts()[0]).seq).toBe("1")
+      expect(params(posts()[0])["phx:seq"]).toBe("1")
       expect(posts()[0][3]).toBe("x\ny\nz")
     })
 
@@ -424,7 +424,7 @@ describe("Socket with resumable: true", () => {
 
     jest.advanceTimersByTime(100)
     expect(last()).not.toBe(ws)
-    expect(last().params.resume).toBe("1")
+    expect(last().params["phx:resume"]).toBe("1")
     expect(socket.conn).toBeInstanceOf(ResumableWebSocket)
   })
 })

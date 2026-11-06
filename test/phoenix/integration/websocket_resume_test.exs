@@ -123,7 +123,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
 
   # connects with a new session and returns its token
   defp new_session(params \\ %{}) do
-    client = connect(Map.put(params, "resumable", "1"))
+    client = connect(Map.put(params, "phx:resumable", "1"))
     assert_receive %Message{topic: "phoenix", event: "phx_session", payload: %{"token" => token}}
     {client, token}
   end
@@ -150,7 +150,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
   end
 
   defp resume(token, ack, params \\ %{}, path \\ "/ws") do
-    client = connect(Map.merge(params, %{"resumable" => "1", "resume" => "1"}), path)
+    client = connect(Map.merge(params, %{"phx:resumable" => "1", "phx:resume" => "1"}), path)
     control(client, "phx_resume", %{token: token, ack: ack})
     client
   end
@@ -206,7 +206,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
 
         client = resume(token, 2)
         assert_receive {:resume, %{"vsn" => "2.0.0"} = params}
-        refute Map.has_key?(params, "resume")
+        refute Map.has_key?(params, "phx:resume")
         assert_receive %Message{event: "phx_resumed", payload: %{"seq" => 1}}
         assert_receive %Message{event: "missed", payload: %{"n" => 1}}
         assert_receive %Message{event: "missed", payload: %{"n" => 2}}
@@ -298,7 +298,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
       end
 
       test "requires the client to resume before sending messages" do
-        client = connect(%{"resumable" => "1", "resume" => "1"})
+        client = connect(%{"phx:resumable" => "1", "phx:resume" => "1"})
         WebsocketClient.join(client, "room:a", %{})
         assert_receive %Message{event: "phx_gone"}
         refute_received {:connect, _}
@@ -347,7 +347,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         drop(client)
         send(channel, {:push, "missed", %{}})
 
-        body = poll(:get, token, %{"ack" => "2", "resume" => "1"})
+        body = poll(:get, token, %{"phx:ack" => "2", "phx:resume" => "1"})
         assert body["status"] == 200
         assert [%Message{event: "missed"}] = decode(body["messages"])
         assert body["last"] == 3
@@ -359,10 +359,10 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         # the client sends the messages the WebSocket did not deliver, numbered
         # after the last one the session confirmed
         frame = ~s(["11","9","room:a","echo",{"n":1}])
-        assert poll(:post, token, %{"seq" => "2"}, frame)["status"] == 200
-        assert poll(:post, token, %{"seq" => "2"}, frame)["status"] == 200
+        assert poll(:post, token, %{"phx:seq" => "2"}, frame)["status"] == 200
+        assert poll(:post, token, %{"phx:seq" => "2"}, frame)["status"] == 200
 
-        body = poll(:get, token, %{"ack" => "3"})
+        body = poll(:get, token, %{"phx:ack" => "3"})
         assert [%Message{event: "echo", payload: %{"n" => 1}}] = decode(body["messages"])
         assert Process.whereis(:"room:a") == channel
       end
@@ -372,7 +372,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         join(client, "room:a")
         ref = Process.monitor(client)
 
-        body = poll(:get, token, %{"ack" => "2", "resume" => "1"})
+        body = poll(:get, token, %{"phx:ack" => "2", "phx:resume" => "1"})
         assert body["status"] == 204
         assert_receive {:DOWN, ^ref, _, _, _}
         assert :sys.get_state(session(token)).pipe == nil
@@ -383,7 +383,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         channel = join(client, "room:a")
 
         # a poll the client gave up on when it resumed over the WebSocket
-        task = Task.async(fn -> poll(:get, token, %{"ack" => "0"}) end)
+        task = Task.async(fn -> poll(:get, token, %{"phx:ack" => "0"}) end)
         Process.sleep(50)
         send(channel, {:push, "new", %{}})
         assert_receive %Message{event: "new"}
@@ -395,8 +395,8 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         join(client, "room:a")
         drop(client)
 
-        assert poll(:post, token, %{"seq" => "2"}, ~s(["11","9","room:a","binary",{}]))
-        body = poll(:get, token, %{"ack" => "2", "resume" => "1"})
+        assert poll(:post, token, %{"phx:seq" => "2"}, ~s(["11","9","room:a","binary",{}]))
+        body = poll(:get, token, %{"phx:ack" => "2", "phx:resume" => "1"})
         assert ["base64:" <> encoded] = body["messages"]
 
         assert <<0, _join_ref_size, _topic_size, _event_size, rest::binary>> =
@@ -411,7 +411,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         token = body["token"]
 
         join = ~s(["11","1","room:a","phx_join",{}])
-        assert poll(:post, token, %{"seq" => "1"}, join)["status"] == 200
+        assert poll(:post, token, %{"phx:seq" => "1"}, join)["status"] == 200
         channel = Process.whereis(:"room:a")
         Process.sleep(50)
 
@@ -457,7 +457,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
       end
 
       test "does not start a session when the socket is not resumable" do
-        client = connect(%{"resumable" => "1"}, "/ws/plain")
+        client = connect(%{"phx:resumable" => "1"}, "/ws/plain")
         assert_receive {:connect, %{"vsn" => "2.0.0"}}
         join(client, "room:a")
         refute_received %Message{event: "phx_session"}
@@ -466,11 +466,47 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
       test "does not pass the resume params to the socket" do
         new_session()
         assert_receive {:connect, params}
-        refute Map.has_key?(params, "resumable")
+        refute Map.has_key?(params, "phx:resumable")
+      end
+
+      test "preserves application params on sockets that did not opt in" do
+        params = %{"resumable" => "1", "resume" => "1", "ack" => "2", "seq" => "3"}
+        expected = Map.put(params, "vsn", "2.0.0")
+
+        for path <- ["/ws", "/ws/plain"] do
+          connect(params, path)
+          assert_receive {:connect, ^expected}
+        end
+      end
+
+      test "preserves application params when a WebSocket connects and resumes" do
+        params = %{"resumable" => "1", "resume" => "1", "ack" => "2", "seq" => "3"}
+        expected = Map.put(params, "vsn", "2.0.0")
+        {client, token} = new_session(params)
+        assert_received {:connect, ^expected}
+        drop(client)
+
+        resume(token, 0, params)
+        assert_receive {:resume, ^expected}
+        assert_receive %Message{event: "phx_resumed"}
+      end
+
+      test "preserves application params and removes protocol params for long polling" do
+        params = %{"resumable" => "1", "resume" => "1", "ack" => "2", "seq" => "3"}
+        expected = Map.put(params, "vsn", "2.0.0")
+
+        query = Map.merge(params, %{"phx:ack" => "0", "phx:seq" => "1", "phx:resume" => "1"})
+        body = poll(:get, nil, query)
+        assert body["status"] == 410
+        assert_received {:connect, ^expected}
+
+        body = poll(:get, body["token"], query)
+        assert body["status"] == 204
+        assert_received {:resume, ^expected}
       end
 
       test "starts a session when the :resumable function allows the connection" do
-        client = connect(%{"resumable" => "1", "user_id" => "1"}, "/ws/users")
+        client = connect(%{"phx:resumable" => "1", "user_id" => "1"}, "/ws/users")
         assert_receive %Message{event: "phx_session", payload: %{"token" => _}}
 
         # the function receives the same map as connect/1, followed by its arguments
@@ -478,13 +514,13 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         assert_received {:resumable?, transport_info, :arg}
         assert %{endpoint: Endpoint, transport: :websocket, connect_info: %{}} = transport_info
         assert transport_info.params == params
-        refute Map.has_key?(params, "resumable")
+        refute Map.has_key?(params, "phx:resumable")
 
         join(client, "room:a")
       end
 
       test "does not start a session when the :resumable function denies the connection" do
-        client = connect(%{"resumable" => "1"}, "/ws/users")
+        client = connect(%{"phx:resumable" => "1"}, "/ws/users")
         assert_received {:connect, %{"vsn" => "2.0.0"}}
         assert_received {:resumable?, _transport_info, :arg}
 
@@ -494,7 +530,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
       end
 
       test "does not invoke the :resumable function when a client resumes" do
-        client = connect(%{"resumable" => "1", "user_id" => "1"}, "/ws/users")
+        client = connect(%{"phx:resumable" => "1", "user_id" => "1"}, "/ws/users")
         assert_receive %Message{event: "phx_session", payload: %{"token" => token}}
         assert_received {:resumable?, _transport_info, :arg}
         channel = join(client, "room:a")
@@ -509,7 +545,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
       end
 
       test "does not invoke the :resumable function when the socket rejects the connection" do
-        params = %{"vsn" => "2.0.0", "resumable" => "1", "reject_connect" => "true"}
+        params = %{"vsn" => "2.0.0", "phx:resumable" => "1", "reject_connect" => "true"}
         url = "ws://127.0.0.1:#{@port}/ws/users/websocket?" <> URI.encode_query(params)
 
         assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
@@ -520,7 +556,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
 
       test "raises when the :resumable function does not return a boolean" do
         # we call the endpoint ourselves, as the server logs the error after it responded
-        params = %{"vsn" => "2.0.0", "resumable" => "1", "user_id" => "invalid"}
+        params = %{"vsn" => "2.0.0", "phx:resumable" => "1", "user_id" => "invalid"}
         conn = Plug.Test.conn(:get, "/ws/users/websocket?" <> URI.encode_query(params))
 
         assert_raise ArgumentError, ~r/resumable\?\/2, given as :resumable, must return/, fn ->

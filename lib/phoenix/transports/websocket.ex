@@ -25,7 +25,7 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Transports.{Session, WebSocket.Pipe}
 
   # the params of resumable clients, which we don't pass to the socket
-  @resume_params ["resumable", "resume"]
+  @resume_params ["phx:resumable", "phx:resume"]
 
   def default_config() do
     [
@@ -102,11 +102,11 @@ defmodule Phoenix.Transports.WebSocket do
 
   # Resumable clients ask for a session that outlives the WebSocket. Only clients
   # with the V2 serializer can resume, as the session talks to them with V2 messages.
-  defp resumable(%{"resumable" => _} = params, opts) do
+  defp resumable(%{"phx:resumable" => _} = params, opts) do
     # a function given as :resumable decides for each new connection, see resumable?/2
     with resumable when resumable != false <- Keyword.get(opts, :resumable, false),
          "2." <> _ <- params["vsn"] do
-      if params["resume"], do: :resume, else: :new
+      if params["phx:resume"], do: :resume, else: :new
     else
       _ -> nil
     end

@@ -129,7 +129,7 @@ export default class ResumableWebSocket {
    */
   connect(resume){
     const WebSocket = ResumableWebSocket.WebSocket || global.WebSocket
-    const params = resume ? {resumable: 1, resume: 1} : {resumable: 1}
+    const params = resume ? {"phx:resumable": 1, "phx:resume": 1} : {"phx:resumable": 1}
     const ws = new WebSocket(Ajax.appendParams(this.endPoint, params), this.protocols)
     ws.binaryType = this.binaryTypeValue
     this.ws = ws
