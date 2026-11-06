@@ -116,8 +116,6 @@ defmodule Phoenix.Transports.Session do
   end
 
   defp init_state(endpoint, handler, handler_state, transport, options, priv_topic) do
-    window_ms = Keyword.fetch!(options, :window_ms)
-
     state = %{
       handler: {handler, handler_state},
       # the transport the client connected or resumed with last
@@ -132,7 +130,8 @@ defmodule Phoenix.Transports.Session do
       sent_at: nil,
       # the number of the last message we received
       in_seq: 0,
-      window_ms: trunc(window_ms * 1.5),
+      # how long we wait for the client, which depends on its transport
+      window_ms: window_ms(options),
       pubsub_server: endpoint.config(:pubsub_server),
       priv_topic: priv_topic,
       last_client_poll: now_ms(),
@@ -231,7 +230,9 @@ defmodule Phoenix.Transports.Session do
         broadcast_from!(state, client_ref, {:resumed, ref})
         # the client gave up on the WebSocket we have, for example to long poll instead
         state = %{detach(state) | handler: {handler, handler_state}, transport: info.transport}
-        {:noreply, state}
+        # The client continues with the window of its transport. Long polling holds
+        # a poll for the window of its options, which must not look like inactivity.
+        {:noreply, %{state | window_ms: window_ms(info.options)}}
 
       {:error, _reason} ->
         broadcast_from!(state, client_ref, {:rejected, ref})
@@ -525,6 +526,8 @@ defmodule Phoenix.Transports.Session do
   end
 
   defp now_ms, do: System.monotonic_time(:millisecond)
+
+  defp window_ms(options), do: trunc(Keyword.fetch!(options, :window_ms) * 1.5)
 
   defp schedule_inactive_shutdown(window_ms) do
     Process.send_after(self(), :shutdown_if_inactive, window_ms)

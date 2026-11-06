@@ -98,6 +98,11 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
 
     socket "/ws/users", UserSocket,
       websocket: [resumable: {UserSocket, :resumable?, [:arg]}, window_ms: 200]
+
+    # long polling waits longer for messages than a WebSocket session for its client
+    socket "/ws/windows", UserSocket,
+      websocket: [resumable: true, window_ms: 200],
+      longpoll: [window_ms: 1000, pubsub_timeout_ms: 200]
   end
 
   setup %{adapter: adapter} do
@@ -155,9 +160,9 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
     client
   end
 
-  defp poll(method, token, params, body \\ nil) do
+  defp poll(method, token, params, body \\ nil, path \\ "/ws") do
     query = URI.encode_query(Map.merge(%{"vsn" => "2.0.0"}, params))
-    url = "http://127.0.0.1:#{@port}/ws/longpoll?" <> query
+    url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> query
 
     headers =
       if token,
@@ -435,6 +440,19 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         drop(client)
 
         assert poll(:get, token, %{"phx:ack" => "0"})["status"] == 410
+      end
+
+      test "long polling continues a WebSocket session with its own window" do
+        client = connect(%{"phx:resumable" => "1"}, "/ws/windows")
+        assert_receive %Message{event: "phx_session", payload: %{"token" => token}}
+        join(client, "room:a")
+        drop(client)
+
+        # the session does not take a poll that waits for messages for inactivity
+        resume = %{"phx:ack" => "2", "phx:resume" => "1"}
+        assert poll(:get, token, resume, nil, "/ws/windows")["status"] == 204
+        assert poll(:get, token, %{"phx:ack" => "2"}, nil, "/ws/windows")["status"] == 204
+        assert Process.alive?(session(token))
       end
 
       test "long polling sends binary messages in base64" do

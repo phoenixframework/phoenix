@@ -1097,7 +1097,8 @@ defmodule Phoenix.Endpoint do
       the new connection instead. When the socket also enables `:longpoll`, clients
       with the `longPollFallbackMs` option continue the socket with long polling
       when they cannot resume it over a WebSocket in time. This requires the same
-      `:crypto` options for both transports.
+      `:crypto` options for both transports. A socket that continues with long
+      polling uses the `:window_ms` of `:longpoll`.
 
       To decide for each connection, pass a function as MFA tuple instead of `true`.
       It runs after `c:Phoenix.Socket.connect/3` accepted a new connection and must
