@@ -2,6 +2,9 @@
 
 ## Bug fixes
 
+  * [phoenix.js] Send the fallback health check before the buffered join, and
+    treat any frame on that websocket as a pass
+    ([#6770](https://github.com/phoenixframework/phoenix/issues/6770))
   * [Phoenix.ChannelTest] Fix test sockets violating the Phoenix.Socket.t
     typespec, which made Dialyzer treat every test join as never returning
     ([#5509](https://github.com/phoenixframework/phoenix/issues/5509))
