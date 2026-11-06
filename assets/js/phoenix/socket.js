@@ -511,14 +511,9 @@ export default class Socket {
       }
       if(!isCurrent()){ return }
       established = true
-      // if we've established primary, give the fallback a new period to attempt ping
+      // the health check already went out. This period is how long a frame has to arrive.
       clearTimeout(this.fallbackTimer)
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
-      this.ping(rtt => {
-        this.log("transport", "connected to primary after", rtt)
-        this.primaryPassedHealthCheck = true
-        clearTimeout(this.fallbackTimer)
-      })
     })
     this.transportConnect()
     connectClock = this.connectClock
@@ -545,10 +540,42 @@ export default class Socket {
     if(this.hasLogger()) this.log("transport", `${this.transportName(this.transport)} connected to ${this.endPointURL()}`)
     this.closeWasClean = false
     this.establishedConnections++
+    // the health-check ping has to leave before the buffered join. The transport
+    // process blocks in Channel.Server.join until the join returns, so a ping
+    // sent after the join is not answered while the mount runs, and the fallback
+    // timer then drops a socket that is fine.
+    this.pingBeforeBufferedJoin()
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     this.resetHeartbeat()
     this.stateChangeCallbacks.open.forEach(([, callback]) => callback())
+  }
+
+  /**
+   * @private
+   *
+   * Sends the fallback health check before flushSendBuffer. No-op unless a
+   * fallback attempt is waiting on the primary transport.
+   */
+  pingBeforeBufferedJoin(){
+    if(!this.fallbackTimer || this.transport === LongPoll){ return }
+    this.ping(rtt => {
+      this.log("transport", "connected to primary after", rtt)
+      this.passPrimaryHealthCheck()
+    })
+  }
+
+  /**
+   * @private
+   *
+   * The primary transport answered. Later frames on this connection also call
+   * this, because a frame is the proof the ping was waiting for.
+   */
+  passPrimaryHealthCheck(){
+    if(this.transport === LongPoll){ return }
+    this.primaryPassedHealthCheck = true
+    clearTimeout(this.fallbackTimer)
+    this.fallbackTimer = null
   }
 
   /**
@@ -854,6 +881,9 @@ export default class Socket {
       // connection may have been replaced or closed in the meantime (browsers also drop messages
       // that arrive once a WebSocket is closing)
       if(connection !== this.connection || (wasOpen && !connection.isOpen())){ return }
+      // a frame on this connection is the health check. The ping reply is one
+      // such frame, and so is anything the server already sent.
+      if(this.fallbackTimer){ this.passPrimaryHealthCheck() }
       let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){
         this.clearHeartbeats()

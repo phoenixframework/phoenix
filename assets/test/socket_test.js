@@ -197,6 +197,51 @@ describe("with transports", function (){
           expect(socket.stateChangeCallbacks.error.length).toBe(1)
         })
 
+        it("sends the health check before the buffered join", function (){
+          const channel = socket.channel("topic")
+          channel.join()
+          socket.connect()
+          connections[0].open()
+
+          expect(connections[0].sent.map(([, , , event]) => event)).toEqual(["heartbeat", "phx_join"])
+        })
+
+        it("does not fall back when the health check is answered before the join reply", function (){
+          const channel = socket.channel("topic")
+          channel.join()
+          socket.connect()
+          connections[0].open()
+          const [[, heartbeatRef]] = connections[0].sent.filter(([, , topic, event]) => topic === "phoenix" && event === "heartbeat")
+          connections[0].onmessage({data: encode({
+            ref: heartbeatRef,
+            topic: "phoenix",
+            event: "phx_reply",
+            payload: {status: "ok", response: {}}
+          })})
+
+          jest.advanceTimersByTime(2500)
+
+          expect(socket.transport).toBe(StubWebSocket)
+          expect(socket.primaryPassedHealthCheck).toBe(true)
+          expect(socket.getSession("phx:fallback:LongPoll")).toBeNull()
+        })
+
+        it("does not fall back when any frame arrives on the open websocket", function (){
+          socket.connect()
+          connections[0].open()
+          connections[0].onmessage({data: encode({
+            ref: null,
+            topic: "phoenix",
+            event: "phx_reply",
+            payload: {status: "ok", response: {}}
+          })})
+
+          jest.advanceTimersByTime(2500)
+
+          expect(socket.transport).toBe(StubWebSocket)
+          expect(socket.primaryPassedHealthCheck).toBe(true)
+        })
+
         it("does not accumulate the health check pings of connections that dropped", function (){
           socket.connect()
           for(let i = 0; i < 3; i++){
