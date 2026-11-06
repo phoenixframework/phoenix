@@ -1219,6 +1219,7 @@ var Socket = class {
     this.ref = 0;
     this.fallbackRef = null;
     this.fallbackErrorRef = null;
+    this.fallbackHealthCheck = null;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
     this.transport = opts.transport || global.WebSocket || LongPoll;
     this.primaryPassedHealthCheck = false;
@@ -1591,6 +1592,16 @@ var Socket = class {
       clearTimeout(this.fallbackTimer);
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
     });
+    this.fallbackHealthCheck = () => {
+      if (!isCurrent()) {
+        return;
+      }
+      this.ping((rtt) => {
+        this.log("transport", "connected to primary after", rtt);
+        this.primaryPassedHealthCheck = true;
+        clearTimeout(this.fallbackTimer);
+      });
+    };
     this.transportConnect();
     connectClock = this.connectClock;
   }
@@ -1602,6 +1613,7 @@ var Socket = class {
   cancelFallback() {
     clearTimeout(this.fallbackTimer);
     this.off([this.fallbackRef, this.fallbackErrorRef]);
+    this.fallbackHealthCheck = null;
   }
   clearHeartbeats() {
     clearTimeout(this.heartbeatTimer);
@@ -1612,40 +1624,13 @@ var Socket = class {
     if (this.hasLogger()) this.log("transport", `${this.transportName(this.transport)} connected to ${this.endPointURL()}`);
     this.closeWasClean = false;
     this.establishedConnections++;
-    this.pingBeforeBufferedJoin();
+    if (this.fallbackHealthCheck) {
+      this.fallbackHealthCheck();
+    }
     this.flushSendBuffer();
     this.reconnectTimer.reset();
     this.resetHeartbeat();
     this.stateChangeCallbacks.open.forEach(([, callback]) => callback());
-  }
-  /**
-   * @private
-   *
-   * Sends the fallback health check before flushSendBuffer. No-op unless a
-   * fallback attempt is waiting on the primary transport.
-   */
-  pingBeforeBufferedJoin() {
-    if (!this.fallbackTimer || this.transport === LongPoll) {
-      return;
-    }
-    this.ping((rtt) => {
-      this.log("transport", "connected to primary after", rtt);
-      this.passPrimaryHealthCheck();
-    });
-  }
-  /**
-   * @private
-   *
-   * The primary transport answered. Later frames on this connection also call
-   * this, because a frame is the proof the ping was waiting for.
-   */
-  passPrimaryHealthCheck() {
-    if (this.transport === LongPoll) {
-      return;
-    }
-    this.primaryPassedHealthCheck = true;
-    clearTimeout(this.fallbackTimer);
-    this.fallbackTimer = null;
   }
   /**
    * @private
@@ -1924,9 +1909,6 @@ var Socket = class {
     this.decode(rawMessage.data, (msg) => {
       if (connection !== this.connection || wasOpen && !connection.isOpen()) {
         return;
-      }
-      if (this.fallbackTimer) {
-        this.passPrimaryHealthCheck();
       }
       let { topic, event, payload, ref, join_ref } = msg;
       if (ref && ref === this.pendingHeartbeatRef) {
