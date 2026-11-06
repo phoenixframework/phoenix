@@ -73,12 +73,21 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   def handle_info({:flush, client_ref, ref}, state) do
-    case state.buffer do
-      [] ->
+    cond do
+      # This listen already gave up. A send now would miss it and drop the buffer.
+      expired_queued?(client_ref, ref) ->
+        {:noreply,
+         %{
+           state
+           | client_ref: clear_client(state.client_ref, client_ref, ref),
+             last_client_poll: now_ms()
+         }}
+
+      state.buffer == [] ->
         {:noreply, %{state | client_ref: {client_ref, ref}, last_client_poll: now_ms()}}
 
-      buffer ->
-        broadcast_from!(state, client_ref, {:messages, Enum.reverse(buffer), ref})
+      true ->
+        broadcast_from!(state, client_ref, {:messages, Enum.reverse(state.buffer), ref})
         {:noreply, %{state | client_ref: nil, last_client_poll: now_ms(), buffer: []}}
     end
   end
@@ -152,6 +161,14 @@ defmodule Phoenix.Transports.LongPoll.Server do
       nil -> :ok
     end
   end
+
+  defp expired_queued?(client_ref, ref) do
+    {:messages, mailbox} = Process.info(self(), :messages)
+    Enum.any?(mailbox, &match?({:expired, ^client_ref, ^ref}, &1))
+  end
+
+  defp clear_client({client_ref, ref}, client_ref, ref), do: nil
+  defp clear_client(client_ref, _client_ref, _ref), do: client_ref
 
   defp now_ms, do: System.system_time(:millisecond)
 

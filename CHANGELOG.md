@@ -2,6 +2,8 @@
 
 ## Bug fixes
 
+  * [Phoenix.Transports.LongPoll] Keep a publish when its listen has already
+    expired, and return that publish on the next listen
   * [Phoenix.ChannelTest] Fix test sockets violating the Phoenix.Socket.t
     typespec, which made Dialyzer treat every test join as never returning
     ([#5509](https://github.com/phoenixframework/phoenix/issues/5509))

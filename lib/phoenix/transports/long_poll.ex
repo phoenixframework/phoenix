@@ -175,18 +175,29 @@ defmodule Phoenix.Transports.LongPoll do
             {:messages, messages, ^ref} -> {:ok, messages}
           after
             opts[:window_ms] ->
-              broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-              {:no_content, []}
+              expire_listen(endpoint, server_ref, client_ref, ref)
           end
       after
         opts[:window_ms] ->
-          broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-          {:no_content, []}
+          expire_listen(endpoint, server_ref, client_ref, ref)
       end
 
     conn
     |> put_status(status)
     |> status_token_messages_json(token, messages)
+  end
+
+  # A publish can arrive in the same moment the timer fires. Take it when it
+  # is already in this mailbox. The session keeps its buffer when this expired
+  # notice is already queued there.
+  defp expire_listen(endpoint, server_ref, client_ref, ref) do
+    broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
+
+    receive do
+      {:messages, messages, ^ref} -> {:ok, messages}
+    after
+      0 -> {:no_content, []}
+    end
   end
 
   # Accept the token from either location so that newer clients can use the

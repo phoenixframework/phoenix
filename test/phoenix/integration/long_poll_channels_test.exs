@@ -281,6 +281,74 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
   defp encode(V1.JSONSerializer, %{} = map), do: Phoenix.json_library().encode!(map)
 
+  # Queues a join behind the heartbeat, then holds the session before that
+  # join runs. The listen's later flush is already behind the join.
+  defp hold_expired_join(state, body, opcode, client, parent, release) do
+    cond do
+      String.contains?(body, "\"heartbeat\"") ->
+        join = ~s(["join-1","join-1","room:lobby","phx_join",{}])
+        send(self(), {:dispatch, client, {join, opcode}, make_ref()})
+        state
+
+      String.contains?(body, "\"phx_join\"") ->
+        send(parent, :join_blocked)
+
+        receive do
+          {^release, :release} -> state
+        end
+
+      true ->
+        state
+    end
+  end
+
+  defp await_parked_listen(pid) do
+    Enum.reduce_while(1..100, :waiting, fn _, _ ->
+      case :sys.get_state(pid) do
+        %{client_ref: {listen_pid, _ref}} when is_pid(listen_pid) ->
+          {:halt, listen_pid}
+
+        _ ->
+          Process.sleep(2)
+          {:cont, :waiting}
+      end
+    end)
+    |> case do
+      listen_pid when is_pid(listen_pid) -> listen_pid
+      :waiting -> flunk("long-poll listen did not park")
+    end
+  end
+
+  defp await_expired_flush(server) do
+    Enum.reduce_while(1..100, :waiting, fn _, _ ->
+      case Process.info(server, :messages) do
+        {:messages, mailbox} ->
+          flush? = Enum.any?(mailbox, &match?({:flush, _, _}, &1))
+          expired? = Enum.any?(mailbox, &match?({:expired, _, _}, &1))
+
+          if flush? and expired? do
+            {:halt, :ok}
+          else
+            Process.sleep(20)
+            {:cont, :waiting}
+          end
+
+        nil ->
+          flunk("long-poll session ended before the expired flush was queued")
+      end
+    end)
+    |> case do
+      :ok -> :ok
+      :waiting -> flunk("second flush and expired notice were not both queued")
+    end
+  end
+
+  defp resume_if_suspended(pid) do
+    if Process.alive?(pid) and match?({:status, :suspended}, Process.info(pid, :status)) do
+      :erlang.resume_process(pid)
+    end
+  end
+
   @doc """
   Joins a long poll socket.
 
@@ -786,6 +854,78 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
         assert resp.status == 200
         assert resp.body["status"] == 408
+      end
+
+      test "a reply published while a listen has expired is on the next listen" do
+        resp = poll(:get, "/ws", "2.0.0", %{}, nil)
+        assert resp.body["status"] == 410
+        assert resp.status == 200
+        token = resp.body["token"]
+        session = %{"token" => token}
+
+        {:ok, {:v1, _id, server, _topic}} =
+          Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), token)
+
+        release = make_ref()
+        parent = self()
+
+        :ok =
+          :sys.install(
+            server,
+            {fn state, event, _name ->
+               case event do
+                 {:in, {:dispatch, client, {body, opcode}, _ref}} when is_binary(body) ->
+                   hold_expired_join(state, body, opcode, client, parent, release)
+
+                 _ ->
+                   state
+               end
+             end, nil}
+          )
+
+        on_exit(fn ->
+          if Process.alive?(server) do
+            send(server, {release, :release})
+            Process.exit(server, :kill)
+          end
+        end)
+
+        listen = Task.async(fn -> poll(:get, "/ws", "2.0.0", session) end)
+        listen_pid = await_parked_listen(server)
+        on_exit(fn -> resume_if_suspended(listen_pid) end)
+        :erlang.suspend_process(listen_pid)
+
+        poster =
+          Task.async(fn ->
+            poll(:post, "/ws", "2.0.0", session, %{
+              "topic" => "phoenix",
+              "event" => "heartbeat",
+              "ref" => "hb-1",
+              "payload" => %{}
+            })
+          end)
+
+        assert_receive :join_blocked, 1_000
+        :erlang.resume_process(listen_pid)
+        assert await_expired_flush(server)
+        send(server, {release, :release})
+
+        first = Task.await(listen, 5_000)
+        assert first.status == 200
+        assert first.body["status"] == 204
+        assert first.body["messages"] == []
+
+        post = Task.await(poster, 5_000)
+        assert post.status == 200
+        assert post.body["status"] == 200
+
+        next = poll(:get, "/ws", "2.0.0", session)
+        assert next.status == 200
+        assert next.body["status"] == 200
+
+        assert Enum.any?(next.body["messages"], fn message ->
+                 message.ref == "join-1" or message.join_ref == "join-1"
+               end)
       end
 
       test "ignores ndjson batch entries after the first 100", %{topic: topic} do
