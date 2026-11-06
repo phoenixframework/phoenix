@@ -324,12 +324,13 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         assert_receive {:DOWN, ^ref, _, _, {:shutdown, :closed}}
       end
 
-      test "tells the client when the session stops" do
+      test "closes normally when the socket is disconnected" do
         {client, _token} = new_session(%{"user_id" => "1"})
         join(client, "room:a")
 
+        # like a WebSocket without a session, see Phoenix.Socket.id/1
         Endpoint.broadcast("user_sockets:1", "disconnect", %{})
-        assert_receive %Message{event: "phx_gone", payload: %{"code" => 1011}}
+        assert_receive %Message{event: "phx_gone", payload: %{"code" => 1000}}
       end
 
       test "closes the session when the client does not acknowledge messages" do
@@ -338,7 +339,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         ref = Process.monitor(session(token))
 
         assert_receive {:DOWN, ^ref, _, _, {:shutdown, :unacknowledged}}, 1000
-        assert_receive %Message{event: "phx_gone"}
+        assert_receive %Message{event: "phx_gone", payload: %{"code" => 1011}}
       end
 
       test "long polling resumes a WebSocket session" do

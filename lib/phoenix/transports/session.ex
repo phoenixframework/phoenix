@@ -404,6 +404,8 @@ defmodule Phoenix.Transports.Session do
   end
 
   defp close_code(:normal), do: @close_codes.normal
+  # the socket was disconnected, see Phoenix.Socket.id/1, which closes a WebSocket normally
+  defp close_code({:shutdown, :disconnected}), do: @close_codes.normal
   defp close_code({:shutdown, :restart}), do: @close_codes.service_restart
   defp close_code(_reason), do: @close_codes.internal_error
 
