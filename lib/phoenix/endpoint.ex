@@ -1099,6 +1099,29 @@ defmodule Phoenix.Endpoint do
       when they cannot resume it over a WebSocket in time. This requires the same
       `:crypto` options for both transports.
 
+      To decide for each connection, pass a function as MFA tuple instead of `true`.
+      It runs after `c:Phoenix.Socket.connect/3` accepted a new connection and must
+      return a boolean. It receives the map given to
+      `c:Phoenix.Socket.Transport.connect/1`, with the `:params` and `:connect_info`
+      of the connection, followed by the arguments of the tuple. When it returns
+      `false`, the client connects like it does to a socket that is not resumable.
+      For example, `mix phx.gen.auth` stores a `"user_token"` in the session of
+      signed-in users, so this only lets them resume:
+
+          socket "/socket", MySocket,
+            websocket: [
+              connect_info: [session: @session_options],
+              resumable: {MySocket, :resumable?, []}
+            ]
+
+      with `MySocket` defining:
+
+          def resumable?(%{connect_info: %{session: %{"user_token" => _}}}), do: true
+          def resumable?(_transport_info), do: false
+
+      The example does not verify the token, as it only decides whether the socket
+      is resumable. The function does not run when a client resumes.
+
     * `:window_ms` - with `:resumable`, how long the client can take to resume
       the socket in milliseconds (ms), times 1.5. Defaults to `10_000`.
 

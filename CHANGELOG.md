@@ -23,7 +23,8 @@
     rejoining channels. Both sides send the messages the other side missed. With
     `longPollFallbackMs`, clients continue the socket with long polling when they
     cannot resume it over a WebSocket in time. Clients connecting to servers without
-    the option behave like before
+    the option behave like before. Pass an MFA tuple instead of `true` to decide for
+    each connection, for example to only let signed-in users resume
   * [Phoenix.Socket] Add the optional `c:Phoenix.Socket.resume/3` callback to check
     a client that resumes its session after a failed request or WebSocket, for example
     to verify that the user is still logged in. Returning `:error` stops the socket,

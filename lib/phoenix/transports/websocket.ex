@@ -85,14 +85,10 @@ defmodule Phoenix.Transports.WebSocket do
 
           :new ->
             connect(conn, handler, config, opts, fn arg ->
-              case Session.start(endpoint, handler, arg, opts) do
-                {:ok, session, priv_topic} ->
-                  data = {:v1, endpoint.config(:endpoint_id), session, priv_topic}
-                  token = Session.sign_token(endpoint, data, opts)
-                  upgrade(conn, Pipe, {:new, session, priv_topic, token, opts}, opts)
-
-                {:error, _} ->
-                  send_resp(conn, 500, "")
+              if resumable?(opts[:resumable], config) do
+                start_session(conn, endpoint, handler, arg, opts)
+              else
+                upgrade(conn, handler, arg, opts)
               end
             end)
 
@@ -107,7 +103,8 @@ defmodule Phoenix.Transports.WebSocket do
   # Resumable clients ask for a session that outlives the WebSocket. Only clients
   # with the V2 serializer can resume, as the session talks to them with V2 messages.
   defp resumable(%{"resumable" => _} = params, opts) do
-    with true <- Keyword.get(opts, :resumable, false),
+    # a function given as :resumable decides for each new connection, see resumable?/2
+    with resumable when resumable != false <- Keyword.get(opts, :resumable, false),
          "2." <> _ <- params["vsn"] do
       if params["resume"], do: :resume, else: :new
     else
@@ -116,6 +113,38 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   defp resumable(_params, _opts), do: nil
+
+  # Whether a new connection gets a session. Clients that resume don't get here, as
+  # they have the token of a session we started, which the socket checks with resume/3.
+  defp resumable?(true, _config), do: true
+
+  defp resumable?({module, function, args}, config) do
+    case apply(module, function, [config | args]) do
+      resumable when is_boolean(resumable) ->
+        resumable
+
+      invalid ->
+        raise ArgumentError,
+              "#{inspect(module)}.#{function}/#{length(args) + 1}, given as :resumable, " <>
+                "must return a boolean, got: #{inspect(invalid)}"
+    end
+  end
+
+  defp resumable?(invalid, _config) do
+    raise ArgumentError, ":resumable expects a boolean or MFA tuple, got: #{inspect(invalid)}"
+  end
+
+  defp start_session(conn, endpoint, handler, arg, opts) do
+    case Session.start(endpoint, handler, arg, opts) do
+      {:ok, session, priv_topic} ->
+        data = {:v1, endpoint.config(:endpoint_id), session, priv_topic}
+        token = Session.sign_token(endpoint, data, opts)
+        upgrade(conn, Pipe, {:new, session, priv_topic, token, opts}, opts)
+
+      {:error, _} ->
+        send_resp(conn, 500, "")
+    end
+  end
 
   defp connect(conn, handler, config, opts, upgrade) do
     case handler.connect(config) do

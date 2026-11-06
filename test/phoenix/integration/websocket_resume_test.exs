@@ -58,6 +58,8 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
 
     channel "room:*", RoomChannel
 
+    def connect(%{"reject_connect" => "true"}, _socket, _connect_info), do: :error
+
     def connect(params, socket, _connect_info) do
       send(Process.whereis(:resume_test), {:connect, params})
       {:ok, assign(socket, :user_id, params["user_id"])}
@@ -73,6 +75,16 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
     def id(socket) do
       if id = socket.assigns.user_id, do: "user_sockets:#{id}"
     end
+
+    # the :resumable function of "/ws/users", which only lets users resume
+    def resumable?(%{params: params} = transport_info, arg) do
+      send(Process.whereis(:resume_test), {:resumable?, transport_info, arg})
+
+      case params["user_id"] do
+        "invalid" -> :invalid
+        user_id -> is_binary(user_id)
+      end
+    end
   end
 
   defmodule Endpoint do
@@ -83,6 +95,9 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
       longpoll: [window_ms: 200, pubsub_timeout_ms: 200]
 
     socket "/ws/plain", UserSocket, websocket: true
+
+    socket "/ws/users", UserSocket,
+      websocket: [resumable: {UserSocket, :resumable?, [:arg]}, window_ms: 200]
   end
 
   setup %{adapter: adapter} do
@@ -134,8 +149,8 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
     assert_receive {:DOWN, ^ref, _, _, _}
   end
 
-  defp resume(token, ack, params \\ %{}) do
-    client = connect(Map.merge(params, %{"resumable" => "1", "resume" => "1"}))
+  defp resume(token, ack, params \\ %{}, path \\ "/ws") do
+    client = connect(Map.merge(params, %{"resumable" => "1", "resume" => "1"}), path)
     control(client, "phx_resume", %{token: token, ack: ack})
     client
   end
@@ -452,6 +467,65 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         new_session()
         assert_receive {:connect, params}
         refute Map.has_key?(params, "resumable")
+      end
+
+      test "starts a session when the :resumable function allows the connection" do
+        client = connect(%{"resumable" => "1", "user_id" => "1"}, "/ws/users")
+        assert_receive %Message{event: "phx_session", payload: %{"token" => _}}
+
+        # the function receives the same map as connect/1, followed by its arguments
+        assert_received {:connect, params}
+        assert_received {:resumable?, transport_info, :arg}
+        assert %{endpoint: Endpoint, transport: :websocket, connect_info: %{}} = transport_info
+        assert transport_info.params == params
+        refute Map.has_key?(params, "resumable")
+
+        join(client, "room:a")
+      end
+
+      test "does not start a session when the :resumable function denies the connection" do
+        client = connect(%{"resumable" => "1"}, "/ws/users")
+        assert_received {:connect, %{"vsn" => "2.0.0"}}
+        assert_received {:resumable?, _transport_info, :arg}
+
+        # the client connects like it does to a socket that is not resumable
+        join(client, "room:a")
+        refute_received %Message{event: "phx_session"}
+      end
+
+      test "does not invoke the :resumable function when a client resumes" do
+        client = connect(%{"resumable" => "1", "user_id" => "1"}, "/ws/users")
+        assert_receive %Message{event: "phx_session", payload: %{"token" => token}}
+        assert_received {:resumable?, _transport_info, :arg}
+        channel = join(client, "room:a")
+        drop(client)
+
+        # the function denies connections without a user
+        resume(token, 2, %{}, "/ws/users")
+        assert_receive %Message{event: "phx_resumed"}
+        assert_received {:resume, _params}
+        refute_received {:resumable?, _transport_info, _arg}
+        assert Process.whereis(:"room:a") == channel
+      end
+
+      test "does not invoke the :resumable function when the socket rejects the connection" do
+        params = %{"vsn" => "2.0.0", "resumable" => "1", "reject_connect" => "true"}
+        url = "ws://127.0.0.1:#{@port}/ws/users/websocket?" <> URI.encode_query(params)
+
+        assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
+                 WebsocketClient.connect(self(), url, V2.JSONSerializer)
+
+        refute_received {:resumable?, _transport_info, _arg}
+      end
+
+      test "raises when the :resumable function does not return a boolean" do
+        # we call the endpoint ourselves, as the server logs the error after it responded
+        params = %{"vsn" => "2.0.0", "resumable" => "1", "user_id" => "invalid"}
+        conn = Plug.Test.conn(:get, "/ws/users/websocket?" <> URI.encode_query(params))
+
+        assert_raise ArgumentError, ~r/resumable\?\/2, given as :resumable, must return/, fn ->
+          Endpoint.call(conn, [])
+        end
       end
     end
   end
