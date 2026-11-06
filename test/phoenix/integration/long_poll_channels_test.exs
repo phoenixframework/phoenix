@@ -355,6 +355,51 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     resp
   end
 
+  @doc """
+  Makes the session wait before it handles its next flush.
+
+  The caller receives `{:flush_blocked, server, release}` once the session
+  waits. The session continues when it receives `release`.
+  """
+  def block_next_flush(session) do
+    {:ok, {:v1, _id, server, _topic}} =
+      Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+    parent = self()
+    release = make_ref()
+
+    :sys.install(
+      server,
+      {fn
+         _state, {:in, {:flush, _client_ref, _ref}}, _proc_state ->
+           send(parent, {:flush_blocked, server, release})
+
+           receive do
+             ^release -> :done
+           end
+
+         state, _event, _proc_state ->
+           state
+       end, nil}
+    )
+  end
+
+  defp await_expired(server, retries \\ 200) do
+    {:messages, messages} = Process.info(server, :messages)
+
+    cond do
+      Enum.any?(messages, &match?({:expired, _client_ref, _ref}, &1)) ->
+        :ok
+
+      retries == 0 ->
+        flunk("the listen did not expire")
+
+      true ->
+        Process.sleep(5)
+        await_expired(server, retries - 1)
+    end
+  end
+
   for %{adapter: adapter} <- [
         %{adapter: Bandit.PhoenixAdapter},
         %{adapter: Phoenix.Endpoint.Cowboy2Adapter}
@@ -763,6 +808,40 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :inactive}}, 5000)
           resp = poll(:post, "/ws", @vsn, session)
           assert resp.body["status"] == 410
+        end
+
+        test "#{@mode}: listen receives messages flushed after its window", %{topic: topic} do
+          session = join("/ws", topic, @vsn, "1", @mode)
+          block_next_flush(session)
+
+          listen = Task.async(fn -> poll(:get, "/ws", @vsn, session) end)
+          assert_receive {:flush_blocked, server, release}
+
+          # the session answers the flush only after the listen stopped waiting for it
+          await_expired(server)
+          send(server, release)
+
+          resp = Task.await(listen)
+          assert resp.body["status"] == 200
+
+          assert [%Message{event: "phx_reply", ref: "1", topic: ^topic} | _] =
+                   resp.body["messages"]
+
+          resp = poll(:get, "/ws", @vsn, session)
+          assert resp.body["status"] == 204
+        end
+
+        test "#{@mode}: listen fails when the session does not answer after its window",
+             %{topic: topic} do
+          session = join("/ws", topic, @vsn, "1", @mode)
+          block_next_flush(session)
+
+          resp = poll(:get, "/ws", @vsn, session)
+          assert resp.body["status"] == 410
+          assert resp.body["messages"] == []
+
+          assert_received {:flush_blocked, server, release}
+          send(server, release)
         end
       end
 

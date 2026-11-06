@@ -174,19 +174,36 @@ defmodule Phoenix.Transports.LongPoll do
           receive do
             {:messages, messages, ^ref} -> {:ok, messages}
           after
-            opts[:window_ms] ->
-              broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-              {:no_content, []}
+            opts[:window_ms] -> expire_listen(endpoint, server_ref, client_ref, ref, opts)
           end
       after
-        opts[:window_ms] ->
-          broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-          {:no_content, []}
+        opts[:window_ms] -> expire_listen(endpoint, server_ref, client_ref, ref, opts)
       end
 
     conn
     |> put_status(status)
     |> status_token_messages_json(token, messages)
+  end
+
+  # The session drops the messages it sends, and it can still answer our flush
+  # after we stopped waiting. It handles our messages in order, so we ask it to
+  # echo a subscribe: if it answered the flush, the messages arrive before the echo.
+  defp expire_listen(endpoint, server_ref, client_ref, ref, opts) do
+    echo_ref = make_ref()
+    broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
+    broadcast_from!(endpoint, server_ref, {:subscribe, client_ref, echo_ref})
+
+    receive do
+      # The echo follows the messages. We deliberately leave it in the mailbox,
+      # as waiting for it would delay the response. With Cowboy, the request
+      # process stops after the response. Bandit ignores unhandled messages.
+      {:messages, messages, ^ref} -> {:ok, messages}
+      {:subscribe, ^echo_ref} -> {:no_content, []}
+    after
+      # We cannot tell if the session still answers the flush, so we fail
+      # and the client starts a new session instead of missing messages.
+      opts[:pubsub_timeout_ms] -> {:gone, []}
+    end
   end
 
   # Accept the token from either location so that newer clients can use the
