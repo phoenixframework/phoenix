@@ -14,7 +14,7 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
   #   * "phx_resume" - the first message of the client on a new WebSocket, with the
   #     token and the number of the last message it received
   #   * "phx_resumed" - the answer to "phx_resume", with the number of the last
-  #     message the session received
+  #     message the session received and the last outgoing message to replay
   #   * "phx_ack" - the number of the last message the client or the session received
   #   * "phx_close" - the client closes the socket, as opposed to losing its WebSocket
   #   * "phx_gone" - the session stopped or the client cannot resume it, with the
@@ -41,7 +41,7 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
     state = new_state(opts)
 
     case attach(state, session, priv_topic, 0) do
-      {:ok, state} -> {:push, [control("phx_session", %{token: token})], state}
+      {:ok, state, _last} -> {:push, [control("phx_session", %{token: token})], state}
       :error -> gone(state, @close_codes.internal_error)
     end
   end
@@ -95,8 +95,8 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
 
     with {:ok, session, priv_topic} <- verify_token(endpoint, token, state.opts),
          :ok <- check_resume(session, priv_topic, info, state.opts),
-         {:ok, state} <- attach(state, session, priv_topic, ack) do
-      {:push, [control("phx_resumed", %{seq: state.in_seq})], state}
+         {:ok, state, last} <- attach(state, session, priv_topic, ack) do
+      {:push, [control("phx_resumed", %{seq: state.in_seq, last: last})], state}
     else
       _ -> gone(state, nil)
     end
@@ -164,8 +164,9 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
     send(session, {:pipe_attach, self(), ref, ack, priv_topic})
 
     receive do
-      {:attached, ^ref, in_seq} ->
-        {:ok, %{state | session: session, session_ref: ref, in_seq: in_seq, confirmed: in_seq}}
+      {:attached, ^ref, in_seq, last} ->
+        {:ok, %{state | session: session, session_ref: ref, in_seq: in_seq, confirmed: in_seq},
+         last}
 
       {:rejected, ^ref} ->
         Process.demonitor(ref, [:flush])

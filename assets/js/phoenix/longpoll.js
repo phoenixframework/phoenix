@@ -42,6 +42,7 @@ export default class LongPoll {
     // the pending requests and queued messages, which are cancelled when we stop
     this.reqs = new Set()
     this.messageTimers = new Set()
+    this.awaitingMessages = false
     this.awaitingBatchAck = false
     this.currentBatch = null
     this.currentBatchTimer = null
@@ -60,6 +61,8 @@ export default class LongPoll {
     // set while we resume a session that another transport started, see resumeSession
     this.resuming = false
     this.resumeBuffer = []
+    // set until the first resumed poll has delivered its messages
+    this.resumePending = false
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
@@ -85,6 +88,7 @@ export default class LongPoll {
     this.token = token
     this.resumable = true
     this.resuming = true
+    this.resumePending = true
     this.ack = received
     this.seq = confirmed
     this.resumeBuffer = unconfirmed.slice()
@@ -158,6 +162,8 @@ export default class LongPoll {
       } else {
         status = 0
       }
+      // A POST can recover while these messages are still queued for delivery.
+      if(status === 200){ this.awaitingMessages = true }
       if(this.resuming && (status === 200 || status === 204)){
         // we resumed the session, so we are open and send what we kept
         this.readyState = SOCKET_STATES.open
@@ -213,6 +219,7 @@ export default class LongPoll {
           // Restore only after delivering the messages, so hooks see their updates.
           // Closing from a message callback cancels this task as well.
           this.scheduleMessage(() => {
+            this.awaitingMessages = false
             this.succeeded("GET")
             this.poll()
           })
@@ -364,8 +371,10 @@ export default class LongPoll {
   succeeded(method){
     this.retries[method] = 0
     // A successful poll must not hide an outstanding failed POST, or vice versa.
-    if(this.interrupted && this.retries.GET === 0 && this.retries.POST === 0){
+    if((this.interrupted || this.resumePending) && !this.resuming && !this.awaitingMessages &&
+      this.retries.GET === 0 && this.retries.POST === 0){
       this.interrupted = false
+      this.resumePending = false
       this.onresume()
     }
   }
@@ -387,9 +396,13 @@ export default class LongPoll {
     for(let {req} of reqs){ req && req.abort() }
     for(let timer of this.messageTimers){ clearTimeout(timer) }
     this.messageTimers.clear()
+    this.awaitingMessages = false
     for(let timer of this.retryTimers){ clearTimeout(timer) }
     this.retryTimers.clear()
     this.interrupted = false
+    this.resumePending = false
+    this.resuming = false
+    this.resumeBuffer = []
     this.batchBuffer = []
     this.awaitingBatchAck = false
     clearTimeout(this.currentBatchTimer)

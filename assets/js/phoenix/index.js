@@ -97,6 +97,9 @@
  * socket.onResume( () => console.log("the connection recovered") )
  * ```
  *
+ * `onResume` runs after delivering the incoming messages buffered at resumption,
+ * so callbacks see those updates. It does not wait for replies to outgoing pushes.
+ *
  * Recovery requires a server that supports acknowledged long-poll messages.
  * With an older server, and for the rest of a session that reached a node
  * with an older server during a rolling upgrade, failed requests close the

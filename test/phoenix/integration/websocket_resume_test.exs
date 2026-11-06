@@ -225,7 +225,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
 
         # the client lost the joined push
         _client = resume(token, 1)
-        assert_receive %Message{event: "phx_resumed"}
+        assert_receive %Message{event: "phx_resumed", payload: %{"seq" => 1, "last" => 2}}
         assert_receive %Message{event: "joined"}
       end
 
@@ -488,7 +488,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
 
         resume(token, 0, params)
         assert_receive {:resume, ^expected}
-        assert_receive %Message{event: "phx_resumed"}
+        assert_receive %Message{event: "phx_resumed", payload: %{"seq" => 0, "last" => 0}}
       end
 
       test "preserves application params and removes protocol params for long polling" do

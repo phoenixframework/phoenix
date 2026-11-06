@@ -797,6 +797,27 @@ describe("LongPoll resuming", () => {
     expect(params(last("GET"))["phx:ack"]).toBe("2")
   })
 
+  it("waits for queued messages and their promises when a POST recovers", async () => {
+    open()
+    longpoll.onmessage = ({data}) => {
+      events.push(data)
+      Promise.resolve().then(() => events.push(`settled ${data}`))
+    }
+    longpoll.send("push")
+    jest.advanceTimersByTime(0)
+    respond(last("POST"), null)
+    jest.advanceTimersByTime(100)
+    respond(last("POST"), null)
+    jest.advanceTimersByTime(500)
+
+    respond(last("GET"), {status: 200, token: "token", messages: ["a", "b"], last: 2})
+    respond(last("POST"), {status: 200, seq: 1})
+    expect(events).toEqual(["open", "suspend"])
+
+    await jest.advanceTimersByTimeAsync(0)
+    expect(events).toEqual(["open", "suspend", "a", "settled a", "b", "settled b", "resume"])
+  })
+
   it("does not deliver already received messages again", () => {
     open()
     respond(last("GET"), {status: 200, token: "token", messages: ["a"], last: 1})
@@ -1229,6 +1250,8 @@ describe("LongPoll continuing a session of another transport", () => {
     longpoll.resumeSession(session)
     events = []
     longpoll.onopen = () => events.push("open")
+    longpoll.onsuspend = () => events.push("suspend")
+    longpoll.onresume = () => events.push("resume")
     longpoll.onmessage = ({data}) => events.push(data)
     longpoll.onerror = () => events.push("error")
     longpoll.onclose = event => events.push({close: event.code})
@@ -1264,10 +1287,30 @@ describe("LongPoll continuing a session of another transport", () => {
     respond(last("GET"), {status: 200, token: "token", messages: ["x"], last: 4})
     expect(events).toEqual(["open"])
     jest.advanceTimersByTime(0)
-    expect(events).toEqual(["open", "x"])
+    expect(events).toEqual(["open", "x", "resume"])
     expect(params(last("POST"))["phx:seq"]).toBe("2")
     expect(last("POST")[3]).toBe("b\nc\nd")
     expect(params(last("GET"))["phx:resume"]).toBeUndefined()
+  })
+
+  it("reports recovery after an empty resumed poll", () => {
+    start()
+    respond(last("GET"), {status: 204, token: "token", messages: [], last: 3})
+    expect(events).toEqual(["open", "resume"])
+  })
+
+  it("reports interruptions while waiting for its first resumed poll", () => {
+    start()
+    respond(last("GET"), null)
+    jest.advanceTimersByTime(100)
+    respond(last("GET"), null)
+    expect(events).toEqual(["suspend"])
+    jest.advanceTimersByTime(500)
+
+    respond(last("GET"), {status: 200, token: "token", messages: ["x"], last: 4})
+    expect(events).toEqual(["suspend", "open"])
+    jest.advanceTimersByTime(0)
+    expect(events).toEqual(["suspend", "open", "x", "resume"])
   })
 
   it("closes when the session is gone", () => {

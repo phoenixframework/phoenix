@@ -406,7 +406,7 @@ export default class Socket {
   /**
    * Registers a callback when the transport is interrupted but keeps its session
    * and retries. Channels remain joined and pushes are buffered by the transport.
-   * Currently supported by LongPoll. A lost session instead emits error/close.
+   * Supported by LongPoll and ResumableWebSocket. A lost session instead emits error/close.
    * @param {Function} callback
    */
   onSuspend(callback){
@@ -416,7 +416,9 @@ export default class Socket {
   }
 
   /**
-   * Registers a callback when a suspended transport recovers the same session.
+   * Registers a callback when a suspended transport recovers the same session,
+   * after delivering the incoming messages buffered at resumption. It does
+   * not wait for replies to outgoing pushes.
    * @param {Function} callback
    */
   onResume(callback){

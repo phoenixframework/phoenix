@@ -219,7 +219,7 @@ defmodule Phoenix.Transports.Session do
   def handle_info({:pipe_attach, pipe, ref, ack, _priv_topic}, state) do
     # the client resumed over a WebSocket, so it stopped polling
     state = %{detach(state) | client_ref: nil}
-    send(pipe, {:attached, ref, state.in_seq})
+    send(pipe, {:attached, ref, state.in_seq, state.out_seq})
     state = acknowledge(state, ack)
     state = %{state | pipe: {pipe, Process.monitor(pipe)}}
 

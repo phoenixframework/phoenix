@@ -63,7 +63,7 @@ describe("ResumableWebSocket", () => {
     last().drop()
     jest.advanceTimersByTime(delay)
     last().open()
-    last().receive(control("phx_resumed", {seq}))
+    last().receive(control("phx_resumed", {seq, last: transport.received}))
   }
 
   beforeEach(() => {
@@ -111,7 +111,7 @@ describe("ResumableWebSocket", () => {
 
     last().open()
     expect(last().sent).toEqual([control("phx_resume", {token: "token", ack: 1})])
-    last().receive(control("phx_resumed", {seq: 0}))
+    last().receive(control("phx_resumed", {seq: 0, last: 2}))
     last().receive("b")
     expect(events).toEqual(["open", "a", "b"])
   })
@@ -128,7 +128,7 @@ describe("ResumableWebSocket", () => {
     transport.send("c")
     jest.advanceTimersByTime(100)
     last().open()
-    last().receive(control("phx_resumed", {seq: 1}))
+    last().receive(control("phx_resumed", {seq: 1, last: 0}))
     expect(last().sent.slice(1)).toEqual(["b", "c"])
 
     // the server received "b" before the WebSocket failed
@@ -146,8 +146,86 @@ describe("ResumableWebSocket", () => {
     expect(events).toEqual(["open", "suspend"])
     jest.advanceTimersByTime(500)
     last().open()
-    last().receive(control("phx_resumed", {seq: 0}))
+    last().receive(control("phx_resumed", {seq: 0, last: 0}))
+    expect(events).toEqual(["open", "suspend"])
+    jest.advanceTimersByTime(0)
     expect(events).toEqual(["open", "suspend", "resume"])
+  })
+
+  describe("replay before recovery", () => {
+    beforeEach(() => {
+      connect()
+      last().drop()
+      jest.advanceTimersByTime(100)
+      last().drop()
+      jest.advanceTimersByTime(500)
+      last().open()
+    })
+
+    it("delivers replay and its promises before notifying recovery", async () => {
+      transport.onmessage = ({data}) => {
+        events.push(data)
+        Promise.resolve().then(() => events.push(`settled ${data}`))
+      }
+      transport.onresume = () => {
+        events.push("resume")
+        transport.send("after recovery")
+      }
+      transport.send("queued")
+      last().receive(control("phx_resumed", {seq: 0, last: 2}))
+      expect(last().sent.slice(1)).toEqual(["queued"])
+
+      last().receive("a")
+      await jest.advanceTimersByTimeAsync(0)
+      expect(events).toEqual(["open", "suspend", "a", "settled a"])
+
+      last().receive("b")
+      expect(events).not.toContain("resume")
+      await jest.advanceTimersByTimeAsync(0)
+      expect(events).toEqual(["open", "suspend", "a", "settled a", "b", "settled b", "resume"])
+      expect(last().sent.slice(1)).toEqual(["queued", "after recovery"])
+
+      last().receive("c")
+      await jest.advanceTimersByTimeAsync(0)
+      expect(events.filter(event => event === "resume")).toHaveLength(1)
+    })
+
+    it("does not notify recovery when a replay callback closes the transport", () => {
+      transport.onmessage = () => transport.close()
+      last().receive(control("phx_resumed", {seq: 0, last: 1}))
+      last().receive("a")
+      jest.advanceTimersByTime(0)
+      expect(events).not.toContain("resume")
+      expect(transport.readyState).toBe(SOCKET_STATES.closed)
+    })
+
+    it.each(["close", "drop"])("cancels a queued recovery notification on %s", action => {
+      last().receive(control("phx_resumed", {seq: 0, last: 1}))
+      last().receive("a")
+      if(action === "close"){ transport.close() } else { last().drop() }
+      jest.advanceTimersByTime(0)
+      expect(events).not.toContain("resume")
+    })
+
+    it("waits for replay on the replacement of a connection lost during recovery", () => {
+      last().receive(control("phx_resumed", {seq: 0, last: 2}))
+      last().receive("a")
+      last().drop()
+      jest.advanceTimersByTime(100)
+      last().open()
+      last().receive(control("phx_resumed", {seq: 0, last: 2}))
+      jest.advanceTimersByTime(0)
+      expect(events).toEqual(["open", "suspend", "a"])
+
+      last().receive("b")
+      jest.advanceTimersByTime(0)
+      expect(events).toEqual(["open", "suspend", "a", "b", "resume"])
+    })
+
+    it.each([undefined, -1, "0"])("rejects an invalid replay boundary %s", lastMessage => {
+      last().receive(control("phx_resumed", {seq: 0, last: lastMessage}))
+      expect(events).toEqual(["open", "suspend", {close: 3410}])
+    })
   })
 
   it("backs off while resuming keeps failing", () => {
@@ -210,7 +288,7 @@ describe("ResumableWebSocket", () => {
     last().drop()
     jest.advanceTimersByTime(100)
     last().open()
-    last().receive(control("phx_resumed", {seq: 2}))
+    last().receive(control("phx_resumed", {seq: 2, last: 0}))
     expect(events).toEqual(["open", {close: 3410}])
   })
 
@@ -276,9 +354,9 @@ describe("ResumableWebSocket", () => {
 
       // the session resumed over long polling
       polls()[0][6]({status: 200, token: "token", messages: ["b"], last: 2})
-      expect(events).toEqual(["open", "a", "suspend", "resume"])
+      expect(events).toEqual(["open", "a", "suspend"])
       jest.advanceTimersByTime(0)
-      expect(events).toEqual(["open", "a", "suspend", "resume", "b"])
+      expect(events).toEqual(["open", "a", "suspend", "b", "resume"])
       expect(params(posts()[0])["phx:seq"]).toBe("1")
       expect(posts()[0][3]).toBe("x")
 
@@ -302,18 +380,35 @@ describe("ResumableWebSocket", () => {
       polls()[0][6]({...response, token: "token"})
       jest.advanceTimersByTime(0)
 
-      expect(posts()).toHaveLength(1)
       expect(params(posts()[0])["phx:seq"]).toBe("1")
-      expect(posts()[0][3]).toBe("x\ny\nz")
+      // A response with messages sends the replay before the recovery callback.
+      // A response without messages can still batch both in the same turn.
+      posts()[0][6]({status: 200, seq: 1})
+      expect(posts().map(call => call[3]).join("\n")).toBe("x\ny\nz")
+      expect(posts().map(call => params(call)["phx:seq"])).toEqual(response.status === 200 ? ["1", "3"] : ["1"])
     })
 
-    it("does not fall back once the session resumed over a WebSocket", () => {
+    it("does not fall back while replaying a session resumed over a WebSocket", () => {
       interrupt()
       jest.advanceTimersByTime(100)
       last().open()
-      last().receive(control("phx_resumed", {seq: 1}))
+      last().receive(control("phx_resumed", {seq: 1, last: 2}))
       jest.advanceTimersByTime(10_000)
       expect(polls()).toHaveLength(0)
+    })
+
+    it("does not notify recovery when a fallback message callback closes it", () => {
+      interrupt()
+      jest.advanceTimersByTime(100)
+      last().drop()
+      jest.advanceTimersByTime(1901)
+      transport.onmessage = () => transport.close()
+
+      polls()[0][6]({status: 200, token: "token", messages: ["b"], last: 2})
+      jest.advanceTimersByTime(0)
+
+      expect(events).not.toContain("resume")
+      expect(transport.readyState).toBe(SOCKET_STATES.closed)
     })
 
     it("closes when the session is gone", () => {

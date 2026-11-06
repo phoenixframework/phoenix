@@ -53,6 +53,9 @@ export default class ResumableWebSocket {
     this.ready = false
     // set while we wait for the server to resume the session over the WebSocket
     this.resuming = false
+    // the last incoming message to replay before reporting recovery
+    this.replayUntil = null
+    this.recoveryTimer = null
     this.retries = 0
     this.retryTimer = null
     this.resumeTimer = null
@@ -184,6 +187,7 @@ export default class ResumableWebSocket {
     this.received++
     this.scheduleAck()
     this.onmessage(event)
+    this.scheduleRecovery()
   }
 
   /**
@@ -195,7 +199,7 @@ export default class ResumableWebSocket {
         this.token = payload.token
         break
       case "phx_resumed":
-        this.resumed(payload.seq)
+        this.resumed(payload.seq, payload.last)
         break
       case "phx_ack":
         this.confirm(payload.seq)
@@ -213,10 +217,11 @@ export default class ResumableWebSocket {
   /**
    * @private
    */
-  resumed(seq){
+  resumed(seq, last){
     if(!this.resuming){ return }
-    if(seq < this.confirmed || seq > this.confirmed + this.unconfirmed.length){
-      // the server cannot have received messages we did not send
+    if(!Number.isSafeInteger(seq) || seq < this.confirmed || seq > this.confirmed + this.unconfirmed.length ||
+      !Number.isSafeInteger(last) || last < this.received){
+      // neither direction can have received messages the other side did not send
       this.end()
       return
     }
@@ -224,10 +229,29 @@ export default class ResumableWebSocket {
     this.confirm(seq)
     this.resuming = false
     this.ready = true
+    this.replayUntil = last
     // we send the messages the server did not receive again
     this.unconfirmed.forEach(data => this.ws.send(data))
     this.retries = 0
-    this.recovered()
+    // The WebSocket is usable now; replay must not trigger a long-poll fallback.
+    clearTimeout(this.fallbackTimer)
+    this.fallbackTimer = null
+    this.scheduleRecovery()
+  }
+
+  /**
+   * @private
+   */
+  scheduleRecovery(){
+    if(this.replayUntil === null || this.received < this.replayUntil || !this.ready || this.recoveryTimer !== null){ return }
+    const ws = this.ws
+    // Let promises from the last replayed message settle before notifying hooks.
+    this.recoveryTimer = setTimeout(() => {
+      this.recoveryTimer = null
+      if(this.ws !== ws || !this.ready){ return }
+      this.replayUntil = null
+      this.recovered()
+    }, 0)
   }
 
   /**
@@ -277,10 +301,8 @@ export default class ResumableWebSocket {
    * @private
    */
   handleClose(event){
-    this.ws = null
-    this.ready = false
+    this.dropWebSocket()
     clearTimeout(this.ackTimer)
-    clearTimeout(this.resumeTimer)
     this.ackTimer = null
     if(this.readyState === SOCKET_STATES.open && this.token){
       this.retry()
@@ -336,7 +358,6 @@ export default class ResumableWebSocket {
     this.unconfirmed = []
     this.longpoll = longpoll
     const current = () => this.longpoll === longpoll
-    longpoll.onopen = () => { if(current()){ this.recovered() } }
     longpoll.onmessage = event => { if(current()){ this.onmessage(event) } }
     longpoll.onerror = error => {
       if(!current()){ return }
@@ -378,6 +399,9 @@ export default class ResumableWebSocket {
     this.ws = null
     this.ready = false
     clearTimeout(this.resumeTimer)
+    clearTimeout(this.recoveryTimer)
+    this.recoveryTimer = null
+    this.replayUntil = null
     if(!ws){ return }
     ws.onopen = ws.onerror = ws.onmessage = ws.onclose = function (){ } // noop
     if(ws.readyState === SOCKET_STATES.connecting || ws.readyState === SOCKET_STATES.open){
