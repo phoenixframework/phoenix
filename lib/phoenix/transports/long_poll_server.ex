@@ -40,8 +40,8 @@ defmodule Phoenix.Transports.LongPoll.Server do
       :error ->
         :ignore
 
-      {:error, _reason} ->
-        :ignore
+      {:error, reason} ->
+        {:stop, {:shutdown, {:connect_error, reason}}}
     end
   end
 
