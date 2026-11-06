@@ -511,14 +511,9 @@ export default class Socket {
       }
       if(!isCurrent()){ return }
       established = true
-      // if we've established primary, give the fallback a new period to attempt ping
+      // the health check already went out. This period is how long a frame has to arrive.
       clearTimeout(this.fallbackTimer)
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
-      this.ping(rtt => {
-        this.log("transport", "connected to primary after", rtt)
-        this.primaryPassedHealthCheck = true
-        clearTimeout(this.fallbackTimer)
-      })
     })
     this.transportConnect()
     connectClock = this.connectClock
@@ -564,7 +559,10 @@ export default class Socket {
    */
   pingBeforeBufferedJoin(){
     if(!this.fallbackTimer || this.transport === LongPoll){ return }
-    this.ping(() => this.passPrimaryHealthCheck())
+    this.ping(rtt => {
+      this.log("transport", "connected to primary after", rtt)
+      this.passPrimaryHealthCheck()
+    })
   }
 
   /**

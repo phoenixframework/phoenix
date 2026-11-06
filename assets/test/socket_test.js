@@ -203,7 +203,7 @@ describe("with transports", function (){
           socket.connect()
           connections[0].open()
 
-          expect(connections[0].sent.map(([, , , event]) => event).slice(0, 2)).toEqual(["heartbeat", "phx_join"])
+          expect(connections[0].sent.map(([, , , event]) => event)).toEqual(["heartbeat", "phx_join"])
         })
 
         it("does not fall back when the health check is answered before the join reply", function (){
