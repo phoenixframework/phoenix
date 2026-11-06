@@ -226,20 +226,20 @@ describe("with transports", function (){
           expect(socket.getSession("phx:fallback:LongPoll")).toBeNull()
         })
 
-        it("does not fall back when any frame arrives on the open websocket", function (){
+        it("falls back and remembers LongPoll when the health check is not answered", function (){
           socket.connect()
           connections[0].open()
-          connections[0].onmessage({data: encode({
-            ref: null,
-            topic: "phoenix",
-            event: "phx_reply",
-            payload: {status: "ok", response: {}}
-          })})
-
           jest.advanceTimersByTime(2500)
 
-          expect(socket.transport).toBe(StubWebSocket)
-          expect(socket.primaryPassedHealthCheck).toBe(true)
+          const longpoll = socket.conn
+          expect(longpoll).toBeInstanceOf(LongPoll)
+          longpoll.readyState = SOCKET_STATES.open
+          longpoll.onopen({})
+
+          expect(socket.primaryPassedHealthCheck).toBe(false)
+          expect(socket.getSession("phx:fallback:LongPoll")).toBe("true")
+          // the health check only concerns the primary transport
+          expect(socket.connection.pings.size).toBe(0)
         })
 
         it("does not accumulate the health check pings of connections that dropped", function (){
