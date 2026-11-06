@@ -126,6 +126,8 @@ export default class Socket {
     this.ref = 0
     this.fallbackRef = null
     this.fallbackErrorRef = null
+    // sends the health check of the current fallback attempt, see connectWithFallback
+    this.fallbackHealthCheck = null
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
     this.transport = opts.transport || global.WebSocket || LongPoll
     this.primaryPassedHealthCheck = false
@@ -511,10 +513,21 @@ export default class Socket {
       }
       if(!isCurrent()){ return }
       established = true
-      // the health check already went out. This period is how long a frame has to arrive.
+      // the health check went out when the connection opened, so give the fallback a new period for its reply
       clearTimeout(this.fallbackTimer)
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold)
     })
+    // onConnOpen sends the health check before it flushes the send buffer. The transport process
+    // blocks in Channel.Server.join until the join returns, so a ping sent after a buffered join
+    // is only answered once the join is, and a slow join would fall back on a socket that is fine.
+    this.fallbackHealthCheck = () => {
+      if(!isCurrent()){ return }
+      this.ping(rtt => {
+        this.log("transport", "connected to primary after", rtt)
+        this.primaryPassedHealthCheck = true
+        clearTimeout(this.fallbackTimer)
+      })
+    }
     this.transportConnect()
     connectClock = this.connectClock
   }
@@ -527,6 +540,7 @@ export default class Socket {
   cancelFallback(){
     clearTimeout(this.fallbackTimer)
     this.off([this.fallbackRef, this.fallbackErrorRef])
+    this.fallbackHealthCheck = null
   }
 
   clearHeartbeats(){
@@ -540,42 +554,12 @@ export default class Socket {
     if(this.hasLogger()) this.log("transport", `${this.transportName(this.transport)} connected to ${this.endPointURL()}`)
     this.closeWasClean = false
     this.establishedConnections++
-    // the health-check ping has to leave before the buffered join. The transport
-    // process blocks in Channel.Server.join until the join returns, so a ping
-    // sent after the join is not answered while the mount runs, and the fallback
-    // timer then drops a socket that is fine.
-    this.pingBeforeBufferedJoin()
+    // the health check has to leave before the buffered joins, see connectWithFallback
+    if(this.fallbackHealthCheck){ this.fallbackHealthCheck() }
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     this.resetHeartbeat()
     this.stateChangeCallbacks.open.forEach(([, callback]) => callback())
-  }
-
-  /**
-   * @private
-   *
-   * Sends the fallback health check before flushSendBuffer. No-op unless a
-   * fallback attempt is waiting on the primary transport.
-   */
-  pingBeforeBufferedJoin(){
-    if(!this.fallbackTimer || this.transport === LongPoll){ return }
-    this.ping(rtt => {
-      this.log("transport", "connected to primary after", rtt)
-      this.passPrimaryHealthCheck()
-    })
-  }
-
-  /**
-   * @private
-   *
-   * The primary transport answered. Later frames on this connection also call
-   * this, because a frame is the proof the ping was waiting for.
-   */
-  passPrimaryHealthCheck(){
-    if(this.transport === LongPoll){ return }
-    this.primaryPassedHealthCheck = true
-    clearTimeout(this.fallbackTimer)
-    this.fallbackTimer = null
   }
 
   /**
@@ -881,9 +865,6 @@ export default class Socket {
       // connection may have been replaced or closed in the meantime (browsers also drop messages
       // that arrive once a WebSocket is closing)
       if(connection !== this.connection || (wasOpen && !connection.isOpen())){ return }
-      // a frame on this connection is the health check. The ping reply is one
-      // such frame, and so is anything the server already sent.
-      if(this.fallbackTimer){ this.passPrimaryHealthCheck() }
       let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){
         this.clearHeartbeats()

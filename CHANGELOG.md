@@ -2,8 +2,9 @@
 
 ## Bug fixes
 
-  * [phoenix.js] Send the fallback health check before the buffered join, and
-    treat any frame on that websocket as a pass
+  * [phoenix.js] Send the fallback health check before the buffered join, so
+    that a working WebSocket no longer falls back to LongPoll when the join
+    takes longer than `longPollFallbackMs`
     ([#6770](https://github.com/phoenixframework/phoenix/issues/6770))
   * [Phoenix.ChannelTest] Fix test sockets violating the Phoenix.Socket.t
     typespec, which made Dialyzer treat every test join as never returning
