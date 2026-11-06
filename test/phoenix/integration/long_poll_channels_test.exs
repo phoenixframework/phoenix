@@ -831,6 +831,26 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert Process.whereis(:"room:lobby")
         end
 
+        test "#{@mode}: answers the poll that resumes without waiting for messages" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["last"] == 3
+
+          # the client reports that it recovered once it has the answer
+          params = Map.merge(session, %{"phx:ack" => "3", "phx:resume" => "1"})
+          {time, resp} = :timer.tc(fn -> poll(:get, "/ws", vsn, params) end)
+          assert resp.body["status"] == 204
+          assert resp.body["last"] == 3
+          # other polls wait 200ms for messages in these tests
+          assert time < 200_000
+
+          # the session does not notify the poll anymore
+          Endpoint.broadcast("room:lobby", "new_msg", %{"body" => "hi"})
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "3"))
+          assert [%Message{event: "new_msg"}] = resp.body["messages"]
+        end
+
         test "#{@mode}: does not send messages when a slow resume is rejected" do
           vsn = "2.0.0"
           session = join("/ws", "room:lobby", vsn, "1", @mode)

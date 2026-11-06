@@ -455,6 +455,25 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         assert Process.alive?(session(token))
       end
 
+      test "long polling answers the poll that resumes without waiting for messages" do
+        client = connect(%{"phx:resumable" => "1"}, "/ws/windows")
+        assert_receive %Message{event: "phx_session", payload: %{"token" => token}}
+        channel = join(client, "room:a")
+        drop(client)
+
+        # the client waits for the answer before it sends its messages
+        resume = %{"phx:ack" => "2", "phx:resume" => "1"}
+        {time, body} = :timer.tc(fn -> poll(:get, token, resume, nil, "/ws/windows") end)
+        assert %{"status" => 204, "messages" => [], "last" => 2} = body
+        assert time < 500_000
+
+        # the next poll waits for messages
+        task = Task.async(fn -> poll(:get, token, %{"phx:ack" => "2"}, nil, "/ws/windows") end)
+        Process.sleep(50)
+        send(channel, {:push, "new", %{}})
+        assert [%Message{event: "new"}] = decode(Task.await(task)["messages"])
+      end
+
       test "long polling sends binary messages in base64" do
         {client, token} = new_session()
         join(client, "room:a")

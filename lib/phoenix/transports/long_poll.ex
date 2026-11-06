@@ -183,7 +183,12 @@ defmodule Phoenix.Transports.LongPoll do
   defp listen(conn, {server_ref, priv_topic}, token, endpoint, opts) do
     case check_resume(conn, server_ref, priv_topic, endpoint, opts) do
       :ok ->
-        poll(conn, server_ref, token, endpoint, opts)
+        poll(conn, server_ref, token, endpoint, opts, _wait? = true)
+
+      :resumed ->
+        # The client waits for the answer to this poll before it sends its messages
+        # and reports that it recovered, so we answer without waiting for messages.
+        poll(conn, server_ref, token, endpoint, opts, _wait? = false)
 
       :rejected ->
         # the session is gone, so the client starts a new one
@@ -219,20 +224,20 @@ defmodule Phoenix.Transports.LongPoll do
     broadcast_from!(endpoint, server_ref, resume)
 
     receive do
-      {:resumed, ^ref} -> :ok
+      {:resumed, ^ref} -> :resumed
       {:rejected, ^ref} -> :rejected
     after
       # The session handles the resume before the flush we send next, as both come from
       # this process. If it is slow to answer, for example because resume/3 queries the
       # database, we poll anyway: a session that rejects the resume stops before it sends
       # us messages, so the poll expires and the next request gets 410.
-      opts[:pubsub_timeout_ms] -> :ok
+      opts[:pubsub_timeout_ms] -> :resumed
     end
   end
 
   defp check_resume(_conn, _server_ref, _priv_topic, _endpoint, _opts), do: :ok
 
-  defp poll(conn, server_ref, token, endpoint, opts) do
+  defp poll(conn, server_ref, token, endpoint, opts, wait?) do
     ref = make_ref()
     client_ref = client_ref(server_ref)
 
@@ -249,6 +254,10 @@ defmodule Phoenix.Transports.LongPoll do
 
     broadcast_from!(endpoint, server_ref, flush)
 
+    # The session answers our requests in order, and it only answers the flush when it
+    # has messages. Its answer to this request then tells us that it has none.
+    if not wait?, do: broadcast_from!(endpoint, server_ref, {:subscribe, client_ref, ref})
+
     result =
       receive do
         # Phoenix 1.8 servers, and newer servers answering a flush without ack,
@@ -263,6 +272,10 @@ defmodule Phoenix.Transports.LongPoll do
 
         {:rejected, ^ref} ->
           :rejected
+
+        {:subscribe, ^ref} ->
+          broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
+          {:no_content, [], ack}
 
         {:now_available, ^ref} ->
           broadcast_from!(endpoint, server_ref, flush)
