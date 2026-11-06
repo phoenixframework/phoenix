@@ -246,7 +246,7 @@ describe("ResumableWebSocket", () => {
 
   it("retries when the server does not answer the resume", () => {
     connect()
-    transport.timeout = 1000
+    transport.resumeTimeout = 1000
     last().drop()
     jest.advanceTimersByTime(100)
     const ws = last()
@@ -521,5 +521,25 @@ describe("Socket with resumable: true", () => {
     expect(last()).not.toBe(ws)
     expect(last().params["phx:resume"]).toBe("1")
     expect(socket.conn).toBeInstanceOf(ResumableWebSocket)
+  })
+
+  it("does not wait for the long polling timeout when the server does not answer the resume", () => {
+    socket = new Socket("ws://localhost/socket", {resumable: true, longpollerTimeout: 60_000})
+    socket.connect()
+    last().open()
+    last().receive(control("phx_session", {token: "token"}))
+    last().drop()
+    jest.advanceTimersByTime(100)
+    const ws = last()
+    ws.open()
+
+    // the server keeps the session for 15 seconds by default
+    jest.advanceTimersByTime(10_000)
+    expect(ws.closed).not.toBeNull()
+    jest.advanceTimersByTime(500)
+    expect(last()).not.toBe(ws)
+    expect(last().params["phx:resume"]).toBe("1")
+    // the LongPoll we fall back to uses the timeout
+    expect(socket.conn.timeout).toBe(60_000)
   })
 })

@@ -11,7 +11,10 @@ import LongPoll from "./longpoll"
 const RETRY_DELAYS = [100, 500, 1000, 2000, 5000]
 // how often we tell the server about the messages we received
 const ACK_INTERVAL_MS = 1000
-const DEFAULT_RESUME_TIMEOUT_MS = 10000
+// How long we wait for the server to resume the session over a new WebSocket. It is
+// shorter than the server keeps the session by default, so we can try again in time.
+const RESUME_TIMEOUT_MS = 10000
+const DEFAULT_LONGPOLL_TIMEOUT_MS = 20000
 // control messages are V2 messages without refs on the "phoenix" topic
 const CONTROL_PREFIX = "[null,null,\"phoenix\",\"phx_"
 
@@ -37,7 +40,9 @@ export default class ResumableWebSocket {
     this.endPoint = endPoint
     this.protocols = protocols
     this.binaryTypeValue = "arraybuffer"
-    this.timeout = DEFAULT_RESUME_TIMEOUT_MS
+    // the timeout of the requests of the LongPoll we fall back to, which the socket sets
+    this.timeout = DEFAULT_LONGPOLL_TIMEOUT_MS
+    this.resumeTimeout = RESUME_TIMEOUT_MS
     this.readyState = SOCKET_STATES.connecting
     // the token of the session, once the server told us that it keeps the socket for us
     this.token = null
@@ -143,7 +148,7 @@ export default class ResumableWebSocket {
       this.resumeTimer = setTimeout(() => {
         this.dropWebSocket()
         this.retry()
-      }, this.timeout)
+      }, this.resumeTimeout)
     }
     ws.onopen = () => {
       if(this.ws !== ws){ return }
