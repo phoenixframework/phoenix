@@ -338,7 +338,13 @@ export default class ResumableWebSocket {
     const current = () => this.longpoll === longpoll
     longpoll.onopen = () => { if(current()){ this.recovered() } }
     longpoll.onmessage = event => { if(current()){ this.onmessage(event) } }
-    longpoll.onerror = error => { if(current()){ this.onerror(error) } }
+    longpoll.onerror = error => {
+      if(!current()){ return }
+      // LongPoll errors end the session. Stop reporting an open connection before
+      // callbacks run, but let them close us and clean up the LongPoll themselves.
+      this.readyState = SOCKET_STATES.connecting
+      this.onerror(error)
+    }
     longpoll.onsuspend = () => { if(current()){ this.interrupt() } }
     longpoll.onresume = () => { if(current()){ this.recovered() } }
     longpoll.onclose = event => {

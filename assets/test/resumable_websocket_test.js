@@ -325,6 +325,34 @@ describe("ResumableWebSocket", () => {
       expect(transport.readyState).toBe(SOCKET_STATES.closed)
     })
 
+    it.each([403, 410, 500])("is no longer open when the fallback reports %s", status => {
+      interrupt()
+      jest.advanceTimersByTime(2001)
+      const states = []
+      transport.onerror = () => states.push(transport.readyState)
+      transport.onclose = () => states.push(transport.readyState)
+
+      polls()[0][6]({status})
+
+      expect(states).toEqual([SOCKET_STATES.connecting, SOCKET_STATES.closed])
+    })
+
+    it("lets an error callback close and clean up the fallback", () => {
+      interrupt()
+      jest.advanceTimersByTime(2001)
+      const longpoll = transport.longpoll
+      transport.onerror = () => transport.close(1000, "done")
+
+      polls()[0][6]({status: 410})
+      jest.advanceTimersByTime(10_000)
+
+      expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
+      expect(longpoll.reqs.size).toBe(0)
+      expect(transport.longpoll).toBeNull()
+      expect(events).toEqual(["open", "a", {close: 1000}])
+      expect(polls()).toHaveLength(1)
+    })
+
     it("closes the LongPoll when it closes", () => {
       interrupt()
       // the first poll runs right after we fall back
