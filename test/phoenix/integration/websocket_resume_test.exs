@@ -381,7 +381,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         body = poll(:get, token, %{"phx:ack" => "2", "phx:resume" => "1"})
         assert body["status"] == 204
         assert_receive {:DOWN, ^ref, _, _, _}
-        assert :sys.get_state(session(token)).pipe == nil
+        refute match?({:pipe, _, _}, :sys.get_state(session(token)).client)
       end
 
       test "long polling must resume a WebSocket session before it polls" do
@@ -512,7 +512,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         {client, token} = new_session()
         channel = join(client, "room:a")
         session = session(token)
-        pipe = :sys.get_state(session).pipe
+        attached = :sys.get_state(session).client
         forged = forge_token(token, fn {:v1, id, pid, _topic} -> {:v1, id, pid, "other"} end)
 
         _other = resume(forged, 0)
@@ -520,7 +520,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         refute_received {:resume, _}
 
         # the session keeps its client
-        assert :sys.get_state(session).pipe == pipe
+        assert :sys.get_state(session).client == attached
         echo(client, %{"still" => "here"})
         assert_receive %Message{event: "echo", payload: %{"still" => "here"}}
         assert Process.whereis(:"room:a") == channel

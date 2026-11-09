@@ -135,10 +135,10 @@ defmodule Phoenix.Transports.Session do
       pubsub_server: endpoint.config(:pubsub_server),
       priv_topic: priv_topic,
       last_client_poll: now_ms(),
-      client_ref: nil,
-      # the process of a connection that receives our messages as we send them,
-      # such as a WebSocket, and its monitor
-      pipe: nil,
+      # how we reach the client: nil, a connection that receives our messages as we send
+      # them, such as a WebSocket, as {:pipe, pid, monitor}, or a request waiting for
+      # messages as {:poll, client_ref, ref}
+      client: nil,
       # the close code the socket asked for when it stopped
       close_code: nil
     }
@@ -175,27 +175,19 @@ defmodule Phoenix.Transports.Session do
 
   ## Incoming messages
 
-  def handle_info({:dispatch, client_ref, _body, ref, seq}, %{in_seq: in_seq} = state)
-      when seq <= in_seq do
-    # The client sends messages again when it did not get the response to its request.
-    broadcast_from!(state, client_ref, {:ok, ref})
-    {:noreply, state}
-  end
-
-  def handle_info({:dispatch, client_ref, _body, ref, seq}, %{in_seq: in_seq} = state)
-      when seq > in_seq + 1 do
-    # We cannot process the message, as we lost the ones before it.
-    broadcast_from!(state, client_ref, {:error, ref})
-    {:stop, {:shutdown, :out_of_order}, state}
-  end
-
-  def handle_info({:dispatch, client_ref, body, ref, _seq}, state) do
-    dispatch(client_ref, body, ref, state)
+  def handle_info({:dispatch, client_ref, body, ref, seq}, state) do
+    receive_in({:poll, client_ref, ref}, seq, body, state)
   end
 
   # TODO: Remove in Phoenix 1.10. Phoenix 1.8 nodes and clients dispatch without seq.
   def handle_info({:dispatch, client_ref, body, ref}, state) do
-    dispatch(client_ref, body, ref, state)
+    process_in({:poll, client_ref, ref}, body, state)
+  end
+
+  # Pipes number the messages they receive, starting after the last one we received
+  # when they attached.
+  def handle_info({:pipe_in, pipe, seq, frame}, state) do
+    receive_in({:pipe, pipe}, seq, frame, state)
   end
 
   def handle_info({:subscribe, client_ref, ref}, state) do
@@ -207,10 +199,9 @@ defmodule Phoenix.Transports.Session do
   # session after this one stopped, so a client that resumes also sends the topic of
   # the token, which only this session has. We reject a mismatch but keep running for
   # our own client.
-  def handle_info({:resume, client_ref, ref, _info, priv_topic}, state)
-      when priv_topic != state.priv_topic do
-    broadcast_from!(state, client_ref, {:rejected, ref})
-    {:noreply, state}
+  def handle_info({event, client_ref, ref, _arg, priv_topic}, state)
+      when event in [:resume, :pipe_attach] and priv_topic != state.priv_topic do
+    reject(state, client_ref, ref)
   end
 
   # A client that resumes the session after a failed request or connection
@@ -243,19 +234,12 @@ defmodule Phoenix.Transports.Session do
   ## Pipes
 
   # A connection that receives our messages as we send them, such as a WebSocket.
-  # It replaces the previous one, which the client gave up on.
-  def handle_info({:pipe_attach, pipe, ref, _ack, priv_topic}, state)
-      when priv_topic != state.priv_topic do
-    send(pipe, {:rejected, ref})
-    {:noreply, state}
-  end
-
+  # It replaces the previous one, which the client gave up on, or a waiting poll.
   def handle_info({:pipe_attach, pipe, ref, ack, _priv_topic}, state) do
-    # the client resumed over a WebSocket, so it stopped polling
-    state = %{detach(state) | client_ref: nil}
+    state = detach(state)
     send(pipe, {:attached, ref, state.in_seq, state.out_seq})
     state = acknowledge(state, ack)
-    state = %{state | pipe: {pipe, Process.monitor(pipe)}}
+    state = %{state | client: {:pipe, pipe, Process.monitor(pipe)}}
 
     if :queue.is_empty(state.out) do
       {:noreply, state}
@@ -270,42 +254,12 @@ defmodule Phoenix.Transports.Session do
     end
   end
 
-  # Pipes number the messages they receive, starting after the last one we received
-  # when they attached. The pipe the client gave up on can still deliver messages,
-  # which the client sends again over the new one, so we drop them like duplicates.
-  def handle_info({:pipe_in, pipe, seq, _frame}, %{in_seq: in_seq} = state) when seq <= in_seq do
-    send(pipe, {:in_seq, in_seq})
-    {:noreply, state}
-  end
-
-  def handle_info({:pipe_in, _pipe, seq, _frame}, %{in_seq: in_seq} = state)
-      when seq > in_seq + 1 do
-    {:stop, {:shutdown, :out_of_order}, %{state | close_code: @close_codes.internal_error}}
-  end
-
-  def handle_info({:pipe_in, pipe, _seq, {body, opcode}}, state) do
-    %{handler: {handler, handler_state}} = state
-    state = %{state | in_seq: state.in_seq + 1}
-    send(pipe, {:in_seq, state.in_seq})
-
-    case handler.handle_in({body, opcode: opcode}, handler_state) do
-      {:reply, _status, {opcode, reply}, handler_state} ->
-        publish_reply(%{state | handler: {handler, handler_state}}, opcode, reply)
-
-      {:ok, handler_state} ->
-        {:noreply, %{state | handler: {handler, handler_state}}}
-
-      {:stop, reason, handler_state} ->
-        {:stop, reason, %{state | handler: {handler, handler_state}}}
-    end
-  end
-
   def handle_info({:pipe_ack, _pipe, ack}, state) do
     {:noreply, acknowledge(state, ack)}
   end
 
   # The client closes the session, as opposed to losing its connection.
-  def handle_info({:pipe_close, pipe}, %{pipe: {pipe, _}} = state) do
+  def handle_info({:pipe_close, pipe}, %{client: {:pipe, pipe, _}} = state) do
     {:stop, {:shutdown, :closed}, %{state | close_code: @close_codes.normal}}
   end
 
@@ -313,8 +267,8 @@ defmodule Phoenix.Transports.Session do
     {:noreply, state}
   end
 
-  def handle_info({:DOWN, ref, _, _, _}, %{pipe: {_, ref}} = state) do
-    {:noreply, %{state | pipe: nil, last_client_poll: now_ms()}}
+  def handle_info({:DOWN, ref, _, _, _}, %{client: {:pipe, _, ref}} = state) do
+    {:noreply, %{state | client: nil, last_client_poll: now_ms()}}
   end
 
   ## Outgoing messages
@@ -325,10 +279,10 @@ defmodule Phoenix.Transports.Session do
     state = acknowledge(%{state | last_client_poll: now_ms()}, ack)
 
     if :queue.is_empty(state.out) do
-      {:noreply, %{state | client_ref: {client_ref, ref}}}
+      {:noreply, %{detach(state) | client: {:poll, client_ref, ref}}}
     else
       broadcast_from!(state, client_ref, {:messages, poll_payloads(state), ref, state.out_seq})
-      {:noreply, %{sent(state) | client_ref: nil}}
+      {:noreply, forget_poll(sent(state))}
     end
   end
 
@@ -340,26 +294,25 @@ defmodule Phoenix.Transports.Session do
     state = acknowledge(%{state | last_client_poll: now_ms()}, state.sent)
 
     if :queue.is_empty(state.out) do
-      {:noreply, %{state | client_ref: {client_ref, ref}}}
+      {:noreply, %{detach(state) | client: {:poll, client_ref, ref}}}
     else
       broadcast_from!(state, client_ref, {:messages, poll_payloads(state), ref})
-      {:noreply, %{acknowledge(sent(state), state.out_seq) | client_ref: nil}}
+      {:noreply, forget_poll(acknowledge(sent(state), state.out_seq))}
     end
   end
 
-  def handle_info({:expired, client_ref, ref}, state) do
-    case state.client_ref do
-      {^client_ref, ^ref} ->
-        {:noreply, %{state | client_ref: nil}}
+  def handle_info({:expired, client_ref, ref}, %{client: {:poll, client_ref, ref}} = state) do
+    {:noreply, %{state | client: nil}}
+  end
 
-      _ ->
-        {:noreply, state}
-    end
+  def handle_info({:expired, _client_ref, _ref}, state) do
+    {:noreply, state}
   end
 
   def handle_info(:shutdown_if_inactive, state) do
     cond do
-      state.pipe == nil and now_ms() - state.last_client_poll > state.window_ms ->
+      not match?({:pipe, _, _}, state.client) and
+          now_ms() - state.last_client_poll > state.window_ms ->
         {:stop, {:shutdown, :inactive}, state}
 
       unacknowledged?(state) ->
@@ -396,7 +349,7 @@ defmodule Phoenix.Transports.Session do
   def terminate(reason, state) do
     %{handler: {handler, handler_state}} = state
 
-    with {pipe, _ref} <- state.pipe do
+    with {:pipe, pipe, _ref} <- state.client do
       send(pipe, {:session_closed, state.close_code || close_code(reason)})
     end
 
@@ -410,40 +363,73 @@ defmodule Phoenix.Transports.Session do
   defp close_code({:shutdown, :restart}), do: @close_codes.service_restart
   defp close_code(_reason), do: @close_codes.internal_error
 
-  defp detach(%{pipe: {pipe, ref}} = state) do
+  defp detach(%{client: {:pipe, pipe, ref}} = state) do
     Process.demonitor(ref, [:flush])
     send(pipe, {:detached, self()})
-    %{state | pipe: nil, last_client_poll: now_ms()}
+    %{state | client: nil, last_client_poll: now_ms()}
   end
 
   defp detach(state), do: state
+
+  defp forget_poll(%{client: {:poll, _client_ref, _ref}} = state), do: %{state | client: nil}
+  defp forget_poll(state), do: state
 
   defp reject(state, client_ref, ref) do
     broadcast_from!(state, client_ref, {:rejected, ref})
     {:noreply, state}
   end
 
-  defp dispatch(client_ref, {body, opcode}, ref, state) do
+  # The client sends messages again when it did not get the response to its request,
+  # or over a new pipe while the one it gave up on still delivers them.
+  defp receive_in(from, seq, _frame, %{in_seq: in_seq} = state) when seq <= in_seq do
+    report_in(from, :ok, state)
+    {:noreply, state}
+  end
+
+  # We cannot process the message, as we lost the ones before it. A pipe
+  # learns about it from the close code.
+  defp receive_in(from, seq, _frame, %{in_seq: in_seq} = state) when seq > in_seq + 1 do
+    with {:poll, client_ref, ref} <- from do
+      broadcast_from!(state, client_ref, {:error, ref})
+    end
+
+    {:stop, {:shutdown, :out_of_order}, %{state | close_code: @close_codes.internal_error}}
+  end
+
+  defp receive_in(from, _seq, frame, state) do
+    process_in(from, frame, state)
+  end
+
+  defp process_in(from, {body, opcode}, state) do
     %{handler: {handler, handler_state}} = state
     state = %{state | in_seq: state.in_seq + 1}
 
     case handler.handle_in({body, opcode: opcode}, handler_state) do
       {:reply, status, {opcode, reply}, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
-        status = if status == :ok, do: :ok, else: :error
-        broadcast_from!(state, client_ref, {status, ref})
+        report_in(from, if(status == :ok, do: :ok, else: :error), state)
         publish_reply(state, opcode, reply)
 
       {:ok, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
-        broadcast_from!(state, client_ref, {:ok, ref})
+        report_in(from, :ok, state)
         {:noreply, state}
 
       {:stop, reason, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
-        broadcast_from!(state, client_ref, {:error, ref})
+        report_in(from, :error, state)
         {:stop, reason, state}
     end
+  end
+
+  # A request reports the status of its messages in its response,
+  # while a pipe tells the client which messages we received.
+  defp report_in({:poll, client_ref, ref}, status, state) do
+    broadcast_from!(state, client_ref, {status, ref})
+  end
+
+  defp report_in({:pipe, pipe}, _status, state) do
+    send(pipe, {:in_seq, state.in_seq})
   end
 
   # Long polling sends text messages as they are and binary messages in base64
@@ -503,13 +489,16 @@ defmodule Phoenix.Transports.Session do
       payload = IO.iodata_to_binary(reply)
       state = %{state | out: :queue.in({seq, opcode, payload}, state.out), out_seq: seq}
 
-      case state.pipe do
-        {pipe, _ref} ->
+      case state.client do
+        {:pipe, pipe, _ref} ->
           send(pipe, {:push_frames, [{opcode, payload}]})
           {:noreply, sent(state)}
 
+        {:poll, client_ref, ref} ->
+          broadcast_from!(state, client_ref, {:now_available, ref})
+          {:noreply, state}
+
         nil ->
-          notify_client_now_available(state)
           {:noreply, state}
       end
     end
@@ -517,13 +506,6 @@ defmodule Phoenix.Transports.Session do
 
   defp unacknowledged?(%{sent_at: nil}), do: false
   defp unacknowledged?(state), do: now_ms() - state.sent_at > state.window_ms
-
-  defp notify_client_now_available(state) do
-    case state.client_ref do
-      {client_ref, ref} -> broadcast_from!(state, client_ref, {:now_available, ref})
-      nil -> :ok
-    end
-  end
 
   defp now_ms, do: System.monotonic_time(:millisecond)
 
