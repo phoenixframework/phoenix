@@ -175,7 +175,9 @@ defmodule Phoenix.Transports.LongPoll do
       {:ok, server_pid} ->
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = Session.sign_token(endpoint, data, opts)
-        # the last message tells clients that we keep messages until they acknowledge them
+        # The "last" field tells clients that this server numbers its messages and keeps
+        # them until they are acknowledged, so they can retry failed requests.
+        # A new session has not sent any messages yet, so it is 0.
         conn |> put_status(:gone) |> status_token_messages_json(token, [], 0)
     end
   end
@@ -309,6 +311,8 @@ defmodule Phoenix.Transports.LongPoll do
   # them arrives first, we leave the echo in the mailbox, as waiting for it would
   # delay the response. With Cowboy, the request process stops after the response.
   # Bandit ignores unhandled messages.
+  #
+  # See https://github.com/phoenixframework/phoenix/pull/6901.
   defp echo(endpoint, server_ref, client_ref) do
     echo_ref = make_ref()
     broadcast_from!(endpoint, server_ref, {:subscribe, client_ref, echo_ref})
@@ -317,8 +321,9 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Stops waiting for messages. The session can still answer our flush afterwards.
   # It keeps the messages until the client acknowledges them, so the client gets
-  # them with its next poll. Without messages, the last message is the one the client
-  # acknowledged. It tells the client that we keep the messages, like we do with messages.
+  # them with its next poll. This response has no messages, so its "last" field is the
+  # number the client acknowledged. We include the field because clients treat a
+  # response without it as coming from a node with an older server.
   defp expire(endpoint, server_ref, client_ref, ref, ack, _opts) when is_integer(ack) do
     broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
     {:no_content, [], ack}
@@ -326,6 +331,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   # For clients that don't acknowledge, the session drops the messages it sends,
   # so we wait for its echo: if it answered the flush, the messages arrive first.
+  # See https://github.com/phoenixframework/phoenix/pull/6901.
   #
   # TODO: Remove in Phoenix 1.10, together with the flush without ack
   defp expire(endpoint, server_ref, client_ref, ref, nil, opts) do

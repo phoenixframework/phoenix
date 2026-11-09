@@ -40,6 +40,9 @@ export default class LongPoll {
     // the pending requests and queued messages, which are cancelled when we stop
     this.reqs = new Set()
     this.messageTimers = new Set()
+    // awaitingMessages is used to track if we are actively processing messages
+    // from a poll, since each message is scheduled using `setTimeout(0)` (see comments below);
+    // therefore, we track it to prevent onresume from firing too early
     this.awaitingMessages = false
     this.awaitingBatchAck = false
     this.currentBatch = null
@@ -48,6 +51,8 @@ export default class LongPoll {
     // set once the server tells us that it keeps the messages until we acknowledge them,
     // so we can retry a failed request instead of starting a new session
     this.resumable = false
+    // tracks if we received a message from a server that does not support resume
+    // TODO: remove in Phoenix 1.10
     this.degraded = false
     // the number of the last message we received, and of the last message we sent
     this.ack = 0
@@ -80,9 +85,9 @@ export default class LongPoll {
    * @private
    *
    * Continues a session that another transport started, such as a ResumableWebSocket,
-   * before the first poll. We resume the session with its token and the number of the
-   * last message we received, and send the messages the server did not confirm again,
-   * numbered after the last one it confirmed. The server drops the ones it received.
+   * before the first poll. We send the token and the number of the last message we received,
+   * and send the messages the server did not confirm again.
+   * The server drops any messages it already received.
    */
   resumeSession({token, received, confirmed, unconfirmed}){
     this.token = token

@@ -29,10 +29,10 @@ defmodule Phoenix.Transports.Session do
   # topic it subscribed to otherwise. Pipes talk to the session directly, so they
   # must run on a node we are connected to.
   #
-  # The session knows the transport the client uses. The requests of long polling
-  # only prove that the client has the token of the session, so a client that used
-  # another transport must resume the session to long poll, which lets the socket
-  # check the new connection. We reject its other requests.
+  # The session knows the transport the client uses. Long-poll requests only prove
+  # that the client has the session token. A client that used another transport
+  # must therefore first send a poll with "phx:resume", which lets the socket check
+  # the new connection. Until then, we reject its polls and POSTs.
 
   use GenServer, restart: :temporary
   alias Phoenix.PubSub

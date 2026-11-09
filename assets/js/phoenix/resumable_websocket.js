@@ -13,8 +13,8 @@ const ACK_INTERVAL_MS = 1000
 // How long we wait for the server to resume the session over a new WebSocket. It is
 // shorter than the server keeps the session by default, so we can try again in time.
 const RESUME_TIMEOUT_MS = 10000
-const DEFAULT_LONGPOLL_TIMEOUT_MS = 20000
-// control messages are V2 messages without refs on the "phoenix" topic
+// control messages are V2 messages without refs on the "phoenix" topic;
+// since the socket decodes messages, we work on the encoded version - it's a bit hacky, I know
 const CONTROL_PREFIX = "[null,null,\"phoenix\",\"phx_"
 
 let control = (event, payload) => JSON.stringify([null, null, "phoenix", event, payload])
@@ -39,8 +39,6 @@ export default class ResumableWebSocket {
     this.endPoint = endPoint
     this.protocols = protocols
     this.binaryTypeValue = "arraybuffer"
-    // the timeout of the requests of the LongPoll we fall back to, which the socket sets
-    this.timeout = DEFAULT_LONGPOLL_TIMEOUT_MS
     this.resumeTimeout = RESUME_TIMEOUT_MS
     this.readyState = SOCKET_STATES.connecting
     // the token of the session, once the server told us that it keeps the socket for us
@@ -137,9 +135,8 @@ export default class ResumableWebSocket {
    * @private
    */
   connect(resume){
-    const WebSocket = ResumableWebSocket.WebSocket || global.WebSocket
     const params = resume ? {"phx:resumable": 1, "phx:resume": 1} : {"phx:resumable": 1}
-    const ws = new WebSocket(Ajax.appendParams(this.endPoint, params), this.protocols)
+    const ws = new global.WebSocket(Ajax.appendParams(this.endPoint, params), this.protocols)
     ws.binaryType = this.binaryTypeValue
     this.ws = ws
     this.ready = false
@@ -185,7 +182,10 @@ export default class ResumableWebSocket {
       this.end()
       return
     }
-    // the server starts a session with its token, which is its first message
+    // the server starts a session with its token, which is its first message;
+    // therefore if we have no token at this point it means that the server does
+    // not run in resumable mode (or is outdated) - we don't need to buffer any
+    // message clientside
     if(this.token === null && !this.unsupported){
       this.unsupported = true
       this.unconfirmed = []
@@ -246,6 +246,10 @@ export default class ResumableWebSocket {
   }
 
   /**
+   * Called in resume and after each message is received.
+   * This is equivalent to awaitingMessages in Longpoll, to delay
+   * onresume until all expected incoming messages are handled.
+   * 
    * @private
    */
   scheduleRecovery(){

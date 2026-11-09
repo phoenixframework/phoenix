@@ -40,7 +40,9 @@ class FakeWebSocket {
 
 FakeWebSocket.instances = []
 
-const last = () => FakeWebSocket.instances.at(-1)
+const OriginalWebSocket = global.WebSocket
+
+const last =() => FakeWebSocket.instances.at(-1)
 
 describe("ResumableWebSocket", () => {
   let transport, events
@@ -69,12 +71,12 @@ describe("ResumableWebSocket", () => {
   beforeEach(() => {
     jest.useFakeTimers()
     FakeWebSocket.instances = []
-    ResumableWebSocket.WebSocket = FakeWebSocket
+    global.WebSocket = FakeWebSocket
   })
 
   afterEach(() => {
     transport.close()
-    ResumableWebSocket.WebSocket = null
+    global.WebSocket = OriginalWebSocket
     jest.useRealTimers()
   })
 
@@ -517,12 +519,12 @@ describe("Socket with resumable: true", () => {
   beforeEach(() => {
     jest.useFakeTimers()
     FakeWebSocket.instances = []
-    ResumableWebSocket.WebSocket = FakeWebSocket
+    global.WebSocket = FakeWebSocket
   })
 
   afterEach(() => {
     socket.disconnect()
-    ResumableWebSocket.WebSocket = null
+    global.WebSocket = OriginalWebSocket
     jest.useRealTimers()
   })
 
