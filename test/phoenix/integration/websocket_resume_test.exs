@@ -87,12 +87,30 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
     end
   end
 
+  defmodule PingSocket do
+    @behaviour Phoenix.Socket.Transport
+
+    def child_spec(_opts), do: :ignore
+    def connect(_), do: {:ok, %{}}
+    def init(state), do: {:ok, state}
+    def handle_in({"ping:" <> payload, _}, state), do: {:reply, :ok, {:ping, payload}, state}
+    def handle_info(_, state), do: {:ok, state}
+
+    def handle_control({payload, opts}, state) do
+      {:push, {:text, "#{opts[:opcode]}:#{payload}"}, state}
+    end
+
+    def terminate(_reason, _state), do: :ok
+  end
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     socket "/ws", UserSocket,
       websocket: [resumable: true, window_ms: 200],
       longpoll: [window_ms: 200, pubsub_timeout_ms: 200]
+
+    socket "/ws/ping", PingSocket, websocket: [resumable: true, window_ms: 200]
 
     socket "/ws/plain", UserSocket, websocket: true
 
@@ -130,6 +148,19 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
   defp new_session(params \\ %{}) do
     client = connect(Map.put(params, "phx:resumable", "1"))
     assert_receive %Message{topic: "phoenix", event: "phx_session", payload: %{"token" => token}}
+    {client, token}
+  end
+
+  # connects to a socket that uses control frames and plain text messages
+  defp new_ping_session do
+    query = URI.encode_query(%{"vsn" => "2.0.0", "phx:resumable" => "1"})
+    url = "ws://127.0.0.1:#{@port}/ws/ping/websocket?" <> query
+    {:ok, client} = WebsocketClient.connect(self(), url, :noop)
+    assert_receive {:text, "[null,null,\"phoenix\",\"phx_session\"," <> _ = session}
+
+    [nil, nil, "phoenix", "phx_session", %{"token" => token}] =
+      Phoenix.json_library().decode!(session)
+
     {client, token}
   end
 
@@ -382,6 +413,32 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         assert body["status"] == 204
         assert_receive {:DOWN, ^ref, _, _, _}
         refute match?({:pipe, _, _}, :sys.get_state(session(token)).client)
+      end
+
+      test "passes control frames to the socket without numbering them" do
+        {client, token} = new_ping_session()
+
+        WebsocketClient.send(client, {:ping, "123"})
+        assert_receive {:pong, "123"}
+        assert_receive {:text, "ping:123"}
+
+        state = :sys.get_state(session(token))
+        assert state.in_seq == 0
+        assert state.out_seq == 1
+      end
+
+      test "does not number the control frames the socket sends" do
+        {client, token} = new_ping_session()
+
+        # the client answers the ping with a pong, which the socket answers with text
+        WebsocketClient.send(client, {:text, "ping:abc"})
+        assert_receive {:ping, "abc"}
+        assert_receive {:text, "pong:abc"}
+
+        state = :sys.get_state(session(token))
+        assert state.in_seq == 1
+        assert state.out_seq == 1
+        assert [{1, :text, "pong:abc"}] = :queue.to_list(state.out)
       end
 
       test "long polling must resume a WebSocket session before it polls" do

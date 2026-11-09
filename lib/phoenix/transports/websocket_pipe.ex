@@ -117,6 +117,17 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
     {:stop, :normal, @close_codes.policy_violation, state}
   end
 
+  # Ping and pong frames belong to this WebSocket, so they are not numbered or replayed.
+  @impl true
+  def handle_control(frame, %{session: session} = state) when session != nil do
+    send(session, {:pipe_control, self(), frame})
+    {:ok, state}
+  end
+
+  def handle_control(_frame, state) do
+    {:ok, state}
+  end
+
   @impl true
   def handle_info({:push_frames, frames}, state) do
     {:push, frames, state}

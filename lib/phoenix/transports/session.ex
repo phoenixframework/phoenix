@@ -285,6 +285,20 @@ defmodule Phoenix.Transports.Session do
     {:noreply, state}
   end
 
+  def handle_info({:pipe_control, pipe, frame}, %{client: {:pipe, pipe, _}} = state) do
+    %{handler: {handler, handler_state}} = state
+
+    if function_exported?(handler, :handle_control, 2) do
+      handle_result(state, handler, handler.handle_control(frame, handler_state))
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_info({:pipe_control, _pipe, _frame}, state) do
+    {:noreply, state}
+  end
+
   def handle_info({:DOWN, ref, _, _, _}, %{client: {:pipe, _, ref}} = state) do
     {:noreply, %{state | client: nil, last_client_poll: now_ms()}}
   end
@@ -345,24 +359,7 @@ defmodule Phoenix.Transports.Session do
 
   def handle_info(message, state) do
     %{handler: {handler, handler_state}} = state
-
-    case handler.handle_info(message, handler_state) do
-      {:push, {opcode, reply}, handler_state} ->
-        state = %{state | handler: {handler, handler_state}}
-        publish_reply(state, opcode, reply)
-
-      {:ok, handler_state} ->
-        state = %{state | handler: {handler, handler_state}}
-        {:noreply, state}
-
-      {:stop, reason, handler_state} ->
-        state = %{state | handler: {handler, handler_state}}
-        {:stop, reason, state}
-
-      {:stop, reason, code, handler_state} ->
-        state = %{state | handler: {handler, handler_state}, close_code: code}
-        {:stop, reason, state}
-    end
+    handle_result(state, handler, handler.handle_info(message, handler_state))
   end
 
   def terminate(reason, state) do
@@ -488,6 +485,25 @@ defmodule Phoenix.Transports.Session do
   defp send_client(_state, client_ref, msg) when is_pid(client_ref),
     do: send(client_ref, msg)
 
+  defp handle_result(state, handler, result) do
+    case result do
+      {:push, {opcode, reply}, handler_state} ->
+        publish_reply(%{state | handler: {handler, handler_state}}, opcode, reply)
+
+      {:reply, _status, {opcode, reply}, handler_state} ->
+        publish_reply(%{state | handler: {handler, handler_state}}, opcode, reply)
+
+      {:ok, handler_state} ->
+        {:noreply, %{state | handler: {handler, handler_state}}}
+
+      {:stop, reason, handler_state} ->
+        {:stop, reason, %{state | handler: {handler, handler_state}}}
+
+      {:stop, reason, code, handler_state} ->
+        {:stop, reason, %{state | handler: {handler, handler_state}, close_code: code}}
+    end
+  end
+
   defp publish_reply(state, opcode, reply) when is_map(reply) do
     IO.warn(
       "Returning a map from the LongPolling serializer is deprecated. " <>
@@ -495,6 +511,18 @@ defmodule Phoenix.Transports.Session do
     )
 
     publish_reply(state, opcode, Phoenix.json_library().encode_to_iodata!(reply))
+  end
+
+  # Browsers don't deliver ping and pong frames to the client, so it could not count
+  # them. They only apply to the current WebSocket, so we drop them if there is none.
+  # Long polling has no control frames and treats them like any other message.
+  defp publish_reply(state, opcode, reply)
+       when opcode in [:ping, :pong] and state.transport != :longpoll do
+    with {:pipe, pipe, _ref} <- state.client do
+      send(pipe, {:push_frames, [{opcode, reply}]})
+    end
+
+    {:noreply, state}
   end
 
   defp publish_reply(state, opcode, reply) do
