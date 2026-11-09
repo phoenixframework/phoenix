@@ -10,6 +10,15 @@ defmodule Phoenix.Transports.Session do
   # session as its pipe, which receives our messages as we send them, while long
   # polling requests them.
   #
+  #   WebSocket client <--> Pipe <------------------+
+  #                               :pipe_*, :resume  |
+  #                                                 v
+  #                                              Session <--> socket handler
+  #                                                 ^
+  #   LongPoll client                               |
+  #     GET  <--> request process :flush, :resume --+
+  #     POST <--> request process :dispatch --------+
+  #
   # Both directions number their messages, starting at 1:
   #
   #   * The session numbers the messages it sends and keeps them until the client
@@ -88,11 +97,17 @@ defmodule Phoenix.Transports.Session do
     GenServer.start_link(__MODULE__, arg)
   end
 
+  # A WebSocket connects the socket in its request process before it starts a session.
+  # It needs the conn to answer a failed connect, and the :resumable option can decide
+  # against a session after connecting.
   def init({:connected, endpoint, handler, handler_state, transport, options, priv_topic}) do
     {:ok, handler_state} = handler.init(handler_state)
     {:ok, init_state(endpoint, handler, handler_state, transport, options, priv_topic)}
   end
 
+  # Long polling connects the socket in the session. Sockets that long poll have always
+  # run connect/1 and init/1 in the same process, so a connect/1 that depends on self(),
+  # the process dictionary or Logger metadata keeps working.
   def init({endpoint, handler, options, params, priv_topic, connect_info}) do
     config = %{
       endpoint: endpoint,
@@ -190,8 +205,11 @@ defmodule Phoenix.Transports.Session do
     receive_in({:pipe, pipe}, seq, frame, state)
   end
 
+  # Answers a request that checks if the session is reachable, and serves as an echo
+  # after a :flush: we handle messages in order, so the echo arrives after the answer
+  # to the flush. The name comes from Phoenix 1.8 nodes, which send the same message.
   def handle_info({:subscribe, client_ref, ref}, state) do
-    broadcast_from!(state, client_ref, {:subscribe, ref})
+    send_client(state, client_ref, {:subscribe, ref})
     {:noreply, state}
   end
 
@@ -218,7 +236,7 @@ defmodule Phoenix.Transports.Session do
 
     case result do
       {:ok, handler_state} ->
-        broadcast_from!(state, client_ref, {:resumed, ref})
+        send_client(state, client_ref, {:resumed, ref})
         # the client gave up on the WebSocket we have, for example to long poll instead
         state = %{detach(state) | handler: {handler, handler_state}, transport: info.transport}
         # The client continues with the window of its transport. Long polling holds
@@ -226,7 +244,7 @@ defmodule Phoenix.Transports.Session do
         {:noreply, %{state | window_ms: window_ms(info.options)}}
 
       {:error, _reason} ->
-        broadcast_from!(state, client_ref, {:rejected, ref})
+        send_client(state, client_ref, {:rejected, ref})
         {:stop, {:shutdown, :resume_rejected}, state}
     end
   end
@@ -276,12 +294,13 @@ defmodule Phoenix.Transports.Session do
   # The client acknowledges the last message it received with each poll, so we send
   # the messages after it until it did, as the response of a poll can get lost.
   def handle_info({:flush, client_ref, ref, ack}, state) do
-    state = acknowledge(%{state | last_client_poll: now_ms()}, ack)
+    # A pipe can still attach after the client resumed with long polling instead.
+    state = detach(acknowledge(%{state | last_client_poll: now_ms()}, ack))
 
     if :queue.is_empty(state.out) do
-      {:noreply, %{detach(state) | client: {:poll, client_ref, ref}}}
+      {:noreply, %{state | client: {:poll, client_ref, ref}}}
     else
-      broadcast_from!(state, client_ref, {:messages, poll_payloads(state), ref, state.out_seq})
+      send_client(state, client_ref, {:messages, poll_payloads(state), ref, state.out_seq})
       {:noreply, forget_poll(sent(state))}
     end
   end
@@ -291,12 +310,12 @@ defmodule Phoenix.Transports.Session do
   # TODO: Remove in Phoenix 1.10. Phoenix 1.8 nodes and clients flush without ack.
   def handle_info({:flush, client_ref, ref}, state) do
     # we assume the client received the messages we sent before, like it does
-    state = acknowledge(%{state | last_client_poll: now_ms()}, state.sent)
+    state = detach(acknowledge(%{state | last_client_poll: now_ms()}, state.sent))
 
     if :queue.is_empty(state.out) do
-      {:noreply, %{detach(state) | client: {:poll, client_ref, ref}}}
+      {:noreply, %{state | client: {:poll, client_ref, ref}}}
     else
-      broadcast_from!(state, client_ref, {:messages, poll_payloads(state), ref})
+      send_client(state, client_ref, {:messages, poll_payloads(state), ref})
       {:noreply, forget_poll(acknowledge(sent(state), state.out_seq))}
     end
   end
@@ -375,7 +394,7 @@ defmodule Phoenix.Transports.Session do
   defp forget_poll(state), do: state
 
   defp reject(state, client_ref, ref) do
-    broadcast_from!(state, client_ref, {:rejected, ref})
+    send_client(state, client_ref, {:rejected, ref})
     {:noreply, state}
   end
 
@@ -390,7 +409,7 @@ defmodule Phoenix.Transports.Session do
   # learns about it from the close code.
   defp receive_in(from, seq, _frame, %{in_seq: in_seq} = state) when seq > in_seq + 1 do
     with {:poll, client_ref, ref} <- from do
-      broadcast_from!(state, client_ref, {:error, ref})
+      send_client(state, client_ref, {:error, ref})
     end
 
     {:stop, {:shutdown, :out_of_order}, %{state | close_code: @close_codes.internal_error}}
@@ -425,7 +444,7 @@ defmodule Phoenix.Transports.Session do
   # A request reports the status of its messages in its response,
   # while a pipe tells the client which messages we received.
   defp report_in({:poll, client_ref, ref}, status, state) do
-    broadcast_from!(state, client_ref, {status, ref})
+    send_client(state, client_ref, {status, ref})
   end
 
   defp report_in({:pipe, pipe}, _status, state) do
@@ -463,10 +482,10 @@ defmodule Phoenix.Transports.Session do
     %{state | sent: state.out_seq, sent_at: state.sent_at || now_ms()}
   end
 
-  defp broadcast_from!(state, client_ref, msg) when is_binary(client_ref),
+  defp send_client(state, client_ref, msg) when is_binary(client_ref),
     do: PubSub.broadcast_from!(state.pubsub_server, self(), client_ref, msg)
 
-  defp broadcast_from!(_state, client_ref, msg) when is_pid(client_ref),
+  defp send_client(_state, client_ref, msg) when is_pid(client_ref),
     do: send(client_ref, msg)
 
   defp publish_reply(state, opcode, reply) when is_map(reply) do
@@ -495,7 +514,7 @@ defmodule Phoenix.Transports.Session do
           {:noreply, sent(state)}
 
         {:poll, client_ref, ref} ->
-          broadcast_from!(state, client_ref, {:now_available, ref})
+          send_client(state, client_ref, {:now_available, ref})
           {:noreply, state}
 
         nil ->
