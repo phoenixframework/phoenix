@@ -1,5 +1,6 @@
 import {
   CLOSE_SESSION_GONE,
+  DEFAULT_RESUME_AFTER_MS,
   global,
   SOCKET_STATES
 } from "./constants"
@@ -7,8 +8,6 @@ import {
 import Ajax from "./ajax"
 import LongPoll from "./longpoll"
 
-// how long we wait before resuming the session over a new WebSocket
-const RETRY_DELAYS = [100, 500, 1000, 2000, 5000]
 // how often we tell the server about the messages we received
 const ACK_INTERVAL_MS = 1000
 // How long we wait for the server to resume the session over a new WebSocket. It is
@@ -62,6 +61,8 @@ export default class ResumableWebSocket {
     this.replayUntil = null
     this.recoveryTimer = null
     this.retries = 0
+    // how long we wait before resuming the session over a new WebSocket, which the socket sets
+    this.resumeAfterMs = DEFAULT_RESUME_AFTER_MS
     this.retryTimer = null
     this.resumeTimer = null
     this.ackTimer = null
@@ -324,8 +325,8 @@ export default class ResumableWebSocket {
    */
   retry(){
     this.resuming = false
-    const delay = RETRY_DELAYS[Math.min(this.retries, RETRY_DELAYS.length - 1)]
     this.retries++
+    const delay = this.resumeAfterMs(this.retries)
     // a single failed WebSocket is resumed quickly, so we only report the
     // interruption once resuming failed as well
     if(this.retries > 1){ this.interrupt() }
@@ -354,6 +355,7 @@ export default class ResumableWebSocket {
     this.resuming = false
     const longpoll = new LongPoll(this.endPoint, this.protocols)
     longpoll.timeout = this.timeout
+    longpoll.resumeAfterMs = this.resumeAfterMs
     longpoll.resumeSession({
       token: this.token,
       received: this.received,

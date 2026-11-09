@@ -745,6 +745,25 @@ describe("LongPoll resuming", () => {
     expect(delays).toEqual([100, 500, 1000, 2000, 5000, 5000])
   })
 
+  it("retries after the delay from resumeAfterMs", () => {
+    open()
+    const tries = []
+    longpoll.resumeAfterMs = (attempt) => {
+      tries.push(attempt)
+      return 30
+    }
+
+    const polls = requests("GET").length
+    respond(last("GET"), null)
+    jest.advanceTimersByTime(29)
+    expect(requests("GET")).toHaveLength(polls)
+    jest.advanceTimersByTime(1)
+    expect(requests("GET")).toHaveLength(polls + 1)
+
+    respond(last("GET"), null)
+    expect(tries).toEqual([1, 2])
+  })
+
   it("reports suspension once a retry failed as well, and resumption once requests succeed", () => {
     open()
     respond(last("GET"), null)

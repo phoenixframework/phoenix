@@ -100,26 +100,19 @@
  * `onResume` runs after delivering the incoming messages buffered at resumption,
  * so callbacks see those updates. It does not wait for replies to outgoing pushes.
  *
- * Recovery requires a server that supports acknowledged long-poll messages.
- * With an older server, and for the rest of a session that reached a node
- * with an older server during a rolling upgrade, failed requests close the
- * socket and channels rejoin. If the session expires, the usual error/close events
- * fire and channels rejoin. Push timeouts continue to apply while suspended.
- *
- * WebSockets resume the same way with the `resumable` option, which requires
- * the `:resumable` WebSocket option on the server:
+ * Longpoll sessions are resumable by default, WebSockets resume with the `resumable`
+ * option, which also requires the `:resumable` WebSocket option in your server's endpoint:
  *
  * ```
  * let socket = new Socket("/socket", {resumable: true})
  * ```
- *
- * When the WebSocket fails, or the heartbeat times out, the socket resumes its
- * session over a new WebSocket and both sides send the messages the other side
- * missed. With the `longPollFallbackMs` option, the socket continues the session
- * with long polling when it cannot resume it over a WebSocket within that time,
- * for example when a proxy stops allowing WebSockets. Servers that don't support
- * it behave like before.
- *
+ * 
+ * ```elixir
+ * socket "/ws", UserSocket,
+ *   websocket: [resumable: true, ...],
+ *   longpoll: [...]
+ * ```
+ * 
  *
  * ## Channel Hooks
  *

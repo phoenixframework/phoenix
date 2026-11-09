@@ -2,6 +2,7 @@ import {
   global,
   phxWindow,
   CHANNEL_EVENTS,
+  DEFAULT_RESUME_AFTER_MS,
   DEFAULT_TIMEOUT,
   DEFAULT_VSN,
   SOCKET_STATES,
@@ -71,7 +72,7 @@ import Connection from "./connection"
  * function(tries){
  *   return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
  * }
- * ````
+ * ```
  *
  * @param {boolean} [opts.reconnectWhenHidden] - When true, the socket also reconnects while the
  * page is hidden, for example in a background tab or on a sleeping phone.
@@ -87,7 +88,19 @@ import Connection from "./connection"
  * function(tries){
  *   return [1000, 2000, 5000][tries - 1] || 10000
  * }
- * ````
+ * ```
+ *
+ * @param {Function} [opts.resumeAfterMs] - The optional function that returns the millisec
+ * interval between attempts to resume a session after a long poll request or a resumable
+ * WebSocket failed.
+ *
+ * Defaults to stepped backoff of:
+ *
+ * ```javascript
+ * function(tries){
+ *   return [100, 500, 1000, 2000][tries - 1] || 5000
+ * }
+ * ```
  *
  * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
  *
@@ -202,6 +215,7 @@ export default class Socket {
         return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
       }
     }
+    this.resumeAfterMs = opts.resumeAfterMs || DEFAULT_RESUME_AFTER_MS
     this.reconnectWhenHidden = opts.reconnectWhenHidden || false
     this.logger = opts.logger || null
     if(!this.logger && opts.debug){
@@ -490,6 +504,7 @@ export default class Socket {
     const transport = new this.transport(this.endPointURL(), protocols)
     transport.binaryType = this.binaryType
     transport.timeout = this.longpollerTimeout
+    transport.resumeAfterMs = this.resumeAfterMs
     // a transport that keeps its session falls back to long polling to continue it
     transport.longPollFallbackMs = this.longPollFallbackMs
     this.connection = new Connection(this, transport)

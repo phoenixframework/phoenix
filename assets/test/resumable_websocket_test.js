@@ -152,6 +152,25 @@ describe("ResumableWebSocket", () => {
     expect(events).toEqual(["open", "suspend", "resume"])
   })
 
+  it("resumes after the delay from resumeAfterMs", () => {
+    connect()
+    const tries = []
+    transport.resumeAfterMs = (attempt) => {
+      tries.push(attempt)
+      return 30
+    }
+
+    const ws = last()
+    ws.drop()
+    jest.advanceTimersByTime(29)
+    expect(last()).toBe(ws)
+    jest.advanceTimersByTime(1)
+    expect(last()).not.toBe(ws)
+
+    last().drop()
+    expect(tries).toEqual([1, 2])
+  })
+
   describe("replay before recovery", () => {
     beforeEach(() => {
       connect()
@@ -337,6 +356,14 @@ describe("ResumableWebSocket", () => {
       transport.send("x")
       last().drop()
     }
+
+    it("passes resumeAfterMs to the LongPoll", () => {
+      interrupt()
+      const resumeAfterMs = () => 30
+      transport.resumeAfterMs = resumeAfterMs
+      jest.advanceTimersByTime(2000)
+      expect(transport.longpoll.resumeAfterMs).toBe(resumeAfterMs)
+    })
 
     it("continues the session with long polling when resuming takes too long", () => {
       interrupt()
