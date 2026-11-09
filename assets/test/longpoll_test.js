@@ -745,6 +745,23 @@ describe("LongPoll resuming", () => {
     expect(delays).toEqual([100, 500, 1000, 2000, 5000, 5000])
   })
 
+  it("reads the connection info for polls that resume", () => {
+    open()
+    const protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa("new").replace(/=/g, "")}`]
+    const connectionInfo = jest.fn(() => ({endPoint: "http://localhost/socket/websocket?token=new", protocols}))
+    longpoll.connectionInfo = connectionInfo
+
+    respond(last("GET"), {status: 204, token: "token", last: 0})
+    expect(connectionInfo).not.toHaveBeenCalled()
+
+    respond(last("GET"), null)
+    jest.advanceTimersByTime(100)
+    expect(connectionInfo).toHaveBeenCalledTimes(1)
+    expect(params(last("GET"))).toMatchObject({token: "new", "phx:resume": "1"})
+    expect(last("GET")[1]).toContain("/socket/longpoll")
+    expect(last("GET")[2]["X-Phoenix-AuthToken"]).toBe("new")
+  })
+
   it("retries after the delay from resumeAfterMs", () => {
     open()
     const tries = []

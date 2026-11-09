@@ -329,6 +329,21 @@ export default class Socket {
   }
 
   /**
+   * @private
+   *
+   * The URL and subprotocols for a new connection, with the current params and auth token.
+   */
+  connectionInfo(){
+    let protocols = undefined
+    // Sec-WebSocket-Protocol based token
+    // (longpoll uses Authorization header instead)
+    if(this.authToken){
+      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken()).replace(/=/g, "")}`]
+    }
+    return {endPoint: this.endPointURL(), protocols}
+  }
+
+  /**
    * Disconnects the socket
    *
    * See https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes for valid status codes.
@@ -495,16 +510,13 @@ export default class Socket {
     // a reconnect scheduled before would tear down the new connection, but we keep
     // its tries, which only reset once a connection opens
     clearTimeout(this.reconnectTimer.timer)
-    let protocols = undefined
-    // Sec-WebSocket-Protocol based token
-    // (longpoll uses Authorization header instead)
-    if(this.authToken){
-      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken()).replace(/=/g, "")}`]
-    }
-    const transport = new this.transport(this.endPointURL(), protocols)
+    const {endPoint, protocols} = this.connectionInfo()
+    const transport = new this.transport(endPoint, protocols)
     transport.binaryType = this.binaryType
     transport.timeout = this.longpollerTimeout
     transport.resumeAfterMs = this.resumeAfterMs
+    // a transport that keeps its session sends the current credentials when it resumes
+    transport.connectionInfo = () => this.connectionInfo()
     // a transport that keeps its session falls back to long polling to continue it
     transport.longPollFallbackMs = this.longPollFallbackMs
     this.connection = new Connection(this, transport)

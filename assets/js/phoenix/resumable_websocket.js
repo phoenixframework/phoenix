@@ -36,8 +36,9 @@ let control = (event, payload) => JSON.stringify([null, null, "phoenix", event, 
  */
 export default class ResumableWebSocket {
   constructor(endPoint, protocols){
-    this.endPoint = endPoint
-    this.protocols = protocols
+    // the URL and subprotocols of a new WebSocket, which the socket replaces
+    // so that we resume with its current params and auth token
+    this.connectionInfo = () => ({endPoint, protocols})
     this.binaryTypeValue = "arraybuffer"
     this.resumeTimeout = RESUME_TIMEOUT_MS
     this.readyState = SOCKET_STATES.connecting
@@ -136,7 +137,8 @@ export default class ResumableWebSocket {
    */
   connect(resume){
     const params = resume ? {"phx:resumable": 1, "phx:resume": 1} : {"phx:resumable": 1}
-    const ws = new global.WebSocket(Ajax.appendParams(this.endPoint, params), this.protocols)
+    const {endPoint, protocols} = this.connectionInfo()
+    const ws = new global.WebSocket(Ajax.appendParams(endPoint, params), protocols)
     ws.binaryType = this.binaryTypeValue
     this.ws = ws
     this.ready = false
@@ -357,9 +359,11 @@ export default class ResumableWebSocket {
     this.retryTimer = null
     this.dropWebSocket()
     this.resuming = false
-    const longpoll = new LongPoll(this.endPoint, this.protocols)
+    const {endPoint, protocols} = this.connectionInfo()
+    const longpoll = new LongPoll(endPoint, protocols)
     longpoll.timeout = this.timeout
     longpoll.resumeAfterMs = this.resumeAfterMs
+    longpoll.connectionInfo = this.connectionInfo
     longpoll.resumeSession({
       token: this.token,
       received: this.received,

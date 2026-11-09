@@ -869,6 +869,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert resp.body["status"] == 200
           assert [_reply, _user_entered, _joined] = resp.body["messages"]
 
+          # the resume callback stores resumed_with in assigns, so this verifies it ran
           assert {_, %Phoenix.Socket{assigns: %{resumed_with: "a"}, transport: :longpoll}} =
                    elem(:sys.get_state(server).handler, 1)
 
@@ -1058,6 +1059,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
         # TODO: Remove in Phoenix 1.10. The session drops the messages it sends
         # to clients that don't acknowledge them, see Phoenix.Transports.LongPoll.
+        # See https://github.com/phoenixframework/phoenix/pull/6901.
         test "#{@mode}: legacy listen receives messages flushed after its window" do
           session = join("/ws", "room:lobby", @vsn, "1", @mode)
           block_next_flush(session)

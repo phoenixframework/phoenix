@@ -173,6 +173,19 @@ describe("ResumableWebSocket", () => {
     expect(tries).toEqual([1, 2])
   })
 
+  it("reads the connection info for each new WebSocket", () => {
+    connect()
+    transport.connectionInfo = () => ({
+      endPoint: "ws://localhost/socket/websocket?vsn=2.0.0&token=new",
+      protocols: ["phoenix", "new"]
+    })
+
+    last().drop()
+    jest.advanceTimersByTime(100)
+    expect(last().params).toEqual({vsn: "2.0.0", token: "new", "phx:resumable": "1", "phx:resume": "1"})
+    expect(last().protocols).toEqual(["phoenix", "new"])
+  })
+
   describe("replay before recovery", () => {
     beforeEach(() => {
       connect()
@@ -358,6 +371,14 @@ describe("ResumableWebSocket", () => {
       transport.send("x")
       last().drop()
     }
+
+    it("continues with the current connection info", () => {
+      interrupt()
+      transport.connectionInfo = () => ({endPoint: "ws://localhost/socket/websocket?vsn=2.0.0&token=new"})
+      jest.advanceTimersByTime(2001)
+      expect(params(polls()[0]).token).toBe("new")
+      expect(transport.longpoll.connectionInfo).toBe(transport.connectionInfo)
+    })
 
     it("passes resumeAfterMs to the LongPoll", () => {
       interrupt()

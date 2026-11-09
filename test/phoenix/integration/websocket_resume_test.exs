@@ -423,7 +423,7 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         send(channel, {:push, "new", %{}})
         assert_receive %Message{event: "new"}
 
-        # such as a poll the client gave up on when it resumed over the WebSocket
+        # a request that has the token but did not resume the session to long poll
         assert poll(:get, token, %{"phx:ack" => "3"})["status"] == 410
 
         # the session still keeps the message for the WebSocket
