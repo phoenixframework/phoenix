@@ -24,8 +24,8 @@ jobs:
           - elixir: "1.18.4"
             otp: "27.3.4.13"
 
-          - elixir: "1.20.4"
-            otp: "29.0.5"
+          - elixir: "1.20.5"
+            otp: "29.1.2"
             lint: true
 
     runs-on: ubuntu-24.04
@@ -84,8 +84,8 @@ jobs:
           - elixir: "1.18.4"
             otp: "27.3.4.3"
 
-          - elixir: "1.20.4"
-            otp: "29.0.5"
+          - elixir: "1.20.5"
+            otp: "29.1.2"
 
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -155,8 +155,8 @@ jobs:
 
     env:
       MIX_ENV: docs
-      elixir: "1.20.4"
-      otp: "29.0.5"
+      elixir: "1.20.5"
+      otp: "29.1.2"
 
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -211,8 +211,8 @@ jobs:
             otp: "27.3.4.3"
 
           # keep version in sync with integration_test/.env
-          - elixir: "1.20.4"
-            otp: "29.0.5"
+          - elixir: "1.20.5"
+            otp: "29.1.2"
 
     env:
       ELIXIR_ASSERT_TIMEOUT: 10000
@@ -320,8 +320,8 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
-          elixir-version: "1.20.4"
-          otp-version: "29.0.5"
+          elixir-version: "1.20.5"
+          otp-version: "29.1.2"
 
       - name: Download summary artifacts
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
