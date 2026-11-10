@@ -401,9 +401,16 @@ defmodule Phoenix.Socket do
     * `:window_ms` - how long the client can take to attach, times 1.5,
       in milliseconds. Defaults to the `:window_ms` of the socket transport.
 
+    * `:max_pending` - the maximum number of detached sessions without a client
+      on this node, across all endpoints. When the node has that many, no session
+      starts. Requests that start sessions at the same time can exceed it slightly.
+      Defaults to no limit. See `detached_count/0`.
+
   ## Return values
 
     * `{:ok, session, token}` - the session and the token the client attaches with
+
+    * `{:error, :limit}` - the node reached the `:max_pending` limit
 
     * `{:error, :no_socket}` - the endpoint has no socket at `path`
 
@@ -443,6 +450,16 @@ defmodule Phoenix.Socket do
   @spec join_detached(pid, String.t(), term) :: {:ok, String.t()} | {:error, map}
   def join_detached(session, topic, payload) when is_pid(session) and is_binary(topic) do
     Phoenix.Transports.Detached.join(session, topic, payload)
+  end
+
+  @doc """
+  Returns the number of detached sessions on this node that no client attached to yet.
+
+  See `start_detached/3`.
+  """
+  @spec detached_count() :: non_neg_integer
+  def detached_count do
+    Phoenix.Transports.Detached.count()
   end
 
   @doc """

@@ -11,7 +11,8 @@ defmodule Phoenix.Transports.Detached do
   alias Phoenix.Transports.{Session, WebSocket}
 
   def start(%Plug.Conn{} = conn, endpoint, path, opts \\ []) do
-    with {:ok, handler, transport_opts, resumable} <- socket_config(endpoint, path),
+    with :ok <- check_limit(Keyword.get(opts, :max_pending)),
+         {:ok, handler, transport_opts, resumable} <- socket_config(endpoint, path),
          config = connect_config(conn, endpoint, transport_opts),
          {:ok, handler_state} <- connect(handler, config),
          :ok <- check_resumable(resumable, config) do
@@ -44,6 +45,22 @@ defmodule Phoenix.Transports.Detached do
       {:DOWN, ^ref, _, _, _} ->
         {:error, %{reason: "join crashed"}}
     end
+  end
+
+  # The sessions register themselves, so the count can exceed the limit when requests
+  # start sessions concurrently. That is fine, as the limit only sheds load.
+  def count do
+    Registry.count(__MODULE__.Registry)
+  end
+
+  defp check_limit(nil), do: :ok
+
+  defp check_limit(max) when is_integer(max) and max >= 0 do
+    if count() < max, do: :ok, else: {:error, :limit}
+  end
+
+  defp check_limit(other) do
+    raise ArgumentError, ":max_pending must be a non-negative integer, got: #{inspect(other)}"
   end
 
   def stop(session) do
