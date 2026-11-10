@@ -121,6 +121,6 @@ defmodule Phoenix.Transports.Detached do
   # A :resumable function decides after the socket accepted the connection,
   # like it does for a new WebSocket.
   defp check_resumable(resumable, config) do
-    if WebSocket.resumable?(resumable, config), do: :ok, else: {:error, :not_resumable}
+    if WebSocket.resumable?(resumable, config), do: :ok, else: {:error, :denied}
   end
 end

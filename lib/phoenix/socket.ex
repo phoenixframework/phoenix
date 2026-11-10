@@ -416,6 +416,8 @@ defmodule Phoenix.Socket do
 
     * `{:error, :not_resumable}` - the socket is not resumable
 
+    * `{:error, :denied}` - the `:resumable` function of the socket returned `false`
+
     * `{:error, :not_a_phoenix_socket}` - the socket at `path` does not use `Phoenix.Socket`
 
     * `{:error, reason}` - `c:connect/3` rejected the connection, with `:rejected`

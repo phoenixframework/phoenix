@@ -341,7 +341,7 @@ defmodule Phoenix.Integration.DetachedSessionTest do
 
   test "lets the :resumable function decide" do
     assert {:ok, _session, _token} = Phoenix.Socket.start_detached(page_conn(), "/ws/users")
-    assert {:error, :not_resumable} = Phoenix.Socket.start_detached(page_conn(%{}), "/ws/users")
+    assert {:error, :denied} = Phoenix.Socket.start_detached(page_conn(%{}), "/ws/users")
   end
 
   test "does not start a session without a socket at the path" do
