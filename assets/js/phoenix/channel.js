@@ -23,6 +23,8 @@ export default class Channel {
     this.bindingRef = 0
     this.timeout = this.socket.timeout
     this.joinedOnce = false
+    // the ref of the join the server sent for us, see awaitJoin
+    this.awaitedJoinRef = null
     this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout)
     this.pushBuffer = []
     this.stateChangeRefs = []
@@ -86,6 +88,40 @@ export default class Channel {
       return this.joinPush
     }
   }
+
+  /**
+   * Waits for the reply to a join that the server sent for this client, for example when it
+   * joined the channel in a session the socket attaches to, see `Socket.attachSession`.
+   *
+   * Call it before the socket attaches, as the reply arrives right after. Otherwise, or when the
+   * socket does not attach to a session, the channel joins like with `join`. It also joins again
+   * like any other channel when the socket cannot attach.
+   *
+   * @param {string} joinRef - The ref of the join, given by the server
+   * @param {integer} timeout
+   * @returns {Push}
+   */
+  awaitJoin(joinRef, timeout = this.timeout){
+    if(this.joinedOnce){
+      throw new Error("tried to join multiple times. 'join' can only be called a single time per channel instance")
+    }
+    if(!this.socket.isAttaching()){ return this.join(timeout) }
+    this.timeout = timeout
+    this.joinedOnce = true
+    this.socket.leaveOpenTopic(this.topic)
+    this.state = CHANNEL_STATES.joining
+    this.joinPush.awaitReply(joinRef, timeout)
+    this.awaitedJoinRef = joinRef
+    this.socket.carryAwaitedJoin(this)
+    return this.joinPush
+  }
+
+  /**
+   * @private
+   *
+   * Whether the channel waits for the reply to a join the server sent for us.
+   */
+  awaitsJoin(){ return this.isJoining() && this.awaitedJoinRef !== null && this.joinRef() === this.awaitedJoinRef }
 
   /**
    * Hook into channel close
