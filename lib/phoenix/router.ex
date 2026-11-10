@@ -1378,7 +1378,7 @@ defmodule Phoenix.Router do
 
   A common use case for `forward` is for sharing a router between
   applications or even breaking a big router into smaller ones.
-  However, in other for route generation to route accordingly, you
+  However, in order for route generation to route accordingly, you
   can only forward to a given `Phoenix.Router` once.
 
   The router pipelines will be invoked prior to forwarding the
