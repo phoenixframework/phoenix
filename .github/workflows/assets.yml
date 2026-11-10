@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      elixir: "1.20.4"
-      otp: "29.0.5"
+      elixir: "1.20.5"
+      otp: "29.1.2"
     permissions:
       contents: write # for stefanzweifel/git-auto-commit-action to push code in repo
     steps:

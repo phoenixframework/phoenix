@@ -22,6 +22,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Verify versions match the tag
+        run: bash .github/verify-release-versions.sh "$GITHUB_REF_NAME"
+
       # no cache: input is set, so nothing is restored into the publishing job
       - name: Set up Node.js # zizmor: ignore[cache-poisoning]
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -38,7 +41,7 @@ jobs:
         run: |
           TAG=${GITHUB_REF#refs/tags/}
           # Update this condition when bumping the major version!
-          if [[ $TAG == v1.7.* ]]; then
+          if [[ $TAG == v1.8.* ]]; then
             echo "tag=old-version" >> $GITHUB_OUTPUT
           elif [[ $TAG == *-rc* ]]; then
             echo "tag=rc" >> $GITHUB_OUTPUT
