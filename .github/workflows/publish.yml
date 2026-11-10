@@ -1,0 +1,54 @@
+# https://hex.pm/blog/announcing-workload-identity-and-staged-publishing
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    # mix hex.publish --wait has no deadline and waits for a person to approve
+    # each staged release, so this uses the GitHub-hosted job limit
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      id-token: write # required for Hex workload identity
+    # The GitHub environment the workload identity names
+    environment: release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify versions match the tag
+        run: bash .github/verify-release-versions.sh "$GITHUB_REF_NAME"
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: "1.20.5"
+          otp-version: "29.1.2"
+
+      # the docs alias also builds the JavaScript documentation with npm
+      # no cache: input is set, so nothing is restored into the publishing job
+      - name: Set up Node.js # zizmor: ignore[cache-poisoning]
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.x"
+
+      - name: Publish phoenix
+        run: |
+          mix deps.get
+          MIX_ENV=docs mix hex.publish --yes --wait
+
+      - name: Publish phx_new
+        working-directory: installer
+        run: |
+          mix deps.get
+          MIX_ENV=docs mix hex.publish --yes --wait
