@@ -257,7 +257,7 @@ defmodule Phoenix.VerifiedRoutes do
 
     statics =
       case Keyword.get(opts, :statics, []) do
-        list when is_list(list) -> list
+        list when is_list(list) -> Enum.map(list, &String.trim_trailing(&1, "/"))
         other -> raise ArgumentError, "expected statics to be a list, got: #{inspect(other)}"
       end
 
@@ -1076,8 +1076,12 @@ defmodule Phoenix.VerifiedRoutes do
     Module.get_attribute(env.module, name) || raise "expected @#{name} module attribute to be set"
   end
 
-  defp static_path?(path, statics) do
-    Enum.find(statics, &String.starts_with?(path, "/" <> &1))
+  # Statics must match whole segments, so "images" matches
+  # "/images/logo.png" but not "/images-gallery"
+  defp static_path?("/" <> path, statics) do
+    Enum.any?(statics, fn static ->
+      path == static or String.starts_with?(path, [static <> "/", static <> "#"])
+    end)
   end
 
   defp build_own_forward_path(conn, router, path) do
