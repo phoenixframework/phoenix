@@ -101,6 +101,11 @@ defmodule Phoenix.Transports.Session do
   # It needs the conn to answer a failed connect, and the :resumable option can decide
   # against a session after connecting.
   def init({:connected, endpoint, handler, handler_state, transport, options, priv_topic}) do
+    # detached sessions count against the limit until a client attaches
+    if transport == :detached do
+      {:ok, _} = Registry.register(Phoenix.Transports.Detached.Registry, self(), nil)
+    end
+
     {:ok, handler_state} = handler.init(handler_state)
     {:ok, init_state(endpoint, handler, handler_state, transport, options, priv_topic)}
   end
@@ -236,6 +241,10 @@ defmodule Phoenix.Transports.Session do
 
     case result do
       {:ok, handler_state} ->
+        if state.transport == :detached do
+          :ok = Registry.unregister(Phoenix.Transports.Detached.Registry, self())
+        end
+
         send_client(state, client_ref, {:resumed, ref})
         # the client gave up on the WebSocket we have, for example to long poll instead
         state = %{detach(state) | handler: {handler, handler_state}, transport: info.transport}

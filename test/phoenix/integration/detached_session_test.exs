@@ -273,6 +273,56 @@ defmodule Phoenix.Integration.DetachedSessionTest do
     assert_received {^ref, :rendered, "<div>"}
   end
 
+  test "does not start more sessions without a client than :max_pending" do
+    # the sessions of other tests stop after their window
+    assert eventually(fn -> Phoenix.Socket.detached_count() == 0 end)
+    max = 2
+
+    assert {:ok, first, token} =
+             Phoenix.Socket.start_detached(page_conn(), "/ws", max_pending: max)
+
+    assert {:ok, second, _token} =
+             Phoenix.Socket.start_detached(page_conn(), "/ws", max_pending: max)
+
+    assert Phoenix.Socket.detached_count() == max
+    assert_received {:connect, _, _, _}
+    assert_received {:connect, _, _, _}
+    assert {:error, :limit} = Phoenix.Socket.start_detached(page_conn(), "/ws", max_pending: max)
+    refute_received {:connect, _, _, _}
+
+    # sessions stop counting once a client attached or they stopped
+    _client = attach(token)
+    assert_receive %Message{event: "phx_resumed"}
+    assert Phoenix.Socket.detached_count() == max - 1
+    assert Process.alive?(first)
+
+    ref = Process.monitor(second)
+    Process.exit(second, :kill)
+    assert_receive {:DOWN, ^ref, _, _, _}
+    # the registry removes the session once it handled the exit
+    assert eventually(fn -> Phoenix.Socket.detached_count() == max - 2 end)
+  end
+
+  defp eventually(fun, tries \\ 50) do
+    cond do
+      fun.() ->
+        true
+
+      tries == 0 ->
+        false
+
+      true ->
+        Process.sleep(10)
+        eventually(fun, tries - 1)
+    end
+  end
+
+  test "raises when :max_pending is invalid" do
+    assert_raise ArgumentError, ~r/:max_pending must be a non-negative integer/, fn ->
+      Phoenix.Socket.start_detached(page_conn(), "/ws", max_pending: :infinity)
+    end
+  end
+
   test "requires a conn that went through an endpoint" do
     assert_raise ArgumentError, ~r/requires a conn that went through an endpoint/, fn ->
       Phoenix.Socket.start_detached(Plug.Test.conn(:get, "/"), "/ws")
