@@ -107,7 +107,7 @@ defmodule Phoenix.Socket.PoolDrainer do
         end
       end)
 
-    rounds = div(total, size) + 1
+    rounds = div(total + size - 1, size)
 
     for {pids, index} <-
           collection |> Stream.concat() |> Stream.chunk_every(size) |> Stream.with_index(1) do
