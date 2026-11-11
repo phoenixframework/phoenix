@@ -441,17 +441,31 @@ defmodule Phoenix.Socket do
   Joins `topic` in a session started with `start_detached/3`, like a client that
   sends a join with `payload`.
 
-  The payload is not serialized, so it can contain any term. Channels joined by
-  clients only receive the terms their serializer decodes.
+  The channel cannot tell this join from a join of the client, so `payload` should
+  contain what the client would send. To pass data that only the server can provide,
+  use the `:assigns` option.
+
+  ## Options
+
+    * `:assigns` - a map merged into the assigns of the socket of this channel,
+      like the `:assigns` option of `channel/3`. Clients cannot set them, so the
+      channel can trust them.
 
   Returns `{:ok, join_ref}` when the channel joined, where `join_ref` is the ref
   the client awaits the join with. The session keeps the reply of the channel for
   the client. Returns `{:error, reply}` when the channel rejected the join, when it
   crashed, or when the session already joined `topic`.
   """
-  @spec join_detached(pid, String.t(), term) :: {:ok, String.t()} | {:error, map}
-  def join_detached(session, topic, payload) when is_pid(session) and is_binary(topic) do
-    Phoenix.Transports.Detached.join(session, topic, payload)
+  @spec join_detached(pid, String.t(), term, keyword) :: {:ok, String.t()} | {:error, map}
+  def join_detached(session, topic, payload, opts \\ [])
+      when is_pid(session) and is_binary(topic) do
+    assigns = Keyword.get(opts, :assigns, %{})
+
+    if not is_map(assigns) do
+      raise ArgumentError, ":assigns must be a map, got: #{inspect(assigns)}"
+    end
+
+    Phoenix.Transports.Detached.join(session, topic, payload, assigns)
   end
 
   @doc """
@@ -744,7 +758,7 @@ defmodule Phoenix.Socket do
   # Joins a channel for a client that attaches to the socket later, see join_detached/3.
   # The client did not send the join, so we pick its ref. The reply is for the client.
   # Clients number their refs, so ours have a prefix to never match the refs of the client.
-  def __info__({__MODULE__, :join, {pid, ref}, topic, payload}, {state, socket}) do
+  def __info__({__MODULE__, :join, {pid, ref}, topic, payload, assigns}, {state, socket}) do
     count = state.detached_joins + 1
     state = %{state | detached_joins: count}
     join_ref = "phx-" <> Integer.to_string(count)
@@ -758,7 +772,7 @@ defmodule Phoenix.Socket do
     }
 
     with nil <- Map.get(state.channels, topic),
-         {%Reply{} = reply, state} <- join(message, state, socket) do
+         {%Reply{} = reply, state} <- join(message, state, socket, assigns) do
       case reply.status do
         :ok -> send(pid, {ref, :ok, join_ref})
         :error -> send(pid, {ref, :error, reply.payload})
@@ -1002,9 +1016,17 @@ defmodule Phoenix.Socket do
     {:reply, :error, encode_ignore(socket, message), {state, socket}}
   end
 
-  defp join(%{topic: topic, ref: ref, join_ref: join_ref} = message, state, socket) do
+  # The assigns come from the server, see join_detached/4.
+  defp join(
+         %{topic: topic, ref: ref, join_ref: join_ref} = message,
+         state,
+         socket,
+         assigns \\ %{}
+       ) do
     case socket.handler.__channel__(topic) do
       {channel, opts} ->
+        opts = Keyword.update(opts, :assigns, assigns, &Map.merge(&1, assigns))
+
         if map_size(state.channels) >= state.max_channels_per_transport do
           Logger.error(
             "Reached max channels per transport limit of #{state.max_channels_per_transport} for socket #{inspect(socket.id)}"

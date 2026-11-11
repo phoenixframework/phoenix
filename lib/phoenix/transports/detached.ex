@@ -29,9 +29,9 @@ defmodule Phoenix.Transports.Detached do
     end
   end
 
-  def join(session, topic, payload) do
+  def join(session, topic, payload, assigns) do
     ref = Process.monitor(session)
-    send(session, {Phoenix.Socket, :join, {self(), ref}, topic, payload})
+    send(session, {Phoenix.Socket, :join, {self(), ref}, topic, payload, assigns})
 
     receive do
       {^ref, :ok, join_ref} ->
