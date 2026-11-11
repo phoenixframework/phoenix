@@ -248,6 +248,15 @@ defmodule Phoenix.Integration.DetachedSessionTest do
     assert :ok = Phoenix.Socket.stop_detached(session)
   end
 
+  test "numbers the join refs of the session with a prefix" do
+    assert {:ok, session, _token} = Phoenix.Socket.start_detached(page_conn(), "/ws")
+    assert {:ok, "phx-1"} = Phoenix.Socket.join_detached(session, "room:a", %{})
+    assert {:ok, "phx-2"} = Phoenix.Socket.join_detached(session, "room:b", %{})
+
+    assert {:ok, other, _token} = Phoenix.Socket.start_detached(page_conn(), "/ws")
+    assert {:ok, "phx-1"} = Phoenix.Socket.join_detached(other, "room:c", %{})
+  end
+
   test "returns the errors of joins" do
     assert {:ok, session, _token} = Phoenix.Socket.start_detached(page_conn(), "/ws")
 

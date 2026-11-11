@@ -743,8 +743,11 @@ defmodule Phoenix.Socket do
 
   # Joins a channel for a client that attaches to the socket later, see join_detached/3.
   # The client did not send the join, so we pick its ref. The reply is for the client.
+  # Clients number their refs, so ours have a prefix to never match the refs of the client.
   def __info__({__MODULE__, :join, {pid, ref}, topic, payload}, {state, socket}) do
-    join_ref = "phx-" <> Integer.to_string(System.unique_integer([:positive]))
+    count = state.detached_joins + 1
+    state = %{state | detached_joins: count}
+    join_ref = "phx-" <> Integer.to_string(count)
 
     message = %Message{
       topic: topic,
@@ -852,6 +855,8 @@ defmodule Phoenix.Socket do
     state = %{
       channels: %{},
       channels_inverse: %{},
+      # the number of joins we sent for clients that attach later, see join_detached/3
+      detached_joins: 0,
       max_channels_per_transport: Keyword.get(options, :max_channels_per_transport, 100)
     }
 
