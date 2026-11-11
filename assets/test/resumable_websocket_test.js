@@ -138,6 +138,30 @@ describe("ResumableWebSocket", () => {
     expect(last().sent.slice(1)).toEqual(["c"])
   })
 
+  it("neither numbers nor replays heartbeats and their replies", () => {
+    connect()
+    const heartbeat = JSON.stringify([null, "5", "phoenix", "heartbeat", {}])
+    const reply = JSON.stringify([null, "5", "phoenix", "phx_reply", {status: "ok", response: {}}])
+    transport.send(heartbeat)
+    transport.send("a")
+    expect(last().sent).toEqual([heartbeat, "a"])
+    expect(transport.unconfirmed).toEqual(["a"])
+
+    last().receive(reply)
+    expect(events).toEqual(["open", reply])
+    expect(transport.received).toBe(0)
+    // there is nothing to acknowledge
+    jest.advanceTimersByTime(1000)
+    expect(last().sent).toEqual([heartbeat, "a"])
+
+    last().drop()
+    jest.advanceTimersByTime(100)
+    last().open()
+    expect(last().sent).toEqual([control("phx_resume", {token: "token", ack: 0})])
+    last().receive(control("phx_resumed", {seq: 0, last: 0}))
+    expect(last().sent.slice(1)).toEqual(["a"])
+  })
+
   it("reports suspension once resuming failed, and resumption once it succeeded", () => {
     connect()
     last().drop()

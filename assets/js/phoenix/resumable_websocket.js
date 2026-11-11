@@ -19,6 +19,12 @@ const CONTROL_PREFIX = "[null,null,\"phoenix\",\"phx_"
 
 let control = (event, payload) => JSON.stringify([null, null, "phoenix", event, payload])
 
+// Heartbeats and their replies are V2 messages on the "phoenix" topic with a ref but without
+// join ref. They only check the current WebSocket, so neither side numbers or replays them.
+const HEARTBEAT_PATTERN = /^\[null,"[^"]*","phoenix","heartbeat",/
+const HEARTBEAT_REPLY_PATTERN = /^\[null,"[^"]*","phoenix","phx_reply",/
+let isHeartbeat = (data, pattern) => typeof(data) === "string" && pattern.test(data)
+
 /**
  * A WebSocket transport that resumes its session over a new WebSocket when the
  * connection fails, without rejoining channels.
@@ -110,7 +116,7 @@ export default class ResumableWebSocket {
       return
     }
     // we number the messages implicitly, in the order we send them
-    if(!this.unsupported){ this.unconfirmed.push(data) }
+    if(!this.unsupported && !isHeartbeat(data, HEARTBEAT_PATTERN)){ this.unconfirmed.push(data) }
     if(this.ready){ this.ws.send(data) }
   }
 
@@ -210,6 +216,10 @@ export default class ResumableWebSocket {
     if(this.token === null && !this.unsupported){
       this.unsupported = true
       this.unconfirmed = []
+    }
+    if(!this.unsupported && isHeartbeat(data, HEARTBEAT_REPLY_PATTERN)){
+      this.onmessage(event)
+      return
     }
     this.received++
     this.scheduleAck()

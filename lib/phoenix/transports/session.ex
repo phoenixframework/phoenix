@@ -308,6 +308,28 @@ defmodule Phoenix.Transports.Session do
     {:noreply, state}
   end
 
+  # The reply to a heartbeat goes to the WebSocket that sent it, without a number,
+  # as there is no point in sending it again over another connection.
+  def handle_info({:pipe_heartbeat, pipe, {body, opcode}}, %{client: {:pipe, pipe, _}} = state) do
+    %{handler: {handler, handler_state}} = state
+
+    case handler.handle_in({body, opcode: opcode}, handler_state) do
+      {:reply, _status, {opcode, reply}, handler_state} ->
+        send(pipe, {:push_frames, [{opcode, IO.iodata_to_binary(reply)}]})
+        {:noreply, %{state | handler: {handler, handler_state}}}
+
+      {:ok, handler_state} ->
+        {:noreply, %{state | handler: {handler, handler_state}}}
+
+      {:stop, reason, handler_state} ->
+        {:stop, reason, %{state | handler: {handler, handler_state}}}
+    end
+  end
+
+  def handle_info({:pipe_heartbeat, _pipe, _frame}, state) do
+    {:noreply, state}
+  end
+
   def handle_info({:DOWN, ref, _, _, _}, %{client: {:pipe, _, ref}} = state) do
     {:noreply, %{state | client: nil, last_client_poll: now_ms()}}
   end
