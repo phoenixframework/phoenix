@@ -2,6 +2,7 @@ import {
   global,
   phxWindow,
   CHANNEL_EVENTS,
+  DEFAULT_RESUME_AFTER_MS,
   DEFAULT_TIMEOUT,
   DEFAULT_VSN,
   SOCKET_STATES,
@@ -17,6 +18,7 @@ import {
 import Ajax from "./ajax"
 import Channel from "./channel"
 import LongPoll from "./longpoll"
+import ResumableWebSocket from "./resumable_websocket"
 import Serializer from "./serializer"
 import Timer from "./timer"
 import Connection from "./connection"
@@ -36,6 +38,12 @@ import Connection from "./connection"
  *
  * @param {number} [opts.longPollFallbackMs] - The millisecond time to attempt the primary transport
  * before falling back to the LongPoll transport. Disabled by default.
+ *
+ * @param {boolean} [opts.resumable] - When true, uses the ResumableWebSocket transport, which
+ * resumes the socket over a new WebSocket when the connection fails, without rejoining channels.
+ * Requires the `:resumable` WebSocket option on the server. Disabled by default.
+ * With `longPollFallbackMs`, the socket continues with long polling when it cannot resume
+ * over a WebSocket within that time.
  *
  * @param {boolean} [opts.debug] - When true, enables debug logging. Default false.
  *
@@ -64,7 +72,7 @@ import Connection from "./connection"
  * function(tries){
  *   return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
  * }
- * ````
+ * ```
  *
  * @param {boolean} [opts.reconnectWhenHidden] - When true, the socket also reconnects while the
  * page is hidden, for example in a background tab or on a sleeping phone.
@@ -80,7 +88,19 @@ import Connection from "./connection"
  * function(tries){
  *   return [1000, 2000, 5000][tries - 1] || 10000
  * }
- * ````
+ * ```
+ *
+ * @param {Function} [opts.resumeAfterMs] - The optional function that returns the millisec
+ * interval between attempts to resume a session after a long poll request or a resumable
+ * WebSocket failed.
+ *
+ * Defaults to stepped backoff of:
+ *
+ * ```javascript
+ * function(tries){
+ *   return [100, 500, 1000, 2000][tries - 1] || 5000
+ * }
+ * ```
  *
  * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
  *
@@ -120,7 +140,7 @@ import Connection from "./connection"
 */
 export default class Socket {
   constructor(endPoint, opts = {}){
-    this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
+    this.stateChangeCallbacks = {open: [], close: [], error: [], message: [], suspend: [], resume: []}
     this.channels = []
     this.sendBuffer = []
     this.ref = 0
@@ -129,7 +149,7 @@ export default class Socket {
     // sends the health check of the current fallback attempt, see connectWithFallback
     this.fallbackHealthCheck = null
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
-    this.transport = opts.transport || global.WebSocket || LongPoll
+    this.transport = opts.transport || (global.WebSocket && opts.resumable ? ResumableWebSocket : global.WebSocket) || LongPoll
     this.primaryPassedHealthCheck = false
     this.longPollFallbackMs = opts.longPollFallbackMs
     this.fallbackTimer = null
@@ -195,6 +215,7 @@ export default class Socket {
         return [10, 50, 100, 150, 200, 250, 500, 1000, 2000][tries - 1] || 5000
       }
     }
+    this.resumeAfterMs = opts.resumeAfterMs || DEFAULT_RESUME_AFTER_MS
     this.reconnectWhenHidden = opts.reconnectWhenHidden || false
     this.logger = opts.logger || null
     if(!this.logger && opts.debug){
@@ -308,6 +329,21 @@ export default class Socket {
   }
 
   /**
+   * @private
+   *
+   * The URL and subprotocols for a new connection, with the current params and auth token.
+   */
+  connectionInfo(){
+    let protocols = undefined
+    // Sec-WebSocket-Protocol based token
+    // (longpoll uses Authorization header instead)
+    if(this.authToken){
+      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken()).replace(/=/g, "")}`]
+    }
+    return {endPoint: this.endPointURL(), protocols}
+  }
+
+  /**
    * Disconnects the socket
    *
    * See https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes for valid status codes.
@@ -397,6 +433,30 @@ export default class Socket {
   }
 
   /**
+   * Registers a callback when the transport is interrupted but keeps its session
+   * and retries. Channels remain joined and pushes are buffered by the transport.
+   * Supported by LongPoll and ResumableWebSocket. A lost session instead emits error/close.
+   * @param {Function} callback
+   */
+  onSuspend(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.suspend.push([ref, callback])
+    return ref
+  }
+
+  /**
+   * Registers a callback when a suspended transport recovers the same session,
+   * after delivering the incoming messages buffered at resumption. It does
+   * not wait for replies to outgoing pushes.
+   * @param {Function} callback
+   */
+  onResume(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.resume.push([ref, callback])
+    return ref
+  }
+
+  /**
    * Registers callbacks for connection message events
    * @param {Function} callback
    */
@@ -435,6 +495,7 @@ export default class Socket {
     // is native to browsers and does not need special handling.
     switch(transport){
       case LongPoll: return "LongPoll"
+      case ResumableWebSocket: return "ResumableWebSocket"
       default: return transport.name
     }
   }
@@ -449,15 +510,15 @@ export default class Socket {
     // a reconnect scheduled before would tear down the new connection, but we keep
     // its tries, which only reset once a connection opens
     clearTimeout(this.reconnectTimer.timer)
-    let protocols = undefined
-    // Sec-WebSocket-Protocol based token
-    // (longpoll uses Authorization header instead)
-    if(this.authToken){
-      protocols = ["phoenix", `${AUTH_TOKEN_PREFIX}${btoa(this.authToken()).replace(/=/g, "")}`]
-    }
-    const transport = new this.transport(this.endPointURL(), protocols)
+    const {endPoint, protocols} = this.connectionInfo()
+    const transport = new this.transport(endPoint, protocols)
     transport.binaryType = this.binaryType
     transport.timeout = this.longpollerTimeout
+    transport.resumeAfterMs = this.resumeAfterMs
+    // a transport that keeps its session sends the current credentials when it resumes
+    transport.connectionInfo = () => this.connectionInfo()
+    // a transport that keeps its session falls back to long polling to continue it
+    transport.longPollFallbackMs = this.longPollFallbackMs
     this.connection = new Connection(this, transport)
     // connect can replace an ended connection that is still open while its buffer drains, but the
     // channels joined over it need to rejoin on the new connection instead of waiting for it to close
@@ -570,6 +631,13 @@ export default class Socket {
     if(this.pendingHeartbeatRef){
       const connection = this.connection
       this.pendingHeartbeatRef = null
+      // a transport that keeps its session resumes it over a new connection instead
+      const transport = connection && connection.transport
+      if(transport && transport.resumeAfterHeartbeatTimeout && transport.resumeAfterHeartbeatTimeout()){
+        if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Resuming the session") }
+        this.resetHeartbeat()
+        return
+      }
       if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
       this.closeWasClean = false
       // the connection is presumed dead, so we close it right away instead of waiting for its
@@ -701,6 +769,28 @@ export default class Socket {
     })
     // callbacks can replace the connection, in which case only its own joins are errored
     this.triggerChanError("connection_error", connection)
+  }
+
+  /** @private */
+  onConnSuspend(connection){
+    if(!this.stillUses(connection) || !connection.isOpen() || connection.suspended){ return }
+    connection.suspended = true
+    if(this.hasLogger()) this.log("transport", "suspended")
+    for(let [, callback] of this.stateChangeCallbacks.suspend.slice()){
+      if(!this.stillUses(connection) || !connection.isOpen()){ break }
+      callback()
+    }
+  }
+
+  /** @private */
+  onConnResume(connection){
+    if(!this.stillUses(connection) || !connection.isOpen() || !connection.suspended){ return }
+    connection.suspended = false
+    if(this.hasLogger()) this.log("transport", "resumed")
+    for(let [, callback] of this.stateChangeCallbacks.resume.slice()){
+      if(!this.stillUses(connection) || !connection.isOpen()){ break }
+      callback()
+    }
   }
 
   /**

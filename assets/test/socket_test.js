@@ -60,7 +60,7 @@ describe("with transports", function (){
       expect(socket.sendBuffer.length).toBe(0)
       expect(socket.ref).toBe(0)
       expect(socket.endPoint).toBe("/socket/websocket")
-      expect(socket.stateChangeCallbacks).toEqual({open: [], close: [], error: [], message: []})
+      expect(socket.stateChangeCallbacks).toEqual({open: [], close: [], error: [], message: [], suspend: [], resume: []})
       expect(socket.transport).toBe(WebSocket)
       expect(socket.timeout).toBe(10000)
       expect(socket.longpollerTimeout).toBe(20000)
@@ -100,6 +100,26 @@ describe("with transports", function (){
       expect(socket.transport).toBe(customTransport)
       expect(socket.logger).toBe(customLogger)
       expect(socket.params()).toEqual({one: "two"})
+    })
+
+    it("gives the transport the current params and auth token", function (){
+      let value = "old"
+      socket = new Socket("/socket", {transport: LongPoll, params: () => ({token: value}), authToken: () => value})
+      socket.connect()
+
+      value = "new"
+      const {endPoint, protocols} = socket.conn.connectionInfo()
+      expect(endPoint).toContain("token=new")
+      expect(protocols).toEqual(["phoenix", `${AUTH_TOKEN_PREFIX}${btoa("new").replace(/=/g, "")}`])
+      socket.disconnect()
+    })
+
+    it("passes resumeAfterMs to the transport", function (){
+      const resumeAfterMs = () => 30
+      socket = new Socket("/socket", {transport: LongPoll, resumeAfterMs})
+      socket.connect()
+      expect(socket.conn.resumeAfterMs).toBe(resumeAfterMs)
+      socket.disconnect()
     })
 
     describe("with Websocket", function (){

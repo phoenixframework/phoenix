@@ -2,10 +2,21 @@ import {
   SOCKET_STATES,
   TRANSPORTS,
   AUTH_TOKEN_PREFIX,
-  MAX_LONGPOLL_BATCH_SIZE
+  MAX_LONGPOLL_BATCH_SIZE,
+  CLOSE_SESSION_GONE,
+  DEFAULT_RESUME_AFTER_MS
 } from "./constants"
 
 import Ajax from "./ajax"
+
+const BINARY_PREFIX = "base64:"
+
+let base64ToArrayBuffer = (base64) => {
+  let binary = atob(base64)
+  let bytes = new Uint8Array(binary.length)
+  for(let i = 0; i < binary.length; i++){ bytes[i] = binary.charCodeAt(i) }
+  return bytes.buffer
+}
 
 let arrayBufferToBase64 = (buffer) => {
   let binary = ""
@@ -18,30 +29,86 @@ let arrayBufferToBase64 = (buffer) => {
 export default class LongPoll {
 
   constructor(endPoint, protocols){
-    // we only support subprotocols for authToken
-    // ["phoenix", "base64url.bearer.phx.BASE64_ENCODED_TOKEN"]
-    if(protocols && protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)){
-      this.authToken = atob(protocols[1].slice(AUTH_TOKEN_PREFIX.length))
-    }
+    // the URL and subprotocols of a poll that resumes the session, which the socket
+    // replaces so that we resume with its current params and auth token
+    this.connectionInfo = () => ({endPoint, protocols})
+    this.applyConnectionInfo({endPoint, protocols})
     this.endPoint = null
     this.token = null
     this.skipHeartbeat = true
     // the pending requests and queued messages, which are cancelled when we stop
     this.reqs = new Set()
     this.messageTimers = new Set()
+    // awaitingMessages is used to track if we are actively processing messages
+    // from a poll, since each message is scheduled using `setTimeout(0)` (see comments below);
+    // therefore, we track it to prevent onresume from firing too early
+    this.awaitingMessages = false
     this.awaitingBatchAck = false
     this.currentBatch = null
     this.currentBatchTimer = null
     this.batchBuffer = []
+    // set once the server tells us that it keeps the messages until we acknowledge them,
+    // so we can retry a failed request instead of starting a new session
+    this.resumable = false
+    // tracks if we received a message from a server that does not support resume
+    // TODO: remove in Phoenix 1.10
+    this.degraded = false
+    // the number of the last message we received, and of the last message we sent
+    this.ack = 0
+    this.seq = 0
+    this.retries = {GET: 0, POST: 0}
+    // how long we wait before retrying a failed request of a session we can resume
+    this.resumeAfterMs = DEFAULT_RESUME_AFTER_MS
+    this.retryTimers = new Set()
+    // set once a retry failed as well, until GET and POST have both recovered
+    this.interrupted = false
+    // set while we resume a session that another transport started, see resumeSession
+    this.resuming = false
+    this.resumeBuffer = []
+    // set until the first resumed poll has delivered its messages
+    this.resumePending = false
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
     this.onclose = function (){ } // noop
-    this.pollEndpoint = this.normalizeEndpoint(endPoint)
+    this.onsuspend = function (){ } // noop
+    this.onresume = function (){ } // noop
     this.readyState = SOCKET_STATES.connecting
     // we must wait for the caller to finish setting up our callbacks and timeout properties,
     // and it might close us before that, e.g. when disconnecting right after connecting
     setTimeout(() => this.poll(), 0)
+  }
+
+  /**
+   * @private
+   *
+   * Continues a session that another transport started, such as a ResumableWebSocket,
+   * before the first poll. We send the token and the number of the last message we received,
+   * and send the messages the server did not confirm again.
+   * The server drops any messages it already received.
+   */
+  resumeSession({token, received, confirmed, unconfirmed}){
+    this.token = token
+    this.resumable = true
+    this.resuming = true
+    this.resumePending = true
+    this.ack = received
+    this.seq = confirmed
+    this.resumeBuffer = unconfirmed.slice()
+  }
+
+  /**
+   * @private
+   */
+  applyConnectionInfo({endPoint, protocols}){
+    this.pollEndpoint = this.normalizeEndpoint(endPoint)
+    // we only support subprotocols for authToken
+    // ["phoenix", "base64url.bearer.phx.BASE64_ENCODED_TOKEN"]
+    if(protocols && protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)){
+      this.authToken = atob(protocols[1].slice(AUTH_TOKEN_PREFIX.length))
+    } else {
+      this.authToken = undefined
+    }
   }
 
   normalizeEndpoint(endPoint){
@@ -51,8 +118,8 @@ export default class LongPoll {
       .replace(new RegExp("(.*)\/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll))
   }
 
-  endpointURL(){
-    return this.pollEndpoint
+  endpointURL(params = {}){
+    return Ajax.appendParams(this.pollEndpoint, params)
   }
 
   closeAndRetry(error, code, reason, wasClean){
@@ -75,26 +142,72 @@ export default class LongPoll {
     // onopen can close us before the next poll, just as the caller can close us
     // before the constructor's deferred first poll
     if(!this.isActive()){ return }
+    // a poll after a failed one resumes the session, so the server checks it again
+    const resume = this.resumable && (this.resuming || this.retries.GET > 0)
+    if(resume){ this.applyConnectionInfo(this.connectionInfo()) }
     const headers = {"Accept": "application/json"}
     if(this.authToken){
       headers["X-Phoenix-AuthToken"] = this.authToken
     }
-    this.ajax("GET", headers, null, () => this.ontimeout(), resp => {
+    const params = this.resumable ? {"phx:ack": this.ack} : {}
+    if(resume){ params["phx:resume"] = 1 }
+    this.ajax("GET", headers, null, params, () => this.retryOr("GET", () => this.poll(), () => this.ontimeout()), resp => {
       if(resp){
-        var {status, token, messages} = resp
+        var {status, token, messages, last} = resp
         if(status === 410 && this.token !== null){
           // In case we already have a token, this means that our existing session
           // is gone. We fail so that the client rejoins its channels.
-          this.closeAndRetry(410, 3410, "session_gone", false)
+          this.closeAndRetry(410, CLOSE_SESSION_GONE, "session_gone", false)
           return
         }
         this.token = token
+        if(last !== undefined){
+          this.resumable = !this.degraded
+        } else if(this.resuming && (status === 200 || status === 204)){
+          // TODO: Remove in Phoenix 1.10, together with degrade()
+          //
+          // a node with an older server cannot resume a session of another transport
+          this.closeAndRetry(410, CLOSE_SESSION_GONE, "session_gone", false)
+          return
+        } else if(this.resumable && (status === 200 || status === 204)){
+          // TODO: Remove in Phoenix 1.10, when no cluster mixes 1.8 and newer nodes.
+          //
+          // The poll went through a node with an older server, as during a rolling
+          // deploy, which forwards it without our ack. The session then dropped the
+          // messages we did not acknowledge yet, like it does for older clients.
+          // We got them unless this poll is a retry, as they were in the response we lost.
+          if(!this.degrade()){ return }
+        }
       } else {
         status = 0
       }
-
+      // A POST can recover while these messages are still queued for delivery.
+      if(status === 200){ this.awaitingMessages = true }
+      if(this.resuming && (status === 200 || status === 204)){
+        // we resumed the session, so we are open and send what we kept
+        this.readyState = SOCKET_STATES.open
+        // keep callback pushes buffered after the messages we already kept
+        this.onopen({})
+        if(!this.isActive()){ return }
+        this.resuming = false
+        const buffered = this.resumeBuffer
+        this.resumeBuffer = []
+        buffered.forEach(body => this.send(body))
+      }
       switch(status){
         case 200:
+          if(last !== undefined){
+            // The server numbers its messages and sends all we did not acknowledge,
+            // so we drop the ones we already received, as when a late poll returns.
+            const first = last - messages.length + 1
+            if(first > this.ack + 1){
+              // we cannot deliver the messages, as we lost the ones before them
+              this.closeAndRetry(0, 1011, "lost messages", false)
+              return
+            }
+            messages = messages.slice(Math.max(0, this.ack + 1 - first))
+            this.ack = Math.max(this.ack, last)
+          }
           messages.forEach(msg => {
             // Tasks are what things like event handlers, setTimeout callbacks,
             // promise resolves and more are run within.
@@ -117,15 +230,21 @@ export default class LongPoll {
             //
             // We might stop before that, e.g. when a POST times out or a message
             // handler disconnects, which cancels the remaining messages.
-            const timer = setTimeout(() => {
-              this.messageTimers.delete(timer)
-              this.onmessage({data: msg})
-            }, 0)
-            this.messageTimers.add(timer)
+            // the server sends binary messages in base64, such as the ones a session
+            // has when it started over a WebSocket
+            const data = msg.startsWith(BINARY_PREFIX) ? base64ToArrayBuffer(msg.slice(BINARY_PREFIX.length)) : msg
+            this.scheduleMessage(() => this.onmessage({data}))
           })
-          this.poll()
+          // Restore only after delivering the messages, so hooks see their updates.
+          // Closing from a message callback cancels this task as well.
+          this.scheduleMessage(() => {
+            this.awaitingMessages = false
+            this.succeeded("GET")
+            this.poll()
+          })
           break
         case 204:
+          this.succeeded("GET")
           this.poll()
           break
         case 410:
@@ -138,6 +257,9 @@ export default class LongPoll {
           this.close(1008, "forbidden", false)
           break
         case 0:
+          // the connection failed, but the server still has our session and messages
+          this.retryOr("GET", () => this.poll(), () => this.closeAndRetry(500, 1011, "internal server error", false))
+          break
         case 500:
           this.closeAndRetry(500, 1011, "internal server error", false)
           break
@@ -146,42 +268,134 @@ export default class LongPoll {
     })
   }
 
+  scheduleMessage(callback){
+    const timer = setTimeout(() => {
+      this.messageTimers.delete(timer)
+      callback()
+    }, 0)
+    this.messageTimers.add(timer)
+  }
+
   // we collect all pushes within the current event loop by
   // setTimeout 0, which optimizes back-to-back procedural
   // pushes against an empty buffer
 
   send(body){
+    // we send once we resumed the session, numbered after the messages we kept
+    if(this.resuming){
+      this.resumeBuffer.push(body)
+      return
+    }
     if(typeof(body) !== "string"){ body = arrayBufferToBase64(body) }
+    // messages are numbered, so the server drops the ones it received when we send
+    // them again. A batch is sent with the seq of its first message.
+    this.seq++
     if(this.currentBatch){
       this.currentBatch.push(body)
     } else if(this.awaitingBatchAck){
+      if(this.batchBuffer.length === 0){ this.batchBufferSeq = this.seq }
       this.batchBuffer.push(body)
     } else {
       this.currentBatch = [body]
+      const seq = this.seq
       this.currentBatchTimer = setTimeout(() => {
-        this.batchSend(this.currentBatch)
+        this.batchSend(this.currentBatch, seq)
         this.currentBatch = null
       }, 0)
     }
   }
 
-  batchSend(messages, offset = 0){
+  batchSend(messages, seq, offset = 0){
+    if(!this.isActive()){ return }
     this.awaitingBatchAck = true
     const next = offset + MAX_LONGPOLL_BATCH_SIZE
     const batch = messages.slice(offset, next)
-    this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), () => this.ontimeout(), resp => {
-      if(!resp || resp.status !== 200){
+    const retry = () => this.batchSend(messages, seq, offset)
+    // servers that don't number their messages don't know about seq either
+    const params = this.resumable ? {"phx:seq": seq + offset} : {}
+    this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), params, () => this.retryOr("POST", retry, () => this.ontimeout()), resp => {
+      if(!resp){
+        this.retryOr("POST", retry, () => this.closeAndRetry(null, 1011, "internal server error", false))
+      } else if(resp.status !== 200){
         // this calls stop which already clears awaitingBatchAck
         this.closeAndRetry(resp && resp.status, 1011, "internal server error", false)
-      } else if(next < messages.length){
-        this.batchSend(messages, next)
-      } else if(this.batchBuffer.length > 0){
-        this.batchSend(this.batchBuffer)
-        this.batchBuffer = []
       } else {
-        this.awaitingBatchAck = false
+        // a node with an older server forwards the request without our seq, so the
+        // session does not drop the messages we send again
+        //
+        // TODO: Remove in Phoenix 1.10, together with degrade()
+        if(this.resumable && resp.seq === undefined && !this.degrade()){ return }
+        this.succeeded("POST")
+        if(next < messages.length){
+          this.batchSend(messages, seq, next)
+        } else if(this.batchBuffer.length > 0){
+          this.batchSend(this.batchBuffer, this.batchBufferSeq)
+          this.batchBuffer = []
+        } else {
+          this.awaitingBatchAck = false
+        }
       }
     })
+  }
+
+  /**
+   * @private
+   *
+   * Stops resuming for the rest of the session. A node with an older server, as
+   * during a rolling deploy, does not forward our ack and seq. Retrying through it
+   * could lose or duplicate messages, so we fail like we do with an older server.
+   *
+   * TODO: Remove in Phoenix 1.10, when no cluster mixes 1.8 and newer nodes.
+   */
+  degrade(){
+    this.degraded = true
+    this.resumable = false
+    // A request already being retried may have been processed. Neither replaying
+    // it without deduplication nor accepting a gap in received messages is safe.
+    if(this.retries.GET > 0 || this.retries.POST > 0){
+      this.closeAndRetry(0, 1011, "session no longer resumable", false)
+      return false
+    }
+    return true
+  }
+
+  /**
+   * @private
+   *
+   * Retries a failed request with backoff when the server keeps our session,
+   * otherwise fails.
+   */
+  retryOr(method, retry, fail){
+    if(!this.resumable){ return fail() }
+    this.retries[method]++
+    const delay = this.resumeAfterMs(this.retries[method])
+    // a single failed request is retried quickly, so we only report the interruption
+    // once its retry failed as well
+    if(this.retries[method] > 1 && !this.interrupted){
+      this.interrupted = true
+      this.onsuspend()
+    }
+    if(!this.isActive()){ return }
+    const timer = setTimeout(() => {
+      this.retryTimers.delete(timer)
+      if(!this.resumable){ return fail() }
+      retry()
+    }, delay)
+    this.retryTimers.add(timer)
+  }
+
+  /**
+   * @private
+   */
+  succeeded(method){
+    this.retries[method] = 0
+    // A successful poll must not hide an outstanding failed POST, or vice versa.
+    if((this.interrupted || this.resumePending) && !this.resuming && !this.awaitingMessages &&
+      this.retries.GET === 0 && this.retries.POST === 0){
+      this.interrupted = false
+      this.resumePending = false
+      this.onresume()
+    }
   }
 
   close(code, reason, wasClean){
@@ -201,6 +415,13 @@ export default class LongPoll {
     for(let {req} of reqs){ req && req.abort() }
     for(let timer of this.messageTimers){ clearTimeout(timer) }
     this.messageTimers.clear()
+    this.awaitingMessages = false
+    for(let timer of this.retryTimers){ clearTimeout(timer) }
+    this.retryTimers.clear()
+    this.interrupted = false
+    this.resumePending = false
+    this.resuming = false
+    this.resumeBuffer = []
     this.batchBuffer = []
     this.awaitingBatchAck = false
     clearTimeout(this.currentBatchTimer)
@@ -221,7 +442,7 @@ export default class LongPoll {
     }
   }
 
-  ajax(method, headers, body, onCallerTimeout, callback){
+  ajax(method, headers, body, params, onCallerTimeout, callback){
     // the request is ours until it completes or we stop, and the callbacks of a request
     // that is not ours anymore are ignored. It is ours before it starts, as a request can
     // complete while it starts.
@@ -233,7 +454,7 @@ export default class LongPoll {
     if(this.token !== null){
       headers = Object.assign({}, headers, {"X-Phoenix-Longpoll-Token": this.token})
     }
-    request.req = Ajax.request(method, this.endpointURL(), headers, body, this.timeout, ontimeout, resp => {
+    request.req = Ajax.request(method, this.endpointURL(params), headers, body, this.timeout, ontimeout, resp => {
       if(this.reqs.delete(request)){ callback(resp) }
     })
   }
