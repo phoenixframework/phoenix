@@ -148,6 +148,10 @@ export default class Socket {
     this.fallbackErrorRef = null
     // sends the health check of the current fallback attempt, see connectWithFallback
     this.fallbackHealthCheck = null
+    // the token of the session the next connection attaches to, see attachSession,
+    // and the connection that attaches to it
+    this.attachToken = null
+    this.attachConnection = null
     this.timeout = opts.timeout || DEFAULT_TIMEOUT
     this.transport = opts.transport || (global.WebSocket && opts.resumable ? ResumableWebSocket : global.WebSocket) || LongPoll
     this.primaryPassedHealthCheck = false
@@ -363,6 +367,53 @@ export default class Socket {
   }
 
   /**
+   * Configures the next connection to attach to an existing session.
+   * Pass the token returned by `Phoenix.Socket.start_detached/3`.
+   *
+   * The server can join channels in the session before the client attaches, with
+   * `Phoenix.Socket.join_detached/3`, which returns the join ref. Join them with
+   * `channel.awaitJoin(joinRef)` before connecting, so they receive the replies to these joins
+   * and the messages the server sent in the meantime.
+   *
+   * Attaching requires the ResumableWebSocket or LongPoll transport. A socket that uses the
+   * browser's WebSocket switches to ResumableWebSocket, as the server keeps sessions of this
+   * socket. When the client cannot attach, for example because the session expired, it connects
+   * with a new session and its channels join again.
+   *
+   * @param {string} token - The token of the session
+   * @returns {boolean} Whether the transport supports attachment and the token was stored
+   * for the next connection
+   */
+  attachSession(token){
+    if(global.WebSocket && this.transport === global.WebSocket){ this.transport = ResumableWebSocket }
+    if(this.transport !== ResumableWebSocket && this.transport !== LongPoll){ return false }
+    this.attachToken = token
+    return true
+  }
+
+  /**
+   * @private
+   *
+   * Whether the socket attaches to a session and did not receive its messages yet.
+   */
+  isAttaching(){
+    if(this.attachToken !== null){ return true }
+    const connection = this.attachConnection
+    return connection !== null && connection.isCurrent() && connection.isConnecting()
+  }
+
+  /**
+   * @private
+   *
+   * The reply to the awaited join of the channel arrives over the connection that attaches,
+   * so the channel joins again when that connection fails, as if it had sent the join.
+   */
+  carryAwaitedJoin(channel){
+    const connection = this.attachConnection
+    if(connection && connection.isCurrent()){ connection.joins.set(channel, channel.joinRef()) }
+  }
+
+  /**
    *
    * @param {Object} params - The params to send when connecting, for example `{user_id: userToken}`
    *
@@ -511,7 +562,12 @@ export default class Socket {
     // its tries, which only reset once a connection opens
     clearTimeout(this.reconnectTimer.timer)
     const {endPoint, protocols} = this.connectionInfo()
-    const transport = new this.transport(endPoint, protocols)
+    // only the first connection after attachSession attaches, later ones start a new session
+    const attachToken = this.attachToken
+    this.attachToken = null
+    const transport = attachToken ?
+      new this.transport(endPoint, protocols, {session: attachToken}) :
+      new this.transport(endPoint, protocols)
     transport.binaryType = this.binaryType
     transport.timeout = this.longpollerTimeout
     transport.resumeAfterMs = this.resumeAfterMs
@@ -520,6 +576,8 @@ export default class Socket {
     // a transport that keeps its session falls back to long polling to continue it
     transport.longPollFallbackMs = this.longPollFallbackMs
     this.connection = new Connection(this, transport)
+    this.attachConnection = attachToken ? this.connection : null
+    if(attachToken){ this.channels.forEach(channel => channel.awaitsJoin() && this.carryAwaitedJoin(channel)) }
     // connect can replace an ended connection that is still open while its buffer drains, but the
     // channels joined over it need to rejoin on the new connection instead of waiting for it to close
     if(previous && previous.isOpen()){ this.triggerChanError("connection_closed", previous) }

@@ -116,9 +116,10 @@ defmodule Phoenix.Transports.WebSocket do
 
   # Whether a new connection gets a session. Clients that resume don't get here, as
   # they have the token of a session we started, which the socket checks with resume/3.
-  defp resumable?(true, _config), do: true
+  @doc false
+  def resumable?(true, _config), do: true
 
-  defp resumable?({module, function, args}, config) do
+  def resumable?({module, function, args}, config) do
     case apply(module, function, [config | args]) do
       resumable when is_boolean(resumable) ->
         resumable
@@ -130,7 +131,7 @@ defmodule Phoenix.Transports.WebSocket do
     end
   end
 
-  defp resumable?(invalid, _config) do
+  def resumable?(invalid, _config) do
     raise ArgumentError, ":resumable expects a boolean or MFA tuple, got: #{inspect(invalid)}"
   end
 

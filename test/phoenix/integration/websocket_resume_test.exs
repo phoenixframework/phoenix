@@ -415,6 +415,32 @@ defmodule Phoenix.Integration.WebSocketResumeTest do
         refute match?({:pipe, _, _}, :sys.get_state(session(token)).client)
       end
 
+      test "answers heartbeats without numbering them" do
+        {client, token} = new_session()
+        :ok = WebsocketClient.send(client, {:text, ~s([null,"5","phoenix","heartbeat",{}])})
+
+        assert_receive %Message{
+          topic: "phoenix",
+          event: "phx_reply",
+          ref: "5",
+          payload: %{"status" => "ok"}
+        }
+
+        # the session did not receive a numbered message, so the pipe does not confirm it
+        refute_receive %Message{event: "phx_ack"}, 50
+
+        join(client, "room:a")
+        assert_receive %Message{event: "phx_ack", payload: %{"seq" => 1}}
+        drop(client)
+
+        # the client replays neither the heartbeat nor its reply
+        _client = resume(token, 0)
+        assert_receive %Message{event: "phx_resumed", payload: %{"seq" => 1, "last" => 2}}
+        assert_receive %Message{event: "phx_reply", topic: "room:a"}
+        assert_receive %Message{event: "joined", topic: "room:a"}
+        refute_receive %Message{topic: "phoenix", event: "phx_reply"}, 50
+      end
+
       test "passes control frames to the socket without numbering them" do
         {client, token} = new_ping_session()
 

@@ -101,6 +101,11 @@ defmodule Phoenix.Transports.Session do
   # It needs the conn to answer a failed connect, and the :resumable option can decide
   # against a session after connecting.
   def init({:connected, endpoint, handler, handler_state, transport, options, priv_topic}) do
+    # detached sessions count against the limit until a client attaches
+    if transport == :detached do
+      {:ok, _} = Registry.register(Phoenix.Transports.Detached.Registry, self(), nil)
+    end
+
     {:ok, handler_state} = handler.init(handler_state)
     {:ok, init_state(endpoint, handler, handler_state, transport, options, priv_topic)}
   end
@@ -236,6 +241,10 @@ defmodule Phoenix.Transports.Session do
 
     case result do
       {:ok, handler_state} ->
+        if state.transport == :detached do
+          :ok = Registry.unregister(Phoenix.Transports.Detached.Registry, self())
+        end
+
         send_client(state, client_ref, {:resumed, ref})
         # the client gave up on the WebSocket we have, for example to long poll instead
         state = %{detach(state) | handler: {handler, handler_state}, transport: info.transport}
@@ -296,6 +305,28 @@ defmodule Phoenix.Transports.Session do
   end
 
   def handle_info({:pipe_control, _pipe, _frame}, state) do
+    {:noreply, state}
+  end
+
+  # The reply to a heartbeat goes to the WebSocket that sent it, without a number,
+  # as there is no point in sending it again over another connection.
+  def handle_info({:pipe_heartbeat, pipe, {body, opcode}}, %{client: {:pipe, pipe, _}} = state) do
+    %{handler: {handler, handler_state}} = state
+
+    case handler.handle_in({body, opcode: opcode}, handler_state) do
+      {:reply, _status, {opcode, reply}, handler_state} ->
+        send(pipe, {:push_frames, [{opcode, IO.iodata_to_binary(reply)}]})
+        {:noreply, %{state | handler: {handler, handler_state}}}
+
+      {:ok, handler_state} ->
+        {:noreply, %{state | handler: {handler, handler_state}}}
+
+      {:stop, reason, handler_state} ->
+        {:stop, reason, %{state | handler: {handler, handler_state}}}
+    end
+  end
+
+  def handle_info({:pipe_heartbeat, _pipe, _frame}, state) do
     {:noreply, state}
   end
 

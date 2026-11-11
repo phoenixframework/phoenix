@@ -20,7 +20,8 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
   #   * "phx_gone" - the session stopped or the client cannot resume it, with the
   #     close code of the session if it stopped
   #
-  # Control messages are not numbered.
+  # Control messages are not numbered. Neither are heartbeats and their replies,
+  # as they only check the current WebSocket, like ping and pong frames.
 
   @behaviour WebSock
 
@@ -82,10 +83,23 @@ defmodule Phoenix.Transports.WebSocket.Pipe do
   end
 
   def handle_in({payload, opcode: opcode}, state) do
-    seq = state.in_seq + 1
-    send(state.session, {:pipe_in, self(), seq, {payload, opcode}})
-    {:ok, %{state | in_seq: seq}}
+    if opcode == :text and heartbeat?(payload) do
+      send(state.session, {:pipe_heartbeat, self(), {payload, opcode}})
+      {:ok, state}
+    else
+      seq = state.in_seq + 1
+      send(state.session, {:pipe_in, self(), seq, {payload, opcode}})
+      {:ok, %{state | in_seq: seq}}
+    end
   end
+
+  # A heartbeat of phoenix.js, a V2 message on the "phoenix" topic with a ref but
+  # without join ref. We don't decode the message, as the socket does that.
+  defp heartbeat?("[null,\"" <> rest) do
+    match?([_ref, "\"phoenix\",\"heartbeat\"," <> _], :binary.split(rest, "\","))
+  end
+
+  defp heartbeat?(_payload), do: false
 
   defp handle_control("phx_resume", %{"token" => token, "ack" => ack}, %{resume: resume} = state)
        when is_binary(token) and is_integer(ack) and resume != nil do

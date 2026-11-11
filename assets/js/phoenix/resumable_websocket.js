@@ -19,6 +19,12 @@ const CONTROL_PREFIX = "[null,null,\"phoenix\",\"phx_"
 
 let control = (event, payload) => JSON.stringify([null, null, "phoenix", event, payload])
 
+// Heartbeats and their replies are V2 messages on the "phoenix" topic with a ref but without
+// join ref. They only check the current WebSocket, so neither side numbers or replays them.
+const HEARTBEAT_PATTERN = /^\[null,"[^"]*","phoenix","heartbeat",/
+const HEARTBEAT_REPLY_PATTERN = /^\[null,"[^"]*","phoenix","phx_reply",/
+let isHeartbeat = (data, pattern) => typeof(data) === "string" && pattern.test(data)
+
 /**
  * A WebSocket transport that resumes its session over a new WebSocket when the
  * connection fails, without rejoining channels.
@@ -35,7 +41,14 @@ let control = (event, payload) => JSON.stringify([null, null, "phoenix", event, 
  * Servers that don't keep the socket for us make it behave like a WebSocket.
  */
 export default class ResumableWebSocket {
-  constructor(endPoint, protocols){
+  /**
+   * @param {string} endPoint
+   * @param {string[]} [protocols]
+   * @param {Object} [opts]
+   * @param {string} [opts.session] - The token of a session the server started for us,
+   * which we attach to like we resume a session, see `Socket.attachSession`
+   */
+  constructor(endPoint, protocols, opts = {}){
     // the URL and subprotocols of a new WebSocket, which the socket replaces
     // so that we resume with its current params and auth token
     this.connectionInfo = () => ({endPoint, protocols})
@@ -78,7 +91,13 @@ export default class ResumableWebSocket {
     this.onclose = function (){ } // noop
     this.onsuspend = function (){ } // noop
     this.onresume = function (){ } // noop
-    this.connect(false)
+    if(opts.session){
+      // we attach to the session like we resume one, and open once it resumed
+      this.token = opts.session
+      this.connect(true)
+    } else {
+      this.connect(false)
+    }
   }
 
   get binaryType(){ return this.binaryTypeValue }
@@ -97,7 +116,7 @@ export default class ResumableWebSocket {
       return
     }
     // we number the messages implicitly, in the order we send them
-    if(!this.unsupported){ this.unconfirmed.push(data) }
+    if(!this.unsupported && !isHeartbeat(data, HEARTBEAT_PATTERN)){ this.unconfirmed.push(data) }
     if(this.ready){ this.ws.send(data) }
   }
 
@@ -147,7 +166,12 @@ export default class ResumableWebSocket {
       // a server that does not answer is as good as a failed connection
       this.resumeTimer = setTimeout(() => {
         this.dropWebSocket()
-        this.retry()
+        // a session we could not attach to is gone for us, so the socket connects again
+        if(this.readyState === SOCKET_STATES.connecting){
+          this.end()
+        } else {
+          this.retry()
+        }
       }, this.resumeTimeout)
     }
     ws.onopen = () => {
@@ -161,8 +185,9 @@ export default class ResumableWebSocket {
       }
     }
     ws.onerror = error => {
-      // failed attempts to resume the session are no errors of the socket
-      if(this.ws === ws && !this.token){ this.onerror(error) }
+      // Retry failed resume attempts without reporting a socket error.
+      // Report attachment failures because the transport has not opened yet.
+      if(this.ws === ws && (!this.token || this.readyState === SOCKET_STATES.connecting)){ this.onerror(error) }
     }
     ws.onmessage = event => { if(this.ws === ws){ this.handleMessage(event) } }
     ws.onclose = event => { if(this.ws === ws){ this.handleClose(event) } }
@@ -191,6 +216,10 @@ export default class ResumableWebSocket {
     if(this.token === null && !this.unsupported){
       this.unsupported = true
       this.unconfirmed = []
+    }
+    if(!this.unsupported && isHeartbeat(data, HEARTBEAT_REPLY_PATTERN)){
+      this.onmessage(event)
+      return
     }
     this.received++
     this.scheduleAck()
@@ -244,6 +273,11 @@ export default class ResumableWebSocket {
     // The WebSocket is usable now; replay must not trigger a long-poll fallback.
     clearTimeout(this.fallbackTimer)
     this.fallbackTimer = null
+    if(this.readyState === SOCKET_STATES.connecting){
+      // we attached to a session the server started for us
+      this.readyState = SOCKET_STATES.open
+      this.onopen()
+    }
     this.scheduleRecovery()
   }
 
