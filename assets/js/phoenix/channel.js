@@ -90,12 +90,11 @@ export default class Channel {
   }
 
   /**
-   * Waits for the reply to a join that the server sent for this client, for example when it
-   * joined the channel in a session the socket attaches to, see `Socket.attachSession`.
+   * Waits for the reply to a channel join initiated by the server. See `Socket.attachSession`.
    *
-   * Call it before the socket attaches, as the reply arrives right after. Otherwise, or when the
-   * socket does not attach to a session, the channel joins like with `join`. It also joins again
-   * like any other channel when the socket cannot attach.
+   * Call this method before the socket finishes attaching. If the socket is not attaching,
+   * the method calls `join()` instead. If attachment fails, the channel joins again through
+   * a new connection.
    *
    * @param {string} joinRef - The ref of the join, given by the server
    * @param {integer} timeout

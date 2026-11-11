@@ -367,9 +367,8 @@ export default class Socket {
   }
 
   /**
-   * Attaches the next connection to a session that the server started for this client with
-   * `Phoenix.Socket.start_detached/3`, for example while rendering the page, instead of starting
-   * a new session.
+   * Configures the next connection to attach to an existing session.
+   * Pass the token returned by `Phoenix.Socket.start_detached/3`.
    *
    * The server can join channels in the session before the client attaches, with
    * `Phoenix.Socket.join_detached/3`, which returns the join ref. Join them with
@@ -382,7 +381,8 @@ export default class Socket {
    * with a new session and its channels join again.
    *
    * @param {string} token - The token of the session
-   * @returns {boolean} Whether the next connection attaches to the session
+   * @returns {boolean} Whether the transport supports attachment and the token was stored
+   * for the next connection
    */
   attachSession(token){
     if(global.WebSocket && this.transport === global.WebSocket){ this.transport = ResumableWebSocket }
