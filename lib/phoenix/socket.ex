@@ -374,19 +374,18 @@ defmodule Phoenix.Socket do
   ## USER API
 
   @doc """
-  Starts a session of the socket at `path` for the client of `conn`, before
-  the client connects.
+  Starts a detached socket session at `path` using the HTTP connection `conn`.
 
-  This lets the server join channels for the client with `join_detached/3`, for
-  example while it renders a page. The client then attaches to the session with
+  The server can join channels with `join_detached/3` before the client connects,
+  for example while rendering a page. The client then attaches to the session with
   the returned token, see `Socket.attachSession` and `Channel.awaitJoin` in
   `phoenix.js`. It receives the replies of the joins and the messages the
   channels pushed before it attached.
 
-  The socket connects with the `connect_info` of `conn`, configured with the
-  `:connect_info` option of the socket. When the request fetched its session,
-  the session in `connect_info` is the session of the request. The socket
-  receives the params `%{"vsn" => "2.0.0"}`, and `:detached` as transport.
+  Builds `connect_info` from `conn` using the socket's `:connect_info` configuration.
+  If the request has fetched its HTTP session, `connect_info.session` contains
+  its current contents. The socket receives the params `%{"vsn" => "2.0.0"}`,
+  and `:detached` as transport.
   When the client attaches, the socket checks its connection with `c:resume/3`.
 
   The socket must be resumable. A WebSocket needs the `:resumable` option of
@@ -398,8 +397,9 @@ defmodule Phoenix.Socket do
 
   ## Options
 
-    * `:window_ms` - how long the client can take to attach, times 1.5,
-      in milliseconds. Defaults to the `:window_ms` of the socket transport.
+    * `:window_ms` - the base timeout for client attachment, in milliseconds.
+      The server uses `1.5 × :window_ms` as the session timeout. Defaults to the
+      `:window_ms` of the socket transport.
 
     * `:max_pending` - the maximum number of detached sessions without a client
       on this node, across all endpoints. When the node has that many, no session
@@ -447,14 +447,15 @@ defmodule Phoenix.Socket do
 
   ## Options
 
-    * `:assigns` - a map merged into the assigns of the socket of this channel,
-      like the `:assigns` option of `channel/3`. Clients cannot set them, so the
-      channel can trust them.
+    * `:assigns` - a map merged into the channel socket assigns, as with `channel/3`.
+      These values come from the server and cannot be supplied by clients.
 
-  Returns `{:ok, join_ref}` when the channel joined, where `join_ref` is the ref
-  the client awaits the join with. The session keeps the reply of the channel for
-  the client. Returns `{:error, reply}` when the channel rejected the join, when it
-  crashed, or when the session already joined `topic`.
+  Returns `{:ok, join_ref}` when the channel joins. Pass `join_ref` to
+  `Channel.awaitJoin` on the client. The session buffers the join reply until
+  the client attaches.
+
+  Returns `{:error, reply}` if the channel rejects the join, crashes, or has
+  already joined `topic` in this session.
   """
   @spec join_detached(pid, String.t(), term, keyword) :: {:ok, String.t()} | {:error, map}
   def join_detached(session, topic, payload, opts \\ [])

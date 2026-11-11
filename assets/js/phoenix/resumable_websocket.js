@@ -185,8 +185,8 @@ export default class ResumableWebSocket {
       }
     }
     ws.onerror = error => {
-      // failed attempts to resume the session are no errors of the socket,
-      // unlike failed attempts to attach to it, as we never opened
+      // Retry failed resume attempts without reporting a socket error.
+      // Report attachment failures because the transport has not opened yet.
       if(this.ws === ws && (!this.token || this.readyState === SOCKET_STATES.connecting)){ this.onerror(error) }
     }
     ws.onmessage = event => { if(this.ws === ws){ this.handleMessage(event) } }
