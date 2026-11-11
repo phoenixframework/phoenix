@@ -656,10 +656,135 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
         end
 
+        test "#{@mode}: accepts legacy flushes without waiting for acknowledgements" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          assert resp.body["status"] == 200
+
+          {:ok, {:v1, _id, server, _topic}} =
+            Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+          # an older plug flushes without acknowledging and expects the reply without batch
+          Endpoint.broadcast!("room:lobby", "new_msg", %{"body" => "hi"})
+          Process.sleep(50)
+          ref = make_ref()
+          send(server, {:flush, self(), ref})
+          assert_receive {:messages, [_new_msg], ^ref}
+
+          # it does not acknowledge the messages we sent before, which we drop
+          # like we drop the ones we send to it, so we don't wait for an ack
+          assert %{sent: [], sent_at: nil} = :sys.get_state(server)
+        end
+
+        test "#{@mode}: resends messages until the client acknowledges them" do
+          vsn = "2.0.0"
+
+          # new sessions tell clients that they keep messages
+          resp = poll(:get, "/ws", vsn, %{})
+          assert resp.body["status"] == 410
+          assert resp.body["batch"] == 0
+
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          assert resp.body["status"] == 200
+          assert [_reply, _user_entered, _joined] = messages = resp.body["messages"]
+          assert batch = resp.body["batch"]
+
+          # the response got lost, so the client polls with the previous ack
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          assert resp.body["status"] == 200
+          assert resp.body["messages"] == messages
+          assert resp.body["batch"] == batch
+
+          # A lost response is replayed unchanged, even when new messages arrive.
+          Endpoint.broadcast("room:lobby", "new_msg", %{"body" => "hi"})
+          Process.sleep(50)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          assert resp.body["status"] == 200
+          assert resp.body["messages"] == messages
+          assert resp.body["batch"] == batch
+
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", to_string(batch)))
+          assert [%Message{event: "new_msg"}] = resp.body["messages"]
+          assert resp.body["batch"] == batch + 1
+
+          # without messages, the batch stays the acknowledged one
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", to_string(batch + 1)))
+          assert resp.body["status"] == 204
+          assert resp.body["batch"] == batch + 1
+        end
+
+        test "#{@mode}: a delayed poll does not expand an already received batch" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+          received = poll(:get, "/ws", vsn, Map.put(session, "ack", "0")).body
+          batch = received["batch"]
+
+          {:ok, {:v1, _id, server, _topic}} =
+            Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+          # A new frame arrives, followed by an old request whose response the
+          # client already stopped waiting for. The next poll acknowledges the
+          # retry's response and must receive only the new frame.
+          send(server, {:socket_push, :text, "[null,null,\"room:lobby\",\"tick\",{}]"})
+          ref = make_ref()
+          send(server, {:flush, self(), ref, 0})
+          assert_receive {:messages, _messages, ^ref, ^batch}
+
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", to_string(batch)))
+          assert [%Message{event: "tick"}] = resp.body["messages"]
+          assert resp.body["batch"] == batch + 1
+        end
+
+        test "#{@mode}: closes when the client keeps polling without acknowledging" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          # the window is 200ms, so the client must acknowledge a batch within 300ms
+          statuses =
+            for _ <- 1..8 do
+              Process.sleep(100)
+              poll(:get, "/ws", vsn, Map.put(session, "ack", "0")).body["status"]
+            end
+
+          assert [200, 200 | _] = statuses
+          assert List.last(statuses) == 410
+        end
+
+        test "#{@mode}: drops messages the client sends again" do
+          vsn = "2.0.0"
+          Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          message = fn body ->
+            %{
+              "topic" => "room:lobby",
+              "event" => "new_msg",
+              "ref" => body,
+              "payload" => %{"body" => body}
+            }
+          end
+
+          resp = poll(:post, "/ws", vsn, Map.put(session, "seq", "2"), [message.("a")])
+          # the seq tells the client that we drop messages it sends again
+          assert resp.body["status"] == 200
+          assert resp.body["seq"] == 2
+          assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "a"}}
+
+          # the response got lost, so the client sends the message again with the next one
+          batch = [message.("a"), message.("b")]
+          resp = poll(:post, "/ws", vsn, Map.put(session, "seq", "2"), batch)
+          assert resp.body["status"] == 200
+          assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "b"}}
+          refute_received %Broadcast{event: "new_msg", payload: %{"body" => "a"}}
+        end
+
         test "#{@mode}: lonpoll publishing batch events on v2 protocol" do
           vsn = "2.0.0"
           Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
           session = join("/ws", "room:lobby", vsn, "1", @mode)
+
           # Publish successfully
           resp =
             poll(:post, "/ws", vsn, session, [
@@ -686,7 +811,9 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
               }
             ])
 
+          # clients that don't number their messages get no seq
           assert resp.body["status"] == 200
+          refute Map.has_key?(resp.body, "seq")
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi1"}}
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi2"}}
           refute_receive %Broadcast{event: "new_msg", payload: %{"body" => "stale"}}
