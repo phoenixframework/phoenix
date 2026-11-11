@@ -29,9 +29,9 @@ defmodule Phoenix.Integration.DetachedSessionTest do
 
     def join(_topic, %{"reject" => true}, _socket), do: {:error, %{reason: "rejected"}}
 
-    # a payload of the server, which is not serialized
-    def join(_topic, %{"notify" => {pid, ref}}, socket) when is_pid(pid) do
-      send(pid, {ref, :rendered, "<div>"})
+    # assigns of the server, see join_detached/4
+    def join(_topic, _payload, %{assigns: %{notify: {pid, ref}}} = socket) do
+      send(pid, {ref, socket.assigns})
       {:ok, socket}
     end
 
@@ -60,7 +60,7 @@ defmodule Phoenix.Integration.DetachedSessionTest do
   defmodule UserSocket do
     use Phoenix.Socket
 
-    channel "room:*", RoomChannel
+    channel "room:*", RoomChannel, assigns: %{from_channel: true}
 
     def connect(params, socket, connect_info) do
       send(Process.whereis(:detached_test), {:connect, params, socket, connect_info})
@@ -272,14 +272,25 @@ defmodule Phoenix.Integration.DetachedSessionTest do
              Phoenix.Socket.join_detached(session, "room:a", %{})
   end
 
-  test "passes payloads that are not serialized to the channel" do
+  test "merges the :assigns of the join into the socket of the channel" do
     assert {:ok, session, _token} = Phoenix.Socket.start_detached(page_conn(), "/ws")
     ref = make_ref()
 
     assert {:ok, _join_ref} =
-             Phoenix.Socket.join_detached(session, "room:a", %{"notify" => {self(), ref}})
+             Phoenix.Socket.join_detached(session, "room:a", %{},
+               assigns: %{notify: {self(), ref}}
+             )
 
-    assert_received {^ref, :rendered, "<div>"}
+    assert_received {^ref, assigns}
+    assert %{from_channel: true, user_id: "1", notify: {_, ^ref}} = assigns
+  end
+
+  test "raises when the :assigns of the join are not a map" do
+    assert {:ok, session, _token} = Phoenix.Socket.start_detached(page_conn(), "/ws")
+
+    assert_raise ArgumentError, ~r/:assigns must be a map/, fn ->
+      Phoenix.Socket.join_detached(session, "room:a", %{}, assigns: [notify: true])
+    end
   end
 
   test "does not start more sessions without a client than :max_pending" do
