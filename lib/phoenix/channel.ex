@@ -332,6 +332,20 @@ defmodule Phoenix.Channel do
 
   Note that changing an event type's level doesn't affect what is logged,
   unless you set it to `false`, it affects the associated level.
+
+  To filter out logs for certain messages, you can pass a function to the
+  `:log_join` and `:log_handle_in` options. The function should return `false`
+  for messages you want to filter out, and `:debug` or `:info` for messages
+  you want to log.
+
+  For example, to filter out handle_in messages when the event name starts
+  with "ping_" and matches `%{"pong" => true}` in params:
+
+      use Phoenix.Channel, log_handle_in: &__MODULE__.filter_ping/2
+
+      def filter_ping("ping_" <> _, %{"pong" => true}), do: false
+      def filter_ping(_, _), do: :debug
+
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
