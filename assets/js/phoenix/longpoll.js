@@ -15,6 +15,20 @@ let arrayBufferToBase64 = (buffer) => {
   return btoa(binary)
 }
 
+let base64ToArrayBuffer = (base64) => {
+  let binary = atob(base64)
+  let len = binary.length
+  let bytes = new Uint8Array(len)
+  for(let i = 0; i < len; i++){ bytes[i] = binary.charCodeAt(i) }
+  return bytes.buffer
+}
+
+// Text messages are always JSON, while binary messages are base64 encoded
+// by the server, the same way we send them in batchSend.
+let decodeMessage = (msg) => {
+  return msg[0] === "[" || msg[0] === "{" ? msg : base64ToArrayBuffer(msg)
+}
+
 export default class LongPoll {
 
   constructor(endPoint, protocols){
@@ -119,7 +133,7 @@ export default class LongPoll {
             // handler disconnects, which cancels the remaining messages.
             const timer = setTimeout(() => {
               this.messageTimers.delete(timer)
-              this.onmessage({data: msg})
+              this.onmessage({data: decodeMessage(msg)})
             }, 0)
             this.messageTimers.add(timer)
           })

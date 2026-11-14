@@ -250,12 +250,22 @@ describe("LongPoll", () => {
     afterEach(() => jest.useRealTimers())
 
     it("delivers each message in its own task", () => {
-      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["first", "second"]})
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["[\"first\"]", "[\"second\"]"]})
       expect(events).toEqual([])
 
       jest.advanceTimersByTime(0)
 
-      expect(events).toEqual(["first", "second"])
+      expect(events).toEqual(["[\"first\"]", "[\"second\"]"])
+    })
+
+    it("delivers base64 encoded messages as binary", () => {
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["[\"text\"]", "/wEC", "{}"]})
+      jest.advanceTimersByTime(0)
+
+      expect(events[0]).toEqual("[\"text\"]")
+      expect(events[1]).toBeInstanceOf(ArrayBuffer)
+      expect(Array.from(new Uint8Array(events[1]))).toEqual([255, 1, 2])
+      expect(events[2]).toEqual("{}")
     })
 
     it("does not deliver messages after a POST timeout closed the transport", () => {
@@ -263,7 +273,7 @@ describe("LongPoll", () => {
       jest.advanceTimersByTime(0)
       const post = Ajax.request.mock.calls.find(([method]) => method === "POST")
 
-      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["message"]})
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["[\"message\"]"]})
       post[5]()
       jest.advanceTimersByTime(0)
 
@@ -276,10 +286,10 @@ describe("LongPoll", () => {
         longpoll.close()
       }
 
-      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["first", "second"]})
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["[\"first\"]", "[\"second\"]"]})
       jest.advanceTimersByTime(0)
 
-      expect(events).toEqual(["first", "close"])
+      expect(events).toEqual(["[\"first\"]", "close"])
     })
   })
 

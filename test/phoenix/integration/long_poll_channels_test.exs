@@ -45,6 +45,11 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       {:noreply, socket}
     end
 
+    def handle_in("echo_bin", {:binary, bin}, socket) do
+      push(socket, "bin_push", {:binary, bin})
+      {:reply, {:ok, {:binary, bin}}, socket}
+    end
+
     def handle_in("new_msg", message, socket) do
       broadcast!(socket, "new_msg", message)
       {:noreply, socket}
@@ -215,6 +220,14 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     decode_body(serializer, resp)
   end
 
+  defp poll_messages(path, vsn, session, count, acc \\ []) do
+    resp = poll(:get, path, vsn, session)
+    assert resp.body["status"] == 200
+    acc = acc ++ resp.body["messages"]
+
+    if length(acc) < count, do: poll_messages(path, vsn, session, count, acc), else: acc
+  end
+
   defp serializer("2." <> _, json), do: {V2.JSONSerializer, json}
   defp serializer(_, nil), do: {V1.JSONSerializer, nil}
 
@@ -231,7 +244,11 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     |> update_in([:body], &Phoenix.json_library().decode!(&1))
     |> update_in([:body, "messages"], fn messages ->
       for msg <- messages || [] do
-        serializer.decode!(msg, opcode: :text)
+        case msg do
+          "[" <> _ -> serializer.decode!(msg, opcode: :text)
+          "{" <> _ -> serializer.decode!(msg, opcode: :text)
+          base64 -> {:binary, Base.decode64!(base64)}
+        end
       end
     end)
   end
@@ -751,6 +768,31 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
                      join_ref: "1"
                    }
                  ] = resp.body["messages"]
+        end
+
+        test "#{@mode}: pushes and replies with binary messages" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          resp =
+            poll(:post, "/ws", vsn, session, [
+              %{
+                "topic" => "room:lobby",
+                "event" => "echo_bin",
+                "join_ref" => "1",
+                "ref" => "2",
+                "payload" => {:binary, <<255, 1, 2>>}
+              }
+            ])
+
+          assert resp.body["status"] == 200
+
+          # The push and the reply may arrive in different polls
+          assert [_phx_reply, _user_entered, _joined, {:binary, push}, {:binary, reply}] =
+                   poll_messages("/ws", vsn, session, 5)
+
+          assert push == <<0, 1, 10, 8, "1", "room:lobby", "bin_push", 255, 1, 2>>
+          assert reply == <<1, 1, 1, 10, 2, "1", "2", "room:lobby", "ok", 255, 1, 2>>
         end
 
         test "#{@mode}: shuts down after timeout" do
