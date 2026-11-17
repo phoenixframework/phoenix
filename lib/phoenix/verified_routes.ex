@@ -182,6 +182,8 @@ defmodule Phoenix.VerifiedRoutes do
         def root, do: ~p"/"
       end
 
+  Note the path prefixes are taken as is and not encoded in any way.
+
   Finally, for even more complex use cases, where the whole URL needs to localized,
   see projects such as [`routex`](https://hex.pm/packages/routex) and
   [`ex_cldr_routes`](https://hex.pm/packages/ex_cldr_routes).
