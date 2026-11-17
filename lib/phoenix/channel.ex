@@ -309,6 +309,29 @@ defmodule Phoenix.Channel do
 
   You can also set it to `:infinity` to fully disable it.
 
+  ## Limiting memory usage
+
+  Each channel runs in its own process and its memory usage may grow based
+  on the messages sent by clients, for example, if you accumulate data in
+  assigns. To guard against clients, malicious or not, that cause a channel
+  to consume too much memory, you can set a maximum heap size for the channel
+  process in `c:join/3`:
+
+      def join("room:" <> _id, _payload, socket) do
+        Process.flag(:max_heap_size, %{size: 1_000_000, kill: true, error_logger: true})
+        {:ok, socket}
+      end
+
+  The size is given in words (8 bytes on 64-bit systems), so the example above
+  allows roughly 8MB. If the limit is exceeded, the channel process is killed
+  and an error is logged. The client receives an error and attempts to rejoin,
+  as with any other channel crash. Note large binaries are stored outside of
+  the process heap and, by default, do not count towards the limit.
+
+  This only limits the channel process. Incoming messages are first received
+  and decoded by the socket process, whose payload size can be limited with
+  the `:max_frame_size` option in `Phoenix.Endpoint.socket/3`.
+
   ## Shutdown
 
   You can configure the shutdown behavior of each channel used when your
