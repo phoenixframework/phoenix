@@ -773,18 +773,33 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   @doc false
-  def __encode_segment__(data) do
+  def __encode_segment__(data, prefixed? \\ false) do
     case data do
-      [] -> ""
-      [str | _] when is_binary(str) -> Enum.map_join(data, "/", &encode_segment/1)
-      _ -> encode_segment(data)
+      [] ->
+        ""
+
+      [str | rest] when is_binary(str) ->
+        Enum.join(
+          [encode_segment(str, prefixed?) | Enum.map(rest, &encode_segment(&1, false))],
+          "/"
+        )
+
+      _ ->
+        encode_segment(data, prefixed?)
     end
   end
 
-  defp encode_segment(data) do
-    data
-    |> Phoenix.Param.to_param()
-    |> URI.encode(&URI.char_unreserved?/1)
+  # A prefixed interpolation, such as "/posts/post-#{id}", is not a whole segment,
+  # so "." and ".." are only rejected when they would form one on their own
+  defp encode_segment(data, prefixed?) do
+    case Phoenix.Param.to_param(data) do
+      segment when segment in [".", ".."] and not prefixed? ->
+        raise ArgumentError,
+              "dot segments are not allowed in path params, got: #{inspect(segment)}"
+
+      segment ->
+        URI.encode(segment, &URI.char_unreserved?/1)
+    end
   end
 
   # Segments must always start with /
@@ -833,7 +848,8 @@ defmodule Phoenix.VerifiedRoutes do
          [prev | _] = acc
        )
        when is_binary(prev) do
-    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_segment__]}, m3, [dynamic]}, bin]}
+    args = if String.ends_with?(prev, "/"), do: [dynamic], else: [dynamic, true]
+    rewrite = {:"::", m1, [{{:., m2, [__MODULE__, :__encode_segment__]}, m3, args}, bin]}
     verify_segment(rest, route, [rewrite | acc])
   end
 

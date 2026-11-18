@@ -451,6 +451,21 @@ defmodule Phoenix.Router.HelpersTest do
              "/posts/my%20path?foo=my+param"
   end
 
+  test "helpers raise on dot segments in named and glob params" do
+    for segment <- [".", ".."] do
+      assert_raise ArgumentError, ~r/dot segments are not allowed/, fn ->
+        Helpers.post_path(Endpoint, :show, segment)
+      end
+
+      assert_raise ArgumentError, ~r/dot segments are not allowed/, fn ->
+        Helpers.post_path(Endpoint, :file, ["foo", segment, "bar"])
+      end
+    end
+
+    assert Helpers.post_path(Endpoint, :show, "...") == "/posts/..."
+    assert Helpers.post_path(Endpoint, :file, ["foo", "a.b"]) == "/posts/file/foo/a.b"
+  end
+
   test "duplicate helpers with unique arities" do
     assert Helpers.product_path(Endpoint, :show) == "/products"
     assert Helpers.product_path(Endpoint, :show, foo: "bar") == "/products?foo=bar"

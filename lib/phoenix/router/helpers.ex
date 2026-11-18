@@ -347,6 +347,10 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Callback for properly encoding parameters in routes.
   """
+  def encode_param(segment) when segment in [".", ".."] do
+    raise ArgumentError, "dot segments are not allowed in path params, got: #{inspect(segment)}"
+  end
+
   def encode_param(str), do: URI.encode(str, &URI.char_unreserved?/1)
 
   defp expand_segments([]), do: "/"
