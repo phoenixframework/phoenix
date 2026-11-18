@@ -87,6 +87,32 @@
  * socket.onClose( () => console.log("the connection dropped") )
  * ```
  *
+ * LongPoll automatically retries interrupted requests while the server keeps
+ * its session alive. During recovery, channels stay joined and outgoing messages
+ * are buffered. Use `onSuspend` and `onResume` to show connection status without
+ * resetting channel state:
+ *
+ * ```
+ * socket.onSuspend( () => console.log("recovering the connection") )
+ * socket.onResume( () => console.log("the connection recovered") )
+ * ```
+ *
+ * `onResume` runs after delivering the incoming messages buffered at resumption,
+ * so callbacks see those updates. It does not wait for replies to outgoing pushes.
+ *
+ * Longpoll sessions are resumable by default, WebSockets resume with the `resumable`
+ * option, which also requires the `:resumable` WebSocket option in your server's endpoint:
+ *
+ * ```
+ * let socket = new Socket("/socket", {resumable: true})
+ * ```
+ * 
+ * ```elixir
+ * socket "/ws", UserSocket,
+ *   websocket: [resumable: true, ...],
+ *   longpoll: [...]
+ * ```
+ * 
  *
  * ## Channel Hooks
  *
@@ -195,6 +221,7 @@
 import Channel from "./channel"
 import LongPoll from "./longpoll"
 import Presence from "./presence"
+import ResumableWebSocket from "./resumable_websocket"
 import Serializer from "./serializer"
 import Socket from "./socket"
 
@@ -202,6 +229,7 @@ export {
   Channel,
   LongPoll,
   Presence,
+  ResumableWebSocket,
   Serializer,
   Socket
 }

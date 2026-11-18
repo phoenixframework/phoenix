@@ -110,6 +110,22 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       {:ok, assign(socket, :user_id, params["user_id"])}
     end
 
+    def resume(%{"reject_resume" => "true"}, _socket, _connect_info), do: :error
+
+    # answers after the plug stopped waiting, which is 200ms in these tests
+    def resume(%{"slow_resume" => result} = params, socket, connect_info) do
+      Process.sleep(300)
+      params = Map.delete(params, "slow_resume")
+
+      if result == "reject",
+        do: :error,
+        else: resume(params, socket, connect_info)
+    end
+
+    def resume(params, socket, _connect_info) do
+      {:ok, assign(socket, :resumed_with, params["resumed_with"])}
+    end
+
     def id(socket) do
       if id = socket.assigns.user_id, do: "user_sockets:#{id}"
     end
@@ -181,8 +197,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
   end
 
   setup config do
-    for {_, pid, _, _} <- DynamicSupervisor.which_children(Phoenix.Transports.LongPoll.Supervisor) do
-      DynamicSupervisor.terminate_child(Phoenix.Transports.LongPoll.Supervisor, pid)
+    for {_, pid, _, _} <- DynamicSupervisor.which_children(Phoenix.Transports.Session.Supervisor) do
+      DynamicSupervisor.terminate_child(Phoenix.Transports.Session.Supervisor, pid)
     end
 
     {:ok, topic: "room:" <> to_string(config.test)}
@@ -193,6 +209,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     assert_receive {:DOWN, ^ref, :process, _pid, _}
   end
 
+  # TODO: Number the messages in Phoenix 1.10, when the server requires ack and seq.
+  # The helpers below poll like Phoenix 1.8 clients, which most tests rely on.
   @doc """
   Helper method to maintain token session state when making HTTP requests.
 
@@ -353,6 +371,51 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
     assert resp.body["status"] == 200
     resp
+  end
+
+  @doc """
+  Makes the session wait before it handles its next flush.
+
+  The caller receives `{:flush_blocked, server, release}` once the session
+  waits. The session continues when it receives `release`.
+  """
+  def block_next_flush(session) do
+    {:ok, {:v1, _id, server, _topic}} =
+      Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+    parent = self()
+    release = make_ref()
+
+    :sys.install(
+      server,
+      {fn
+         _state, {:in, flush}, _proc_state when elem(flush, 0) == :flush ->
+           send(parent, {:flush_blocked, server, release})
+
+           receive do
+             ^release -> :done
+           end
+
+         state, _event, _proc_state ->
+           state
+       end, nil}
+    )
+  end
+
+  defp await_expired(server, retries \\ 200) do
+    {:messages, messages} = Process.info(server, :messages)
+
+    cond do
+      Enum.any?(messages, &match?({:expired, _client_ref, _ref}, &1)) ->
+        :ok
+
+      retries == 0 ->
+        flunk("the listen did not expire")
+
+      true ->
+        Process.sleep(5)
+        await_expired(server, retries - 1)
+    end
   end
 
   for %{adapter: adapter} <- [
@@ -656,10 +719,235 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
         end
 
+        # TODO: Remove in Phoenix 1.10, together with the flush without ack
+        # in Phoenix.Transports.Session
+        test "#{@mode}: accepts legacy flushes without waiting for acknowledgements" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["status"] == 200
+
+          {:ok, {:v1, _id, server, _topic}} =
+            Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+          # an older plug flushes without acknowledging and expects the reply without last
+          Endpoint.broadcast!("room:lobby", "new_msg", %{"body" => "hi"})
+          Process.sleep(50)
+          ref = make_ref()
+          send(server, {:flush, self(), ref})
+          assert_receive {:messages, [_new_msg], ^ref}
+
+          # it does not acknowledge the messages we sent before, which we drop
+          # like we drop the ones we send to it, so we don't wait for an ack
+          assert %{sent_at: nil, out_seq: 4, acked: 4} = state = :sys.get_state(server)
+          assert :queue.is_empty(state.out)
+        end
+
+        test "#{@mode}: resends messages until the client acknowledges them" do
+          vsn = "2.0.0"
+
+          # new sessions tell clients that they keep messages
+          resp = poll(:get, "/ws", vsn, %{})
+          assert resp.body["status"] == 410
+          assert resp.body["last"] == 0
+
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["status"] == 200
+          assert [_reply, _user_entered, _joined] = messages = resp.body["messages"]
+          assert resp.body["last"] == 3
+
+          # the response got lost, so the client polls with the previous ack
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["status"] == 200
+          assert resp.body["messages"] == messages
+          assert resp.body["last"] == 3
+
+          # new messages are sent with the ones the client did not acknowledge
+          Endpoint.broadcast("room:lobby", "new_msg", %{"body" => "hi"})
+          Process.sleep(50)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "2"))
+          assert [%Message{event: "joined"}, %Message{event: "new_msg"}] = resp.body["messages"]
+          assert resp.body["last"] == 4
+
+          # a late poll acknowledging fewer messages does not bring back dropped ones
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "1"))
+          assert [%Message{event: "joined"}, %Message{event: "new_msg"}] = resp.body["messages"]
+
+          # without messages, the last message is the acknowledged one
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "4"))
+          assert resp.body["status"] == 204
+          assert resp.body["last"] == 4
+        end
+
+        test "#{@mode}: ignores acknowledgements of messages we did not send" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          {:ok, {:v1, _id, server, _topic}} =
+            Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+          Process.sleep(50)
+          ref = make_ref()
+          send(server, {:flush, self(), ref, 100})
+          assert_receive {:messages, [_reply, _user_entered, _joined], ^ref, 3}
+        end
+
+        test "#{@mode}: closes when the client keeps polling without acknowledging" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          # the window is 200ms, so the client must acknowledge messages within 300ms
+          statuses =
+            for _ <- 1..8 do
+              Process.sleep(100)
+              poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0")).body["status"]
+            end
+
+          assert [200, 200 | _] = statuses
+          assert List.last(statuses) == 410
+        end
+
+        test "#{@mode}: drops messages the client sends again" do
+          vsn = "2.0.0"
+          Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          message = fn body ->
+            %{
+              "topic" => "room:lobby",
+              "event" => "new_msg",
+              "ref" => body,
+              "payload" => %{"body" => body}
+            }
+          end
+
+          resp = poll(:post, "/ws", vsn, Map.put(session, "phx:seq", "2"), [message.("a")])
+          # the seq tells the client that we drop messages it sends again
+          assert resp.body["status"] == 200
+          assert resp.body["seq"] == 2
+          assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "a"}}
+
+          # the response got lost, so the client sends the message again with the next one
+          batch = [message.("a"), message.("b")]
+          resp = poll(:post, "/ws", vsn, Map.put(session, "phx:seq", "2"), batch)
+          assert resp.body["status"] == 200
+          assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "b"}}
+          refute_received %Broadcast{event: "new_msg", payload: %{"body" => "a"}}
+        end
+
+        test "#{@mode}: closes when messages arrive out of order" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          message = %{
+            "topic" => "room:lobby",
+            "event" => "new_msg",
+            "ref" => "1",
+            "payload" => %{"body" => "a"}
+          }
+
+          # the join was message 1, so message 3 means we lost message 2
+          resp = poll(:post, "/ws", vsn, Map.put(session, "phx:seq", "3"), [message])
+          assert resp.body["status"] == 200
+
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["status"] == 410
+        end
+
+        test "#{@mode}: checks the socket when the client resumes" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          {:ok, {:v1, _id, server, _topic}} =
+            Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+          params =
+            Map.merge(session, %{"phx:ack" => "0", "phx:resume" => "1", "resumed_with" => "a"})
+
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 200
+          assert [_reply, _user_entered, _joined] = resp.body["messages"]
+
+          # the resume callback stores resumed_with in assigns, so this verifies it ran
+          assert {_, %Phoenix.Socket{assigns: %{resumed_with: "a"}, transport: :longpoll}} =
+                   elem(:sys.get_state(server).handler, 1)
+
+          # the channel keeps running
+          assert Process.whereis(:"room:lobby")
+        end
+
+        test "#{@mode}: answers the poll that resumes without waiting for messages" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["last"] == 3
+
+          # the client reports that it recovered once it has the answer
+          params = Map.merge(session, %{"phx:ack" => "3", "phx:resume" => "1"})
+          {time, resp} = :timer.tc(fn -> poll(:get, "/ws", vsn, params) end)
+          assert resp.body["status"] == 204
+          assert resp.body["last"] == 3
+          # other polls wait 200ms for messages in these tests
+          assert time < 200_000
+
+          # the session does not notify the poll anymore
+          Endpoint.broadcast("room:lobby", "new_msg", %{"body" => "hi"})
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "3"))
+          assert [%Message{event: "new_msg"}] = resp.body["messages"]
+        end
+
+        test "#{@mode}: does not send messages when a slow resume is rejected" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          params =
+            Map.merge(session, %{"phx:ack" => "0", "phx:resume" => "1", "slow_resume" => "reject"})
+
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 204
+          assert resp.body["messages"] == []
+          assert_down("room:lobby")
+
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["status"] == 410
+        end
+
+        test "#{@mode}: sends messages when a slow resume is accepted" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          params =
+            Map.merge(session, %{"phx:ack" => "0", "phx:resume" => "1", "slow_resume" => "accept"})
+
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 200
+          assert [_reply, _user_entered, _joined] = resp.body["messages"]
+        end
+
+        test "#{@mode}: stops the socket when it rejects the resume" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          params =
+            Map.merge(session, %{"phx:ack" => "0", "phx:resume" => "1", "reject_resume" => "true"})
+
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 410
+          refute resp.body["token"]
+          assert_down("room:lobby")
+
+          # the client starts a new session
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["status"] == 410
+          assert resp.body["token"]
+        end
+
         test "#{@mode}: lonpoll publishing batch events on v2 protocol" do
           vsn = "2.0.0"
           Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
           session = join("/ws", "room:lobby", vsn, "1", @mode)
+
           # Publish successfully
           resp =
             poll(:post, "/ws", vsn, session, [
@@ -686,7 +974,11 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
               }
             ])
 
+          # clients that don't number their messages get no seq
+          #
+          # TODO: Remove in Phoenix 1.10, when the server requires seq
           assert resp.body["status"] == 200
+          refute Map.has_key?(resp.body, "seq")
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi1"}}
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi2"}}
           refute_receive %Broadcast{event: "new_msg", payload: %{"body" => "stale"}}
@@ -763,6 +1055,60 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :inactive}}, 5000)
           resp = poll(:post, "/ws", @vsn, session)
           assert resp.body["status"] == 410
+        end
+
+        # TODO: Remove in Phoenix 1.10. The session drops the messages it sends
+        # to clients that don't acknowledge them, see Phoenix.Transports.LongPoll.
+        # See https://github.com/phoenixframework/phoenix/pull/6901.
+        test "#{@mode}: legacy listen receives messages flushed after its window" do
+          session = join("/ws", "room:lobby", @vsn, "1", @mode)
+          block_next_flush(session)
+
+          listen = Task.async(fn -> poll(:get, "/ws", @vsn, session) end)
+          assert_receive {:flush_blocked, server, release}
+
+          # the session answers the flush only after the listen stopped waiting for it
+          await_expired(server)
+          send(server, release)
+
+          resp = Task.await(listen)
+          assert resp.body["status"] == 200
+
+          assert [%Message{event: "phx_reply", ref: "1", topic: "room:lobby"} | _] =
+                   resp.body["messages"]
+
+          resp = poll(:get, "/ws", @vsn, session)
+          assert resp.body["status"] == 204
+        end
+
+        test "#{@mode}: legacy listen fails when the session does not answer after its window" do
+          session = join("/ws", "room:lobby", @vsn, "1", @mode)
+          block_next_flush(session)
+
+          resp = poll(:get, "/ws", @vsn, session)
+          assert resp.body["status"] == 410
+          assert resp.body["messages"] == []
+
+          assert_received {:flush_blocked, server, release}
+          send(server, release)
+        end
+
+        test "#{@mode}: listen gets messages flushed after its window with the next poll" do
+          vsn = "2.0.0"
+          session = Map.put(join("/ws", "room:lobby", vsn, "1", @mode), "phx:ack", "0")
+          block_next_flush(session)
+
+          listen = Task.async(fn -> poll(:get, "/ws", vsn, session) end)
+          assert_receive {:flush_blocked, server, release}
+
+          # the listen does not wait for the session, which keeps the messages it sends
+          await_expired(server)
+          assert Task.await(listen).body["status"] == 204
+          send(server, release)
+
+          resp = poll(:get, "/ws", vsn, session)
+          assert [%Message{event: "phx_reply"}, _user_entered, _joined] = resp.body["messages"]
+          assert resp.body["last"] == 3
         end
       end
 
