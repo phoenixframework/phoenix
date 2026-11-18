@@ -224,6 +224,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       router_scope: router_scope(context),
       web_path_prefix: web_path_prefix(schema),
       test_case_options: test_case_options(ecto_adapter),
+      mongo_adapter?: ecto_adapter == Mongo.Ecto,
       live?: Keyword.fetch!(context.opts, :live),
       datetime_module: datetime_module(schema),
       datetime_now: datetime_now(schema),
