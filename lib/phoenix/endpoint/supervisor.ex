@@ -166,11 +166,12 @@ defmodule Phoenix.Endpoint.Supervisor do
       check_origin = Keyword.get(transport_opts, :check_origin, check_origin)
 
       check_csrf = transport_opts[:check_csrf]
+      check_sec_fetch_site = Keyword.get(transport_opts, :check_sec_fetch_site, false)
 
-      if check_origin == false and check_csrf == false do
+      if check_origin == false and check_csrf == false and check_sec_fetch_site == false do
         raise ArgumentError,
-              "one of :check_origin and :check_csrf must be set to non-false value for " <>
-                "transport #{inspect(transport)}"
+              "one of :check_origin, :check_csrf and :check_sec_fetch_site must be set to " <>
+                "non-false value for transport #{inspect(transport)}"
       end
     end
   end

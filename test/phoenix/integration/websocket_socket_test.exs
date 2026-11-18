@@ -102,6 +102,10 @@ defmodule Phoenix.Integration.WebSocketTest do
       custom: :value
 
     socket "/ws/ping", PingSocket, websocket: true
+
+    socket "/sec_fetch_site", UserSocket,
+      websocket: [check_sec_fetch_site: true, timeout: 200],
+      custom: :value
   end
 
   setup %{adapter: adapter} do
@@ -135,6 +139,23 @@ defmodule Phoenix.Integration.WebSocketTest do
 
           assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
                    WebsocketClient.connect(self(), @path, :noop, headers)
+        end)
+      end
+
+      test "refuses cross-site requests when checking sec-fetch-site" do
+        capture_log(fn ->
+          path = "ws://127.0.0.1:#{@port}/sec_fetch_site/websocket"
+
+          headers = [{"sec-fetch-site", "same-origin"}]
+          assert {:ok, _} = WebsocketClient.connect(self(), path, :noop, headers)
+
+          headers = [{"sec-fetch-site", "cross-site"}]
+
+          assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
+                   WebsocketClient.connect(self(), path, :noop, headers)
+
+          assert {:error, %Mint.WebSocket.UpgradeFailureError{status_code: 403}} =
+                   WebsocketClient.connect(self(), path, :noop, [])
         end)
       end
 

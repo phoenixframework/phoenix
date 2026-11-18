@@ -715,6 +715,7 @@ defmodule Phoenix.Endpoint do
       :transport_log,
       :check_origin,
       :check_csrf,
+      :check_sec_fetch_site,
       :code_reloader,
       :connect_info,
       :auth_token,
@@ -965,10 +966,19 @@ defmodule Phoenix.Endpoint do
 
     * `:check_csrf` - if the transport should perform CSRF check. To avoid
       "Cross-Site WebSocket Hijacking", you must have at least one of
-      `check_origin` and `check_csrf` enabled. If you set both to `false`,
-      Phoenix will raise, but it is still possible to disable both by passing
-      a custom MFA to `check_origin`. In such cases, it is your responsibility
-      to ensure at least one of them is enabled. Defaults to `true`
+      `check_origin`, `check_csrf` or `check_sec_fetch_site` enabled. If you
+      set all of them to `false`, Phoenix will raise, but it is still possible
+      to disable all checks by passing a custom MFA to `check_origin`. In such
+      cases, it is your responsibility to ensure at least one of them is enabled.
+      Defaults to `true`
+
+    * `:check_sec_fetch_site` - if the transport should require the
+      `sec-fetch-site` request header to be either "same-origin" or "none".
+      Requests without the header, or with any other value, are refused.
+      Modern browsers send this header on secure connections (HTTPS or
+      localhost), so older browsers and pages served over plain HTTP on
+      other hosts will be refused. Other clients, such as mobile apps, must
+      send it explicitly. Defaults to `false`
 
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration

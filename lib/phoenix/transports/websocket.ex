@@ -52,6 +52,7 @@ defmodule Phoenix.Transports.WebSocket do
     |> Transport.code_reload(endpoint, opts)
     |> Transport.transport_log(opts[:transport_log])
     |> Transport.check_origin(handler, endpoint, opts)
+    |> Transport.check_sec_fetch_site(opts)
     |> maybe_auth_token_from_header(opts[:auth_token])
     |> Transport.check_subprotocols(subprotocols)
     |> case do

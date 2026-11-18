@@ -286,6 +286,46 @@ defmodule Phoenix.Socket.TransportTest do
     end
   end
 
+  ## Check sec-fetch-site
+
+  describe "check_sec_fetch_site/2" do
+    defp check_sec_fetch_site(value, opts) do
+      conn = put_req_header(conn(:get, "/"), "sec-fetch-site", value)
+      Transport.check_sec_fetch_site(conn, opts)
+    end
+
+    test "does not check sec-fetch-site if disabled" do
+      refute Transport.check_sec_fetch_site(conn(:get, "/"), []).halted
+      refute Transport.check_sec_fetch_site(conn(:get, "/"), check_sec_fetch_site: false).halted
+      refute check_sec_fetch_site("cross-site", check_sec_fetch_site: false).halted
+    end
+
+    test "does not check sec-fetch-site if conn is halted" do
+      halted_conn = conn(:get, "/") |> halt()
+      conn = Transport.check_sec_fetch_site(halted_conn, check_sec_fetch_site: true)
+      assert conn == halted_conn
+    end
+
+    test "allows same-origin and none" do
+      refute check_sec_fetch_site("same-origin", check_sec_fetch_site: true).halted
+      refute check_sec_fetch_site("none", check_sec_fetch_site: true).halted
+    end
+
+    test "refuses same-site and cross-site" do
+      for value <- ["same-site", "cross-site"] do
+        conn = check_sec_fetch_site(value, check_sec_fetch_site: true)
+        assert conn.halted
+        assert conn.status == 403
+      end
+    end
+
+    test "refuses requests without the header" do
+      conn = Transport.check_sec_fetch_site(conn(:get, "/"), check_sec_fetch_site: true)
+      assert conn.halted
+      assert conn.status == 403
+    end
+  end
+
   ## Check subprotocols
 
   describe "check_subprotocols/2" do

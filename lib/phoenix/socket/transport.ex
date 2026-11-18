@@ -387,6 +387,52 @@ defmodule Phoenix.Socket.Transport do
   end
 
   @doc """
+  Checks the `sec-fetch-site` request header when `:check_sec_fetch_site` is enabled.
+
+  Should be called by transports before connecting when appropriate.
+  If the option is disabled, or the header is either "same-origin" or
+  "none", it will return the given connection.
+
+  Otherwise, including when the header is missing, a 403 Forbidden
+  response will be sent and the connection halted. It is a noop if the
+  connection has been halted.
+  """
+  def check_sec_fetch_site(conn, opts, sender \\ &Plug.Conn.send_resp/1)
+
+  def check_sec_fetch_site(%Plug.Conn{halted: true} = conn, _opts, _sender),
+    do: conn
+
+  def check_sec_fetch_site(conn, opts, sender) do
+    import Plug.Conn
+
+    if Keyword.get(opts, :check_sec_fetch_site, false) do
+      case get_req_header(conn, "sec-fetch-site") do
+        [value] when value in ["same-origin", "none"] ->
+          conn
+
+        values ->
+          Logger.error("""
+          Could not check sec-fetch-site for Phoenix.Socket transport.
+
+          sec-fetch-site of the request: #{inspect(values)}
+
+          This happens when the socket connection comes from a different
+          site than the one serving the page, or when the client does not
+          send the sec-fetch-site header. Modern browsers only send it on
+          secure connections (HTTPS or localhost). Other clients, such as
+          mobile apps, must send it with the value "same-origin" or "none".
+          """)
+
+          resp(conn, :forbidden, "")
+          |> sender.()
+          |> halt()
+      end
+    else
+      conn
+    end
+  end
+
+  @doc """
   Checks the Websocket subprotocols request header against the allowed subprotocols.
 
   Should be called by transports before connecting when appropriate.
