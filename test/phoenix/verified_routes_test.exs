@@ -403,6 +403,17 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert path(socket_with_endpoint(), ~p"/images/foo.png") == "/images/foo.png"
   end
 
+  test "static urls encode interpolated values like paths" do
+    name = "a/b?x=1#"
+
+    assert ~p"/images/#{name}" == "/images/a%2Fb%3Fx%3D1%23"
+    assert path(Endpoint, ~p"/images/#{name}") == "/images/a%2Fb%3Fx%3D1%23"
+    assert url(~p"/images/#{name}") == "https://static.example.com/images/a%2Fb%3Fx%3D1%23"
+
+    assert url(Endpoint, ~p"/images/#{name}") ==
+             "https://static.example.com/images/a%2Fb%3Fx%3D1%23"
+  end
+
   test "~p dict query strings" do
     assert ~p"/posts/5?#{[id: 3]}" == "/posts/5?id=3"
     assert ~p"/posts/5?#{[foo: "bar"]}" == "/posts/5?foo=bar"
