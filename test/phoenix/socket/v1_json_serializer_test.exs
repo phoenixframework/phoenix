@@ -40,4 +40,22 @@ defmodule Phoenix.Socket.V1.JSONSerializerTest do
     msg = %Broadcast{topic: "t", event: "e", payload: "m"}
     assert fastlane!(@serializer, msg) == @v1_fastlane_json
   end
+
+  test "fastlane!/1 raises on binary payloads" do
+    msg = %Broadcast{topic: "t", event: "e", payload: {:binary, <<1, 2, 3>>}}
+
+    assert_raise ArgumentError, ~r/unable to send a binary payload on topic "t"/, fn ->
+      @serializer.fastlane!(msg)
+    end
+  end
+
+  test "encode!/1 raises on binary payloads" do
+    assert_raise ArgumentError, ~r/unable to send a binary payload on topic "t"/, fn ->
+      @serializer.encode!(%Message{topic: "t", event: "e", payload: {:binary, <<1>>}})
+    end
+
+    assert_raise ArgumentError, ~r/unable to send a binary payload on topic "t"/, fn ->
+      @serializer.encode!(%Reply{topic: "t", status: :ok, payload: {:binary, <<1>>}})
+    end
+  end
 end

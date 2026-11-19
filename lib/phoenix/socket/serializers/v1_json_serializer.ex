@@ -5,12 +5,24 @@ defmodule Phoenix.Socket.V1.JSONSerializer do
   alias Phoenix.Socket.{Broadcast, Message, Reply}
 
   @impl true
+  def fastlane!(%Broadcast{payload: {:binary, _}} = msg) do
+    raise_binary_payload!(msg.topic)
+  end
+
   def fastlane!(%Broadcast{} = msg) do
     map = %Message{topic: msg.topic, event: msg.event, payload: msg.payload}
     {:socket_push, :text, encode_v1_fields_only(map)}
   end
 
   @impl true
+  def encode!(%Reply{payload: {:binary, _}} = reply) do
+    raise_binary_payload!(reply.topic)
+  end
+
+  def encode!(%Message{payload: {:binary, _}} = msg) do
+    raise_binary_payload!(msg.topic)
+  end
+
   def encode!(%Reply{} = reply) do
     map = %Message{
       topic: reply.topic,
@@ -31,6 +43,15 @@ defmodule Phoenix.Socket.V1.JSONSerializer do
     message
     |> Phoenix.json_library().decode!()
     |> Phoenix.Socket.Message.from_map!()
+  end
+
+  defp raise_binary_payload!(topic) do
+    raise ArgumentError, """
+    unable to send a binary payload on topic #{inspect(topic)}.
+
+    The client connected with the V1 serializer, which only supports JSON payloads. \
+    Clients must connect with vsn=2.0.0 to receive binary payloads.
+    """
   end
 
   defp encode_v1_fields_only(%Message{} = msg) do
