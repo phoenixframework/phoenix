@@ -308,21 +308,21 @@ defmodule Phoenix.Presence do
         track(socket.channel_pid, socket.topic, key, meta)
       end
       def track(pid, topic, key, meta) do
-        Phoenix.Tracker.track(__MODULE__, pid, topic, key, meta)
+        Phoenix.Tracker.track(__MODULE__, pid, topic, to_string(key), meta)
       end
 
       def untrack(%Phoenix.Socket{} = socket, key) do
         untrack(socket.channel_pid, socket.topic, key)
       end
       def untrack(pid, topic, key) do
-        Phoenix.Tracker.untrack(__MODULE__, pid, topic, key)
+        Phoenix.Tracker.untrack(__MODULE__, pid, topic, to_string(key))
       end
 
       def update(%Phoenix.Socket{} = socket, key, meta) do
         update(socket.channel_pid, socket.topic, key, meta)
       end
       def update(pid, topic, key, meta) do
-        Phoenix.Tracker.update(__MODULE__, pid, topic, key, meta)
+        Phoenix.Tracker.update(__MODULE__, pid, topic, to_string(key), meta)
       end
 
       def list(%Phoenix.Socket{topic: topic}), do: list(topic)
@@ -402,7 +402,7 @@ defmodule Phoenix.Presence do
   def get_by_key(module, topic, key) do
     string_key = to_string(key)
 
-    case Phoenix.Tracker.get_by_key(module, topic, key) do
+    case Phoenix.Tracker.get_by_key(module, topic, string_key) do
       [] -> []
       [_|_] = pid_metas ->
         metas = Enum.map(pid_metas, fn {_pid, meta} -> meta end)
