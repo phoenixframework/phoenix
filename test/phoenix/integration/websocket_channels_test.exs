@@ -757,5 +757,36 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
       }
       assert_receive %Message{event: "binary_event", join_ref: @join_ref, payload: {:binary, <<0, 1>>}}
     end
+
+    test "binary broadcasts stop V1 subscriber channels" do
+      topic = "room:bin_v1"
+
+      {:ok, socket} =
+        WebsocketClient.connect(
+          self(),
+          "ws://127.0.0.1:#{@port}/ws/websocket?vsn=1.0.0",
+          V1.JSONSerializer
+        )
+
+      WebsocketClient.join(socket, topic, %{})
+      assert_receive %Message{event: "phx_reply", payload: %{"status" => "ok"}, topic: ^topic}
+
+      log =
+        capture_log(fn ->
+          assert :ok = Endpoint.broadcast(topic, "binary_event", {:binary, <<1, 2, 3>>})
+          assert_receive %Message{event: "phx_error", topic: ^topic}
+        end)
+
+      assert log =~ "Stopping channels on topic #{inspect(topic)}"
+      assert log =~ "unable to send a binary payload on topic #{inspect(topic)}"
+      # the channel stops with a shutdown reason, so there is no crash report
+      refute log =~ "terminating"
+
+      # the socket stays connected, so the client can rejoin
+      WebsocketClient.join(socket, topic, %{})
+      assert_receive %Message{event: "phx_reply", payload: %{"status" => "ok"}, topic: ^topic}
+      assert :ok = Endpoint.broadcast(topic, "json_event", %{"a" => 1})
+      assert_receive %Message{event: "json_event", payload: %{"a" => 1}, topic: ^topic}
+    end
   end
 end

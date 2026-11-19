@@ -83,6 +83,14 @@ defmodule Phoenix.Channel.Server do
 
   @doc """
   Hook invoked by Phoenix.PubSub dispatch.
+
+  Broadcasts not intercepted by the channel are encoded once per
+  serializer and sent directly to the transport process.
+
+  This function runs in the broadcasting process or in a PubSub worker.
+  If the serializer raises, the error is logged and the channels of
+  subscribers using that serializer are stopped. Their clients receive
+  a `phx_error` and rejoin, instead of missing the message.
   """
   def dispatch(subscribers, from, %Broadcast{event: event} = msg) do
     Enum.reduce(subscribers, %{}, fn
@@ -95,14 +103,24 @@ defmodule Phoenix.Channel.Server do
           cache
         else
           case cache do
+            %{^serializer => :fastlane_error} ->
+              send(pid, {__MODULE__, :fastlane_error})
+              cache
+
             %{^serializer => encoded_msg} ->
               send(fastlane_pid, encoded_msg)
               cache
 
             %{} ->
-              encoded_msg = serializer.fastlane!(msg)
-              send(fastlane_pid, encoded_msg)
-              Map.put(cache, serializer, encoded_msg)
+              case fastlane(serializer, msg) do
+                {:ok, encoded_msg} ->
+                  send(fastlane_pid, encoded_msg)
+                  Map.put(cache, serializer, encoded_msg)
+
+                :error ->
+                  send(pid, {__MODULE__, :fastlane_error})
+                  Map.put(cache, serializer, :fastlane_error)
+              end
           end
         end
 
@@ -128,6 +146,20 @@ defmodule Phoenix.Channel.Server do
     end
 
     :ok
+  end
+
+  defp fastlane(serializer, msg) do
+    {:ok, serializer.fastlane!(msg)}
+  catch
+    kind, reason ->
+      Logger.error("""
+      Stopping channels on topic #{inspect(msg.topic)} that use #{inspect(serializer)}, \
+      because the serializer failed to encode a broadcast (event #{inspect(msg.event)}):
+
+      #{Exception.format(kind, reason, __STACKTRACE__)}\
+      """)
+
+      :error
   end
 
   @doc """
@@ -341,6 +373,13 @@ defmodule Phoenix.Channel.Server do
     event
     |> socket.channel.handle_out(payload, socket)
     |> handle_result(:handle_out)
+  end
+
+  # dispatch/3 failed to encode a broadcast for this channel and logged the error.
+  # We stop without handle_result/2, which would send phx_close for a shutdown
+  # reason. The transport sends phx_error instead, so the client rejoins.
+  def handle_info({__MODULE__, :fastlane_error}, socket) do
+    {:stop, {:shutdown, :fastlane_error}, socket}
   end
 
   def handle_info({:DOWN, ref, _, _, reason}, ref) do

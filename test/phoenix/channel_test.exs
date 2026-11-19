@@ -5,7 +5,7 @@ defmodule Phoenix.Channel.ChannelTest do
   import Phoenix.Channel
 
   setup_all do
-    start_supervised! {Phoenix.PubSub, name: @pubsub, pool_size: 1}
+    start_supervised!({Phoenix.PubSub, name: @pubsub, pool_size: 1})
     :ok
   end
 
@@ -187,6 +187,79 @@ defmodule Phoenix.Channel.ChannelTest do
 
     assert_raise ArgumentError, ~r"ref", fn ->
       socket_ref(%Phoenix.Socket{joined: true})
+    end
+  end
+
+  test "fastlane errors are logged and stop only channels using that serializer" do
+    topic = "fastlane:#{System.unique_integer()}"
+
+    # The V1 subscribers come first, so their serializer raises before
+    # the V2 subscriber is dispatched (single partition, insertion order).
+    v1_transport = forwarder(:v1_transport)
+
+    _v1_channel =
+      forwarder(:v1_channel, subscriber(topic, v1_transport, Phoenix.Socket.V1.JSONSerializer))
+
+    v1_transport_2 = forwarder(:v1_transport_2)
+
+    _v1_channel_2 =
+      forwarder(
+        :v1_channel_2,
+        subscriber(topic, v1_transport_2, Phoenix.Socket.V1.JSONSerializer)
+      )
+
+    v2_transport = forwarder(:v2_transport)
+
+    _v2_channel =
+      forwarder(:v2_channel, subscriber(topic, v2_transport, Phoenix.Socket.V2.JSONSerializer))
+
+    msg = %Phoenix.Socket.Broadcast{topic: topic, event: "evt", payload: {:binary, <<1, 2, 3>>}}
+
+    log =
+      ExUnit.CaptureLog.capture_log(fn ->
+        assert :ok = Phoenix.PubSub.broadcast(@pubsub, topic, msg, Phoenix.Channel.Server)
+      end)
+
+    assert_receive {:v2_transport, {:socket_push, :binary, <<2, _::binary>>}}
+    assert_receive {:v1_channel, {Phoenix.Channel.Server, :fastlane_error}}
+    assert_receive {:v1_channel_2, {Phoenix.Channel.Server, :fastlane_error}}
+    refute_received {:v1_transport, _}
+    refute_received {:v1_transport_2, _}
+
+    # logged once for both V1 subscribers, as the failure is cached per serializer
+    stopping =
+      "Stopping channels on topic #{inspect(topic)} that use Phoenix.Socket.V1.JSONSerializer"
+
+    assert [_, _] = String.split(log, stopping)
+    assert log =~ "unable to send a binary payload"
+  end
+
+  defp subscriber(topic, transport_pid, serializer) do
+    fastlane = {:fastlane, transport_pid, serializer, []}
+    fn -> Phoenix.PubSub.subscribe(@pubsub, topic, metadata: fastlane) end
+  end
+
+  # Starts a process that runs `setup` and then forwards
+  # every message it receives to the test process as `{tag, msg}`.
+  defp forwarder(tag, setup \\ fn -> :ok end) do
+    test_pid = self()
+
+    pid =
+      spawn_link(fn ->
+        setup.()
+        send(test_pid, {:ready, self()})
+        forward(test_pid, tag)
+      end)
+
+    assert_receive {:ready, ^pid}
+    pid
+  end
+
+  defp forward(test_pid, tag) do
+    receive do
+      msg ->
+        send(test_pid, {tag, msg})
+        forward(test_pid, tag)
     end
   end
 end
