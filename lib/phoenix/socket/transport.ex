@@ -185,8 +185,8 @@ defmodule Phoenix.Socket.Transport do
 
   The `reply` is a tuple contain an `opcode` atom and a message that can
   be any term. The built-in websocket transport supports both `:text` and
-  `:binary` opcode and the message must be always iodata. Long polling only
-  supports text opcode.
+  `:binary` opcode and the message must be always iodata. Long polling sends
+  `:binary` messages base64-encoded in its JSON poll response.
   """
   @callback handle_in({message :: term, opts :: keyword}, state) ::
               {:ok, state}
@@ -227,8 +227,9 @@ defmodule Phoenix.Socket.Transport do
 
   The `reply` is a tuple contain an `opcode` atom and a message that can
   be any term. The built-in websocket transport supports both `:text` and
-  `:binary` opcode and the message must be always iodata. Long polling only
-  supports text opcode.
+  `:binary` opcode and the message must be always iodata. Long polling sends
+  `:binary` messages base64-encoded in its JSON poll response. The Phoenix
+  JavaScript client decodes them since Phoenix 1.9.
   """
   @callback handle_info(message :: term, state) ::
               {:ok, state}

@@ -15,6 +15,17 @@ let arrayBufferToBase64 = (buffer) => {
   return btoa(binary)
 }
 
+let base64ToArrayBuffer = (base64) => {
+  let binary = atob(base64)
+  let bytes = new Uint8Array(binary.length)
+  for(let i = 0; i < binary.length; i++){ bytes[i] = binary.charCodeAt(i) }
+  return bytes.buffer
+}
+
+// The server sends text frames as strings and binary frames
+// as base64 in an object, as the poll response is JSON.
+let decodeMessage = (msg) => typeof(msg) === "string" ? msg : base64ToArrayBuffer(msg.binary)
+
 export default class LongPoll {
 
   constructor(endPoint, protocols){
@@ -119,7 +130,7 @@ export default class LongPoll {
             // handler disconnects, which cancels the remaining messages.
             const timer = setTimeout(() => {
               this.messageTimers.delete(timer)
-              this.onmessage({data: msg})
+              this.onmessage({data: decodeMessage(msg)})
             }, 0)
             this.messageTimers.add(timer)
           })

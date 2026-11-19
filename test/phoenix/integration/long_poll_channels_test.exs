@@ -54,6 +54,13 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       raise "boom"
     end
 
+    def handle_in("binary_frames", _message, socket) do
+      push(socket, "text_push", %{"body" => "hello world"})
+      push(socket, "binary_push", {:binary, <<0xFF, 0xFE>>})
+      broadcast!(socket, "binary_broadcast", {:binary, <<0xFD>>})
+      {:reply, {:ok, {:binary, <<0xFC>>}}, socket}
+    end
+
     def handle_out(event, payload, socket) do
       push(socket, event, Map.put(payload, "transport", inspect(socket.transport)))
       {:noreply, socket}
@@ -215,6 +222,14 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     decode_body(serializer, resp)
   end
 
+  # Polls until a message matching `fun` arrives and returns all messages received.
+  defp poll_until(vsn, session, fun, acc \\ []) do
+    resp = poll(:get, "/ws", vsn, session)
+    assert resp.body["status"] == 200
+    acc = acc ++ resp.body["messages"]
+    if Enum.any?(acc, fun), do: acc, else: poll_until(vsn, session, fun, acc)
+  end
+
   defp serializer("2." <> _, json), do: {V2.JSONSerializer, json}
   defp serializer(_, nil), do: {V1.JSONSerializer, nil}
 
@@ -231,7 +246,10 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     |> update_in([:body], &Phoenix.json_library().decode!(&1))
     |> update_in([:body, "messages"], fn messages ->
       for msg <- messages || [] do
-        serializer.decode!(msg, opcode: :text)
+        case msg do
+          %{"binary" => base64} -> {:binary, Base.decode64!(base64)}
+          text -> serializer.decode!(text, opcode: :text)
+        end
       end
     end)
   end
@@ -816,6 +834,58 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
         assert new_msg_bodies == for(n <- 1..100, do: "msg#{n}")
         refute_receive %Broadcast{event: "new_msg", payload: %{"body" => "msg101"}}
+      end
+
+      test "sends binary frames base64-encoded next to text frames", %{topic: topic} do
+        vsn = "2.0.0"
+        session = join("/ws", topic, vsn, "1")
+
+        resp =
+          poll(:post, "/ws", vsn, session, %{
+            "topic" => topic,
+            "event" => "binary_frames",
+            "ref" => "2",
+            "join_ref" => "1",
+            "payload" => %{}
+          })
+
+        assert resp.body["status"] == 200
+
+        # the channel sends the reply last, so all frames are buffered once it arrives
+        messages =
+          poll_until(vsn, session, &match?({:binary, <<1, _::binary>>}, &1))
+          |> Enum.drop_while(&(not match?(%Message{event: "text_push"}, &1)))
+
+        {:socket_push, :binary, push} =
+          V2.JSONSerializer.encode!(%Message{
+            join_ref: "1",
+            topic: topic,
+            event: "binary_push",
+            payload: {:binary, <<0xFF, 0xFE>>}
+          })
+
+        {:socket_push, :binary, broadcast} =
+          V2.JSONSerializer.fastlane!(%Broadcast{
+            topic: topic,
+            event: "binary_broadcast",
+            payload: {:binary, <<0xFD>>}
+          })
+
+        {:socket_push, :binary, reply} =
+          V2.JSONSerializer.encode!(%Phoenix.Socket.Reply{
+            join_ref: "1",
+            ref: "2",
+            topic: topic,
+            status: :ok,
+            payload: {:binary, <<0xFC>>}
+          })
+
+        assert [
+                 %Message{event: "text_push", payload: %{"body" => "hello world"}},
+                 {:binary, ^push},
+                 {:binary, ^broadcast},
+                 {:binary, ^reply}
+               ] = messages
       end
     end
 
