@@ -218,6 +218,16 @@ describe("LongPoll", () => {
       expect(events).toEqual(["first", "second"])
     })
 
+    it("delivers binary messages as an ArrayBuffer", () => {
+      const binary = {binary: btoa(String.fromCharCode(2, 0, 255, 254))}
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["text", binary]})
+      jest.advanceTimersByTime(0)
+
+      expect(events[0]).toEqual("text")
+      expect(events[1]).toBeInstanceOf(ArrayBuffer)
+      expect(Array.from(new Uint8Array(events[1]))).toEqual([2, 0, 255, 254])
+    })
+
     it("does not deliver messages after a POST timeout closed the transport", () => {
       longpoll.send("push")
       jest.advanceTimersByTime(0)

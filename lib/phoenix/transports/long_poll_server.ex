@@ -49,11 +49,11 @@ defmodule Phoenix.Transports.LongPoll.Server do
     %{handler: {handler, handler_state}} = state
 
     case handler.handle_in({body, opcode: opcode}, handler_state) do
-      {:reply, status, {_, reply}, handler_state} ->
+      {:reply, status, {reply_opcode, reply}, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
         status = if status == :ok, do: :ok, else: :error
         broadcast_from!(state, client_ref, {status, ref})
-        publish_reply(state, reply)
+        publish_reply(state, reply_opcode, reply)
 
       {:ok, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
@@ -106,9 +106,9 @@ defmodule Phoenix.Transports.LongPoll.Server do
     %{handler: {handler, handler_state}} = state
 
     case handler.handle_info(message, handler_state) do
-      {:push, {_, reply}, handler_state} ->
+      {:push, {opcode, reply}, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
-        publish_reply(state, reply)
+        publish_reply(state, opcode, reply)
 
       {:ok, handler_state} ->
         state = %{state | handler: {handler, handler_state}}
@@ -132,18 +132,29 @@ defmodule Phoenix.Transports.LongPoll.Server do
   defp broadcast_from!(_state, client_ref, msg) when is_pid(client_ref),
     do: send(client_ref, msg)
 
-  defp publish_reply(state, reply) when is_map(reply) do
+  defp publish_reply(state, _opcode, reply) when is_map(reply) do
     IO.warn(
       "Returning a map from the LongPolling serializer is deprecated. " <>
         "Please return JSON encoded data instead (see Phoenix.Socket.Serializer)"
     )
 
-    publish_reply(state, Phoenix.json_library().encode_to_iodata!(reply))
+    publish_reply(state, :text, Phoenix.json_library().encode_to_iodata!(reply))
   end
 
-  defp publish_reply(state, reply) do
+  # The poll response is a JSON document, which cannot hold arbitrary bytes.
+  # Binary frames are sent base64-encoded in an object, so clients can tell
+  # them apart from text frames, which are sent as strings.
+  defp publish_reply(state, :binary, reply) do
+    buffer_reply(state, %{"binary" => Base.encode64(IO.iodata_to_binary(reply))})
+  end
+
+  defp publish_reply(state, _opcode, reply) do
+    buffer_reply(state, IO.iodata_to_binary(reply))
+  end
+
+  defp buffer_reply(state, reply) do
     notify_client_now_available(state)
-    {:noreply, update_in(state.buffer, &[IO.iodata_to_binary(reply) | &1])}
+    {:noreply, update_in(state.buffer, &[reply | &1])}
   end
 
   defp notify_client_now_available(state) do
