@@ -95,6 +95,11 @@ defmodule Phoenix.Channel.Server do
 
   Broadcasts not intercepted by the channel are encoded once per
   serializer and sent directly to the transport process.
+
+  This function runs in the broadcasting process or in a PubSub worker.
+  If the serializer raises, the error is logged and the channels of
+  subscribers using that serializer are stopped. Their clients receive
+  a `phx_error` and rejoin, instead of missing the message.
   """
   def send(pid, {transport_pid, serializer, intercepts}, %Broadcast{event: event} = msg, cache) do
     if event in intercepts do
@@ -102,24 +107,24 @@ defmodule Phoenix.Channel.Server do
       cache
     else
       case cache do
+        %{^serializer => :fastlane_error} ->
+          send(pid, {__MODULE__, :fastlane_error})
+          cache
+
         %{^serializer => encoded_msg} ->
           send(transport_pid, encoded_msg)
           cache
 
         _ ->
-          encoded_msg =
-            case serializer.fastlane!(msg) do
-              # Flatten so every subscriber shares one binary
-              # instead of getting its own copy of the iodata.
-              {:socket_push, opcode, payload} ->
-                {:socket_push, opcode, IO.iodata_to_binary(payload)}
+          case fastlane(serializer, msg) do
+            {:ok, encoded_msg} ->
+              send(transport_pid, encoded_msg)
+              Map.put(cache || %{}, serializer, encoded_msg)
 
-              encoded ->
-                encoded
-            end
-
-          send(transport_pid, encoded_msg)
-          Map.put(cache || %{}, serializer, encoded_msg)
+            :error ->
+              send(pid, {__MODULE__, :fastlane_error})
+              Map.put(cache || %{}, serializer, :fastlane_error)
+          end
       end
     end
   end
@@ -127,6 +132,28 @@ defmodule Phoenix.Channel.Server do
   def send(pid, _meta, msg, cache) do
     send(pid, msg)
     cache
+  end
+
+  defp fastlane(serializer, msg) do
+    case serializer.fastlane!(msg) do
+      # Flatten so every subscriber shares one binary
+      # instead of getting its own copy of the iodata.
+      {:socket_push, opcode, payload} ->
+        {:ok, {:socket_push, opcode, IO.iodata_to_binary(payload)}}
+
+      encoded ->
+        {:ok, encoded}
+    end
+  catch
+    kind, reason ->
+      Logger.error("""
+      Stopping channels on topic #{inspect(msg.topic)} that use #{inspect(serializer)}, \
+      because the serializer failed to encode a broadcast (event #{inspect(msg.event)}):
+
+      #{Exception.format(kind, reason, __STACKTRACE__)}\
+      """)
+
+      :error
   end
 
   # TODO: Remove in Phoenix 1.10
@@ -354,6 +381,13 @@ defmodule Phoenix.Channel.Server do
     event
     |> socket.channel.handle_out(payload, socket)
     |> handle_result(:handle_out)
+  end
+
+  # send/4 failed to encode a broadcast for this channel and logged the error.
+  # We stop without handle_result/2, which would send phx_close for a shutdown
+  # reason. The transport sends phx_error instead, so the client rejoins.
+  def handle_info({__MODULE__, :fastlane_error}, socket) do
+    {:stop, {:shutdown, :fastlane_error}, socket}
   end
 
   def handle_info({:DOWN, ref, _, _, reason}, ref) do
