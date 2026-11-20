@@ -650,6 +650,15 @@ var arrayBufferToBase64 = (buffer) => {
   }
   return btoa(binary);
 };
+var base64ToArrayBuffer = (base64) => {
+  let binary = atob(base64);
+  let bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+};
+var decodeMessage = (msg) => typeof msg === "string" ? msg : base64ToArrayBuffer(msg.binary);
 var LongPoll = class {
   constructor(endPoint, protocols) {
     if (protocols && protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)) {
@@ -722,7 +731,7 @@ var LongPoll = class {
           messages.forEach((msg) => {
             const timer = setTimeout(() => {
               this.messageTimers.delete(timer);
-              this.onmessage({ data: msg });
+              this.onmessage({ data: decodeMessage(msg) });
             }, 0);
             this.messageTimers.add(timer);
           });
@@ -1216,6 +1225,7 @@ var Socket = class {
     this.ref = 0;
     this.fallbackRef = null;
     this.fallbackErrorRef = null;
+    this.fallbackHealthCheck = null;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
     this.transport = opts.transport || global.WebSocket || LongPoll;
     this.primaryPassedHealthCheck = false;
@@ -1273,6 +1283,7 @@ var Socket = class {
         return [10, 50, 100, 150, 200, 250, 500, 1e3, 2e3][tries - 1] || 5e3;
       }
     };
+    this.reconnectWhenHidden = opts.reconnectWhenHidden || false;
     this.logger = opts.logger || null;
     if (!this.logger && opts.debug) {
       this.logger = (kind, msg, data) => {
@@ -1287,7 +1298,7 @@ var Socket = class {
     this.heartbeatTimer = null;
     this.pendingHeartbeatRef = null;
     this.reconnectTimer = new Timer(() => {
-      if (this.pageHidden) {
+      if (this.pageHidden && !this.reconnectWhenHidden) {
         this.log("Not reconnecting as page is hidden!");
         this.teardown();
         return;
@@ -1586,12 +1597,17 @@ var Socket = class {
       established = true;
       clearTimeout(this.fallbackTimer);
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
+    });
+    this.fallbackHealthCheck = () => {
+      if (!isCurrent()) {
+        return;
+      }
       this.ping((rtt) => {
         this.log("transport", "connected to primary after", rtt);
         this.primaryPassedHealthCheck = true;
         clearTimeout(this.fallbackTimer);
       });
-    });
+    };
     this.transportConnect();
     connectClock = this.connectClock;
   }
@@ -1603,6 +1619,7 @@ var Socket = class {
   cancelFallback() {
     clearTimeout(this.fallbackTimer);
     this.off([this.fallbackRef, this.fallbackErrorRef]);
+    this.fallbackHealthCheck = null;
   }
   clearHeartbeats() {
     clearTimeout(this.heartbeatTimer);
@@ -1613,6 +1630,9 @@ var Socket = class {
     if (this.hasLogger()) this.log("transport", `${this.transportName(this.transport)} connected to ${this.endPointURL()}`);
     this.closeWasClean = false;
     this.establishedConnections++;
+    if (this.fallbackHealthCheck) {
+      this.fallbackHealthCheck();
+    }
     this.flushSendBuffer();
     this.reconnectTimer.reset();
     this.resetHeartbeat();

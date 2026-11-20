@@ -29,6 +29,25 @@ This release introduces deprecation warnings for several features that have been
 
   * The `config` variable is no longer available in `Phoenix.Endpoint`. In the past, it was possible to read your endpoint configuration at compile-time via an injected variable named `config`, which is no longer supported. Use `Application.compile_env/3` instead, which is tracked by the Elixir compiler and lead to a better developer experience. This may also lead to errors on application boot if you were previously incorrectly setting compile time config at runtime.
 
+## v1.8.17 (2026-11-20)
+
+### Security fixes
+
+* [CVE-2026-129344](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-5vmc-qgf8-rw36): Sending a channel message that cannot be serialized can lead to a denial of service for all clients on a shared topic
+* [CVE-2026-128361](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-pvfx-rx4x-phrr): Unsanitized presence key crashes Presence tracker
+
+### Bug fixes
+
+* [Phoenix.PubSub] an Endpoint broadcast now works even when the endpoint is not started ([#6846](https://github.com/phoenixframework/phoenix/issues/6846))
+* [phoenix.js] Send the fallback health check before a buffered join ([#6770](https://github.com/phoenixframework/phoenix/issues/6770))
+
+### Enhancements
+
+* [phoenix.js] Allow enabling reconnections while a tab is hidden with `reconnectWhenHidden` ([#6883](https://github.com/phoenixframework/phoenix/pull/6883))
+* [Channels] send fastlane messages as shared binaries ([#6884](https://github.com/phoenixframework/phoenix/pull/6884))
+* Store verified route warnings relative to cwd ([#6889](https://github.com/phoenixframework/phoenix/pull/6889))
+* Support binary messages in LongPoll transport
+
 ## v1.8.16 (2026-10-20)
 
 ### Bug fixes
