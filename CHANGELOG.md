@@ -12,6 +12,12 @@ Then once you start an application, you will get a warning about the `:pubsub` k
 
 Phoenix built-in guides have been restructured and revamped, providing a better navigation structure and more content.
 
+## 1.5.16 (2026-11-20)
+
+### Security fixes
+- [CVE-2026-129344](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-5vmc-qgf8-rw36): Sending a channel message that cannot be serialized can lead to a denial of service for all clients on a shared topic
+- [CVE-2026-128361](https://github.com/phoenixframework/phoenix/security/advisories/GHSA-pvfx-rx4x-phrr): Unsanitized presence key crashes Presence tracker
+
 ## 1.5.15 (2026-07-07)
 
 ### Security fixes
