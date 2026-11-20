@@ -650,6 +650,15 @@ var Phoenix = (() => {
     }
     return btoa(binary);
   };
+  var base64ToArrayBuffer = (base64) => {
+    let binary = atob(base64);
+    let bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  };
+  var decodeMessage = (msg) => typeof msg === "string" ? msg : base64ToArrayBuffer(msg.binary);
   var LongPoll = class {
     constructor(endPoint, protocols) {
       if (protocols && protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)) {
@@ -722,7 +731,7 @@ var Phoenix = (() => {
             messages.forEach((msg) => {
               const timer = setTimeout(() => {
                 this.messageTimers.delete(timer);
-                this.onmessage({ data: msg });
+                this.onmessage({ data: decodeMessage(msg) });
               }, 0);
               this.messageTimers.add(timer);
             });
