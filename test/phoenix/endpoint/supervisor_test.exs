@@ -232,7 +232,7 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     Application.put_env(:phoenix, SocketEndpoint, [])
 
     test "fails when CSRF and origin checks both disabled in transport" do
-      assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
+      assert_raise ArgumentError, ~r/:check_csrf and :check_sec_fetch_site must be set/, fn ->
         Supervisor.init({:phoenix, SocketEndpoint, []})
       end
     end
@@ -251,7 +251,7 @@ defmodule Phoenix.Endpoint.SupervisorTest do
       assert [{"/ws", TestSocket, _}, {"/unsafe", TestSocket, _}] =
                DuplicateSocketEndpoint.__sockets__()
 
-      assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
+      assert_raise ArgumentError, ~r/:check_csrf and :check_sec_fetch_site must be set/, fn ->
         Supervisor.init({:phoenix, DuplicateSocketEndpoint, []})
       end
     end
@@ -265,9 +265,22 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     Application.put_env(:phoenix, SocketEndpointOriginCheckDisabled, check_origin: false)
 
     test "fails when origin is disabled in endpoint config and CSRF disabled in transport" do
-      assert_raise ArgumentError, ~r/one of :check_origin and :check_csrf must be set/, fn ->
+      assert_raise ArgumentError, ~r/:check_csrf and :check_sec_fetch_site must be set/, fn ->
         Supervisor.init({:phoenix, SocketEndpointOriginCheckDisabled, []})
       end
+    end
+
+    defmodule SocketEndpointSecFetchSiteOnly do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      socket "/ws", TestSocket,
+        websocket: [check_csrf: false, check_origin: false, check_sec_fetch_site: true]
+    end
+
+    Application.put_env(:phoenix, SocketEndpointSecFetchSiteOnly, [])
+
+    test "does not fail when only sec-fetch-site check is enabled in transport" do
+      assert {:ok, _} = Supervisor.init({:phoenix, SocketEndpointSecFetchSiteOnly, []})
     end
   end
 end

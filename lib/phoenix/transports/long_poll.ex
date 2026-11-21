@@ -32,6 +32,7 @@ defmodule Phoenix.Transports.LongPoll do
     |> Transport.code_reload(endpoint, opts)
     |> Transport.transport_log(opts[:transport_log])
     |> Transport.check_origin(handler, endpoint, opts, &status_json/1)
+    |> Transport.check_sec_fetch_site(opts, &status_json/1)
     |> dispatch(endpoint, handler, opts)
   end
 

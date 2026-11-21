@@ -73,6 +73,10 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     socket "/custom/:socket_var", UserSocket,
       longpoll: [path: ":path_var/path", check_origin: ["//example.com"], pubsub_timeout_ms: 200],
       custom: :value
+
+    socket "/sec_fetch_site", UserSocket,
+      longpoll: [window_ms: 200, pubsub_timeout_ms: 200, check_sec_fetch_site: true],
+      custom: :value
   end
 
   setup %{adapter: adapter} do
@@ -128,6 +132,21 @@ defmodule Phoenix.Integration.LongPollSocketTest do
           assert resp.body["status"] == 410
 
           resp = poll(:get, "ws/longpoll", %{}, nil, %{"origin" => "http://notallowed.com"})
+          assert resp.body["status"] == 403
+        end)
+      end
+
+      test "refuses cross-site requests when checking sec-fetch-site" do
+        capture_log(fn ->
+          path = "sec_fetch_site/longpoll"
+
+          resp = poll(:get, path, %{}, nil, %{"sec-fetch-site" => "same-origin"})
+          assert resp.body["status"] == 410
+
+          resp = poll(:get, path, %{}, nil, %{"sec-fetch-site" => "cross-site"})
+          assert resp.body["status"] == 403
+
+          resp = poll(:get, path, %{}, nil)
           assert resp.body["status"] == 403
         end)
       end
