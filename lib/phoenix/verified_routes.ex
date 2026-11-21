@@ -381,7 +381,7 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp inject_path(
-         {%__MODULE__{} = route, static?, _endpoint_ctx, _route_ast, path_ast, static_ast},
+         {%__MODULE__{} = route, static?, _endpoint_ctx, path_ast, static_ast, _static_url_ast},
          env
        ) do
     if static? do
@@ -393,13 +393,11 @@ defmodule Phoenix.VerifiedRoutes do
   end
 
   defp inject_url(
-         {%__MODULE__{} = route, static?, endpoint_ctx, route_ast, path_ast, _static_ast},
+         {%__MODULE__{} = route, static?, endpoint_ctx, path_ast, _static_ast, static_url_ast},
          env
        ) do
     if static? do
-      quote do
-        unquote(__MODULE__).static_url(unquote_splicing([endpoint_ctx, route_ast]))
-      end
+      static_url_ast
     else
       Module.put_attribute(env.module, :phoenix_verified_routes, route)
 
@@ -974,7 +972,7 @@ defmodule Phoenix.VerifiedRoutes do
           """
       end
 
-    {static?, meta, test_path, path_ast, static_ast} =
+    {static?, meta, test_path, path_ast, static_ast, static_url_ast} =
       rewrite_path(route_ast, endpoint_ctx, router, config)
 
     route = %__MODULE__{
@@ -984,7 +982,7 @@ defmodule Phoenix.VerifiedRoutes do
       test_path: test_path
     }
 
-    {route, static?, endpoint_ctx, route_ast, path_ast, static_ast}
+    {route, static?, endpoint_ctx, path_ast, static_ast, static_url_ast}
   end
 
   defp warn_location(meta, %{line: line, file: file, function: function, module: module}) do
@@ -1037,7 +1035,12 @@ defmodule Phoenix.VerifiedRoutes do
         unquote(__MODULE__).static_path(unquote_splicing([endpoint, rewrite_route]))
       end
 
-    {static?, meta, test_path, path_ast, static_ast}
+    static_url_ast =
+      quote generated: true do
+        unquote(__MODULE__).static_url(unquote_splicing([endpoint, rewrite_route]))
+      end
+
+    {static?, meta, test_path, path_ast, static_ast, static_url_ast}
   end
 
   defp materialize_path(path) do
