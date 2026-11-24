@@ -46,6 +46,15 @@ Plug.Crypto.non_executable_binary_to_term(user_input, [:safe])
 
 The function `Plug.Crypto.non_executable_binary_to_term` prevents the creation of executable terms at runtime. If you are curious how this vulnerability can occur in the real world, see the writeup on [CVE-2020-15150 in the library Paginator.](https://www.alphabot.com/security/blog/2020/elixir/Remote-code-execution-vulnerability-in-Elixir-based-Paginator-project.html)
 
+> #### Use it alongside signing or encryption {. :warning}
+>
+> If you are encoding data using `:erlang.term_to_binary/2`, sending it
+> to an untrusted actor, and decoding it, even with `Plug.Crypto.non_executable_binary_to_term`,
+> we strongly advise you to sign or encrypt the payload before sending,
+> and verify it when receiving. Although `non_executable_binary_to_term` rules out
+> anonymous functions, idioms such as `{module, function, args}` tuples may still
+> be injected anywhere within the decoded data-structure (such as within structs)
+> to invoke custom code.
 
 ## SQL Injection 
 
