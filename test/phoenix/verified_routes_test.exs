@@ -204,6 +204,28 @@ defmodule Phoenix.VerifiedRoutesTest do
     assert ~p"/posts/#{slug}?#{[foo: "my param"]}" == "/posts/my%20path?foo=my+param"
   end
 
+  test "~p raises on dot segments in interpolated and splat segments" do
+    for segment <- [".", ".."] do
+      assert_raise ArgumentError, ~r/dot segments are not allowed/, fn ->
+        ~p"/posts/#{segment}"
+      end
+
+      assert_raise ArgumentError, ~r/dot segments are not allowed/, fn ->
+        ~p"/posts/file/#{["foo", segment, "bar"]}"
+      end
+
+      assert_raise ArgumentError, ~r/dot segments are not allowed/, fn ->
+        ~p"/posts/file/foo-#{["bar", segment]}"
+      end
+
+      assert ~p"/posts/post-#{segment}" == "/posts/post-" <> segment
+      assert ~p"/posts/file/foo-#{[segment, "bar"]}" == "/posts/file/foo-#{segment}/bar"
+    end
+
+    assert ~p"/posts/#{"..."}" == "/posts/..."
+    assert ~p"/posts/file/#{["foo", "a.b"]}" == "/posts/file/foo/a.b"
+  end
+
   test "~p with empty query string drops ?" do
     assert ~p"/posts/5?#{%{}}" == "/posts/5"
   end
