@@ -149,13 +149,9 @@ export default class Socket {
     this.connectClock = 1
     // the connection created when the page was shown, see handleVisibilityChange
     this.visibilityConnection = null
-    if(this.transport !== LongPoll){
-      this.encode = opts.encode || this.defaultEncoder
-      this.decode = opts.decode || this.defaultDecoder
-    } else {
-      this.encode = this.defaultEncoder
-      this.decode = this.defaultDecoder
-    }
+    this.customEncode = opts.encode
+    this.customDecode = opts.decode
+    this.useSerializers()
     let awaitingConnectionOnPageShow = null
     if(phxWindow && phxWindow.addEventListener){
       phxWindow.addEventListener("pagehide", _e => {
@@ -260,6 +256,21 @@ export default class Socket {
   getLongPollTransport(){ return LongPoll }
 
   /**
+   * Picks the encode and decode functions of the current transport: the `encode` and `decode`
+   * options apply to every transport but LongPoll, which always uses the default serializer.
+   * @private
+   */
+  useSerializers(){
+    if(this.transport !== LongPoll){
+      this.encode = this.customEncode || this.defaultEncoder
+      this.decode = this.customDecode || this.defaultDecoder
+    } else {
+      this.encode = this.defaultEncoder
+      this.decode = this.defaultDecoder
+    }
+  }
+
+  /**
    * Disconnects and replaces the active transport
    *
    * @param {Function} newTransport - The new transport class to instantiate
@@ -272,6 +283,7 @@ export default class Socket {
     this.reconnectTimer.reset()
     // replaced first, as channel error callbacks below can already connect again
     this.transport = newTransport
+    this.useSerializers()
     const connection = this.connection
     if(connection){
       const wasOpen = connection.isOpen()
