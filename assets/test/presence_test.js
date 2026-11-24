@@ -225,6 +225,21 @@ describe("instance", () => {
     expect(presence.list(listByFirst)).toEqual([{id: 2, phx_ref: "2"}])
   })
 
+  it("does not change presences that list returned earlier", () => {
+    let presence = new Presence(channelStub)
+    channelStub.trigger("presence_state", {
+      u1: {metas: [{id: 1, phx_ref: "1"}, {id: 1, phx_ref: "1.2"}]},
+    })
+    let listed = presence.list()
+    let listedBefore = clone(listed)
+
+    channelStub.trigger("presence_diff", {joins: {}, leaves: {u1: {metas: [{id: 1, phx_ref: "1"}]}}})
+
+    expect(listed).toEqual(listedBefore)
+    expect(presence.list()).toEqual([{metas: [{id: 1, phx_ref: "1.2"}]}])
+    expect(presence.list()[0].metas[0]).toBe(listed[0].metas[1])
+  })
+
   it("applies pending diff if state is not yet synced", () => {
     let presence = new Presence(channelStub)
     let onJoins = []

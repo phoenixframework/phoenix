@@ -25,7 +25,7 @@ export default class Presence {
       this.state = Presence.syncState(this.state, newState, onJoin, onLeave)
 
       this.pendingDiffs.forEach(diff => {
-        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
+        this.state = Presence.applyDiff(this.state, diff, onJoin, onLeave)
       })
       this.pendingDiffs = []
       onSync()
@@ -37,7 +37,7 @@ export default class Presence {
       if(this.inPendingSyncState()){
         this.pendingDiffs.push(diff)
       } else {
-        this.state = Presence.syncDiff(this.state, diff, onJoin, onLeave)
+        this.state = Presence.applyDiff(this.state, diff, onJoin, onLeave)
         onSync()
       }
     })
@@ -95,7 +95,7 @@ export default class Presence {
         joins[key] = newPresence
       }
     })
-    return this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
+    return this.applyDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
   }
 
   /**
@@ -108,8 +108,12 @@ export default class Presence {
    * @returns {Presence}
    */
   static syncDiff(state, diff, onJoin, onLeave){
-    // a new state, like syncState returns, so that the given state does not change
-    state = this.copyToNullProtoObj(state)
+    return this.applyDiff(this.copyToNullProtoObj(state), diff, onJoin, onLeave)
+  }
+
+  // Changes `state` in place, so the caller must own it.
+  // Presence objects are replaced, never changed, because list() results share them.
+  static applyDiff(state, diff, onJoin, onLeave){
     let {joins, leaves} = this.clone(diff)
     if(!onJoin){ onJoin = function (){ } }
     if(!onLeave){ onLeave = function (){ } }
@@ -127,11 +131,10 @@ export default class Presence {
     this.map(leaves, (key, leftPresence) => {
       if(!state[key]){ return }
       let refsToRemove = leftPresence.metas.map(m => m.phx_ref)
-      // a copy of the presence, as the given state can share it
-      let currentPresence = this.clone(state[key])
-      currentPresence.metas = currentPresence.metas.filter(p => {
-        return refsToRemove.indexOf(p.phx_ref) < 0
-      })
+      let currentPresence = {
+        ...state[key],
+        metas: state[key].metas.filter(p => refsToRemove.indexOf(p.phx_ref) < 0)
+      }
       state[key] = currentPresence
       onLeave(key, currentPresence, leftPresence)
       if(currentPresence.metas.length === 0){
