@@ -108,7 +108,8 @@ export default class Presence {
    * @returns {Presence}
    */
   static syncDiff(state, diff, onJoin, onLeave){
-    state = this.toNullProtoObj(state)
+    // a new state, like syncState returns, so that the given state does not change
+    state = this.copyToNullProtoObj(state)
     let {joins, leaves} = this.clone(diff)
     if(!onJoin){ onJoin = function (){ } }
     if(!onLeave){ onLeave = function (){ } }
@@ -124,12 +125,14 @@ export default class Presence {
       onJoin(key, currentPresence, newPresence)
     })
     this.map(leaves, (key, leftPresence) => {
-      let currentPresence = state[key]
-      if(!currentPresence){ return }
+      if(!state[key]){ return }
       let refsToRemove = leftPresence.metas.map(m => m.phx_ref)
+      // a copy of the presence, as the given state can share it
+      let currentPresence = this.clone(state[key])
       currentPresence.metas = currentPresence.metas.filter(p => {
         return refsToRemove.indexOf(p.phx_ref) < 0
       })
+      state[key] = currentPresence
       onLeave(key, currentPresence, leftPresence)
       if(currentPresence.metas.length === 0){
         delete state[key]
@@ -168,6 +171,10 @@ export default class Presence {
   // (breaking change for the lower-level static API)
   static toNullProtoObj(obj){
     if(Object.getPrototypeOf(obj) === null){ return obj }
+    return this.copyToNullProtoObj(obj)
+  }
+
+  static copyToNullProtoObj(obj){
     let cleaned = Object.create(null)
     Object.getOwnPropertyNames(obj).forEach(key => {
       cleaned[key] = obj[key]

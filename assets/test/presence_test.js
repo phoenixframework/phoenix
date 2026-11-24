@@ -130,6 +130,31 @@ describe("syncDiff", () => {
       u1: {metas: [{id: 1, phx_ref: "1.2"}]},
     })
   })
+
+  it("does not change the state that it is given", () => {
+    let state = Presence.syncState({}, {
+      u1: {metas: [{id: 1, phx_ref: "1"}, {id: 1, phx_ref: "1.2"}]},
+      u2: {metas: [{id: 2, phx_ref: "2"}]},
+    })
+    let stateBefore = clone(state)
+
+    let newState = Presence.syncDiff(state, {
+      joins: {u3: {metas: [{id: 3, phx_ref: "3"}]}},
+      leaves: {u1: {metas: [{id: 1, phx_ref: "1"}]}, u2: {metas: [{id: 2, phx_ref: "2"}]}},
+    })
+
+    expect(newState).not.toBe(state)
+    expect(state).toEqual(stateBefore)
+    expect(newState).toEqual({
+      u1: {metas: [{id: 1, phx_ref: "1.2"}]},
+      u3: {metas: [{id: 3, phx_ref: "3"}]},
+    })
+
+    let plainState = {u1: {metas: [{id: 1, phx_ref: "1"}, {id: 1, phx_ref: "1.2"}]}}
+    let plainStateBefore = clone(plainState)
+    Presence.syncDiff(plainState, {joins: {}, leaves: {u1: {metas: [{id: 1, phx_ref: "1"}]}}})
+    expect(plainState).toEqual(plainStateBefore)
+  })
 })
 
 describe("keys colliding with Object.prototype properties", () => {
