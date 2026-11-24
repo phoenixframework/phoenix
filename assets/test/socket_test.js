@@ -667,6 +667,33 @@ describe("with transports", function (){
     })
   })
 
+  describe("replaceTransport serializers", function (){
+    it("uses the default serializer over LongPoll and the custom one again over the WebSocket", function (){
+      const encode = jest.fn()
+      const decode = jest.fn()
+      socket = new Socket("/socket", {transport: StubWebSocket, encode, decode})
+      expect(socket.encode).toBe(encode)
+      expect(socket.decode).toBe(decode)
+
+      socket.replaceTransport(LongPoll)
+      expect(socket.encode).toBe(socket.defaultEncoder)
+      expect(socket.decode).toBe(socket.defaultDecoder)
+
+      socket.replaceTransport(StubWebSocket)
+      expect(socket.encode).toBe(encode)
+      expect(socket.decode).toBe(decode)
+    })
+
+    it("keeps the default serializer when there are no custom ones", function (){
+      socket = new Socket("/socket", {transport: StubWebSocket})
+      socket.replaceTransport(LongPoll)
+      expect(socket.encode).toBe(socket.defaultEncoder)
+      socket.replaceTransport(StubWebSocket)
+      expect(socket.encode).toBe(socket.defaultEncoder)
+      expect(socket.decode).toBe(socket.defaultDecoder)
+    })
+  })
+
   describe("protocol", function (){
     beforeEach(function (){
       socket = new Socket("/socket")
