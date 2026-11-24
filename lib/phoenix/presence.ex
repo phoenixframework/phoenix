@@ -189,8 +189,8 @@ defmodule Phoenix.Presence do
 
   """
 
-  @type presences :: %{String.t() => %{metas: [map()]}}
-  @type presence :: %{key: String.t(), meta: map()}
+  @type presences :: %{String.t() => presence}
+  @type presence :: %{required(:metas) => [map()], optional(any()) => any()}
   @type topic :: String.t()
 
   @doc """
@@ -297,12 +297,18 @@ defmodule Phoenix.Presence do
   devices, could return:
 
       iex> MyPresence.get_by_key("room:1", "user1")
-      [%{name: "User 1", metas: [%{device: "Desktop"}, %{device: "Mobile"}]}]
+      %{metas: [%{device: "Desktop", phx_ref: ...}, %{device: "Mobile", phx_ref: ...}]}
+
+  An empty list is returned if there are no presences for the given key:
+
+      iex> MyPresence.get_by_key("room:1", "unknown")
+      []
 
   Like `c:list/1`, the presence metadata is passed to the `fetch`
   callback of your presence module to fetch any additional information.
+  Any keys added by `fetch` are returned alongside `:metas`.
   """
-  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: [presence]
+  @callback get_by_key(Phoenix.Socket.t() | topic, key :: String.t()) :: presence | []
 
   @doc """
   Extend presence information with additional data.
