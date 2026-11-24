@@ -1,8 +1,25 @@
 var Phoenix = (() => {
   var __defProp = Object.defineProperty;
+  var __defProps = Object.defineProperties;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
   var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __propIsEnum = Object.prototype.propertyIsEnumerable;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __spreadValues = (a, b) => {
+    for (var prop in b || (b = {}))
+      if (__hasOwnProp.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    if (__getOwnPropSymbols)
+      for (var prop of __getOwnPropSymbols(b)) {
+        if (__propIsEnum.call(b, prop))
+          __defNormalProp(a, prop, b[prop]);
+      }
+    return a;
+  };
+  var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -870,7 +887,7 @@ var Phoenix = (() => {
         this.joinRef = this.channel.joinRef();
         this.state = _Presence.syncState(this.state, newState, onJoin, onLeave);
         this.pendingDiffs.forEach((diff) => {
-          this.state = _Presence.syncDiff(this.state, diff, onJoin, onLeave);
+          this.state = _Presence.applyDiff(this.state, diff, onJoin, onLeave);
         });
         this.pendingDiffs = [];
         onSync();
@@ -880,7 +897,7 @@ var Phoenix = (() => {
         if (this.inPendingSyncState()) {
           this.pendingDiffs.push(diff);
         } else {
-          this.state = _Presence.syncDiff(this.state, diff, onJoin, onLeave);
+          this.state = _Presence.applyDiff(this.state, diff, onJoin, onLeave);
           onSync();
         }
       });
@@ -938,7 +955,7 @@ var Phoenix = (() => {
           joins[key] = newPresence;
         }
       });
-      return this.syncDiff(state, { joins, leaves }, onJoin, onLeave);
+      return this.applyDiff(state, { joins, leaves }, onJoin, onLeave);
     }
     /**
      *
@@ -950,7 +967,11 @@ var Phoenix = (() => {
      * @returns {Presence}
      */
     static syncDiff(state, diff, onJoin, onLeave) {
-      state = this.toNullProtoObj(state);
+      return this.applyDiff(this.copyToNullProtoObj(state), diff, onJoin, onLeave);
+    }
+    // Changes `state` in place, so the caller must own it.
+    // Presence objects are replaced, never changed, because list() results share them.
+    static applyDiff(state, diff, onJoin, onLeave) {
       let { joins, leaves } = this.clone(diff);
       if (!onJoin) {
         onJoin = function() {
@@ -971,14 +992,14 @@ var Phoenix = (() => {
         onJoin(key, currentPresence, newPresence);
       });
       this.map(leaves, (key, leftPresence) => {
-        let currentPresence = state[key];
-        if (!currentPresence) {
+        if (!state[key]) {
           return;
         }
         let refsToRemove = leftPresence.metas.map((m) => m.phx_ref);
-        currentPresence.metas = currentPresence.metas.filter((p) => {
-          return refsToRemove.indexOf(p.phx_ref) < 0;
+        let currentPresence = __spreadProps(__spreadValues({}, state[key]), {
+          metas: state[key].metas.filter((p) => refsToRemove.indexOf(p.phx_ref) < 0)
         });
+        state[key] = currentPresence;
         onLeave(key, currentPresence, leftPresence);
         if (currentPresence.metas.length === 0) {
           delete state[key];
@@ -1018,6 +1039,9 @@ var Phoenix = (() => {
       if (Object.getPrototypeOf(obj) === null) {
         return obj;
       }
+      return this.copyToNullProtoObj(obj);
+    }
+    static copyToNullProtoObj(obj) {
       let cleaned = /* @__PURE__ */ Object.create(null);
       Object.getOwnPropertyNames(obj).forEach((key) => {
         cleaned[key] = obj[key];
