@@ -2,6 +2,7 @@ import {
   global,
   phxWindow,
   CHANNEL_EVENTS,
+  DEFAULT_RESUME_AFTER_MS,
   DEFAULT_TIMEOUT,
   DEFAULT_VSN,
   SOCKET_STATES,
@@ -82,6 +83,18 @@ import Connection from "./connection"
  * }
  * ````
  *
+ * @param {Function} [opts.resumeAfterMs] - The optional function that returns the millisec
+ * interval between attempts to retry a failed long-poll request while the server keeps
+ * the session.
+ *
+ * Defaults to stepped backoff of:
+ *
+ * ```javascript
+ * function(tries){
+ *   return [100, 500, 1000, 2000][tries - 1] || 5000
+ * }
+ * ```
+ *
  * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
  *
  * ```javascript
@@ -120,7 +133,7 @@ import Connection from "./connection"
 */
 export default class Socket {
   constructor(endPoint, opts = {}){
-    this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
+    this.stateChangeCallbacks = {open: [], close: [], error: [], message: [], suspend: [], resume: []}
     this.channels = []
     this.sendBuffer = []
     this.ref = 0
@@ -197,6 +210,7 @@ export default class Socket {
       this.logger = (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
     }
     this.longpollerTimeout = opts.longpollerTimeout || 20000
+    this.resumeAfterMs = opts.resumeAfterMs || DEFAULT_RESUME_AFTER_MS
     this.params = closure(opts.params || {})
     this.endPoint = `${endPoint}/${TRANSPORTS.websocket}`
     this.vsn = opts.vsn || DEFAULT_VSN
@@ -409,6 +423,30 @@ export default class Socket {
   }
 
   /**
+   * Registers a callback when the transport is interrupted but keeps its session
+   * and retries. Channels remain joined and pushes are buffered by the transport.
+   * Currently supported by LongPoll. A lost session instead emits error/close.
+   * @param {Function} callback
+   */
+  onSuspend(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.suspend.push([ref, callback])
+    return ref
+  }
+
+  /**
+   * Registers a callback when a suspended transport recovers the same session,
+   * after delivering the incoming messages buffered at resumption. It does
+   * not wait for replies to outgoing pushes.
+   * @param {Function} callback
+   */
+  onResume(callback){
+    let ref = this.makeRef()
+    this.stateChangeCallbacks.resume.push([ref, callback])
+    return ref
+  }
+
+  /**
    * Registers callbacks for connection message events
    * @param {Function} callback
    */
@@ -470,6 +508,7 @@ export default class Socket {
     const transport = new this.transport(this.endPointURL(), protocols)
     transport.binaryType = this.binaryType
     transport.timeout = this.longpollerTimeout
+    transport.resumeAfterMs = this.resumeAfterMs
     this.connection = new Connection(this, transport)
     // connect can replace an ended connection that is still open while its buffer drains, but the
     // channels joined over it need to rejoin on the new connection instead of waiting for it to close
@@ -713,6 +752,28 @@ export default class Socket {
     })
     // callbacks can replace the connection, in which case only its own joins are errored
     this.triggerChanError("connection_error", connection)
+  }
+
+  /** @private */
+  onConnSuspend(connection){
+    if(!this.stillUses(connection) || !connection.isOpen() || connection.suspended){ return }
+    connection.suspended = true
+    if(this.hasLogger()) this.log("transport", "suspended")
+    for(let [, callback] of this.stateChangeCallbacks.suspend.slice()){
+      if(!this.stillUses(connection) || !connection.isOpen()){ break }
+      callback()
+    }
+  }
+
+  /** @private */
+  onConnResume(connection){
+    if(!this.stillUses(connection) || !connection.isOpen() || !connection.suspended){ return }
+    connection.suspended = false
+    if(this.hasLogger()) this.log("transport", "resumed")
+    for(let [, callback] of this.stateChangeCallbacks.resume.slice()){
+      if(!this.stillUses(connection) || !connection.isOpen()){ break }
+      callback()
+    }
   }
 
   /**

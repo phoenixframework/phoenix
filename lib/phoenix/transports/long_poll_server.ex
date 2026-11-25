@@ -24,7 +24,19 @@ defmodule Phoenix.Transports.LongPoll.Server do
         {:ok, handler_state} = handler.init(handler_state)
 
         state = %{
-          buffer: [],
+          # The messages the client did not acknowledge yet, as {seq, payload}.
+          # We number them starting at 1 and send all of them with each poll,
+          # together with the number of the last one, until the client acknowledges
+          # them, as the response of a poll can get lost.
+          out: :queue.new(),
+          # the number of the last message we numbered, sent and the client acknowledged
+          out_seq: 0,
+          sent: 0,
+          acked: 0,
+          # when we sent the oldest message the client did not acknowledge yet
+          sent_at: nil,
+          # the number of the last message we received, to drop the ones the client resends
+          in_seq: 0,
           handler: {handler, handler_state},
           window_ms: trunc(window_ms * 1.5),
           pubsub_server: endpoint.config(:pubsub_server),
@@ -45,8 +57,30 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
+  # The client numbers its messages and sends them again when it did not get the
+  # response to its POST, so we drop the ones we already received.
+  def handle_info({:dispatch, client_ref, _body, ref, seq}, %{in_seq: in_seq} = state)
+      when seq <= in_seq do
+    broadcast_from!(state, client_ref, {:ok, ref})
+    {:noreply, state}
+  end
+
+  # We cannot process the message, as we lost the ones before it.
+  def handle_info({:dispatch, client_ref, _body, ref, seq}, %{in_seq: in_seq} = state)
+      when seq > in_seq + 1 do
+    broadcast_from!(state, client_ref, {:error, ref})
+    {:stop, {:shutdown, :out_of_order}, state}
+  end
+
+  def handle_info({:dispatch, client_ref, body, ref, _seq}, state) do
+    handle_info({:dispatch, client_ref, body, ref}, state)
+  end
+
+  # TODO: Merge into the clause above in Phoenix 1.9. Older nodes and
+  # clients dispatch without seq.
   def handle_info({:dispatch, client_ref, {body, opcode}, ref}, state) do
     %{handler: {handler, handler_state}} = state
+    state = %{state | in_seq: state.in_seq + 1}
 
     case handler.handle_in({body, opcode: opcode}, handler_state) do
       {:reply, status, {reply_opcode, reply}, handler_state} ->
@@ -72,14 +106,32 @@ defmodule Phoenix.Transports.LongPoll.Server do
     {:noreply, state}
   end
 
-  def handle_info({:flush, client_ref, ref}, state) do
-    case state.buffer do
-      [] ->
-        {:noreply, %{state | client_ref: {client_ref, ref}, last_client_poll: now_ms()}}
+  # The client acknowledges the last message it received with each poll, so we send
+  # the messages after it until it did, as the response of a poll can get lost.
+  def handle_info({:flush, client_ref, ref, ack}, state) do
+    state = acknowledge(%{state | last_client_poll: now_ms()}, ack)
 
-      buffer ->
-        broadcast_from!(state, client_ref, {:messages, Enum.reverse(buffer), ref})
-        {:noreply, %{state | client_ref: nil, last_client_poll: now_ms(), buffer: []}}
+    if :queue.is_empty(state.out) do
+      {:noreply, %{state | client_ref: {client_ref, ref}}}
+    else
+      broadcast_from!(state, client_ref, {:messages, payloads(state), ref, state.out_seq})
+      {:noreply, %{sent(state) | client_ref: nil}}
+    end
+  end
+
+  # Backwards compat: clients that don't acknowledge get each message once.
+  #
+  # TODO: Remove in Phoenix 1.9. Older nodes and clients flush without ack.
+  def handle_info({:flush, client_ref, ref}, state) do
+    # we assume the client received the messages we sent before, like it does
+    state = acknowledge(%{state | last_client_poll: now_ms()}, state.sent)
+
+    if :queue.is_empty(state.out) do
+      {:noreply, %{state | client_ref: {client_ref, ref}}}
+    else
+      broadcast_from!(state, client_ref, {:messages, payloads(state), ref})
+      state = sent(state)
+      {:noreply, %{acknowledge(state, state.out_seq) | client_ref: nil}}
     end
   end
 
@@ -94,11 +146,16 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   def handle_info(:shutdown_if_inactive, state) do
-    if now_ms() - state.last_client_poll > state.window_ms do
-      {:stop, {:shutdown, :inactive}, state}
-    else
-      schedule_inactive_shutdown(state.window_ms)
-      {:noreply, state}
+    cond do
+      now_ms() - state.last_client_poll > state.window_ms ->
+        {:stop, {:shutdown, :inactive}, state}
+
+      unacknowledged?(state) ->
+        {:stop, {:shutdown, :unacknowledged}, state}
+
+      true ->
+        schedule_inactive_shutdown(state.window_ms)
+        {:noreply, state}
     end
   end
 
@@ -153,9 +210,46 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   defp buffer_reply(state, reply) do
-    notify_client_now_available(state)
-    {:noreply, update_in(state.buffer, &[reply | &1])}
+    # A client that does not acknowledge must not be able to
+    # grow the buffer indefinitely, so we close when it did not acknowledge
+    # the messages we sent within the window.
+    if unacknowledged?(state) do
+      {:stop, {:shutdown, :unacknowledged}, state}
+    else
+      notify_client_now_available(state)
+      seq = state.out_seq + 1
+      {:noreply, %{state | out: :queue.in({seq, reply}, state.out), out_seq: seq}}
+    end
   end
+
+  defp payloads(state) do
+    for {_seq, payload} <- :queue.to_list(state.out), do: payload
+  end
+
+  # Drops the messages up to the acknowledged one. A late poll can acknowledge
+  # an older message, and a client cannot acknowledge messages we did not send.
+  defp acknowledge(state, ack) when ack > state.acked do
+    ack = min(ack, state.sent)
+    # while the client makes progress, the rest of the messages get a new window
+    sent_at = if ack < state.sent, do: now_ms()
+    %{state | out: drop_until(state.out, ack), acked: ack, sent_at: sent_at}
+  end
+
+  defp acknowledge(state, _ack), do: state
+
+  defp drop_until(queue, ack) do
+    case :queue.peek(queue) do
+      {:value, {seq, _payload}} when seq <= ack -> drop_until(:queue.drop(queue), ack)
+      _ -> queue
+    end
+  end
+
+  defp sent(state) do
+    %{state | sent: state.out_seq, sent_at: state.sent_at || now_ms()}
+  end
+
+  defp unacknowledged?(%{sent_at: nil}), do: false
+  defp unacknowledged?(state), do: now_ms() - state.sent_at > state.window_ms
 
   defp notify_client_now_available(state) do
     case state.client_ref do
@@ -164,7 +258,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
-  defp now_ms, do: System.system_time(:millisecond)
+  defp now_ms, do: System.monotonic_time(:millisecond)
 
   defp schedule_inactive_shutdown(window_ms) do
     Process.send_after(self(), :shutdown_if_inactive, window_ms)

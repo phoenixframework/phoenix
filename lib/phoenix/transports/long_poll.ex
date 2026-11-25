@@ -8,6 +8,10 @@ defmodule Phoenix.Transports.LongPoll do
   @max_poll_batch_size 100
   @connect_info_opts [:check_csrf]
   @token_header "x-phoenix-longpoll-token"
+  # The params clients use to number their messages and to mark the first polls
+  # after a failed request with "phx:resume", which are not for the socket.
+  # We don't check resumed connections, so we treat these polls like any other.
+  @transport_params ["phx:ack", "phx:seq", "phx:resume"]
 
   import Plug.Conn
   alias Phoenix.Socket.{V1, V2, Transport}
@@ -82,27 +86,39 @@ defmodule Phoenix.Transports.LongPoll do
     case read_body(conn, []) do
       {:ok, body, conn} ->
         # We need to match on both v1 and v2 protocol, as well as wrap for backwards compat
-        status =
+        {status, seq} =
           case get_req_header(conn, "content-type") do
             ["application/x-ndjson"] ->
-              body
-              |> String.splitter(["\n", "\r\n"])
-              |> Stream.take(@max_poll_batch_size)
-              |> Enum.find_value(fn part ->
-                msg =
-                  case part do
-                    "[" <> _ = txt -> {txt, :text}
-                    base64 -> {safe_decode64!(base64), :binary}
-                  end
+              # the seq of the first message, sent by clients that resend messages
+              #
+              # TODO: Require seq in Phoenix 1.9. Older clients don't send it. Newer clients
+              # only omit it after their session reached a node with an older server.
+              seq = int_param(conn, "phx:seq")
 
-                transport_dispatch(endpoint, server_ref, msg, opts)
-              end)
+              status =
+                body
+                |> String.splitter(["\n", "\r\n"])
+                |> Stream.take(@max_poll_batch_size)
+                |> Stream.with_index()
+                |> Enum.find_value(fn {part, index} ->
+                  msg =
+                    case part do
+                      "[" <> _ = txt -> {txt, :text}
+                      base64 -> {safe_decode64!(base64), :binary}
+                    end
+
+                  transport_dispatch(endpoint, server_ref, msg, seq && seq + index, opts)
+                end)
+
+              {status, seq}
 
             _ ->
-              transport_dispatch(endpoint, server_ref, {body, :text}, opts)
+              {transport_dispatch(endpoint, server_ref, {body, :text}, nil, opts), nil}
           end
 
-        conn |> put_status(status || :ok) |> status_json()
+        # the seq tells clients that we drop the messages they send again
+        extra = if seq, do: %{"seq" => seq}, else: %{}
+        conn |> put_status(status || :ok) |> status_json(extra)
 
       _ ->
         raise Plug.BadRequestError
@@ -117,9 +133,16 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  defp transport_dispatch(endpoint, server_ref, body, opts) do
+  defp transport_dispatch(endpoint, server_ref, body, seq, opts) do
     ref = make_ref()
-    broadcast_from!(endpoint, server_ref, {:dispatch, client_ref(server_ref), body, ref})
+
+    # TODO: Always send seq in Phoenix 1.9, see publish/4
+    message =
+      if seq,
+        do: {:dispatch, client_ref(server_ref), body, ref, seq},
+        else: {:dispatch, client_ref(server_ref), body, ref}
+
+    broadcast_from!(endpoint, server_ref, message)
 
     receive do
       {:ok, ^ref} -> nil
@@ -144,7 +167,8 @@ defmodule Phoenix.Transports.LongPoll do
     connect_info =
       Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
 
-    arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
+    params = Map.drop(conn.params, @transport_params)
+    arg = {endpoint, handler, opts, params, priv_topic, connect_info}
     spec = {Phoenix.Transports.LongPoll.Server, arg}
 
     case DynamicSupervisor.start_child(Phoenix.Transports.LongPoll.Supervisor, spec) do
@@ -154,39 +178,100 @@ defmodule Phoenix.Transports.LongPoll do
       {:ok, server_pid} ->
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = sign_token(endpoint, data, opts)
-        conn |> put_status(:gone) |> status_token_messages_json(token, [])
+        # The "last" field tells clients that we number our messages and keep them
+        # until they are acknowledged, so they can retry failed requests.
+        # A new session has not sent any messages yet, so it is 0.
+        conn |> put_status(:gone) |> status_token_messages_json(token, [], 0)
     end
   end
 
   defp listen(conn, server_ref, token, endpoint, opts) do
     ref = make_ref()
     client_ref = client_ref(server_ref)
-    broadcast_from!(endpoint, server_ref, {:flush, client_ref, ref})
 
-    {status, messages} =
+    # the last message the client received, sent by clients that acknowledge
+    ack = int_param(conn, "phx:ack")
+
+    flush =
+      case ack do
+        # TODO: Remove the nil case in Phoenix 1.9. Older clients don't send an ack.
+        # Newer clients only omit it after their session reached a node with an older server.
+        nil -> {:flush, client_ref, ref}
+        ack -> {:flush, client_ref, ref, ack}
+      end
+
+    broadcast_from!(endpoint, server_ref, flush)
+
+    {status, messages, last} =
       receive do
+        # Older servers, and newer servers answering a flush without ack,
+        # reply without the number of the last message.
+        #
+        # TODO: Remove the clauses without last in Phoenix 1.9
         {:messages, messages, ^ref} ->
-          {:ok, messages}
+          {:ok, messages, nil}
+
+        {:messages, messages, ^ref, last} ->
+          {:ok, messages, last}
 
         {:now_available, ^ref} ->
-          broadcast_from!(endpoint, server_ref, {:flush, client_ref, ref})
+          broadcast_from!(endpoint, server_ref, flush)
 
           receive do
-            {:messages, messages, ^ref} -> {:ok, messages}
+            {:messages, messages, ^ref} -> {:ok, messages, nil}
+            {:messages, messages, ^ref, last} -> {:ok, messages, last}
           after
-            opts[:window_ms] ->
-              broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-              {:no_content, []}
+            opts[:window_ms] -> expire(endpoint, server_ref, client_ref, ref, ack, opts)
           end
       after
-        opts[:window_ms] ->
-          broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-          {:no_content, []}
+        opts[:window_ms] -> expire(endpoint, server_ref, client_ref, ref, ack, opts)
       end
 
     conn
     |> put_status(status)
-    |> status_token_messages_json(token, messages)
+    |> status_token_messages_json(token, messages, last)
+  end
+
+  # Stops waiting for messages. The session can still answer our flush afterwards.
+  # It keeps the messages until the client acknowledges them, so the client gets
+  # them with its next poll. Without messages, the last message is the one the client
+  # acknowledged. It tells the client that we keep the messages, like we do with messages.
+  defp expire(endpoint, server_ref, client_ref, ref, ack, _opts) when is_integer(ack) do
+    broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
+    {:no_content, [], ack}
+  end
+
+  # For clients that don't acknowledge, the session drops the messages it sends.
+  # It handles our requests in order, so we ask it to echo a subscribe: if it
+  # answered the flush, the messages arrive before the echo.
+  # See https://github.com/phoenixframework/phoenix/pull/6901.
+  #
+  # TODO: Remove in Phoenix 1.9, together with the flush without ack
+  defp expire(endpoint, server_ref, client_ref, ref, nil, opts) do
+    echo_ref = make_ref()
+    broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
+    broadcast_from!(endpoint, server_ref, {:subscribe, client_ref, echo_ref})
+
+    receive do
+      # The echo follows the messages. We deliberately leave it in the mailbox,
+      # as waiting for it would delay the response. With Cowboy, the request
+      # process stops after the response. Bandit ignores unhandled messages.
+      {:messages, messages, ^ref} -> {:ok, messages, nil}
+      {:subscribe, ^echo_ref} -> {:no_content, [], nil}
+    after
+      # We cannot tell if the session still answers the flush, so we fail
+      # and the client starts a new session instead of missing messages.
+      opts[:pubsub_timeout_ms] -> {:gone, [], nil}
+    end
+  end
+
+  defp int_param(conn, key) do
+    with value when is_binary(value) <- conn.params[key],
+         {int, ""} <- Integer.parse(value) do
+      int
+    else
+      _ -> nil
+    end
   end
 
   # Accept the token from either location so that newer clients can use the
@@ -286,12 +371,22 @@ defmodule Phoenix.Transports.LongPoll do
 
   defp maybe_auth_token_from_header(conn, _), do: conn
 
-  defp status_json(conn) do
-    send_json(conn, %{"status" => conn.status || 200})
+  defp status_json(conn, extra \\ %{}) do
+    send_json(conn, Map.put(extra, "status", conn.status || 200))
   end
 
-  defp status_token_messages_json(conn, token, messages) do
+  # TODO: Remove in Phoenix 1.9, when every poll has a last message
+  defp status_token_messages_json(conn, token, messages, nil) do
     send_json(conn, %{"status" => conn.status || 200, "token" => token, "messages" => messages})
+  end
+
+  defp status_token_messages_json(conn, token, messages, last) do
+    send_json(conn, %{
+      "status" => conn.status || 200,
+      "token" => token,
+      "messages" => messages,
+      "last" => last
+    })
   end
 
   defp send_json(conn, data) do
