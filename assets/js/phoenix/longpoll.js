@@ -43,6 +43,9 @@ export default class LongPoll {
     // the pending requests and queued messages, which are cancelled when we stop
     this.reqs = new Set()
     this.messageTimers = new Set()
+    // set while the messages of a poll wait for delivery, see scheduleMessage,
+    // so that a recovered POST does not report resumption before them
+    this.awaitingMessages = false
     this.awaitingBatchAck = false
     this.currentBatch = null
     this.currentBatchTimer = null
@@ -131,6 +134,8 @@ export default class LongPoll {
       } else {
         status = 0
       }
+      // A POST can recover while these messages are still queued for delivery.
+      if(status === 200){ this.awaitingMessages = true }
       switch(status){
         case 200:
           if(last !== undefined){
@@ -172,6 +177,7 @@ export default class LongPoll {
           // Restore only after delivering the messages, so hooks see their updates.
           // Closing from a message callback cancels this task as well.
           this.scheduleMessage(() => {
+            this.awaitingMessages = false
             this.succeeded("GET")
             this.poll()
           })
@@ -318,7 +324,7 @@ export default class LongPoll {
   succeeded(method){
     this.retries[method] = 0
     // A successful poll must not hide an outstanding failed POST, or vice versa.
-    if(this.interrupted && this.retries.GET === 0 && this.retries.POST === 0){
+    if(this.interrupted && !this.awaitingMessages && this.retries.GET === 0 && this.retries.POST === 0){
       this.interrupted = false
       this.onresume()
     }
@@ -341,6 +347,7 @@ export default class LongPoll {
     for(let {req} of reqs){ req && req.abort() }
     for(let timer of this.messageTimers){ clearTimeout(timer) }
     this.messageTimers.clear()
+    this.awaitingMessages = false
     for(let timer of this.retryTimers){ clearTimeout(timer) }
     this.retryTimers.clear()
     this.interrupted = false

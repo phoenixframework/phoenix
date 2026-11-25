@@ -806,6 +806,27 @@ describe("LongPoll resuming", () => {
     expect(params(last("GET"))["phx:ack"]).toBe("2")
   })
 
+  it("waits for queued messages and their promises when a POST recovers", async () => {
+    open()
+    longpoll.onmessage = ({data}) => {
+      events.push(data)
+      Promise.resolve().then(() => events.push(`settled ${data}`))
+    }
+    longpoll.send("push")
+    jest.advanceTimersByTime(0)
+    respond(last("POST"), null)
+    jest.advanceTimersByTime(100)
+    respond(last("POST"), null)
+    jest.advanceTimersByTime(500)
+
+    respond(last("GET"), {status: 200, token: "token", messages: ["a", "b"], last: 2})
+    respond(last("POST"), {status: 200, seq: 1})
+    expect(events).toEqual(["open", "suspend"])
+
+    await jest.advanceTimersByTimeAsync(0)
+    expect(events).toEqual(["open", "suspend", "a", "settled a", "b", "settled b", "resume"])
+  })
+
   it("does not deliver already received messages again", () => {
     open()
     respond(last("GET"), {status: 200, token: "token", messages: ["a"], last: 1})

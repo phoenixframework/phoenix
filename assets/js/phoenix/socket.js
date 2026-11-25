@@ -421,7 +421,9 @@ export default class Socket {
   }
 
   /**
-   * Registers a callback when a suspended transport recovers the same session.
+   * Registers a callback when a suspended transport recovers the same session,
+   * after delivering the incoming messages buffered at resumption. It does
+   * not wait for replies to outgoing pushes.
    * @param {Function} callback
    */
   onResume(callback){
