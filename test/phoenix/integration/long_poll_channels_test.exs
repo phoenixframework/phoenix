@@ -114,7 +114,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
     # the params of the transport are not for the socket
     def connect(params, _socket)
-        when is_map_key(params, "phx:ack") or is_map_key(params, "phx:seq") do
+        when is_map_key(params, "phx:ack") or is_map_key(params, "phx:seq") or
+               is_map_key(params, "phx:resume") do
       {:error, :transport_params}
     end
 
@@ -798,7 +799,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         end
 
         test "#{@mode}: does not pass the params of the transport to the socket" do
-          resp = poll(:get, "/ws", "2.0.0", %{"phx:ack" => "0", "phx:seq" => "1"})
+          params = %{"phx:ack" => "0", "phx:seq" => "1", "phx:resume" => "1"}
+          resp = poll(:get, "/ws", "2.0.0", params)
           assert resp.body["status"] == 410
           assert resp.body["token"]
         end

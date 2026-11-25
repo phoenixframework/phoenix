@@ -110,6 +110,9 @@ export default class LongPoll {
       headers["X-Phoenix-AuthToken"] = this.authToken
     }
     const params = this.resumable ? {"phx:ack": this.ack} : {}
+    // A poll after a failed one resumes the session. The server can check the
+    // connection again, as the client may have lost access in the meantime.
+    if(this.resumable && this.retries.GET > 0){ params["phx:resume"] = 1 }
     this.ajax("GET", headers, null, params, () => this.retryOr("GET", () => this.poll(), () => this.ontimeout()), resp => {
       if(resp){
         var {status, token, messages, last} = resp

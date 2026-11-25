@@ -8,8 +8,10 @@ defmodule Phoenix.Transports.LongPoll do
   @max_poll_batch_size 100
   @connect_info_opts [:check_csrf]
   @token_header "x-phoenix-longpoll-token"
-  # the params clients use to number their messages, which are not for the socket
-  @transport_params ["phx:ack", "phx:seq"]
+  # The params clients use to number their messages and to mark the first polls
+  # after a failed request with "phx:resume", which are not for the socket.
+  # We don't check resumed connections, so we treat these polls like any other.
+  @transport_params ["phx:ack", "phx:seq", "phx:resume"]
 
   import Plug.Conn
   alias Phoenix.Socket.{V1, V2, Transport}

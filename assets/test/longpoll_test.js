@@ -861,6 +861,25 @@ describe("LongPoll resuming", () => {
     expect(params(last("GET"))["phx:ack"]).toBe("2")
   })
 
+  it("resumes the session with the polls after a failed one", () => {
+    open()
+    expect(params(last("GET"))["phx:resume"]).toBeUndefined()
+    respond(last("GET"), null)
+    jest.advanceTimersByTime(100)
+    expect(params(last("GET"))["phx:resume"]).toBe("1")
+    respond(last("GET"), null)
+    jest.advanceTimersByTime(500)
+    expect(params(last("GET"))["phx:resume"]).toBe("1")
+
+    respond(last("GET"), {status: 204, token: "token", last: 0})
+    expect(params(last("GET"))["phx:resume"]).toBeUndefined()
+  })
+
+  it("does not resume the session when the server does not number its messages", () => {
+    open({status: 410, token: "token", messages: []})
+    expect(params(last("GET"))["phx:resume"]).toBeUndefined()
+  })
+
   it("closes when messages are missing before the ones it receives", () => {
     open()
     respond(last("GET"), {status: 200, token: "token", messages: ["c"], last: 3})
