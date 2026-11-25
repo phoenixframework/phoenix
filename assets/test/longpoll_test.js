@@ -712,6 +712,7 @@ describe("LongPoll resuming", () => {
     expect(params(last("GET"))["phx:ack"]).toBe("1")
   })
 
+  // TODO: Remove in Phoenix 1.9, together with degrade()
   it("does not acknowledge when the server does not number its messages", () => {
     open({status: 410, token: "token", messages: []})
     expect(params(last("GET"))["phx:ack"]).toBeUndefined()
@@ -875,6 +876,7 @@ describe("LongPoll resuming", () => {
     expect(params(last("GET"))["phx:resume"]).toBeUndefined()
   })
 
+  // TODO: Remove in Phoenix 1.9, together with degrade()
   it("does not resume the session when the server does not number its messages", () => {
     open({status: 410, token: "token", messages: []})
     expect(params(last("GET"))["phx:resume"]).toBeUndefined()
@@ -946,6 +948,7 @@ describe("LongPoll resuming", () => {
     expect(last("POST")[3]).toBe("c")
   })
 
+  // TODO: Remove in Phoenix 1.9, together with degrade()
   it("does not number the messages when the server does not number its messages", () => {
     open({status: 410, token: "token", messages: []})
     longpoll.send("a")
@@ -971,6 +974,8 @@ describe("LongPoll resuming", () => {
 
   // During a rolling deploy, a node with an older server forwards our requests
   // without ack and seq, so the session treats us like an older client.
+  //
+  // TODO: Remove in Phoenix 1.9, together with degrade()
   describe("with a node of an older server", () => {
     it("delivers the messages of a poll and stops resuming", () => {
       open()
