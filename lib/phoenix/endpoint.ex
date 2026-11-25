@@ -755,6 +755,7 @@ defmodule Phoenix.Endpoint do
       if websocket do
         websocket = put_socket_opts(websocket, opts)
         config = Phoenix.Socket.Transport.load_config(websocket, Phoenix.Transports.WebSocket)
+        warn_on_deprecated_serializer(endpoint, path, config)
         plug_init = {endpoint, socket, config}
         {conn_ast, match_path} = socket_path(path, config)
         [{match_path, Phoenix.Transports.WebSocket, conn_ast, plug_init} | paths]
@@ -766,6 +767,7 @@ defmodule Phoenix.Endpoint do
       if longpoll do
         longpoll = put_socket_opts(longpoll, opts)
         config = Phoenix.Socket.Transport.load_config(longpoll, Phoenix.Transports.LongPoll)
+        warn_on_deprecated_serializer(endpoint, path, config)
         plug_init = {endpoint, socket, config}
         {conn_ast, match_path} = socket_path(path, config)
         [{match_path, Phoenix.Transports.LongPoll, conn_ast, plug_init} | paths]
@@ -774,6 +776,21 @@ defmodule Phoenix.Endpoint do
       end
 
     paths
+  end
+
+  defp warn_on_deprecated_serializer(endpoint, path, config) do
+    serializers = config[:serializer]
+
+    if is_list(serializers) and List.keymember?(serializers, Phoenix.Socket.V1.JSONSerializer, 0) do
+      IO.warn(
+        """
+        Phoenix.Socket.V1.JSONSerializer is deprecated. It is listed in the :serializer \
+        option of socket #{inspect(path)} in #{inspect(endpoint)}. Remove it and make sure \
+        your clients connect with vsn=2.0.0\
+        """,
+        []
+      )
+    end
   end
 
   # Copies top-level socket options into the transport config,

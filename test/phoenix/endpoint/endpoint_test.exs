@@ -470,4 +470,48 @@ defmodule Phoenix.Endpoint.EndpointTest do
       end
     end
   end
+
+  test "does not include the V1 JSON serializer by default" do
+    {_, diagnostics} =
+      Code.with_diagnostics(fn ->
+        defmodule DefaultSerializerEndpoint do
+          use Phoenix.Endpoint, otp_app: :phoenix
+
+          socket "/ws", UserSocket, longpoll: true
+        end
+      end)
+
+    assert diagnostics == []
+
+    for transport <- [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoll] do
+      assert transport.default_config()[:serializer] ==
+               [{Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}]
+    end
+  end
+
+  test "warns when the V1 JSON serializer is listed in a socket" do
+    {_, diagnostics} =
+      Code.with_diagnostics(fn ->
+        defmodule V1SerializerEndpoint do
+          use Phoenix.Endpoint, otp_app: :phoenix
+
+          socket "/ws", UserSocket,
+            websocket: [serializer: [{Phoenix.Socket.V1.JSONSerializer, "~> 1.0.0"}]],
+            longpoll: [
+              serializer: [
+                {Phoenix.Socket.V1.JSONSerializer, "~> 1.0.0"},
+                {Phoenix.Socket.V2.JSONSerializer, "~> 2.0.0"}
+              ]
+            ]
+        end
+      end)
+
+    assert [_, _] = diagnostics
+
+    for diagnostic <- diagnostics do
+      assert diagnostic.severity == :warning
+      assert diagnostic.message =~ "Phoenix.Socket.V1.JSONSerializer is deprecated"
+      assert diagnostic.message =~ ~s(socket "/ws")
+    end
+  end
 end

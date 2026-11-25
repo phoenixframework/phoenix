@@ -138,46 +138,59 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     def terminate(_reason, _state), do: :ok
   end
 
-  defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
+  # V1.JSONSerializer is deprecated and listing it emits a compile-time warning
+  {_, diagnostics} =
+    Code.with_diagnostics(fn ->
+      defmodule Endpoint do
+        use Phoenix.Endpoint, otp_app: :phoenix
 
-    socket "/ws", UserSocket,
-      longpoll: [
-        window_ms: 200,
-        pubsub_timeout_ms: 200,
-        check_origin: ["//example.com"]
-      ]
+        @serializers [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}]
 
-    socket "/ws/admin", UserSocket,
-      longpoll: [
-        window_ms: 200,
-        pubsub_timeout_ms: 200,
-        check_origin: ["//example.com"]
-      ]
+        socket "/ws", UserSocket,
+          longpoll: [
+            serializer: @serializers,
+            window_ms: 200,
+            pubsub_timeout_ms: 200,
+            check_origin: ["//example.com"]
+          ]
 
-    socket "/ws/limited", UserSocket,
-      longpoll: [
-        window_ms: 200,
-        pubsub_timeout_ms: 200,
-        check_origin: ["//example.com"]
-      ],
-      max_channels_per_transport: 1
+        socket "/ws/admin", UserSocket,
+          longpoll: [
+            serializer: @serializers,
+            window_ms: 200,
+            pubsub_timeout_ms: 200,
+            check_origin: ["//example.com"]
+          ]
 
-    socket "/ws/connect_info", UserSocketConnectInfo,
-      longpoll: [
-        window_ms: 200,
-        pubsub_timeout_ms: 200,
-        check_origin: ["//example.com"],
-        connect_info: [:trace_context_headers, :x_headers, :peer_data, :uri]
-      ]
+        socket "/ws/limited", UserSocket,
+          longpoll: [
+            serializer: @serializers,
+            window_ms: 200,
+            pubsub_timeout_ms: 200,
+            check_origin: ["//example.com"]
+          ],
+          max_channels_per_transport: 1
 
-    socket "/ws/slow", SlowSocket,
-      longpoll: [
-        window_ms: 100,
-        pubsub_timeout_ms: 200,
-        check_origin: ["//example.com"]
-      ]
-  end
+        socket "/ws/connect_info", UserSocketConnectInfo,
+          longpoll: [
+            serializer: @serializers,
+            window_ms: 200,
+            pubsub_timeout_ms: 200,
+            check_origin: ["//example.com"],
+            connect_info: [:trace_context_headers, :x_headers, :peer_data, :uri]
+          ]
+
+        socket "/ws/slow", SlowSocket,
+          longpoll: [
+            serializer: @serializers,
+            window_ms: 100,
+            pubsub_timeout_ms: 200,
+            check_origin: ["//example.com"]
+          ]
+      end
+    end)
+
+  true = Enum.all?(diagnostics, &(&1.message =~ "V1.JSONSerializer is deprecated"))
 
   setup %{adapter: adapter} do
     config = Application.get_env(:phoenix, Endpoint)

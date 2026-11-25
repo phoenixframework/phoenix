@@ -171,73 +171,87 @@ defmodule Phoenix.Integration.WebSocketChannelsTest do
     def id(_socket), do: nil
   end
 
-  defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
+  # V1.JSONSerializer is deprecated and listing it emits a compile-time warning
+  {_, diagnostics} =
+    Code.with_diagnostics(fn ->
+      defmodule Endpoint do
+        use Phoenix.Endpoint, otp_app: :phoenix
 
-    @session_config store: :cookie,
-                    key: "_hello_key",
-                    signing_salt: "change_me"
+        @serializers [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}]
 
-    socket "/ws", UserSocket,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200,
-        error_handler: {UserSocket, :handle_error, []}
-      ]
+        @session_config store: :cookie,
+                        key: "_hello_key",
+                        signing_salt: "change_me"
 
-    socket "/ws/admin", UserSocket,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200
-      ]
+        socket "/ws", UserSocket,
+          websocket: [
+            serializer: @serializers,
+            check_origin: ["//example.com"],
+            timeout: 200,
+            error_handler: {UserSocket, :handle_error, []}
+          ]
 
-    socket "/ws/limited", LimitedUserSocket,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200
-      ]
+        socket "/ws/admin", UserSocket,
+          websocket: [
+            serializer: @serializers,
+            check_origin: ["//example.com"],
+            timeout: 200
+          ]
 
-    socket "/ws/endpoint_limited", UserSocket,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200
-      ],
-      max_channels_per_transport: 1
+        socket "/ws/limited", LimitedUserSocket,
+          websocket: [
+            serializer: @serializers,
+            check_origin: ["//example.com"],
+            timeout: 200
+          ]
 
-    socket "/ws/endpoint_override", LimitedUserSocket,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200
-      ],
-      max_channels_per_transport: 2
+        socket "/ws/endpoint_limited", UserSocket,
+          websocket: [
+            serializer: @serializers,
+            check_origin: ["//example.com"],
+            timeout: 200
+          ],
+          max_channels_per_transport: 1
 
-    socket "/ws/connect_info", UserSocketConnectInfo,
-      websocket: [
-        check_origin: ["//example.com"],
-        timeout: 200,
-        connect_info: [
-          :trace_context_headers,
-          :x_headers,
-          :peer_data,
-          :uri,
-          :user_agent,
-          :sec_websocket_headers,
-          session: @session_config,
-          signing_salt: "salt"
-        ]
-      ]
+        socket "/ws/endpoint_override", LimitedUserSocket,
+          websocket: [
+            serializer: @serializers,
+            check_origin: ["//example.com"],
+            timeout: 200
+          ],
+          max_channels_per_transport: 2
 
-    plug Plug.Session, @session_config
-    plug :fetch_session
-    plug Plug.CSRFProtection
-    plug :put_session
+        socket "/ws/connect_info", UserSocketConnectInfo,
+          websocket: [
+            serializer: @serializers,
+            check_origin: ["//example.com"],
+            timeout: 200,
+            connect_info: [
+              :trace_context_headers,
+              :x_headers,
+              :peer_data,
+              :uri,
+              :user_agent,
+              :sec_websocket_headers,
+              session: @session_config,
+              signing_salt: "salt"
+            ]
+          ]
 
-    defp put_session(conn, _) do
-      conn
-      |> put_session(:from_session, "123")
-      |> send_resp(200, Plug.CSRFProtection.get_csrf_token())
-    end
-  end
+        plug Plug.Session, @session_config
+        plug :fetch_session
+        plug Plug.CSRFProtection
+        plug :put_session
+
+        defp put_session(conn, _) do
+          conn
+          |> put_session(:from_session, "123")
+          |> send_resp(200, Plug.CSRFProtection.get_csrf_token())
+        end
+      end
+    end)
+
+  true = Enum.all?(diagnostics, &(&1.message =~ "V1.JSONSerializer is deprecated"))
 
   setup %{adapter: adapter} do
     config = Application.get_env(:phoenix, Endpoint)
