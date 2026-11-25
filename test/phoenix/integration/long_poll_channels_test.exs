@@ -112,6 +112,12 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       {:error, :custom}
     end
 
+    # the params of the transport are not for the socket
+    def connect(params, _socket)
+        when is_map_key(params, "phx:ack") or is_map_key(params, "phx:seq") do
+      {:error, :transport_params}
+    end
+
     def connect(params, socket) do
       unless params["logging"] == "enabled", do: Logger.put_process_level(self(), :none)
       {:ok, assign(socket, :user_id, params["user_id"])}
@@ -677,7 +683,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         test "#{@mode}: accepts legacy flushes without waiting for acknowledgements" do
           vsn = "2.0.0"
           session = join("/ws", "room:lobby", vsn, "1", @mode)
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
           assert resp.body["status"] == 200
 
           {:ok, {:v1, _id, server, _topic}} =
@@ -705,13 +711,13 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert resp.body["last"] == 0
 
           session = join("/ws", "room:lobby", vsn, "1", @mode)
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
           assert resp.body["status"] == 200
           assert [_reply, _user_entered, _joined] = messages = resp.body["messages"]
           assert resp.body["last"] == 3
 
           # the response got lost, so the client polls with the previous ack
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
           assert resp.body["status"] == 200
           assert resp.body["messages"] == messages
           assert resp.body["last"] == 3
@@ -719,16 +725,16 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           # new messages are sent with the ones the client did not acknowledge
           Endpoint.broadcast("room:lobby", "new_msg", %{"body" => "hi"})
           Process.sleep(50)
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "2"))
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "2"))
           assert [%Message{event: "joined"}, %Message{event: "new_msg"}] = resp.body["messages"]
           assert resp.body["last"] == 4
 
           # a late poll acknowledging fewer messages does not bring back dropped ones
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "1"))
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "1"))
           assert [%Message{event: "joined"}, %Message{event: "new_msg"}] = resp.body["messages"]
 
           # without messages, the last message is the acknowledged one
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "4"))
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "4"))
           assert resp.body["status"] == 204
           assert resp.body["last"] == 4
         end
@@ -746,6 +752,12 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert_receive {:messages, [_reply, _user_entered, _joined], ^ref, 3}
         end
 
+        test "#{@mode}: does not pass the params of the transport to the socket" do
+          resp = poll(:get, "/ws", "2.0.0", %{"phx:ack" => "0", "phx:seq" => "1"})
+          assert resp.body["status"] == 410
+          assert resp.body["token"]
+        end
+
         test "#{@mode}: closes when the client keeps polling without acknowledging" do
           vsn = "2.0.0"
           session = join("/ws", "room:lobby", vsn, "1", @mode)
@@ -754,7 +766,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           statuses =
             for _ <- 1..8 do
               Process.sleep(100)
-              poll(:get, "/ws", vsn, Map.put(session, "ack", "0")).body["status"]
+              poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0")).body["status"]
             end
 
           assert [200, 200 | _] = statuses
@@ -775,7 +787,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
             }
           end
 
-          resp = poll(:post, "/ws", vsn, Map.put(session, "seq", "2"), [message.("a")])
+          resp = poll(:post, "/ws", vsn, Map.put(session, "phx:seq", "2"), [message.("a")])
           # the seq tells the client that we drop messages it sends again
           assert resp.body["status"] == 200
           assert resp.body["seq"] == 2
@@ -783,7 +795,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
           # the response got lost, so the client sends the message again with the next one
           batch = [message.("a"), message.("b")]
-          resp = poll(:post, "/ws", vsn, Map.put(session, "seq", "2"), batch)
+          resp = poll(:post, "/ws", vsn, Map.put(session, "phx:seq", "2"), batch)
           assert resp.body["status"] == 200
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "b"}}
           refute_received %Broadcast{event: "new_msg", payload: %{"body" => "a"}}
@@ -801,10 +813,10 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           }
 
           # the join was message 1, so message 3 means we lost message 2
-          resp = poll(:post, "/ws", vsn, Map.put(session, "seq", "3"), [message])
+          resp = poll(:post, "/ws", vsn, Map.put(session, "phx:seq", "3"), [message])
           assert resp.body["status"] == 200
 
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
           assert resp.body["status"] == 410
         end
 

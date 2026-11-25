@@ -106,7 +106,7 @@ export default class LongPoll {
     if(this.authToken){
       headers["X-Phoenix-AuthToken"] = this.authToken
     }
-    const params = this.resumable ? {ack: this.ack} : {}
+    const params = this.resumable ? {"phx:ack": this.ack} : {}
     this.ajax("GET", headers, null, params, () => this.retryOr("GET", () => this.poll(), () => this.ontimeout()), resp => {
       if(resp){
         var {status, token, messages, last} = resp
@@ -240,7 +240,7 @@ export default class LongPoll {
     const batch = messages.slice(offset, next)
     const retry = () => this.batchSend(messages, seq, offset)
     // servers that don't number their messages don't know about seq either
-    const params = this.resumable ? {seq: seq + offset} : {}
+    const params = this.resumable ? {"phx:seq": seq + offset} : {}
     this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), params, () => this.retryOr("POST", retry, () => this.ontimeout()), resp => {
       if(!resp){
         this.retryOr("POST", retry, () => this.closeAndRetry(null, 1011, "internal server error", false))

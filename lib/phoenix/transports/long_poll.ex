@@ -8,6 +8,8 @@ defmodule Phoenix.Transports.LongPoll do
   @max_poll_batch_size 100
   @connect_info_opts [:check_csrf]
   @token_header "x-phoenix-longpoll-token"
+  # the params clients use to number their messages, which are not for the socket
+  @transport_params ["phx:ack", "phx:seq"]
 
   import Plug.Conn
   alias Phoenix.Socket.{V1, V2, Transport}
@@ -89,7 +91,7 @@ defmodule Phoenix.Transports.LongPoll do
               #
               # TODO: Require seq in Phoenix 1.9. Older clients don't send it. Newer clients
               # only omit it after their session reached a node with an older server.
-              seq = int_param(conn, "seq")
+              seq = int_param(conn, "phx:seq")
 
               status =
                 body
@@ -163,7 +165,8 @@ defmodule Phoenix.Transports.LongPoll do
     connect_info =
       Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
 
-    arg = {endpoint, handler, opts, conn.params, priv_topic, connect_info}
+    params = Map.drop(conn.params, @transport_params)
+    arg = {endpoint, handler, opts, params, priv_topic, connect_info}
     spec = {Phoenix.Transports.LongPoll.Server, arg}
 
     case DynamicSupervisor.start_child(Phoenix.Transports.LongPoll.Supervisor, spec) do
@@ -185,7 +188,7 @@ defmodule Phoenix.Transports.LongPoll do
     client_ref = client_ref(server_ref)
 
     # the last message the client received, sent by clients that acknowledge
-    ack = int_param(conn, "ack")
+    ack = int_param(conn, "phx:ack")
 
     flush =
       case ack do

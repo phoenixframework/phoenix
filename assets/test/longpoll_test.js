@@ -701,20 +701,20 @@ describe("LongPoll resuming", () => {
 
   it("acknowledges the last message it received with the next poll", () => {
     open()
-    expect(params(last("GET")).ack).toBe("0")
+    expect(params(last("GET"))["phx:ack"]).toBe("0")
 
     respond(last("GET"), {status: 200, token: "token", messages: ["a"], last: 1})
     jest.advanceTimersByTime(0)
-    expect(params(last("GET")).ack).toBe("1")
+    expect(params(last("GET"))["phx:ack"]).toBe("1")
 
     // a poll without new messages keeps the ack
     respond(last("GET"), {status: 204, token: "token", last: 1})
-    expect(params(last("GET")).ack).toBe("1")
+    expect(params(last("GET"))["phx:ack"]).toBe("1")
   })
 
   it("does not acknowledge when the server does not number its messages", () => {
     open({status: 410, token: "token", messages: []})
-    expect(params(last("GET")).ack).toBeUndefined()
+    expect(params(last("GET"))["phx:ack"]).toBeUndefined()
   })
 
   it.each([
@@ -732,7 +732,7 @@ describe("LongPoll resuming", () => {
     jest.advanceTimersByTime(1)
 
     expect(requests("GET")).toHaveLength(polls + 1)
-    expect(params(last("GET")).ack).toBe("1")
+    expect(params(last("GET"))["phx:ack"]).toBe("1")
     expect(events).not.toContain("error")
     expect(events).not.toContain("close")
   })
@@ -803,7 +803,7 @@ describe("LongPoll resuming", () => {
     expect(events).toEqual(["open", "suspend"])
     jest.advanceTimersByTime(0)
     expect(events).toEqual(["open", "suspend", "a", "b", "resume"])
-    expect(params(last("GET")).ack).toBe("2")
+    expect(params(last("GET"))["phx:ack"]).toBe("2")
   })
 
   it("does not deliver already received messages again", () => {
@@ -818,7 +818,7 @@ describe("LongPoll resuming", () => {
     respond(last("GET"), {status: 200, token: "token", messages: ["a", "b"], last: 2})
     jest.advanceTimersByTime(0)
     expect(events).toEqual(["open", "a", "b"])
-    expect(params(last("GET")).ack).toBe("2")
+    expect(params(last("GET"))["phx:ack"]).toBe("2")
   })
 
   it("closes when messages are missing before the ones it receives", () => {
@@ -872,18 +872,18 @@ describe("LongPoll resuming", () => {
     longpoll.send("a")
     longpoll.send("b")
     jest.advanceTimersByTime(0)
-    expect(params(last("POST")).seq).toBe("1")
+    expect(params(last("POST"))["phx:seq"]).toBe("1")
     expect(last("POST")[3]).toBe("a\nb")
 
     longpoll.send("c")
     respond(last("POST"), null)
     jest.advanceTimersByTime(100)
     expect(requests("POST")).toHaveLength(2)
-    expect(params(last("POST")).seq).toBe("1")
+    expect(params(last("POST"))["phx:seq"]).toBe("1")
     expect(last("POST")[3]).toBe("a\nb")
 
     respond(last("POST"), {status: 200, seq: 1})
-    expect(params(last("POST")).seq).toBe("3")
+    expect(params(last("POST"))["phx:seq"]).toBe("3")
     expect(last("POST")[3]).toBe("c")
   })
 
@@ -892,7 +892,7 @@ describe("LongPoll resuming", () => {
     longpoll.send("a")
     jest.advanceTimersByTime(0)
 
-    expect(params(last("POST")).seq).toBeUndefined()
+    expect(params(last("POST"))["phx:seq"]).toBeUndefined()
   })
 
   it("sends messages pushed by a resume callback after a POST recovers", () => {
@@ -907,7 +907,7 @@ describe("LongPoll resuming", () => {
     respond(last("POST"), {status: 200, seq: 1})
     jest.advanceTimersByTime(0)
     expect(last("POST")[3]).toBe("b")
-    expect(params(last("POST")).seq).toBe("2")
+    expect(params(last("POST"))["phx:seq"]).toBe("2")
   })
 
   // During a rolling deploy, a node with an older server forwards our requests
@@ -918,7 +918,7 @@ describe("LongPoll resuming", () => {
       respond(last("GET"), {status: 200, token: "token", messages: ["a"]})
       jest.advanceTimersByTime(0)
       expect(events).toEqual(["open", "a"])
-      expect(params(last("GET")).ack).toBeUndefined()
+      expect(params(last("GET"))["phx:ack"]).toBeUndefined()
 
       // the next failure reconnects, as the session no longer keeps messages for us
       respond(last("GET"), null)
@@ -945,7 +945,7 @@ describe("LongPoll resuming", () => {
       respond(last("POST"), {status: 200})
       longpoll.send("b")
       jest.advanceTimersByTime(0)
-      expect(params(last("POST")).seq).toBeUndefined()
+      expect(params(last("POST"))["phx:seq"]).toBeUndefined()
 
       respond(last("POST"), null)
       expect(events).toEqual(["open", "error", "close"])
@@ -957,11 +957,11 @@ describe("LongPoll resuming", () => {
       jest.advanceTimersByTime(0)
       respond(last("POST"), {status: 200})
       respond(last("GET"), {status: 204, token: "token", last: 0})
-      expect(params(last("GET")).ack).toBeUndefined()
+      expect(params(last("GET"))["phx:ack"]).toBeUndefined()
 
       longpoll.send("b")
       jest.advanceTimersByTime(0)
-      expect(params(last("POST")).seq).toBeUndefined()
+      expect(params(last("POST"))["phx:seq"]).toBeUndefined()
       respond(last("GET"), null)
       expect(events).toEqual(["open", "error", "close"])
     })
@@ -1000,7 +1000,7 @@ describe("LongPoll resuming", () => {
       respond(last("POST"), {status: 200, seq: 1})
       longpoll.send("b")
       jest.advanceTimersByTime(0)
-      expect(params(last("POST")).seq).toBe("2")
+      expect(params(last("POST"))["phx:seq"]).toBe("2")
 
       respond(last("POST"), null)
       expect(events).toEqual(["open"])
