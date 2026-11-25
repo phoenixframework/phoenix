@@ -683,7 +683,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           {:ok, {:v1, _id, server, _topic}} =
             Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
 
-          # an older plug flushes without acknowledging and expects the reply without batch
+          # an older plug flushes without acknowledging and expects the reply without last
           Endpoint.broadcast!("room:lobby", "new_msg", %{"body" => "hi"})
           Process.sleep(50)
           ref = make_ref()
@@ -692,7 +692,8 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
           # it does not acknowledge the messages we sent before, which we drop
           # like we drop the ones we send to it, so we don't wait for an ack
-          assert %{sent: [], sent_at: nil} = :sys.get_state(server)
+          assert %{sent_at: nil, out_seq: 4, acked: 4} = state = :sys.get_state(server)
+          assert :queue.is_empty(state.out)
         end
 
         test "#{@mode}: resends messages until the client acknowledges them" do
@@ -701,65 +702,55 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           # new sessions tell clients that they keep messages
           resp = poll(:get, "/ws", vsn, %{})
           assert resp.body["status"] == 410
-          assert resp.body["batch"] == 0
+          assert resp.body["last"] == 0
 
           session = join("/ws", "room:lobby", vsn, "1", @mode)
           resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
           assert resp.body["status"] == 200
           assert [_reply, _user_entered, _joined] = messages = resp.body["messages"]
-          assert batch = resp.body["batch"]
+          assert resp.body["last"] == 3
 
           # the response got lost, so the client polls with the previous ack
           resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
           assert resp.body["status"] == 200
           assert resp.body["messages"] == messages
-          assert resp.body["batch"] == batch
+          assert resp.body["last"] == 3
 
-          # A lost response is replayed unchanged, even when new messages arrive.
+          # new messages are sent with the ones the client did not acknowledge
           Endpoint.broadcast("room:lobby", "new_msg", %{"body" => "hi"})
           Process.sleep(50)
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
-          assert resp.body["status"] == 200
-          assert resp.body["messages"] == messages
-          assert resp.body["batch"] == batch
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "2"))
+          assert [%Message{event: "joined"}, %Message{event: "new_msg"}] = resp.body["messages"]
+          assert resp.body["last"] == 4
 
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", to_string(batch)))
-          assert [%Message{event: "new_msg"}] = resp.body["messages"]
-          assert resp.body["batch"] == batch + 1
+          # a late poll acknowledging fewer messages does not bring back dropped ones
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "1"))
+          assert [%Message{event: "joined"}, %Message{event: "new_msg"}] = resp.body["messages"]
 
-          # without messages, the batch stays the acknowledged one
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", to_string(batch + 1)))
+          # without messages, the last message is the acknowledged one
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "4"))
           assert resp.body["status"] == 204
-          assert resp.body["batch"] == batch + 1
+          assert resp.body["last"] == 4
         end
 
-        test "#{@mode}: a delayed poll does not expand an already received batch" do
+        test "#{@mode}: ignores acknowledgements of messages we did not send" do
           vsn = "2.0.0"
           session = join("/ws", "room:lobby", vsn, "1", @mode)
-          received = poll(:get, "/ws", vsn, Map.put(session, "ack", "0")).body
-          batch = received["batch"]
 
           {:ok, {:v1, _id, server, _topic}} =
             Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
 
-          # A new frame arrives, followed by an old request whose response the
-          # client already stopped waiting for. The next poll acknowledges the
-          # retry's response and must receive only the new frame.
-          send(server, {:socket_push, :text, "[null,null,\"room:lobby\",\"tick\",{}]"})
+          Process.sleep(50)
           ref = make_ref()
-          send(server, {:flush, self(), ref, 0})
-          assert_receive {:messages, _messages, ^ref, ^batch}
-
-          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", to_string(batch)))
-          assert [%Message{event: "tick"}] = resp.body["messages"]
-          assert resp.body["batch"] == batch + 1
+          send(server, {:flush, self(), ref, 100})
+          assert_receive {:messages, [_reply, _user_entered, _joined], ^ref, 3}
         end
 
         test "#{@mode}: closes when the client keeps polling without acknowledging" do
           vsn = "2.0.0"
           session = join("/ws", "room:lobby", vsn, "1", @mode)
 
-          # the window is 200ms, so the client must acknowledge a batch within 300ms
+          # the window is 200ms, so the client must acknowledge messages within 300ms
           statuses =
             for _ <- 1..8 do
               Process.sleep(100)
@@ -796,6 +787,25 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert resp.body["status"] == 200
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "b"}}
           refute_received %Broadcast{event: "new_msg", payload: %{"body" => "a"}}
+        end
+
+        test "#{@mode}: closes when messages arrive out of order" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          message = %{
+            "topic" => "room:lobby",
+            "event" => "new_msg",
+            "ref" => "1",
+            "payload" => %{"body" => "a"}
+          }
+
+          # the join was message 1, so message 3 means we lost message 2
+          resp = poll(:post, "/ws", vsn, Map.put(session, "seq", "3"), [message])
+          assert resp.body["status"] == 200
+
+          resp = poll(:get, "/ws", vsn, Map.put(session, "ack", "0"))
+          assert resp.body["status"] == 410
         end
 
         test "#{@mode}: lonpoll publishing batch events on v2 protocol" do

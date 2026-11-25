@@ -674,8 +674,8 @@ describe("LongPoll resuming", () => {
   const params = call => Object.fromEntries(new URL(call[1]).searchParams)
   const respond = (call, resp) => call[6](resp)
 
-  // the server keeps the messages until we acknowledge them when it announces a batch
-  const open = (resp = {status: 410, token: "token", messages: [], batch: 0}) => {
+  // the server keeps the messages until we acknowledge them when it numbers them
+  const open = (resp = {status: 410, token: "token", messages: [], last: 0}) => {
     longpoll = new LongPoll("http://localhost/socket/longpoll")
     events = []
     longpoll.onopen = () => events.push("open")
@@ -699,20 +699,20 @@ describe("LongPoll resuming", () => {
     jest.restoreAllMocks()
   })
 
-  it("acknowledges the last batch it received with the next poll", () => {
+  it("acknowledges the last message it received with the next poll", () => {
     open()
     expect(params(last("GET")).ack).toBe("0")
 
-    respond(last("GET"), {status: 200, token: "token", messages: ["a"], batch: 1})
+    respond(last("GET"), {status: 200, token: "token", messages: ["a"], last: 1})
     jest.advanceTimersByTime(0)
     expect(params(last("GET")).ack).toBe("1")
 
     // a poll without new messages keeps the ack
-    respond(last("GET"), {status: 204, token: "token", batch: 1})
+    respond(last("GET"), {status: 204, token: "token", last: 1})
     expect(params(last("GET")).ack).toBe("1")
   })
 
-  it("does not acknowledge when the server does not announce batches", () => {
+  it("does not acknowledge when the server does not number its messages", () => {
     open({status: 410, token: "token", messages: []})
     expect(params(last("GET")).ack).toBeUndefined()
   })
@@ -722,7 +722,7 @@ describe("LongPoll resuming", () => {
     ["times out", call => call[5]()]
   ])("polls again with the same ack when a poll %s", (_, fail) => {
     open()
-    respond(last("GET"), {status: 200, token: "token", messages: ["a"], batch: 1})
+    respond(last("GET"), {status: 200, token: "token", messages: ["a"], last: 1})
     jest.advanceTimersByTime(0)
     const polls = requests("GET").length
 
@@ -766,7 +766,7 @@ describe("LongPoll resuming", () => {
     jest.advanceTimersByTime(1000)
     expect(events).toEqual(["open", "suspend"])
 
-    respond(last("GET"), {status: 204, token: "token", batch: 0})
+    respond(last("GET"), {status: 204, token: "token", last: 0})
     expect(events).toEqual(["open", "suspend", "resume"])
 
     // a single failure after that is not an interruption yet
@@ -787,32 +787,45 @@ describe("LongPoll resuming", () => {
     jest.advanceTimersByTime(500)
     expect(events).toEqual(["open", "suspend"])
 
-    respond(last("GET"), {status: 204, token: "token", batch: 0})
+    respond(last("GET"), {status: 204, token: "token", last: 0})
     expect(events).toEqual(["open", "suspend"])
     respond(last("POST"), {status: 200, seq: 1})
     expect(events).toEqual(["open", "suspend", "resume"])
   })
 
-  it("delivers the recovered batch before reporting resumption", () => {
+  it("delivers the recovered messages before reporting resumption", () => {
     open()
     respond(last("GET"), null)
     jest.advanceTimersByTime(100)
     respond(last("GET"), null)
     jest.advanceTimersByTime(500)
-    respond(last("GET"), {status: 200, token: "token", messages: ["a", "b"], batch: 1})
+    respond(last("GET"), {status: 200, token: "token", messages: ["a", "b"], last: 2})
     expect(events).toEqual(["open", "suspend"])
     jest.advanceTimersByTime(0)
     expect(events).toEqual(["open", "suspend", "a", "b", "resume"])
-    expect(params(last("GET")).ack).toBe("1")
+    expect(params(last("GET")).ack).toBe("2")
   })
 
-  it("does not deliver an already received batch again", () => {
+  it("does not deliver already received messages again", () => {
     open()
-    respond(last("GET"), {status: 200, token: "token", messages: ["a"], batch: 1})
+    respond(last("GET"), {status: 200, token: "token", messages: ["a"], last: 1})
     jest.advanceTimersByTime(0)
-    respond(last("GET"), {status: 200, token: "token", messages: ["a"], batch: 1})
+    respond(last("GET"), {status: 200, token: "token", messages: ["a"], last: 1})
     jest.advanceTimersByTime(0)
     expect(events).toEqual(["open", "a"])
+
+    // a late poll returns the messages after an older ack, with new ones
+    respond(last("GET"), {status: 200, token: "token", messages: ["a", "b"], last: 2})
+    jest.advanceTimersByTime(0)
+    expect(events).toEqual(["open", "a", "b"])
+    expect(params(last("GET")).ack).toBe("2")
+  })
+
+  it("closes when messages are missing before the ones it receives", () => {
+    open()
+    respond(last("GET"), {status: 200, token: "token", messages: ["c"], last: 3})
+    jest.advanceTimersByTime(0)
+    expect(events).toEqual(["open", "error", "close"])
   })
 
   it("does not retry when a suspension callback closes the transport", () => {
@@ -839,7 +852,7 @@ describe("LongPoll resuming", () => {
 
   it("closes when the session is gone", () => {
     open()
-    respond(last("GET"), {status: 410, token: "new-token", messages: [], batch: 0})
+    respond(last("GET"), {status: 410, token: "new-token", messages: [], last: 0})
 
     expect(events).toEqual(["open", "error", "close"])
   })
@@ -874,7 +887,7 @@ describe("LongPoll resuming", () => {
     expect(last("POST")[3]).toBe("c")
   })
 
-  it("does not number the messages when the server does not announce batches", () => {
+  it("does not number the messages when the server does not number its messages", () => {
     open({status: 410, token: "token", messages: []})
     longpoll.send("a")
     jest.advanceTimersByTime(0)
@@ -919,7 +932,7 @@ describe("LongPoll resuming", () => {
       open()
       respond(last("GET"), null)
       jest.advanceTimersByTime(100)
-      // the session dropped the batch of the response we lost
+      // the session dropped the messages of the response we lost
       respond(last("GET"), resp)
       jest.advanceTimersByTime(0)
       expect(events).toEqual(["open", "error", "close"])
@@ -943,7 +956,7 @@ describe("LongPoll resuming", () => {
       longpoll.send("a")
       jest.advanceTimersByTime(0)
       respond(last("POST"), {status: 200})
-      respond(last("GET"), {status: 204, token: "token", batch: 0})
+      respond(last("GET"), {status: 204, token: "token", last: 0})
       expect(params(last("GET")).ack).toBeUndefined()
 
       longpoll.send("b")

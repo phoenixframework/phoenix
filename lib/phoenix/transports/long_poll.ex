@@ -87,8 +87,8 @@ defmodule Phoenix.Transports.LongPoll do
             ["application/x-ndjson"] ->
               # the seq of the first message, sent by clients that resend messages
               #
-              # TODO: Require seq in Phoenix 1.10. Phoenix 1.8 clients don't send it.
-              # Phoenix 1.9 clients only omit it after their session reached a 1.8 node.
+              # TODO: Require seq in Phoenix 1.9. Older clients don't send it. Newer clients
+              # only omit it after their session reached a node with an older server.
               seq = int_param(conn, "seq")
 
               status =
@@ -132,7 +132,7 @@ defmodule Phoenix.Transports.LongPoll do
   defp transport_dispatch(endpoint, server_ref, body, seq, opts) do
     ref = make_ref()
 
-    # TODO: Always send seq in Phoenix 1.10, see publish/4
+    # TODO: Always send seq in Phoenix 1.9, see publish/4
     message =
       if seq,
         do: {:dispatch, client_ref(server_ref), body, ref, seq},
@@ -173,7 +173,9 @@ defmodule Phoenix.Transports.LongPoll do
       {:ok, server_pid} ->
         data = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
         token = sign_token(endpoint, data, opts)
-        # the batch tells clients that we keep messages until they acknowledge them
+        # The "last" field tells clients that we number our messages and keep them
+        # until they are acknowledged, so they can retry failed requests.
+        # A new session has not sent any messages yet, so it is 0.
         conn |> put_status(:gone) |> status_token_messages_json(token, [], 0)
     end
   end
@@ -182,37 +184,37 @@ defmodule Phoenix.Transports.LongPoll do
     ref = make_ref()
     client_ref = client_ref(server_ref)
 
-    # the last batch the client received, sent by clients that acknowledge
+    # the last message the client received, sent by clients that acknowledge
     ack = int_param(conn, "ack")
 
     flush =
       case ack do
-        # TODO: Remove the nil case in Phoenix 1.10. Phoenix 1.8 clients don't send
-        # an ack. Phoenix 1.9 clients only omit it after their session reached a 1.8 node.
+        # TODO: Remove the nil case in Phoenix 1.9. Older clients don't send an ack.
+        # Newer clients only omit it after their session reached a node with an older server.
         nil -> {:flush, client_ref, ref}
         ack -> {:flush, client_ref, ref, ack}
       end
 
     broadcast_from!(endpoint, server_ref, flush)
 
-    {status, messages, batch} =
+    {status, messages, last} =
       receive do
-        # Phoenix 1.8 servers, and newer servers answering a flush without ack,
-        # reply without batch.
+        # Older servers, and newer servers answering a flush without ack,
+        # reply without the number of the last message.
         #
-        # TODO: Remove the clauses without batch in Phoenix 1.10
+        # TODO: Remove the clauses without last in Phoenix 1.9
         {:messages, messages, ^ref} ->
           {:ok, messages, nil}
 
-        {:messages, messages, ^ref, batch} ->
-          {:ok, messages, batch}
+        {:messages, messages, ^ref, last} ->
+          {:ok, messages, last}
 
         {:now_available, ^ref} ->
           broadcast_from!(endpoint, server_ref, flush)
 
           receive do
             {:messages, messages, ^ref} -> {:ok, messages, nil}
-            {:messages, messages, ^ref, batch} -> {:ok, messages, batch}
+            {:messages, messages, ^ref, last} -> {:ok, messages, last}
           after
             opts[:window_ms] ->
               broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
@@ -220,15 +222,15 @@ defmodule Phoenix.Transports.LongPoll do
           end
       after
         opts[:window_ms] ->
-          # Without messages, the batch stays the one the client acknowledged. It tells
-          # the client that we keep the messages, like we do with messages.
+          # Without messages, the last message is the one the client acknowledged.
+          # It tells the client that we keep the messages, like we do with messages.
           broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
           {:no_content, [], ack}
       end
 
     conn
     |> put_status(status)
-    |> status_token_messages_json(token, messages, batch)
+    |> status_token_messages_json(token, messages, last)
   end
 
   defp int_param(conn, key) do
@@ -341,17 +343,17 @@ defmodule Phoenix.Transports.LongPoll do
     send_json(conn, Map.put(extra, "status", conn.status || 200))
   end
 
-  # TODO: Remove in Phoenix 1.10, when every poll has a batch
+  # TODO: Remove in Phoenix 1.9, when every poll has a last message
   defp status_token_messages_json(conn, token, messages, nil) do
     send_json(conn, %{"status" => conn.status || 200, "token" => token, "messages" => messages})
   end
 
-  defp status_token_messages_json(conn, token, messages, batch) do
+  defp status_token_messages_json(conn, token, messages, last) do
     send_json(conn, %{
       "status" => conn.status || 200,
       "token" => token,
       "messages" => messages,
-      "batch" => batch
+      "last" => last
     })
   end
 

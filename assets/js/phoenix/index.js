@@ -97,7 +97,7 @@
  * socket.onResume( () => console.log("the connection recovered") )
  * ```
  *
- * Recovery requires a server that supports acknowledged long-poll batches.
+ * Recovery requires a server that supports acknowledged long-poll messages.
  * With an older server, and for the rest of a session that reached a node
  * with an older server during a rolling upgrade, failed requests close the
  * socket and channels rejoin. If the session expires, the usual error/close events
