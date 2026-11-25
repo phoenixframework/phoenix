@@ -21,12 +21,12 @@ defmodule Phoenix.Transports.WebSocket do
 
   import Plug.Conn
 
-  alias Phoenix.Socket.{V1, V2, Transport}
+  alias Phoenix.Socket.{V2, Transport}
 
   def default_config() do
     [
       path: "/websocket",
-      serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
+      serializer: [{V2.JSONSerializer, "~> 2.0.0"}],
       error_handler: {__MODULE__, :handle_error, []},
       timeout: 60_000,
       transport_log: false,

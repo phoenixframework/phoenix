@@ -10,14 +10,14 @@ defmodule Phoenix.Transports.LongPoll do
   @token_header "x-phoenix-longpoll-token"
 
   import Plug.Conn
-  alias Phoenix.Socket.{V1, V2, Transport}
+  alias Phoenix.Socket.{V2, Transport}
 
   def default_config() do
     [
       window_ms: 10_000,
       path: "/longpoll",
       pubsub_timeout_ms: 2_000,
-      serializer: [{V1.JSONSerializer, "~> 1.0.0"}, {V2.JSONSerializer, "~> 2.0.0"}],
+      serializer: [{V2.JSONSerializer, "~> 2.0.0"}],
       transport_log: false,
       crypto: [max_age: 1_209_600]
     ]
