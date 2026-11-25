@@ -2,6 +2,7 @@ import {
   global,
   phxWindow,
   CHANNEL_EVENTS,
+  DEFAULT_RESUME_AFTER_MS,
   DEFAULT_TIMEOUT,
   DEFAULT_VSN,
   SOCKET_STATES,
@@ -81,6 +82,18 @@ import Connection from "./connection"
  *   return [1000, 2000, 5000][tries - 1] || 10000
  * }
  * ````
+ *
+ * @param {Function} [opts.resumeAfterMs] - The optional function that returns the millisec
+ * interval between attempts to retry a failed long-poll request while the server keeps
+ * the session.
+ *
+ * Defaults to stepped backoff of:
+ *
+ * ```javascript
+ * function(tries){
+ *   return [100, 500, 1000, 2000][tries - 1] || 5000
+ * }
+ * ```
  *
  * @param {Function} [opts.logger] - The optional function for specialized logging, ie:
  *
@@ -197,6 +210,7 @@ export default class Socket {
       this.logger = (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
     }
     this.longpollerTimeout = opts.longpollerTimeout || 20000
+    this.resumeAfterMs = opts.resumeAfterMs || DEFAULT_RESUME_AFTER_MS
     this.params = closure(opts.params || {})
     this.endPoint = `${endPoint}/${TRANSPORTS.websocket}`
     this.vsn = opts.vsn || DEFAULT_VSN
@@ -494,6 +508,7 @@ export default class Socket {
     const transport = new this.transport(this.endPointURL(), protocols)
     transport.binaryType = this.binaryType
     transport.timeout = this.longpollerTimeout
+    transport.resumeAfterMs = this.resumeAfterMs
     this.connection = new Connection(this, transport)
     // connect can replace an ended connection that is still open while its buffer drains, but the
     // channels joined over it need to rejoin on the new connection instead of waiting for it to close

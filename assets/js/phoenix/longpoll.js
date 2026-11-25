@@ -2,13 +2,11 @@ import {
   SOCKET_STATES,
   TRANSPORTS,
   AUTH_TOKEN_PREFIX,
-  MAX_LONGPOLL_BATCH_SIZE
+  MAX_LONGPOLL_BATCH_SIZE,
+  DEFAULT_RESUME_AFTER_MS
 } from "./constants"
 
 import Ajax from "./ajax"
-
-// how long we wait before retrying a failed request of a session we can resume
-const RETRY_DELAYS = [100, 500, 1000, 2000, 5000]
 
 let arrayBufferToBase64 = (buffer) => {
   let binary = ""
@@ -58,6 +56,8 @@ export default class LongPoll {
     this.ack = 0
     this.seq = 0
     this.retries = {GET: 0, POST: 0}
+    // how long we wait before retrying a failed request of a session we can resume
+    this.resumeAfterMs = DEFAULT_RESUME_AFTER_MS
     this.retryTimers = new Set()
     // set once a retry failed as well, until GET and POST have both recovered
     this.interrupted = false
@@ -301,8 +301,8 @@ export default class LongPoll {
    */
   retryOr(method, retry, fail){
     if(!this.resumable){ return fail() }
-    const delay = RETRY_DELAYS[Math.min(this.retries[method], RETRY_DELAYS.length - 1)]
     this.retries[method]++
+    const delay = this.resumeAfterMs(this.retries[method])
     // a single failed request is retried quickly, so we only report the interruption
     // once its retry failed as well
     if(this.retries[method] > 1 && !this.interrupted){

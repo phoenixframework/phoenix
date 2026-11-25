@@ -102,6 +102,14 @@ describe("with transports", function (){
       expect(socket.params()).toEqual({one: "two"})
     })
 
+    it("passes resumeAfterMs to the transport", function (){
+      const resumeAfterMs = () => 30
+      socket = new Socket("/socket", {transport: LongPoll, resumeAfterMs})
+      socket.connect()
+      expect(socket.conn.resumeAfterMs).toBe(resumeAfterMs)
+      socket.disconnect()
+    })
+
     describe("with Websocket", function (){
       it("defaults to Websocket transport if available", function (done){
         let mockServer = new WebSocketServer("wss://example.com/")
