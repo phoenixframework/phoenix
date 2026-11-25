@@ -219,21 +219,48 @@ defmodule Phoenix.Transports.LongPoll do
             {:messages, messages, ^ref} -> {:ok, messages, nil}
             {:messages, messages, ^ref, last} -> {:ok, messages, last}
           after
-            opts[:window_ms] ->
-              broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-              {:no_content, [], ack}
+            opts[:window_ms] -> expire(endpoint, server_ref, client_ref, ref, ack, opts)
           end
       after
-        opts[:window_ms] ->
-          # Without messages, the last message is the one the client acknowledged.
-          # It tells the client that we keep the messages, like we do with messages.
-          broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
-          {:no_content, [], ack}
+        opts[:window_ms] -> expire(endpoint, server_ref, client_ref, ref, ack, opts)
       end
 
     conn
     |> put_status(status)
     |> status_token_messages_json(token, messages, last)
+  end
+
+  # Stops waiting for messages. The session can still answer our flush afterwards.
+  # It keeps the messages until the client acknowledges them, so the client gets
+  # them with its next poll. Without messages, the last message is the one the client
+  # acknowledged. It tells the client that we keep the messages, like we do with messages.
+  defp expire(endpoint, server_ref, client_ref, ref, ack, _opts) when is_integer(ack) do
+    broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
+    {:no_content, [], ack}
+  end
+
+  # For clients that don't acknowledge, the session drops the messages it sends.
+  # It handles our requests in order, so we ask it to echo a subscribe: if it
+  # answered the flush, the messages arrive before the echo.
+  # See https://github.com/phoenixframework/phoenix/pull/6901.
+  #
+  # TODO: Remove in Phoenix 1.9, together with the flush without ack
+  defp expire(endpoint, server_ref, client_ref, ref, nil, opts) do
+    echo_ref = make_ref()
+    broadcast_from!(endpoint, server_ref, {:expired, client_ref, ref})
+    broadcast_from!(endpoint, server_ref, {:subscribe, client_ref, echo_ref})
+
+    receive do
+      # The echo follows the messages. We deliberately leave it in the mailbox,
+      # as waiting for it would delay the response. With Cowboy, the request
+      # process stops after the response. Bandit ignores unhandled messages.
+      {:messages, messages, ^ref} -> {:ok, messages, nil}
+      {:subscribe, ^echo_ref} -> {:no_content, [], nil}
+    after
+      # We cannot tell if the session still answers the flush, so we fail
+      # and the client starts a new session instead of missing messages.
+      opts[:pubsub_timeout_ms] -> {:gone, [], nil}
+    end
   end
 
   defp int_param(conn, key) do
