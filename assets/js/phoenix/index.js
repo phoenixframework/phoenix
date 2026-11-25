@@ -88,8 +88,8 @@
  * ```
  *
  * LongPoll automatically retries interrupted requests while the server keeps
- * its session alive. During recovery, channels stay joined and outgoing messages
- * are buffered. Use `onSuspend` and `onResume` to show connection status without
+ * its session alive, with the delays from the `resumeAfterMs` option. During
+ * recovery, channels stay joined and outgoing messages are buffered. Use `onSuspend` and `onResume` to show connection status without
  * resetting channel state:
  *
  * ```
