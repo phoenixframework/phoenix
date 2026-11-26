@@ -30,7 +30,14 @@ let decodeMessage = (msg) => typeof(msg) === "string" ? msg : base64ToArrayBuffe
 
 export default class LongPoll {
 
-  constructor(endPoint, protocols){
+  /**
+   * @param {string} endPoint
+   * @param {string[]} [protocols]
+   * @param {Object} [opts]
+   * @param {string} [opts.session] - The token of a session the server started for us,
+   * which we attach to like we resume a session, see `Socket.attachSession`
+   */
+  constructor(endPoint, protocols, opts = {}){
     // the URL and subprotocols of a poll that resumes the session, which the socket
     // replaces so that we resume with its current params and auth token
     this.connectionInfo = () => ({endPoint, protocols})
@@ -71,6 +78,9 @@ export default class LongPoll {
     this.onsuspend = function (){ } // noop
     this.onresume = function (){ } // noop
     this.readyState = SOCKET_STATES.connecting
+    if(opts.session){
+      this.resumeSession({token: opts.session, received: 0, confirmed: 0, unconfirmed: []})
+    }
     // we must wait for the caller to finish setting up our callbacks and timeout properties,
     // and it might close us before that, e.g. when disconnecting right after connecting
     setTimeout(() => this.poll(), 0)

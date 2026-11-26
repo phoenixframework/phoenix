@@ -128,6 +128,13 @@ defmodule Phoenix.Socket do
   and long polling that interacts with Phoenix.Socket and can be
   used as reference for those interested in implementing custom clients.
 
+  ## Detached sessions
+
+  A request can start a session of a socket before its client connects, for
+  example while it renders a page, and join channels in it. The client attaches
+  to the session afterwards and receives the replies of these joins, together
+  with the messages the channels pushed in the meantime. See `start_detached/3`.
+
   ## Custom sockets and transports
 
   See the `Phoenix.Socket.Transport` documentation for more information on
@@ -365,6 +372,123 @@ defmodule Phoenix.Socket do
   end
 
   ## USER API
+
+  @doc """
+  Starts a detached socket session at `path` using the HTTP connection `conn`.
+
+  The server can join channels with `join_detached/3` before the client connects,
+  for example while rendering a page. The client then attaches to the session with
+  the returned token, see `Socket.attachSession` and `Channel.awaitJoin` in
+  `phoenix.js`. It receives the replies of the joins and the messages the
+  channels pushed before it attached.
+
+  Builds `connect_info` from `conn` using the socket's `:connect_info` configuration.
+  If the request has fetched its HTTP session, `connect_info.session` contains
+  its current contents. The socket receives the params `%{"vsn" => "2.0.0"}`,
+  and `:detached` as transport.
+  When the client attaches, the socket checks its connection with `c:resume/3`.
+
+  The socket must be resumable. A WebSocket needs the `:resumable` option of
+  `Phoenix.Endpoint.socket/3`. When it is a function, it decides after `c:connect/3`
+  accepted the connection, as for a new WebSocket. Long polling always resumes.
+
+  The session stops when no client attached within its window, like a session
+  that lost its client.
+
+  ## Options
+
+    * `:window_ms` - the base timeout for client attachment, in milliseconds.
+      The server uses `1.5 × :window_ms` as the session timeout. Defaults to the
+      `:window_ms` of the socket transport.
+
+    * `:max_pending` - the maximum number of detached sessions without a client
+      on this node, across all endpoints. When the node has that many, no session
+      starts. Requests that start sessions at the same time can exceed it slightly.
+      Defaults to no limit. See `detached_count/0`.
+
+  ## Return values
+
+    * `{:ok, session, token}` - the session and the token the client attaches with
+
+    * `{:error, :limit}` - the node reached the `:max_pending` limit
+
+    * `{:error, :no_socket}` - the endpoint has no socket at `path`
+
+    * `{:error, :not_resumable}` - the socket is not resumable
+
+    * `{:error, :denied}` - the `:resumable` function of the socket returned `false`
+
+    * `{:error, :not_a_phoenix_socket}` - the socket at `path` does not use `Phoenix.Socket`
+
+    * `{:error, reason}` - `c:connect/3` rejected the connection, with `:rejected`
+      as reason when it returned `:error`
+
+  > #### Experimental {: .warning}
+  >
+  > Detached sessions are experimental and might change in future releases.
+  """
+  @spec start_detached(Plug.Conn.t(), String.t(), keyword) ::
+          {:ok, pid, String.t()} | {:error, term}
+  def start_detached(%Plug.Conn{} = conn, path, opts \\ []) when is_binary(path) do
+    endpoint =
+      conn.private[:phoenix_endpoint] ||
+        raise ArgumentError, "start_detached/3 requires a conn that went through an endpoint"
+
+    Phoenix.Transports.Detached.start(conn, endpoint, path, opts)
+  end
+
+  @doc """
+  Joins `topic` in a session started with `start_detached/3`, like a client that
+  sends a join with `payload`.
+
+  The channel cannot tell this join from a join of the client, so `payload` should
+  contain what the client would send. To pass data that only the server can provide,
+  use the `:assigns` option.
+
+  ## Options
+
+    * `:assigns` - a map merged into the channel socket assigns, as with `channel/3`.
+      These values come from the server and cannot be supplied by clients.
+
+  Returns `{:ok, join_ref}` when the channel joins. Pass `join_ref` to
+  `Channel.awaitJoin` on the client. The session buffers the join reply until
+  the client attaches.
+
+  Returns `{:error, reply}` if the channel rejects the join, crashes, or has
+  already joined `topic` in this session.
+  """
+  @spec join_detached(pid, String.t(), term, keyword) :: {:ok, String.t()} | {:error, map}
+  def join_detached(session, topic, payload, opts \\ [])
+      when is_pid(session) and is_binary(topic) do
+    assigns = Keyword.get(opts, :assigns, %{})
+
+    if not is_map(assigns) do
+      raise ArgumentError, ":assigns must be a map, got: #{inspect(assigns)}"
+    end
+
+    Phoenix.Transports.Detached.join(session, topic, payload, assigns)
+  end
+
+  @doc """
+  Returns the number of detached sessions on this node that no client attached to yet.
+
+  See `start_detached/3`.
+  """
+  @spec detached_count() :: non_neg_integer
+  def detached_count do
+    Phoenix.Transports.Detached.count()
+  end
+
+  @doc """
+  Stops a session started with `start_detached/3`, together with its channels.
+
+  Use it when the client won't attach, for example because the request redirects
+  instead of rendering a page.
+  """
+  @spec stop_detached(pid) :: :ok
+  def stop_detached(session) when is_pid(session) do
+    Phoenix.Transports.Detached.stop(session)
+  end
 
   @doc """
   Adds a `key`/`value` pair to `socket` assigns.
@@ -632,6 +756,41 @@ defmodule Phoenix.Socket do
     {:ok, {state, socket}}
   end
 
+  # Joins a channel for a client that attaches to the socket later, see join_detached/3.
+  # The client did not send the join, so we pick its ref. The reply is for the client.
+  # Clients number their refs, so ours have a prefix to never match the refs of the client.
+  def __info__({__MODULE__, :join, {pid, ref}, topic, payload, assigns}, {state, socket}) do
+    count = state.detached_joins + 1
+    state = %{state | detached_joins: count}
+    join_ref = "phx-" <> Integer.to_string(count)
+
+    message = %Message{
+      topic: topic,
+      event: "phx_join",
+      payload: payload,
+      ref: join_ref,
+      join_ref: join_ref
+    }
+
+    with nil <- Map.get(state.channels, topic),
+         {%Reply{} = reply, state} <- join(message, state, socket, assigns) do
+      case reply.status do
+        :ok -> send(pid, {ref, :ok, join_ref})
+        :error -> send(pid, {ref, :error, reply.payload})
+      end
+
+      {:push, encode_reply(socket, reply), {state, socket}}
+    else
+      :unmatched ->
+        send(pid, {ref, :error, %{reason: "unmatched topic"}})
+        {:ok, {state, socket}}
+
+      {_pid, _monitor_ref, _status} ->
+        send(pid, {ref, :error, %{reason: "already joined"}})
+        {:ok, {state, socket}}
+    end
+  end
+
   def __info__(_, state) do
     {:ok, state}
   end
@@ -711,6 +870,8 @@ defmodule Phoenix.Socket do
     state = %{
       channels: %{},
       channels_inverse: %{},
+      # the number of joins we sent for clients that attach later, see join_detached/3
+      detached_joins: 0,
       max_channels_per_transport: Keyword.get(options, :max_channels_per_transport, 100)
     }
 
@@ -771,57 +932,12 @@ defmodule Phoenix.Socket do
     {:reply, :ok, encode_reply(socket, reply), {state, socket}}
   end
 
-  defp handle_in(
-         nil,
-         %{event: "phx_join", topic: topic, ref: ref, join_ref: join_ref} = message,
-         state,
-         socket
-       ) do
-    case socket.handler.__channel__(topic) do
-      {channel, opts} ->
-        if map_size(state.channels) >= state.max_channels_per_transport do
-          Logger.error(
-            "Reached max channels per transport limit of #{state.max_channels_per_transport} for socket #{inspect(socket.id)}"
-          )
+  defp handle_in(nil, %{event: "phx_join"} = message, state, socket) do
+    case join(message, state, socket) do
+      {%Reply{status: status} = reply, state} ->
+        {:reply, status, encode_reply(socket, reply), {state, socket}}
 
-          reply = %Reply{
-            join_ref: join_ref,
-            ref: ref,
-            topic: topic,
-            status: :error,
-            payload: %{reason: "too many channels joined"}
-          }
-
-          {:reply, :error, encode_reply(socket, reply), {state, socket}}
-        else
-          case Phoenix.Channel.Server.join(socket, channel, message, opts) do
-            {:ok, reply, pid} ->
-              reply = %Reply{
-                join_ref: join_ref,
-                ref: ref,
-                topic: topic,
-                status: :ok,
-                payload: reply
-              }
-
-              state = put_channel(state, pid, topic, join_ref)
-              {:reply, :ok, encode_reply(socket, reply), {state, socket}}
-
-            {:error, reply} ->
-              reply = %Reply{
-                join_ref: join_ref,
-                ref: ref,
-                topic: topic,
-                status: :error,
-                payload: reply
-              }
-
-              {:reply, :error, encode_reply(socket, reply), {state, socket}}
-          end
-        end
-
-      _ ->
-        Logger.warning("Ignoring unmatched topic \"#{topic}\" in #{inspect(socket.handler)}")
+      :unmatched ->
         {:reply, :error, encode_ignore(socket, message), {state, socket}}
     end
   end
@@ -899,6 +1015,63 @@ defmodule Phoenix.Socket do
     # This clause can happen if the server drops the channel
     # and the client sends a message meanwhile
     {:reply, :error, encode_ignore(socket, message), {state, socket}}
+  end
+
+  # The assigns come from the server, see join_detached/4.
+  defp join(
+         %{topic: topic, ref: ref, join_ref: join_ref} = message,
+         state,
+         socket,
+         assigns \\ %{}
+       ) do
+    case socket.handler.__channel__(topic) do
+      {channel, opts} ->
+        opts = Keyword.update(opts, :assigns, assigns, &Map.merge(&1, assigns))
+
+        if map_size(state.channels) >= state.max_channels_per_transport do
+          Logger.error(
+            "Reached max channels per transport limit of #{state.max_channels_per_transport} for socket #{inspect(socket.id)}"
+          )
+
+          reply = %Reply{
+            join_ref: join_ref,
+            ref: ref,
+            topic: topic,
+            status: :error,
+            payload: %{reason: "too many channels joined"}
+          }
+
+          {reply, state}
+        else
+          case Phoenix.Channel.Server.join(socket, channel, message, opts) do
+            {:ok, reply, pid} ->
+              reply = %Reply{
+                join_ref: join_ref,
+                ref: ref,
+                topic: topic,
+                status: :ok,
+                payload: reply
+              }
+
+              {reply, put_channel(state, pid, topic, join_ref)}
+
+            {:error, reply} ->
+              reply = %Reply{
+                join_ref: join_ref,
+                ref: ref,
+                topic: topic,
+                status: :error,
+                payload: reply
+              }
+
+              {reply, state}
+          end
+        end
+
+      _ ->
+        Logger.warning("Ignoring unmatched topic \"#{topic}\" in #{inspect(socket.handler)}")
+        :unmatched
+    end
   end
 
   defp put_channel(state, pid, topic, join_ref) do

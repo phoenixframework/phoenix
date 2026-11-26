@@ -779,6 +779,36 @@ defmodule Phoenix.Endpoint do
     paths
   end
 
+  @doc false
+  # The handler of the socket at the given path and the config of its transports,
+  # as the transports receive it, or nil if the endpoint has no socket at the path.
+  def __socket_config__(endpoint, path) do
+    Phoenix.Config.cache(endpoint, {:socket_config, path}, fn _ ->
+      config =
+        Enum.find_value(endpoint.__sockets__(), fn
+          {^path, handler, opts} ->
+            %{
+              handler: handler,
+              websocket: transport_config(opts, :websocket, true, Phoenix.Transports.WebSocket),
+              longpoll: transport_config(opts, :longpoll, false, Phoenix.Transports.LongPoll)
+            }
+
+          _ ->
+            nil
+        end)
+
+      {:cache, config}
+    end)
+  end
+
+  defp transport_config(opts, key, default, transport) do
+    if transport_opts = Keyword.get(opts, key, default) do
+      transport_opts
+      |> put_socket_opts(opts)
+      |> Phoenix.Socket.Transport.load_config(transport)
+    end
+  end
+
   # Copies top-level socket options into the transport config,
   # which is what the socket receives on connect.
   defp put_socket_opts(true, opts), do: put_socket_opts([], opts)

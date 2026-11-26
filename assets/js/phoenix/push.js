@@ -44,6 +44,18 @@ export default class Push {
   }
 
   /**
+   * @private
+   *
+   * Waits for the reply to a push the server sent for us with the given ref.
+   */
+  awaitReply(ref, timeout){
+    this.timeout = timeout
+    this.reset()
+    this.startTimeout(ref)
+    this.sent = true
+  }
+
+  /**
    *
    * @param {*} status
    * @param {*} callback
@@ -95,10 +107,10 @@ export default class Push {
   /**
    * @private
    */
-  startTimeout(){
+  startTimeout(ref = this.channel.socket.makeRef()){
     if(this.timeoutTimer){ this.cancelTimeout() }
     this.cancelRefEvent()
-    this.ref = this.channel.socket.makeRef()
+    this.ref = ref
     this.refEvent = this.channel.replyEventName(this.ref)
 
     this.channel.on(this.refEvent, payload => {

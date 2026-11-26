@@ -29,7 +29,12 @@ defmodule Phoenix do
     children = [
       # Code reloading must be serial across all Phoenix apps
       Phoenix.CodeReloader.Server,
-      {DynamicSupervisor, name: Phoenix.Transports.Session.Supervisor, strategy: :one_for_one}
+      {DynamicSupervisor, name: Phoenix.Transports.Session.Supervisor, strategy: :one_for_one},
+      # the detached sessions without a client, see Phoenix.Socket.start_detached/3
+      {Registry,
+       name: Phoenix.Transports.Detached.Registry,
+       keys: :unique,
+       partitions: System.schedulers_online()}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)
