@@ -267,7 +267,8 @@ defmodule Phoenix.Socket do
   channels stop, and the client connects again and rejoins its channels,
   which invokes `c:connect/3`.
 
-  A WebSocket invokes this callback for every new connection of a client. A client
+  A WebSocket invokes this callback for every new connection of a client, and a
+  client that used a WebSocket must pass it to continue with long polling. A client
   that long polls decides itself when it resumes after a failed request, so the
   callback does not run for its other requests. To make sure that a client loses
   access, disconnect its socket instead, see `c:id/1`.

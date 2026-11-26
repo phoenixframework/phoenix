@@ -118,8 +118,11 @@
  * ```
  *
  * When the WebSocket fails, or the heartbeat times out, the socket resumes its session
- * over a new WebSocket, and both sides send the messages the other side missed. With a
- * server that does not keep the socket, it behaves like a WebSocket.
+ * over a new WebSocket, and both sides send the messages the other side missed. With the
+ * `longPollFallbackMs` option, the socket continues the session with long polling when it
+ * cannot resume it over a WebSocket within that time, for example when a proxy stops
+ * allowing WebSockets. With a server that does not keep the socket, it behaves like a
+ * WebSocket.
  *
  *
  * ## Channel Hooks
