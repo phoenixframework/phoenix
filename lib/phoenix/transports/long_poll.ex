@@ -10,7 +10,6 @@ defmodule Phoenix.Transports.LongPoll do
   @token_header "x-phoenix-longpoll-token"
   # The params clients use to number their messages and to mark the first polls
   # after a failed request with "phx:resume", which are not for the socket.
-  # We don't check resumed connections, so we treat these polls like any other.
   @transport_params ["phx:ack", "phx:seq", "phx:resume"]
 
   import Plug.Conn
@@ -60,8 +59,8 @@ defmodule Phoenix.Transports.LongPoll do
   # Starts a new session or listen to a message if one already exists.
   defp dispatch(%{method: "GET"} = conn, endpoint, handler, opts) do
     case resume_session(conn, endpoint, opts) do
-      {:ok, new_conn, server_ref, token} ->
-        listen(new_conn, server_ref, token, endpoint, opts)
+      {:ok, new_conn, server_ref, priv_topic, token} ->
+        listen(new_conn, {server_ref, priv_topic}, token, endpoint, opts)
 
       :error ->
         new_session(conn, endpoint, handler, opts)
@@ -71,7 +70,7 @@ defmodule Phoenix.Transports.LongPoll do
   # Publish the message.
   defp dispatch(%{method: "POST"} = conn, endpoint, _, opts) do
     case resume_session(conn, endpoint, opts) do
-      {:ok, new_conn, server_ref, _token} ->
+      {:ok, new_conn, server_ref, _priv_topic, _token} ->
         publish(new_conn, server_ref, endpoint, opts)
 
       :error ->
@@ -142,6 +141,8 @@ defmodule Phoenix.Transports.LongPoll do
     receive do
       {:ok, ^ref} -> nil
       {:error, ^ref} -> nil
+      # the session belongs to a WebSocket, so the socket did not check this request
+      {:rejected, ^ref} -> :gone
     after
       opts[:window_ms] -> :request_timeout
     end
@@ -176,30 +177,102 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  defp listen(conn, server_ref, token, endpoint, opts) do
+  defp listen(conn, {server_ref, priv_topic}, token, endpoint, opts) do
     # the last message the client received, as clients acknowledge our messages
-    case int_param(conn, "phx:ack") do
-      nil -> reject_unnumbered(conn, "phx:ack")
-      ack -> listen(conn, server_ref, token, ack, endpoint, opts)
+    with {:ok, ack} <- fetch_ack(conn),
+         {:ok, wait?} <- check_resume(conn, server_ref, priv_topic, endpoint, opts) do
+      poll(conn, server_ref, token, ack, endpoint, opts, wait?)
+    else
+      {:error, :unnumbered} ->
+        reject_unnumbered(conn, "phx:ack")
+
+      {:error, :rejected} ->
+        # the session is gone, so the client starts a new one
+        conn |> put_status(:gone) |> status_json()
     end
   end
 
-  defp listen(conn, server_ref, token, ack, endpoint, opts) do
+  defp fetch_ack(conn) do
+    case int_param(conn, "phx:ack") do
+      nil -> {:error, :unnumbered}
+      ack -> {:ok, ack}
+    end
+  end
+
+  # Clients resume the session with the polls after a failed request, so the
+  # socket can check the connection again. The client waits for the answer to
+  # this poll before it reports that it recovered, so we answer it without
+  # waiting for messages.
+  defp check_resume(
+         %{params: %{"phx:resume" => _}} = conn,
+         server_ref,
+         priv_topic,
+         endpoint,
+         opts
+       ) do
+    keys = Keyword.get(opts, :connect_info, [])
+    conn = maybe_auth_token_from_header(conn, opts[:auth_token])
+
+    connect_info =
+      Transport.connect_info(conn, endpoint, keys, Keyword.take(opts, @connect_info_opts))
+
+    info = %{
+      endpoint: endpoint,
+      transport: :longpoll,
+      options: opts,
+      params: Map.drop(conn.params, @transport_params),
+      connect_info: connect_info
+    }
+
+    ref = make_ref()
+
+    broadcast_from!(
+      endpoint,
+      server_ref,
+      {:resume, client_ref(server_ref), ref, info, priv_topic}
+    )
+
+    receive do
+      {:resumed, ^ref} -> {:ok, false}
+      {:rejected, ^ref} -> {:error, :rejected}
+    after
+      # The session handles the resume before the flush we send next, as both come from
+      # this process. If it is slow to answer, for example because resume/3 queries the
+      # database, we poll anyway: a session that rejects the resume stops before it sends
+      # us messages, so the poll expires and the next request gets 410.
+      opts[:pubsub_timeout_ms] -> {:ok, false}
+    end
+  end
+
+  defp check_resume(_conn, _server_ref, _priv_topic, _endpoint, _opts), do: {:ok, true}
+
+  defp poll(conn, server_ref, token, ack, endpoint, opts, wait?) do
     ref = make_ref()
     client_ref = client_ref(server_ref)
     flush = {:flush, client_ref, ref, ack}
     broadcast_from!(endpoint, server_ref, flush)
 
-    {status, messages, last} =
+    # The session only answers the flush when it has messages,
+    # so its echo then tells us that it has none.
+    echo_ref = if not wait?, do: echo(endpoint, server_ref, client_ref)
+
+    result =
       receive do
         {:messages, messages, ^ref, last} ->
           {:ok, messages, last}
+
+        {:rejected, ^ref} ->
+          :rejected
+
+        {:subscribe, ^echo_ref} ->
+          expire(endpoint, server_ref, client_ref, ref, ack)
 
         {:now_available, ^ref} ->
           broadcast_from!(endpoint, server_ref, flush)
 
           receive do
             {:messages, messages, ^ref, last} -> {:ok, messages, last}
+            {:rejected, ^ref} -> :rejected
           after
             opts[:window_ms] -> expire(endpoint, server_ref, client_ref, ref, ack)
           end
@@ -207,9 +280,28 @@ defmodule Phoenix.Transports.LongPoll do
         opts[:window_ms] -> expire(endpoint, server_ref, client_ref, ref, ack)
       end
 
-    conn
-    |> put_status(status)
-    |> status_token_messages_json(token, messages, last)
+    case result do
+      {status, messages, last} ->
+        conn
+        |> put_status(status)
+        |> status_token_messages_json(token, messages, last)
+
+      :rejected ->
+        # The session belongs to a WebSocket, so the socket did not check this request.
+        # The client starts a new session.
+        conn |> put_status(:gone) |> status_json()
+    end
+  end
+
+  # The session handles our requests in order and echoes a subscribe, so the echo
+  # tells us that it handled the requests we sent before. When its answer to one of
+  # them arrives first, we leave the echo in the mailbox, as waiting for it would
+  # delay the response. With Cowboy, the request process stops after the response.
+  # Bandit ignores unhandled messages.
+  defp echo(endpoint, server_ref, client_ref) do
+    echo_ref = make_ref()
+    broadcast_from!(endpoint, server_ref, {:subscribe, client_ref, echo_ref})
+    echo_ref
   end
 
   # Stops waiting for messages. The session can still answer our flush afterwards.
@@ -269,7 +361,7 @@ defmodule Phoenix.Transports.LongPoll do
       broadcast_from!(endpoint, server_ref, {:subscribe, client_ref(server_ref), ref})
 
       receive do
-        {:subscribe, ^ref} -> {:ok, new_conn, server_ref, token}
+        {:subscribe, ^ref} -> {:ok, new_conn, server_ref, priv_topic, token}
       after
         opts[:pubsub_timeout_ms] -> :error
       end

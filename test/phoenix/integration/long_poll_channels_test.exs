@@ -124,6 +124,22 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
       {:ok, assign(socket, :user_id, params["user_id"])}
     end
 
+    def resume(%{"reject_resume" => "true"}, _socket, _connect_info), do: :error
+
+    # answers after the plug stopped waiting, which is 200ms in these tests
+    def resume(%{"slow_resume" => result} = params, socket, connect_info) do
+      Process.sleep(300)
+      params = Map.delete(params, "slow_resume")
+
+      if result == "reject",
+        do: :error,
+        else: resume(params, socket, connect_info)
+    end
+
+    def resume(params, socket, _connect_info) do
+      {:ok, assign(socket, :resumed_with, params["resumed_with"])}
+    end
+
     def id(socket) do
       if id = socket.assigns.user_id, do: "user_sockets:#{id}"
     end
@@ -930,6 +946,94 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
 
           resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
           assert resp.body["status"] == 410
+        end
+
+        test "#{@mode}: checks the socket when the client resumes" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          {:ok, {:v1, _id, server, _topic}} =
+            Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+          params =
+            Map.merge(session, %{"phx:ack" => "0", "phx:resume" => "1", "resumed_with" => "a"})
+
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 200
+          assert [_reply, _user_entered, _joined] = resp.body["messages"]
+
+          # the resume callback stores resumed_with in assigns, so this verifies it ran
+          assert {_, %Phoenix.Socket{assigns: %{resumed_with: "a"}, transport: :longpoll}} =
+                   elem(:sys.get_state(server).handler, 1)
+
+          # the channel keeps running
+          assert Process.whereis(:"room:lobby")
+        end
+
+        test "#{@mode}: answers the poll that resumes without waiting for messages" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["last"] == 3
+
+          # the client reports that it recovered once it has the answer
+          params = Map.merge(session, %{"phx:ack" => "3", "phx:resume" => "1"})
+          {time, resp} = :timer.tc(fn -> poll(:get, "/ws", vsn, params) end)
+          assert resp.body["status"] == 204
+          assert resp.body["last"] == 3
+          # other polls wait 200ms for messages in these tests
+          assert time < 200_000
+
+          # the session does not notify the poll anymore
+          Endpoint.broadcast("room:lobby", "new_msg", %{"body" => "hi"})
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "3"))
+          assert [%Message{event: "new_msg"}] = resp.body["messages"]
+        end
+
+        test "#{@mode}: does not send messages when a slow resume is rejected" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          params =
+            Map.merge(session, %{"phx:ack" => "0", "phx:resume" => "1", "slow_resume" => "reject"})
+
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 204
+          assert resp.body["messages"] == []
+          assert_down("room:lobby")
+
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["status"] == 410
+        end
+
+        test "#{@mode}: sends messages when a slow resume is accepted" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          params =
+            Map.merge(session, %{"phx:ack" => "0", "phx:resume" => "1", "slow_resume" => "accept"})
+
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 200
+          assert [_reply, _user_entered, _joined] = resp.body["messages"]
+        end
+
+        test "#{@mode}: stops the socket when it rejects the resume" do
+          vsn = "2.0.0"
+          session = join("/ws", "room:lobby", vsn, "1", @mode)
+
+          params =
+            Map.merge(session, %{"phx:ack" => "0", "phx:resume" => "1", "reject_resume" => "true"})
+
+          resp = poll(:get, "/ws", vsn, params)
+          assert resp.body["status"] == 410
+          refute resp.body["token"]
+          assert_down("room:lobby")
+
+          # the client starts a new session
+          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
+          assert resp.body["status"] == 410
+          assert resp.body["token"]
         end
 
         test "#{@mode}: lonpoll publishing batch events on v2 protocol" do

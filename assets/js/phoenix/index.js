@@ -105,6 +105,22 @@
  * expires, the usual error/close events fire and channels rejoin. Push timeouts continue
  * to apply while suspended.
  *
+ * WebSockets resume the same way with the `resumable` option, which also requires the
+ * `:resumable` WebSocket option in your endpoint:
+ *
+ * ```
+ * let socket = new Socket("/socket", {resumable: true})
+ * ```
+ *
+ * ```elixir
+ * socket "/socket", UserSocket,
+ *   websocket: [resumable: true]
+ * ```
+ *
+ * When the WebSocket fails, or the heartbeat times out, the socket resumes its session
+ * over a new WebSocket, and both sides send the messages the other side missed. With a
+ * server that does not keep the socket, it behaves like a WebSocket.
+ *
  *
  * ## Channel Hooks
  *
@@ -213,6 +229,7 @@
 import Channel from "./channel"
 import LongPoll from "./longpoll"
 import Presence from "./presence"
+import ResumableWebSocket from "./resumable_websocket"
 import Serializer from "./serializer"
 import Socket from "./socket"
 
@@ -220,6 +237,7 @@ export {
   Channel,
   LongPoll,
   Presence,
+  ResumableWebSocket,
   Serializer,
   Socket
 }
