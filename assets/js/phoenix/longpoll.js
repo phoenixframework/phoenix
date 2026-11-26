@@ -3,6 +3,7 @@ import {
   TRANSPORTS,
   AUTH_TOKEN_PREFIX,
   MAX_LONGPOLL_BATCH_SIZE,
+  CLOSE_SESSION_GONE,
   DEFAULT_RESUME_AFTER_MS
 } from "./constants"
 
@@ -30,11 +31,10 @@ let decodeMessage = (msg) => typeof(msg) === "string" ? msg : base64ToArrayBuffe
 export default class LongPoll {
 
   constructor(endPoint, protocols){
-    // we only support subprotocols for authToken
-    // ["phoenix", "base64url.bearer.phx.BASE64_ENCODED_TOKEN"]
-    if(protocols && protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)){
-      this.authToken = atob(protocols[1].slice(AUTH_TOKEN_PREFIX.length))
-    }
+    // the URL and subprotocols of a poll that resumes the session, which the socket
+    // replaces so that we resume with its current params and auth token
+    this.connectionInfo = () => ({endPoint, protocols})
+    this.applyConnectionInfo({endPoint, protocols})
     this.endPoint = null
     this.token = null
     this.skipHeartbeat = true
@@ -65,11 +65,24 @@ export default class LongPoll {
     this.onclose = function (){ } // noop
     this.onsuspend = function (){ } // noop
     this.onresume = function (){ } // noop
-    this.pollEndpoint = this.normalizeEndpoint(endPoint)
     this.readyState = SOCKET_STATES.connecting
     // we must wait for the caller to finish setting up our callbacks and timeout properties,
     // and it might close us before that, e.g. when disconnecting right after connecting
     setTimeout(() => this.poll(), 0)
+  }
+
+  /**
+   * @private
+   */
+  applyConnectionInfo({endPoint, protocols}){
+    this.pollEndpoint = this.normalizeEndpoint(endPoint)
+    // we only support subprotocols for authToken
+    // ["phoenix", "base64url.bearer.phx.BASE64_ENCODED_TOKEN"]
+    if(protocols && protocols.length === 2 && protocols[1].startsWith(AUTH_TOKEN_PREFIX)){
+      this.authToken = atob(protocols[1].slice(AUTH_TOKEN_PREFIX.length))
+    } else {
+      this.authToken = undefined
+    }
   }
 
   normalizeEndpoint(endPoint){
@@ -103,22 +116,25 @@ export default class LongPoll {
     // onopen can close us before the next poll, just as the caller can close us
     // before the constructor's deferred first poll
     if(!this.isActive()){ return }
+    // A poll after a failed one resumes the session. The server checks the connection
+    // again, as the client may have lost access in the meantime, so we send its
+    // current params and auth token.
+    const resume = this.retries.GET > 0
+    if(resume){ this.applyConnectionInfo(this.connectionInfo()) }
     const headers = {"Accept": "application/json"}
     if(this.authToken){
       headers["X-Phoenix-AuthToken"] = this.authToken
     }
     // the first poll starts the session, which has no messages to acknowledge yet
     const params = this.token === null ? {} : {"phx:ack": this.ack}
-    // A poll after a failed one resumes the session. The server can check the
-    // connection again, as the client may have lost access in the meantime.
-    if(this.retries.GET > 0){ params["phx:resume"] = 1 }
+    if(resume){ params["phx:resume"] = 1 }
     this.ajax("GET", headers, null, params, () => this.retryOr("GET", () => this.poll(), () => this.ontimeout()), resp => {
       if(resp){
         var {status, token, messages, last} = resp
         if(status === 410 && this.token !== null){
           // In case we already have a token, this means that our existing session
           // is gone. We fail so that the client rejoins its channels.
-          this.closeAndRetry(410, 3410, "session_gone", false)
+          this.closeAndRetry(410, CLOSE_SESSION_GONE, "session_gone", false)
           return
         }
         this.token = token

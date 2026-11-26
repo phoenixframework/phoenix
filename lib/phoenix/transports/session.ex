@@ -134,10 +134,45 @@ defmodule Phoenix.Transports.Session do
   def handle_info({:dispatch, _client_ref, _body, _ref}, state), do: stop_unnumbered(state)
   def handle_info({:flush, _client_ref, _ref}, state), do: stop_unnumbered(state)
 
-  # Answers a request that checks if the session is reachable.
+  # Answers a request that checks if the session is reachable, and serves as an echo
+  # after a :flush: we handle messages in order, so the echo arrives after the answer
+  # to the flush.
   def handle_info({:subscribe, client_ref, ref}, state) do
     send_client(state, client_ref, {:subscribe, ref})
     {:noreply, state}
+  end
+
+  # Transports find the session by the pid in the token. A pid can belong to another
+  # session after this one stopped, so a client that resumes also sends the topic of
+  # the token, which only this session has. We reject a mismatch but keep running for
+  # our own client.
+  def handle_info({:resume, client_ref, ref, _info, priv_topic}, state)
+      when priv_topic != state.priv_topic do
+    send_client(state, client_ref, {:rejected, ref})
+    {:noreply, state}
+  end
+
+  # A client that resumes the session after a failed request
+  # tells us about its new connection, so the socket can check it.
+  def handle_info({:resume, client_ref, ref, info, _priv_topic}, state) do
+    %{handler: {handler, handler_state}} = state
+
+    result =
+      if function_exported?(handler, :handle_resume, 2) do
+        handler.handle_resume(info, handler_state)
+      else
+        {:ok, handler_state}
+      end
+
+    case result do
+      {:ok, handler_state} ->
+        send_client(state, client_ref, {:resumed, ref})
+        {:noreply, %{state | handler: {handler, handler_state}}}
+
+      {:error, _reason} ->
+        send_client(state, client_ref, {:rejected, ref})
+        {:stop, {:shutdown, :resume_rejected}, state}
+    end
   end
 
   ## Outgoing messages

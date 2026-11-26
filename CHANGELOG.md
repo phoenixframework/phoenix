@@ -25,6 +25,11 @@
     old and new nodes are active at the same time, ensure that you deploy
     Phoenix v1.8.18 or a later v1.8 release first. Browsers that still run
     phoenix.js of an older release cannot long poll until they reload the page.
+  * [Phoenix.Socket] Add the optional `c:Phoenix.Socket.resume/3` callback to check
+    a client that resumes its socket with the poll after a failed long-poll request,
+    for example to verify that the user is still logged in. Returning `:error`
+    stops the socket, so the client connects again. Custom transports can implement
+    the new optional `c:Phoenix.Socket.Transport.handle_resume/2` callback
   * The longpoll session token is now sent in a `x-phoenix-longpoll-token`
     header instead of the query string. If you do rolling deploys where both
     old and new nodes are active at the same time, ensure that you deploy

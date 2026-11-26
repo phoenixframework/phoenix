@@ -102,6 +102,18 @@ describe("with transports", function (){
       expect(socket.params()).toEqual({one: "two"})
     })
 
+    it("gives the transport the current params and auth token", function (){
+      let value = "old"
+      socket = new Socket("/socket", {transport: LongPoll, params: () => ({token: value}), authToken: () => value})
+      socket.connect()
+
+      value = "new"
+      const {endPoint, protocols} = socket.conn.connectionInfo()
+      expect(endPoint).toContain("token=new")
+      expect(protocols).toEqual(["phoenix", `${AUTH_TOKEN_PREFIX}${btoa("new").replace(/=/g, "")}`])
+      socket.disconnect()
+    })
+
     it("passes resumeAfterMs to the transport", function (){
       const resumeAfterMs = () => 30
       socket = new Socket("/socket", {transport: LongPoll, resumeAfterMs})
