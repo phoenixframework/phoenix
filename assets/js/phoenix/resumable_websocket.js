@@ -6,6 +6,7 @@ import {
 } from "./constants"
 
 import Ajax from "./ajax"
+import LongPoll from "./longpoll"
 
 // how often we tell the server about the messages we received
 const ACK_INTERVAL_MS = 1000
@@ -32,6 +33,10 @@ let isHeartbeat = (data, pattern) => typeof(data) === "string" && pattern.test(d
  * failed, see the `:resumable` option of `Phoenix.Endpoint.socket/3`. Both sides
  * number their messages and keep them until the other side confirmed them, so
  * they send the missed ones again after resuming.
+ *
+ * With `longPollFallbackMs`, which the socket sets from its option of the same name,
+ * we continue the session with long polling when resuming it over a WebSocket did
+ * not succeed within that time, and keep long polling for the rest of the session.
  *
  * Servers that don't keep the socket for us make it behave like a WebSocket.
  */
@@ -68,6 +73,11 @@ export default class ResumableWebSocket {
     this.ackTimer = null
     // set once a retry failed as well, until we resumed the session
     this.interrupted = false
+    // how long we try to resume the session over a WebSocket before we long poll, if at all
+    this.longPollFallbackMs = null
+    this.fallbackTimer = null
+    // the LongPoll that continues the session once we fell back to it
+    this.longpoll = null
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
@@ -88,6 +98,10 @@ export default class ResumableWebSocket {
 
   send(data){
     if(this.readyState !== SOCKET_STATES.open){ return }
+    if(this.longpoll){
+      this.longpoll.send(data)
+      return
+    }
     // we number the messages implicitly, in the order we send them
     if(!this.unsupported && !isHeartbeat(data, HEARTBEAT_PATTERN)){ this.unconfirmed.push(data) }
     if(this.ready){ this.ws.send(data) }
@@ -97,6 +111,12 @@ export default class ResumableWebSocket {
     if(this.readyState === SOCKET_STATES.closed){ return }
     // the server stops the session, as we did not lose the connection
     if(this.ready && this.token){ this.ws.send(control("phx_close", {})) }
+    if(this.longpoll){
+      const longpoll = this.longpoll
+      this.longpoll = null
+      longpoll.onclose = function (){ } // noop
+      longpoll.close(code, reason)
+    }
     this.stop(code, reason)
     this.onclose({code: code || 1005, reason: reason || "", wasClean: true})
   }
@@ -109,6 +129,8 @@ export default class ResumableWebSocket {
    */
   resumeAfterHeartbeatTimeout(){
     if(this.readyState !== SOCKET_STATES.open || !this.token){ return false }
+    // long polling detects failed requests itself
+    if(this.longpoll){ return true }
     if(this.ws && !this.resuming){
       this.dropWebSocket()
       this.retry()
@@ -229,6 +251,9 @@ export default class ResumableWebSocket {
     // we send the messages the server did not receive again
     this.unconfirmed.forEach(data => this.ws.send(data))
     this.retries = 0
+    // The WebSocket is usable now; replay must not trigger a long-poll fallback.
+    clearTimeout(this.fallbackTimer)
+    this.fallbackTimer = null
     this.scheduleRecovery()
   }
 
@@ -265,6 +290,8 @@ export default class ResumableWebSocket {
    * @private
    */
   recovered(){
+    clearTimeout(this.fallbackTimer)
+    this.fallbackTimer = null
     if(this.interrupted){
       this.interrupted = false
       this.onresume()
@@ -320,10 +347,59 @@ export default class ResumableWebSocket {
     // interruption once resuming failed as well
     if(this.retries > 1){ this.interrupt() }
     if(this.readyState !== SOCKET_STATES.open){ return }
+    if(this.longPollFallbackMs && !this.fallbackTimer){
+      this.fallbackTimer = setTimeout(() => this.fallBack(), this.longPollFallbackMs)
+    }
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null
       this.connect(true)
     }, delay)
+  }
+
+  /**
+   * @private
+   *
+   * Continues the session with long polling, as resuming it over a WebSocket did not
+   * succeed in time. The LongPoll sends the messages the server did not confirm.
+   */
+  fallBack(){
+    this.fallbackTimer = null
+    if(this.readyState !== SOCKET_STATES.open){ return }
+    clearTimeout(this.retryTimer)
+    this.retryTimer = null
+    this.dropWebSocket()
+    this.resuming = false
+    const {endPoint, protocols} = this.connectionInfo()
+    const longpoll = new LongPoll(endPoint, protocols)
+    longpoll.timeout = this.timeout
+    longpoll.resumeAfterMs = this.resumeAfterMs
+    longpoll.connectionInfo = this.connectionInfo
+    longpoll.resumeSession({
+      token: this.token,
+      received: this.received,
+      confirmed: this.confirmed,
+      unconfirmed: this.unconfirmed
+    })
+    this.unconfirmed = []
+    this.longpoll = longpoll
+    const current = () => this.longpoll === longpoll
+    longpoll.onmessage = event => { if(current()){ this.onmessage(event) } }
+    longpoll.onerror = error => {
+      if(!current()){ return }
+      // LongPoll errors end the session. Stop reporting an open connection before
+      // callbacks run, but let them close us and clean up the LongPoll themselves.
+      this.readyState = SOCKET_STATES.connecting
+      this.onerror(error)
+    }
+    longpoll.onsuspend = () => { if(current()){ this.interrupt() } }
+    longpoll.onresume = () => { if(current()){ this.recovered() } }
+    longpoll.onclose = event => {
+      if(!current()){ return }
+      // the session is gone, so the socket connects again
+      this.longpoll = null
+      this.stop()
+      this.onclose(event)
+    }
   }
 
   /**
@@ -365,8 +441,10 @@ export default class ResumableWebSocket {
     this.readyState = SOCKET_STATES.closed
     clearTimeout(this.retryTimer)
     clearTimeout(this.ackTimer)
+    clearTimeout(this.fallbackTimer)
     this.retryTimer = null
     this.ackTimer = null
+    this.fallbackTimer = null
     this.interrupted = false
     this.dropWebSocket(code, reason)
   }

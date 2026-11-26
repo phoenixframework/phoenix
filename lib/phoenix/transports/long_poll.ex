@@ -141,7 +141,7 @@ defmodule Phoenix.Transports.LongPoll do
     receive do
       {:ok, ^ref} -> nil
       {:error, ^ref} -> nil
-      # the session belongs to a WebSocket, so the socket did not check this request
+      # the client uses another transport and did not resume the session to long poll
       {:rejected, ^ref} -> :gone
     after
       opts[:window_ms] -> :request_timeout
@@ -287,8 +287,8 @@ defmodule Phoenix.Transports.LongPoll do
         |> status_token_messages_json(token, messages, last)
 
       :rejected ->
-        # The session belongs to a WebSocket, so the socket did not check this request.
-        # The client starts a new session.
+        # The client uses another transport and did not resume the session to long
+        # poll, so the socket did not check this request. The client starts a new session.
         conn |> put_status(:gone) |> status_json()
     end
   end

@@ -59,6 +59,11 @@ export default class LongPoll {
     this.retryTimers = new Set()
     // set once a retry failed as well, until GET and POST have both recovered
     this.interrupted = false
+    // set while we resume a session that another transport started, see resumeSession
+    this.resuming = false
+    this.resumeBuffer = []
+    // set until the first resumed poll has delivered its messages
+    this.resumePending = false
     this.onopen = function (){ } // noop
     this.onerror = function (){ } // noop
     this.onmessage = function (){ } // noop
@@ -69,6 +74,23 @@ export default class LongPoll {
     // we must wait for the caller to finish setting up our callbacks and timeout properties,
     // and it might close us before that, e.g. when disconnecting right after connecting
     setTimeout(() => this.poll(), 0)
+  }
+
+  /**
+   * @private
+   *
+   * Continues a session that another transport started, such as a ResumableWebSocket,
+   * before the first poll. We send the token and the number of the last message we received,
+   * and send the messages the server did not confirm again.
+   * The server drops any messages it already received.
+   */
+  resumeSession({token, received, confirmed, unconfirmed}){
+    this.token = token
+    this.resuming = true
+    this.resumePending = true
+    this.ack = received
+    this.seq = confirmed
+    this.resumeBuffer = unconfirmed.slice()
   }
 
   /**
@@ -119,7 +141,7 @@ export default class LongPoll {
     // A poll after a failed one resumes the session. The server checks the connection
     // again, as the client may have lost access in the meantime, so we send its
     // current params and auth token.
-    const resume = this.retries.GET > 0
+    const resume = this.resuming || this.retries.GET > 0
     if(resume){ this.applyConnectionInfo(this.connectionInfo()) }
     const headers = {"Accept": "application/json"}
     if(this.authToken){
@@ -147,6 +169,17 @@ export default class LongPoll {
       }
       // A POST can recover while these messages are still queued for delivery.
       if(status === 200){ this.awaitingMessages = true }
+      if(this.resuming && (status === 200 || status === 204)){
+        // we resumed the session, so we are open and send what we kept
+        this.readyState = SOCKET_STATES.open
+        // keep callback pushes buffered after the messages we already kept
+        this.onopen({})
+        if(!this.isActive()){ return }
+        this.resuming = false
+        const buffered = this.resumeBuffer
+        this.resumeBuffer = []
+        buffered.forEach(body => this.send(body))
+      }
       switch(status){
         case 200:
           // The server numbers its messages and sends all we did not acknowledge,
@@ -229,6 +262,11 @@ export default class LongPoll {
   // pushes against an empty buffer
 
   send(body){
+    // we send once we resumed the session, numbered after the messages we kept
+    if(this.resuming){
+      this.resumeBuffer.push(body)
+      return
+    }
     if(typeof(body) !== "string"){ body = arrayBufferToBase64(body) }
     // messages are numbered, so the server drops the ones it received when we send
     // them again. A batch is sent with the seq of its first message.
@@ -319,8 +357,10 @@ export default class LongPoll {
   succeeded(method){
     this.retries[method] = 0
     // A successful poll must not hide an outstanding failed POST, or vice versa.
-    if(this.interrupted && !this.awaitingMessages && this.retries.GET === 0 && this.retries.POST === 0){
+    if((this.interrupted || this.resumePending) && !this.resuming && !this.awaitingMessages &&
+      this.retries.GET === 0 && this.retries.POST === 0){
       this.interrupted = false
+      this.resumePending = false
       this.onresume()
     }
   }
@@ -346,6 +386,9 @@ export default class LongPoll {
     for(let timer of this.retryTimers){ clearTimeout(timer) }
     this.retryTimers.clear()
     this.interrupted = false
+    this.resumePending = false
+    this.resuming = false
+    this.resumeBuffer = []
     this.batchBuffer = []
     this.awaitingBatchAck = false
     clearTimeout(this.currentBatchTimer)

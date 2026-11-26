@@ -30,7 +30,9 @@
     requires the new `:resumable` WebSocket option of `Phoenix.Endpoint.socket/3`.
     When the WebSocket fails or the heartbeat times out, the socket resumes its
     session over a new WebSocket, and both sides send the messages the other side
-    missed. `:resumable` can also be a function that decides for each connection
+    missed. With the `longPollFallbackMs` option, the socket continues the session
+    with long polling when it cannot resume it over a WebSocket in time.
+    `:resumable` can also be a function that decides for each connection
   * [Phoenix.Socket] Add the optional `c:Phoenix.Socket.resume/3` callback to check
     a client that resumes its socket over a new WebSocket or with the poll after a
     failed long-poll request, for example to verify that the user is still logged

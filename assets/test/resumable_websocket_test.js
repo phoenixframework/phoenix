@@ -377,6 +377,162 @@ describe("ResumableWebSocket", () => {
     expect(FakeWebSocket.instances).toHaveLength(2)
   })
 
+  describe("with a long polling fallback", () => {
+    const polls = () => Ajax.request.mock.calls.filter(([method]) => method === "GET")
+    const posts = () => Ajax.request.mock.calls.filter(([method]) => method === "POST")
+    const params = call => Object.fromEntries(new URL(call[1]).searchParams)
+
+    beforeEach(() => {
+      jest.spyOn(Ajax, "request").mockImplementation(() => ({abort: jest.fn()}))
+    })
+
+    afterEach(() => jest.restoreAllMocks())
+
+    const interrupt = () => {
+      connect()
+      transport.longPollFallbackMs = 2000
+      last().receive("a")
+      transport.send("x")
+      last().drop()
+    }
+
+    it("continues with the current connection info", () => {
+      interrupt()
+      transport.connectionInfo = () => ({endPoint: "ws://localhost/socket/websocket?vsn=2.0.0&token=new"})
+      jest.advanceTimersByTime(2001)
+      expect(params(polls()[0]).token).toBe("new")
+      expect(transport.longpoll.connectionInfo).toBe(transport.connectionInfo)
+    })
+
+    it("passes resumeAfterMs to the LongPoll", () => {
+      interrupt()
+      const resumeAfterMs = () => 30
+      transport.resumeAfterMs = resumeAfterMs
+      jest.advanceTimersByTime(2000)
+      expect(transport.longpoll.resumeAfterMs).toBe(resumeAfterMs)
+    })
+
+    it("continues the session with long polling when resuming takes too long", () => {
+      interrupt()
+      jest.advanceTimersByTime(100)
+      last().drop()
+      jest.advanceTimersByTime(1900)
+      expect(polls()).toHaveLength(0)
+      const ws = last()
+
+      jest.advanceTimersByTime(100)
+      expect(ws.closed).not.toBeNull()
+      jest.advanceTimersByTime(0)
+      expect(params(polls()[0])).toEqual({vsn: "2.0.0", "phx:ack": "1", "phx:resume": "1"})
+      expect(polls()[0][2]["X-Phoenix-Longpoll-Token"]).toBe("token")
+
+      // the session resumed over long polling
+      polls()[0][6]({status: 200, token: "token", messages: ["b"], last: 2})
+      expect(events).toEqual(["open", "a", "suspend"])
+      jest.advanceTimersByTime(0)
+      expect(events).toEqual(["open", "a", "suspend", "b", "resume"])
+      expect(params(posts()[0])["phx:seq"]).toBe("1")
+      expect(posts()[0][3]).toBe("x")
+
+      // we keep long polling and do not open WebSockets anymore
+      transport.send("y")
+      jest.advanceTimersByTime(10_000)
+      expect(FakeWebSocket.instances).toHaveLength(3)
+    })
+
+    it.each([
+      {status: 200, messages: ["b"], last: 2},
+      {status: 204, messages: [], last: 1}
+    ])("keeps replay order when a resume callback pushes after a $status poll", response => {
+      interrupt()
+      transport.onresume = () => transport.send("z")
+      jest.advanceTimersByTime(100)
+      last().drop()
+      jest.advanceTimersByTime(1901)
+      transport.send("y")
+
+      polls()[0][6]({...response, token: "token"})
+      jest.advanceTimersByTime(0)
+
+      expect(params(posts()[0])["phx:seq"]).toBe("1")
+      // A response with messages sends the replay before the recovery callback.
+      // A response without messages can still batch both in the same turn.
+      posts()[0][6]({status: 200, seq: 1})
+      expect(posts().map(call => call[3]).join("\n")).toBe("x\ny\nz")
+      expect(posts().map(call => params(call)["phx:seq"])).toEqual(response.status === 200 ? ["1", "3"] : ["1"])
+    })
+
+    it("does not fall back while replaying a session resumed over a WebSocket", () => {
+      interrupt()
+      jest.advanceTimersByTime(100)
+      last().open()
+      last().receive(control("phx_resumed", {seq: 1, last: 2}))
+      jest.advanceTimersByTime(10_000)
+      expect(polls()).toHaveLength(0)
+    })
+
+    it("does not notify recovery when a fallback message callback closes it", () => {
+      interrupt()
+      jest.advanceTimersByTime(100)
+      last().drop()
+      jest.advanceTimersByTime(1901)
+      transport.onmessage = () => transport.close()
+
+      polls()[0][6]({status: 200, token: "token", messages: ["b"], last: 2})
+      jest.advanceTimersByTime(0)
+
+      expect(events).not.toContain("resume")
+      expect(transport.readyState).toBe(SOCKET_STATES.closed)
+    })
+
+    it("closes when the session is gone", () => {
+      interrupt()
+      // the first poll runs right after we fall back
+      jest.advanceTimersByTime(2001)
+      polls()[0][6]({status: 410, token: "new", messages: [], last: 0})
+      expect(events).toEqual(["open", "a", "error", {close: 3410}])
+      expect(transport.readyState).toBe(SOCKET_STATES.closed)
+    })
+
+    it.each([403, 410, 500])("is no longer open when the fallback reports %s", status => {
+      interrupt()
+      jest.advanceTimersByTime(2001)
+      const states = []
+      transport.onerror = () => states.push(transport.readyState)
+      transport.onclose = () => states.push(transport.readyState)
+
+      polls()[0][6]({status})
+
+      expect(states).toEqual([SOCKET_STATES.connecting, SOCKET_STATES.closed])
+    })
+
+    it("lets an error callback close and clean up the fallback", () => {
+      interrupt()
+      jest.advanceTimersByTime(2001)
+      const longpoll = transport.longpoll
+      transport.onerror = () => transport.close(1000, "done")
+
+      polls()[0][6]({status: 410})
+      jest.advanceTimersByTime(10_000)
+
+      expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
+      expect(longpoll.reqs.size).toBe(0)
+      expect(transport.longpoll).toBeNull()
+      expect(events).toEqual(["open", "a", {close: 1000}])
+      expect(polls()).toHaveLength(1)
+    })
+
+    it("closes the LongPoll when it closes", () => {
+      interrupt()
+      // the first poll runs right after we fall back
+      jest.advanceTimersByTime(2001)
+      const longpoll = transport.longpoll
+      transport.close(1000, "bye")
+      expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
+      expect(events.at(-1)).toEqual({close: 1000})
+    })
+  })
+
   describe("with a server that does not keep sessions", () => {
     it("behaves like a WebSocket", () => {
       connect({session: false})
@@ -457,5 +613,7 @@ describe("Socket with resumable: true", () => {
     jest.advanceTimersByTime(500)
     expect(last()).not.toBe(ws)
     expect(last().params["phx:resume"]).toBe("1")
+    // the LongPoll we fall back to uses the timeout
+    expect(socket.conn.timeout).toBe(60_000)
   })
 })
