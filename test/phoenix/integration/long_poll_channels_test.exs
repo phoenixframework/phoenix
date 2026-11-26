@@ -207,10 +207,11 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
     assert_receive {:DOWN, ^ref, :process, _pid, _}
   end
 
-  # TODO: Number the messages in Phoenix 1.9, when the server requires ack and seq.
-  # The helpers below poll like older clients, which most tests rely on.
   @doc """
   Helper method to maintain token session state when making HTTP requests.
+
+  Like phoenix.js, it numbers the messages it sends and acknowledges the ones it
+  received, unless the params already have "phx:seq" or "phx:ack".
 
   Returns a response with body decoded into JSON map.
   """
@@ -224,11 +225,50 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
         Map.merge(%{"content-type" => "application/json"}, headers)
       end
 
+    params = number(method, params)
     body = encode(serializer, json)
     query_string = params |> Map.put("vsn", vsn) |> URI.encode_query()
     url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> query_string
     {:ok, resp} = HTTPClient.request(method, url, headers, body)
-    decode_body(serializer, resp)
+    resp = decode_body(serializer, resp)
+    numbered(method, params, json, resp)
+    resp
+  end
+
+  defp number(:get, %{"token" => token} = params) do
+    Map.put_new_lazy(params, "phx:ack", fn ->
+      to_string(Process.get({:ack, session_key(token)}, 0))
+    end)
+  end
+
+  defp number(:post, %{"token" => token} = params) do
+    Map.put_new_lazy(params, "phx:seq", fn ->
+      to_string(Process.get({:seq, session_key(token)}, 0) + 1)
+    end)
+  end
+
+  defp number(_method, params), do: params
+
+  defp numbered(:get, %{"token" => token}, _json, %{body: %{"last" => last}})
+       when is_integer(last) do
+    key = {:ack, session_key(token)}
+    Process.put(key, max(Process.get(key, 0), last))
+  end
+
+  defp numbered(:post, %{"token" => token, "phx:seq" => seq}, json, %{body: %{"status" => 200}}) do
+    count = if is_list(json), do: length(json), else: 1
+    key = {:seq, session_key(token)}
+    Process.put(key, max(Process.get(key, 0), String.to_integer(seq) + count - 1))
+  end
+
+  defp numbered(_method, _params, _json, _resp), do: :ok
+
+  # The pubsub mode signs another token for the same session.
+  defp session_key(token) do
+    case Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), token) do
+      {:ok, {:v1, _id, pid, _topic}} -> pid
+      _ -> token
+    end
   end
 
   # Polls until a message matching `fun` arrives and returns all messages received.
@@ -728,28 +768,49 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
         end
 
-        # TODO: Remove in Phoenix 1.9, together with the flush without ack
-        # in Phoenix.Transports.LongPoll.Server
-        test "#{@mode}: accepts legacy flushes without waiting for acknowledgements" do
+        test "#{@mode}: rejects requests without message numbers" do
           vsn = "2.0.0"
           session = join("/ws", "room:lobby", vsn, "1", @mode)
-          resp = poll(:get, "/ws", vsn, Map.put(session, "phx:ack", "0"))
-          assert resp.body["status"] == 200
+          # clients before Phoenix v1.8.18 neither acknowledge nor number their messages
+          url = "http://127.0.0.1:#{@port}/ws/longpoll?" <> URI.encode_query(session)
 
-          {:ok, {:v1, _id, server, _topic}} =
-            Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+          log =
+            capture_log(fn ->
+              {:ok, resp} = HTTPClient.request(:get, url, %{}, "")
+              assert Phoenix.json_library().decode!(resp.body)["status"] == 410
 
-          # an older plug flushes without acknowledging and expects the reply without last
-          Endpoint.broadcast!("room:lobby", "new_msg", %{"body" => "hi"})
-          Process.sleep(50)
-          ref = make_ref()
-          send(server, {:flush, self(), ref})
-          assert_receive {:messages, [_new_msg], ^ref}
+              headers = %{"content-type" => "application/x-ndjson"}
+              {:ok, resp} = HTTPClient.request(:post, url, headers, "[]")
+              assert Phoenix.json_library().decode!(resp.body)["status"] == 410
+            end)
 
-          # it does not acknowledge the messages we sent before, which we drop
-          # like we drop the ones we send to it, so we don't wait for an ack
-          assert %{sent_at: nil, out_seq: 4, acked: 4} = state = :sys.get_state(server)
-          assert :queue.is_empty(state.out)
+          assert log =~ "rejected a GET request without the phx:ack parameter"
+          assert log =~ "rejected a POST request without the phx:seq parameter"
+        end
+
+        test "#{@mode}: stops when a node forwards requests without message numbers" do
+          # nodes before Phoenix v1.8.18 forward requests without the numbers
+          for {topic, request} <- [
+                {"room:flush", {:flush, self(), make_ref()}},
+                {"room:dispatch", {:dispatch, self(), {"[]", :text}, make_ref()}}
+              ] do
+            # the socket only logs when we enable it
+            params = %{"logging" => "enabled"}
+            session = join("/ws", topic, "2.0.0", "1", @mode, %{}, params)
+
+            {:ok, {:v1, _id, server, _topic}} =
+              Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
+
+            ref = Process.monitor(server)
+
+            log =
+              capture_log(fn ->
+                send(server, request)
+                assert_receive {:DOWN, ^ref, :process, ^server, {:shutdown, :unnumbered}}
+              end)
+
+            assert log =~ "received a long-poll request without message numbers"
+          end
         end
 
         test "#{@mode}: resends messages until the client acknowledges them" do
@@ -902,11 +963,7 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
               }
             ])
 
-          # clients that don't number their messages get no seq
-          #
-          # TODO: Remove in Phoenix 1.9, when the server requires seq
           assert resp.body["status"] == 200
-          refute Map.has_key?(resp.body, "seq")
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi1"}}
           assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi2"}}
           refute_receive %Broadcast{event: "new_msg", payload: %{"body" => "stale"}}
@@ -983,42 +1040,6 @@ defmodule Phoenix.Integration.LongPollChannelsTest do
           assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :inactive}}, 5000)
           resp = poll(:post, "/ws", @vsn, session)
           assert resp.body["status"] == 410
-        end
-
-        # TODO: Remove in Phoenix 1.9. The session drops the messages it sends
-        # to clients that don't acknowledge them, see Phoenix.Transports.LongPoll.
-        test "#{@mode}: legacy listen receives messages flushed after its window" do
-          session = join("/ws", "room:lobby", @vsn, "1", @mode)
-          block_next_flush(session)
-
-          listen = Task.async(fn -> poll(:get, "/ws", @vsn, session) end)
-          assert_receive {:flush_blocked, server, release}
-
-          # the session answers the flush only after the listen stopped waiting for it
-          await_expired(server)
-          send(server, release)
-
-          resp = Task.await(listen)
-          assert resp.body["status"] == 200
-
-          assert [%Message{event: "phx_reply", ref: "1", topic: "room:lobby"} | _] =
-                   resp.body["messages"]
-
-          resp = poll(:get, "/ws", @vsn, session)
-          assert resp.body["status"] == 204
-        end
-
-        # TODO: Remove in Phoenix 1.9, see above
-        test "#{@mode}: legacy listen fails when the session does not answer after its window" do
-          session = join("/ws", "room:lobby", @vsn, "1", @mode)
-          block_next_flush(session)
-
-          resp = poll(:get, "/ws", @vsn, session)
-          assert resp.body["status"] == 410
-          assert resp.body["messages"] == []
-
-          assert_received {:flush_blocked, server, release}
-          send(server, release)
         end
 
         test "#{@mode}: listen gets messages flushed after its window with the next poll" do

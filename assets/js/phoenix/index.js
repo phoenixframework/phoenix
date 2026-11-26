@@ -100,11 +100,10 @@
  * `onResume` runs after delivering the incoming messages buffered at resumption,
  * so callbacks see those updates. It does not wait for replies to outgoing pushes.
  *
- * Recovery requires a server that supports acknowledged long-poll messages.
- * With an older server, and for the rest of a session that reached a node
- * with an older server during a rolling upgrade, failed requests close the
- * socket and channels rejoin. If the session expires, the usual error/close events
- * fire and channels rejoin. Push timeouts continue to apply while suspended.
+ * LongPoll requires Phoenix v1.8.18 or later on every node of the server. With an
+ * older server, it logs an error, and the socket closes and reconnects. If the session
+ * expires, the usual error/close events fire and channels rejoin. Push timeouts continue
+ * to apply while suspended.
  *
  *
  * ## Channel Hooks

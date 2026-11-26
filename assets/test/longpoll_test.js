@@ -125,7 +125,7 @@ describe("LongPoll", () => {
         jest.advanceTimersByTime(0)
         const response = Ajax.request.mock.calls[0][6]
 
-        response({status: 410, token: "token", messages: []})
+        response({status: 410, token: "token", messages: [], last: 0})
 
         expect(socket.conn).toBeNull()
         expect(longpoll.readyState).toBe(SOCKET_STATES.closed)
@@ -178,7 +178,7 @@ describe("LongPoll", () => {
       longpoll.timeout = 1000
 
       Ajax.request.mockImplementationOnce((method, url, headers, body, timeout, ontimeout, callback) => {
-        callback({status: 410, token: "token123", messages: []})
+        callback({status: 410, token: "token123", messages: [], last: 0})
         return {abort: jest.fn()}
       })
 
@@ -186,7 +186,7 @@ describe("LongPoll", () => {
 
       expect(Ajax.request).toHaveBeenLastCalledWith(
         "GET",
-        "http://localhost/socket/longpoll",
+        "http://localhost/socket/longpoll?phx%3Aack=0",
         {"Accept": "application/json", "X-Phoenix-Longpoll-Token": "token123"},
         null,
         expect.any(Number),
@@ -200,11 +200,11 @@ describe("LongPoll", () => {
       longpoll.timeout = 1000
       longpoll.token = "token123"
 
-      longpoll.batchSend(["msg1"])
+      longpoll.batchSend(["msg1"], 1)
 
       expect(Ajax.request).toHaveBeenLastCalledWith(
         "POST",
-        "http://localhost/socket/longpoll",
+        "http://localhost/socket/longpoll?phx%3Aseq=1",
         {"Content-Type": "application/x-ndjson", "X-Phoenix-Longpoll-Token": "token123"},
         "msg1",
         expect.any(Number),
@@ -244,13 +244,13 @@ describe("LongPoll", () => {
       longpoll.onclose = () => events.push("close")
       jest.advanceTimersByTime(0)
       // the first poll opens the transport and polls again
-      Ajax.request.mock.calls[0][6]({status: 410, token: "token", messages: []})
+      Ajax.request.mock.calls[0][6]({status: 410, token: "token", messages: [], last: 0})
     })
 
     afterEach(() => jest.useRealTimers())
 
     it("delivers each message in its own task", () => {
-      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["first", "second"]})
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["first", "second"], last: 2})
       expect(events).toEqual([])
 
       jest.advanceTimersByTime(0)
@@ -260,7 +260,7 @@ describe("LongPoll", () => {
 
     it("delivers binary messages as an ArrayBuffer", () => {
       const binary = {binary: btoa(String.fromCharCode(2, 0, 255, 254))}
-      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["text", binary]})
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["text", binary], last: 2})
       jest.advanceTimersByTime(0)
 
       expect(events[0]).toEqual("text")
@@ -268,13 +268,13 @@ describe("LongPoll", () => {
       expect(Array.from(new Uint8Array(events[1]))).toEqual([2, 0, 255, 254])
     })
 
-    it("does not deliver messages after a POST timeout closed the transport", () => {
+    it("does not deliver messages after a failed POST closed the transport", () => {
       longpoll.send("push")
       jest.advanceTimersByTime(0)
       const post = Ajax.request.mock.calls.find(([method]) => method === "POST")
 
-      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["message"]})
-      post[5]()
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["message"], last: 1})
+      post[6]({status: 500})
       jest.advanceTimersByTime(0)
 
       expect(events).toEqual(["error", "close"])
@@ -286,7 +286,7 @@ describe("LongPoll", () => {
         longpoll.close()
       }
 
-      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["first", "second"]})
+      Ajax.request.mock.calls[1][6]({status: 200, token: "token", messages: ["first", "second"], last: 2})
       jest.advanceTimersByTime(0)
 
       expect(events).toEqual(["first", "close"])
@@ -304,7 +304,7 @@ describe("LongPoll", () => {
       longpoll.onclose = () => events.push(["close", longpoll.readyState])
       jest.advanceTimersByTime(0)
       // the first poll opens the transport and polls again
-      Ajax.request.mock.calls[0][6]({status: 410, token: "token", messages: []})
+      Ajax.request.mock.calls[0][6]({status: 410, token: "token", messages: [], last: 0})
     })
 
     afterEach(() => jest.useRealTimers())
@@ -317,9 +317,7 @@ describe("LongPoll", () => {
 
     it.each([
       ["a poll fails", () => Ajax.request.mock.calls[1][6]({status: 500})],
-      ["a poll gets no response", () => Ajax.request.mock.calls[1][6](null)],
-      ["a poll times out", () => Ajax.request.mock.calls[1][5]()],
-      ["the session is gone", () => Ajax.request.mock.calls[1][6]({status: 410, token: "new-token", messages: []})],
+      ["the session is gone", () => Ajax.request.mock.calls[1][6]({status: 410, token: "new-token", messages: [], last: 0})],
       ["a batch fails", failBatch]
     ])("is no longer open when it emits the error after %s", (_, fail) => {
       fail()
@@ -350,7 +348,7 @@ describe("LongPoll", () => {
       const socket = new Socket("/socket", {transport: LongPoll})
       socket.connect()
       jest.advanceTimersByTime(0)
-      Ajax.request.mock.calls[0][6]({status: 410, token: "token", messages: []})
+      Ajax.request.mock.calls[0][6]({status: 410, token: "token", messages: [], last: 0})
       const channel = socket.channel("topic")
       channel.join().trigger("ok", {})
       const connectedOnError = []
@@ -422,7 +420,7 @@ describe("LongPoll", () => {
       expect(longpoll.token).toBeNull()
       expect(Ajax.request).toHaveBeenCalledTimes(2)
       expect(longpoll.reqs.size).toBe(1)
-      Ajax.request.mock.calls[1][6]({status: 410, token: "new-token", messages: []})
+      Ajax.request.mock.calls[1][6]({status: 410, token: "new-token", messages: [], last: 0})
       expect(longpoll.readyState).toBe(SOCKET_STATES.open)
       expect(longpoll.token).toBe("new-token")
     })
@@ -542,7 +540,7 @@ describe("LongPoll", () => {
         expect(longpoll.batchBuffer).toEqual(["d", "e"])
 
         // Ack the first batch — the buffered sends should be flushed as the next POST
-        calls[0].callback({status: 200})
+        calls[0].callback({status: 200, seq: 1})
 
         expect(calls).toHaveLength(2)
         expect(calls[1].body).toBe("d\ne")
@@ -550,7 +548,7 @@ describe("LongPoll", () => {
         expect(longpoll.awaitingBatchAck).toBe(true)
 
         // Ack the buffered batch — nothing left to send
-        calls[1].callback({status: 200})
+        calls[1].callback({status: 200, seq: 4})
         expect(calls).toHaveLength(2)
         expect(longpoll.awaitingBatchAck).toBe(false)
       } finally {
@@ -583,7 +581,7 @@ describe("LongPoll", () => {
         expect(firstLines[99]).toBe("m99")
 
         // Ack the first chunk — batchSend should recurse with the remaining 50
-        calls[0].callback({status: 200})
+        calls[0].callback({status: 200, seq: 1})
 
         expect(calls).toHaveLength(2)
         const secondLines = calls[1].body.split("\n")
@@ -591,7 +589,7 @@ describe("LongPoll", () => {
         expect(secondLines[0]).toBe("m100")
         expect(secondLines[49]).toBe("m149")
 
-        calls[1].callback({status: 200})
+        calls[1].callback({status: 200, seq: 101})
         expect(calls).toHaveLength(2)
         expect(longpoll.awaitingBatchAck).toBe(false)
       } finally {
@@ -710,12 +708,6 @@ describe("LongPoll resuming", () => {
     // a poll without new messages keeps the ack
     respond(last("GET"), {status: 204, token: "token", last: 1})
     expect(params(last("GET"))["phx:ack"]).toBe("1")
-  })
-
-  // TODO: Remove in Phoenix 1.9, together with degrade()
-  it("does not acknowledge when the server does not number its messages", () => {
-    open({status: 410, token: "token", messages: []})
-    expect(params(last("GET"))["phx:ack"]).toBeUndefined()
   })
 
   it.each([
@@ -876,12 +868,6 @@ describe("LongPoll resuming", () => {
     expect(params(last("GET"))["phx:resume"]).toBeUndefined()
   })
 
-  // TODO: Remove in Phoenix 1.9, together with degrade()
-  it("does not resume the session when the server does not number its messages", () => {
-    open({status: 410, token: "token", messages: []})
-    expect(params(last("GET"))["phx:resume"]).toBeUndefined()
-  })
-
   it("closes when messages are missing before the ones it receives", () => {
     open()
     respond(last("GET"), {status: 200, token: "token", messages: ["c"], last: 3})
@@ -948,15 +934,6 @@ describe("LongPoll resuming", () => {
     expect(last("POST")[3]).toBe("c")
   })
 
-  // TODO: Remove in Phoenix 1.9, together with degrade()
-  it("does not number the messages when the server does not number its messages", () => {
-    open({status: 410, token: "token", messages: []})
-    longpoll.send("a")
-    jest.advanceTimersByTime(0)
-
-    expect(params(last("POST"))["phx:seq"]).toBeUndefined()
-  })
-
   it("sends messages pushed by a resume callback after a POST recovers", () => {
     open()
     longpoll.onresume = () => longpoll.send("b")
@@ -972,102 +949,35 @@ describe("LongPoll resuming", () => {
     expect(params(last("POST"))["phx:seq"]).toBe("2")
   })
 
-  // During a rolling deploy, a node with an older server forwards our requests
-  // without ack and seq, so the session treats us like an older client.
-  //
-  // TODO: Remove in Phoenix 1.9, together with degrade()
-  describe("with a node of an older server", () => {
-    it("delivers the messages of a poll and stops resuming", () => {
-      open()
-      respond(last("GET"), {status: 200, token: "token", messages: ["a"]})
-      jest.advanceTimersByTime(0)
-      expect(events).toEqual(["open", "a"])
-      expect(params(last("GET"))["phx:ack"]).toBeUndefined()
+  // A server before Phoenix v1.8.18, like a node with one during a rolling deploy,
+  // neither numbers its messages nor drops the ones we send again.
+  describe("with an older server", () => {
+    beforeEach(() => jest.spyOn(console, "error").mockImplementation(() => {}))
 
-      // the next failure reconnects, as the session no longer keeps messages for us
-      respond(last("GET"), null)
-      expect(events).toEqual(["open", "a", "error", "close"])
+    it("closes when it starts the session", () => {
+      open({status: 410, token: "token", messages: []})
+      expect(events).toEqual(["error", "close"])
+      expect(console.error).toHaveBeenCalledTimes(1)
     })
 
     it.each([
       ["with messages", {status: 200, token: "token", messages: ["a"]}],
       ["without messages", {status: 204, token: "token"}]
-    ])("reconnects when a retried poll %s was answered by it", (_, resp) => {
+    ])("closes when it answers a poll %s", (_, resp) => {
       open()
-      respond(last("GET"), null)
-      jest.advanceTimersByTime(100)
-      // the session dropped the messages of the response we lost
       respond(last("GET"), resp)
       jest.advanceTimersByTime(0)
       expect(events).toEqual(["open", "error", "close"])
+      expect(console.error).toHaveBeenCalledTimes(1)
     })
 
-    it("stops resuming after it answered a POST", () => {
+    it("closes when it answers a POST", () => {
       open()
       longpoll.send("a")
       jest.advanceTimersByTime(0)
       respond(last("POST"), {status: 200})
-      longpoll.send("b")
-      jest.advanceTimersByTime(0)
-      expect(params(last("POST"))["phx:seq"]).toBeUndefined()
-
-      respond(last("POST"), null)
       expect(events).toEqual(["open", "error", "close"])
-    })
-
-    it("keeps the downgrade when an outstanding modern poll completes", () => {
-      open()
-      longpoll.send("a")
-      jest.advanceTimersByTime(0)
-      respond(last("POST"), {status: 200})
-      respond(last("GET"), {status: 204, token: "token", last: 0})
-      expect(params(last("GET"))["phx:ack"]).toBeUndefined()
-
-      longpoll.send("b")
-      jest.advanceTimersByTime(0)
-      expect(params(last("POST"))["phx:seq"]).toBeUndefined()
-      respond(last("GET"), null)
-      expect(events).toEqual(["open", "error", "close"])
-    })
-
-    it("fails a pending POST retry when a legacy poll downgrades the session", () => {
-      open()
-      longpoll.send("a")
-      jest.advanceTimersByTime(0)
-      respond(last("POST"), null)
-      respond(last("GET"), {status: 204, token: "token"})
-      jest.advanceTimersByTime(1000)
-
-      expect(requests("POST")).toHaveLength(1)
-      expect(longpoll.retryTimers.size).toBe(0)
-      expect(events).toEqual(["open", "error", "close"])
-    })
-
-    it("fails a pending GET retry when a legacy POST downgrades the session", () => {
-      open()
-      longpoll.send("a")
-      jest.advanceTimersByTime(0)
-      respond(last("GET"), null)
-      const polls = requests("GET").length
-      respond(last("POST"), {status: 200})
-      jest.advanceTimersByTime(1000)
-
-      expect(requests("GET")).toHaveLength(polls)
-      expect(longpoll.retryTimers.size).toBe(0)
-      expect(events).toEqual(["open", "error", "close"])
-    })
-
-    it("keeps resuming while POSTs are answered with seq", () => {
-      open()
-      longpoll.send("a")
-      jest.advanceTimersByTime(0)
-      respond(last("POST"), {status: 200, seq: 1})
-      longpoll.send("b")
-      jest.advanceTimersByTime(0)
-      expect(params(last("POST"))["phx:seq"]).toBe("2")
-
-      respond(last("POST"), null)
-      expect(events).toEqual(["open"])
+      expect(console.error).toHaveBeenCalledTimes(1)
     })
   })
 })

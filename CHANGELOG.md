@@ -20,9 +20,11 @@
     and drops the messages the client sends again. New `socket.onSuspend` and
     `socket.onResume` callbacks report interruptions and recovery without a
     channel error, and the new `resumeAfterMs` socket option sets the delay
-    between retries. Older servers retain the existing reconnect behavior.
-    During a rolling deploy, a session that reaches a node with an older server
-    falls back to that behavior for the rest of the session.
+    between retries. Long polling requires clients and nodes of Phoenix v1.8.18
+    or later, which number their messages. If you do rolling deploys where both
+    old and new nodes are active at the same time, ensure that you deploy
+    Phoenix v1.8.18 or a later v1.8 release first. Browsers that still run
+    phoenix.js of an older release cannot long poll until they reload the page.
   * The longpoll session token is now sent in a `x-phoenix-longpoll-token`
     header instead of the query string. If you do rolling deploys where both
     old and new nodes are active at the same time, ensure that you deploy
