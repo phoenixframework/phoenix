@@ -48,11 +48,9 @@ export default class LongPoll {
     this.currentBatch = null
     this.currentBatchTimer = null
     this.batchBuffer = []
-    // set once the server tells us that it keeps the messages until we acknowledge them,
-    // so we can retry a failed request instead of starting a new session
-    this.resumable = false
-    this.degraded = false
-    // the number of the last message we received, and of the last message we sent
+    // The server keeps the messages of our session until we acknowledge them, and drops
+    // the ones we send again, so we can retry a failed request of our session.
+    // These are the number of the last message we received, and of the last one we sent.
     this.ack = 0
     this.seq = 0
     this.retries = {GET: 0, POST: 0}
@@ -109,10 +107,11 @@ export default class LongPoll {
     if(this.authToken){
       headers["X-Phoenix-AuthToken"] = this.authToken
     }
-    const params = this.resumable ? {"phx:ack": this.ack} : {}
+    // the first poll starts the session, which has no messages to acknowledge yet
+    const params = this.token === null ? {} : {"phx:ack": this.ack}
     // A poll after a failed one resumes the session. The server can check the
     // connection again, as the client may have lost access in the meantime.
-    if(this.resumable && this.retries.GET > 0){ params["phx:resume"] = 1 }
+    if(this.retries.GET > 0){ params["phx:resume"] = 1 }
     this.ajax("GET", headers, null, params, () => this.retryOr("GET", () => this.poll(), () => this.ontimeout()), resp => {
       if(resp){
         var {status, token, messages, last} = resp
@@ -123,16 +122,9 @@ export default class LongPoll {
           return
         }
         this.token = token
-        if(last !== undefined){
-          this.resumable = !this.degraded
-        } else if(this.resumable && (status === 200 || status === 204)){
-          // TODO: Remove in Phoenix 1.9, when no cluster mixes older and newer nodes.
-          //
-          // The poll went through a node with an older server, as during a rolling
-          // deploy, which forwards it without our ack. The session then dropped the
-          // messages we did not acknowledge yet, like it does for older clients.
-          // We got them unless this poll is a retry, as they were in the response we lost.
-          if(!this.degrade()){ return }
+        if(last === undefined && (status === 200 || status === 204 || status === 410)){
+          this.unsupportedServer()
+          return
         }
       } else {
         status = 0
@@ -141,18 +133,16 @@ export default class LongPoll {
       if(status === 200){ this.awaitingMessages = true }
       switch(status){
         case 200:
-          if(last !== undefined){
-            // The server numbers its messages and sends all we did not acknowledge,
-            // so we drop the ones we already received, as when a late poll returns.
-            const first = last - messages.length + 1
-            if(first > this.ack + 1){
-              // we cannot deliver the messages, as we lost the ones before them
-              this.closeAndRetry(0, 1011, "lost messages", false)
-              return
-            }
-            messages = messages.slice(Math.max(0, this.ack + 1 - first))
-            this.ack = Math.max(this.ack, last)
+          // The server numbers its messages and sends all we did not acknowledge,
+          // so we drop the ones we already received, as when a late poll returns.
+          const first = last - messages.length + 1
+          if(first > this.ack + 1){
+            // we cannot deliver the messages, as we lost the ones before them
+            this.closeAndRetry(0, 1011, "lost messages", false)
+            return
           }
+          messages = messages.slice(Math.max(0, this.ack + 1 - first))
+          this.ack = Math.max(this.ack, last)
           messages.forEach(msg => {
             // Tasks are what things like event handlers, setTimeout callbacks,
             // promise resolves and more are run within.
@@ -248,20 +238,16 @@ export default class LongPoll {
     const next = offset + MAX_LONGPOLL_BATCH_SIZE
     const batch = messages.slice(offset, next)
     const retry = () => this.batchSend(messages, seq, offset)
-    // servers that don't number their messages don't know about seq either
-    const params = this.resumable ? {"phx:seq": seq + offset} : {}
+    const params = {"phx:seq": seq + offset}
     this.ajax("POST", {"Content-Type": "application/x-ndjson"}, batch.join("\n"), params, () => this.retryOr("POST", retry, () => this.ontimeout()), resp => {
       if(!resp){
         this.retryOr("POST", retry, () => this.closeAndRetry(null, 1011, "internal server error", false))
       } else if(resp.status !== 200){
         // this calls stop which already clears awaitingBatchAck
         this.closeAndRetry(resp && resp.status, 1011, "internal server error", false)
+      } else if(resp.seq === undefined){
+        this.unsupportedServer()
       } else {
-        // a node with an older server forwards the request without our seq, so the
-        // session does not drop the messages we send again
-        //
-        // TODO: Remove in Phoenix 1.9, together with degrade()
-        if(this.resumable && resp.seq === undefined && !this.degrade()){ return }
         this.succeeded("POST")
         if(next < messages.length){
           this.batchSend(messages, seq, next)
@@ -278,32 +264,23 @@ export default class LongPoll {
   /**
    * @private
    *
-   * Stops resuming for the rest of the session. A node with an older server, as
-   * during a rolling deploy, does not forward our ack and seq. Retrying through it
-   * could lose or duplicate messages, so we fail like we do with an older server.
-   *
-   * TODO: Remove in Phoenix 1.9, when no cluster mixes older and newer nodes.
+   * Fails for a server before Phoenix v1.8.18, which neither numbers its messages nor
+   * drops the ones we send again. A node with such a server, as during a rolling deploy,
+   * does not forward our ack and seq either, so we could lose or duplicate messages.
    */
-  degrade(){
-    this.degraded = true
-    this.resumable = false
-    // A request already being retried may have been processed. Neither replaying
-    // it without deduplication nor accepting a gap in received messages is safe.
-    if(this.retries.GET > 0 || this.retries.POST > 0){
-      this.closeAndRetry(0, 1011, "session no longer resumable", false)
-      return false
-    }
-    return true
+  unsupportedServer(){
+    console && console.error("phoenix: the server does not number its long poll messages, " +
+      "which requires Phoenix v1.8.18 or later on all nodes")
+    this.closeAndRetry("unsupported server", 1011, "unsupported server", false)
   }
 
   /**
    * @private
    *
-   * Retries a failed request with backoff when the server keeps our session,
-   * otherwise fails.
+   * Retries a failed request with backoff when we have a session, otherwise fails.
    */
   retryOr(method, retry, fail){
-    if(!this.resumable){ return fail() }
+    if(this.token === null){ return fail() }
     this.retries[method]++
     const delay = this.resumeAfterMs(this.retries[method])
     // a single failed request is retried quickly, so we only report the interruption
@@ -315,7 +292,6 @@ export default class LongPoll {
     if(!this.isActive()){ return }
     const timer = setTimeout(() => {
       this.retryTimers.delete(timer)
-      if(!this.resumable){ return fail() }
       retry()
     }, delay)
     this.retryTimers.add(timer)
