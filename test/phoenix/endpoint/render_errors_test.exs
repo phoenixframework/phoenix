@@ -341,4 +341,30 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     conn = call(Router, :get, "/unknown")
     assert Phoenix.ConnTest.response(conn, 404) =~ "Got 404 from error with GET"
   end
+
+  test "exception page sets connection close header on HTTP/1.1" do
+    {500, headers, _body} =
+      Phoenix.ConnTest.assert_error_sent(500, fn ->
+        call(Router, :get, "/boom")
+      end)
+
+    assert {"connection", "close"} in headers
+  end
+
+  test "exception page does not set connection close header on HTTP/2" do
+    {500, headers, _body} =
+      Phoenix.ConnTest.assert_error_sent(500, fn ->
+        conn(:get, "/boom")
+        |> Plug.Test.put_http_protocol(:"HTTP/2")
+        |> Router.call([])
+      end)
+
+    refute List.keyfind(headers, "connection", 0)
+  end
+
+  test "exception page for NoRouteError does not set connection close header" do
+    conn = call(Router, :get, "/unknown")
+    assert Phoenix.ConnTest.response(conn, 404)
+    assert Plug.Conn.get_resp_header(conn, "connection") == []
+  end
 end
