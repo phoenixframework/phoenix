@@ -3,6 +3,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   use GenServer, restart: :temporary
   alias Phoenix.PubSub
+  require Logger
 
   def start_link(arg) do
     GenServer.start_link(__MODULE__, arg)
@@ -72,13 +73,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
     {:stop, {:shutdown, :out_of_order}, state}
   end
 
-  def handle_info({:dispatch, client_ref, body, ref, _seq}, state) do
-    handle_info({:dispatch, client_ref, body, ref}, state)
-  end
-
-  # TODO: Merge into the clause above in Phoenix 1.9. Older nodes and
-  # clients dispatch without seq.
-  def handle_info({:dispatch, client_ref, {body, opcode}, ref}, state) do
+  def handle_info({:dispatch, client_ref, {body, opcode}, ref, _seq}, state) do
     %{handler: {handler, handler_state}} = state
     state = %{state | in_seq: state.in_seq + 1}
 
@@ -119,21 +114,11 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
-  # Backwards compat: clients that don't acknowledge get each message once.
-  #
-  # TODO: Remove in Phoenix 1.9. Older nodes and clients flush without ack.
-  def handle_info({:flush, client_ref, ref}, state) do
-    # we assume the client received the messages we sent before, like it does
-    state = acknowledge(%{state | last_client_poll: now_ms()}, state.sent)
-
-    if :queue.is_empty(state.out) do
-      {:noreply, %{state | client_ref: {client_ref, ref}}}
-    else
-      broadcast_from!(state, client_ref, {:messages, payloads(state), ref})
-      state = sent(state)
-      {:noreply, %{acknowledge(state, state.out_seq) | client_ref: nil}}
-    end
-  end
+  # Nodes before Phoenix v1.8.18 forward requests without the numbers of the messages,
+  # as do newer nodes for older clients. We cannot serve them, as we would send our
+  # messages again and again, so we stop and the client starts a new session.
+  def handle_info({:flush, _client_ref, _ref}, state), do: stop_unnumbered(state)
+  def handle_info({:dispatch, _client_ref, _body, _ref}, state), do: stop_unnumbered(state)
 
   def handle_info({:expired, client_ref, ref}, state) do
     case state.client_ref do
@@ -250,6 +235,17 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   defp unacknowledged?(%{sent_at: nil}), do: false
   defp unacknowledged?(state), do: now_ms() - state.sent_at > state.window_ms
+
+  defp stop_unnumbered(state) do
+    Logger.error(
+      "Phoenix.Transports.LongPoll.Server received a long-poll request without message " <>
+        "numbers, which nodes and clients before Phoenix v1.8.18 send, and stops the session. " <>
+        "If you do rolling deploys, deploy Phoenix v1.8.18 or a later v1.8 release first. " <>
+        "Browsers that still run an older phoenix.js client must reload the page"
+    )
+
+    {:stop, {:shutdown, :unnumbered}, state}
+  end
 
   defp notify_client_now_available(state) do
     case state.client_ref do

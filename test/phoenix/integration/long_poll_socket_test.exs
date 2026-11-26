@@ -108,12 +108,33 @@ defmodule Phoenix.Integration.LongPollSocketTest do
     do_poll(method, path, params, body, headers)
   end
 
+  # Like phoenix.js, we number the messages we send and acknowledge the ones we received.
   defp do_poll(method, path, params, body, headers) do
+    token = headers[@token_header] || params["token"]
+    params = number(method, token, params)
     headers = Map.merge(%{"content-type" => "application/json"}, headers)
     url = "http://127.0.0.1:#{@port}/#{path}?" <> URI.encode_query(params)
     {:ok, resp} = HTTPClient.request(method, url, headers, body)
-    update_in(resp.body, &Phoenix.json_library().decode!(&1))
+    resp = update_in(resp.body, &Phoenix.json_library().decode!(&1))
+    numbered(method, token, resp)
+    resp
   end
+
+  defp number(_method, nil, params), do: params
+
+  defp number(:get, token, params),
+    do: Map.put(params, "phx:ack", Process.get({:ack, token}, 0))
+
+  defp number(:post, token, params),
+    do: Map.put(params, "phx:seq", Process.get({:seq, token}, 0) + 1)
+
+  defp numbered(:get, token, %{body: %{"last" => last}}) when is_integer(last),
+    do: Process.put({:ack, token}, last)
+
+  defp numbered(:post, token, %{body: %{"status" => 200, "seq" => seq}}),
+    do: Process.put({:seq, token}, seq)
+
+  defp numbered(_method, _token, _resp), do: :ok
 
   for %{adapter: adapter} <- [
         %{adapter: Bandit.PhoenixAdapter},
