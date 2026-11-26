@@ -1,16 +1,23 @@
 defmodule Phoenix.Transports.Session do
   @moduledoc false
   #
-  # A socket session that outlives the requests of its transport.
+  # A socket session that outlives the requests or connections of its transport.
   #
   # The session runs the socket handler, so it is the `transport_pid` of the socket
-  # and its channels. Long polling talks to it through the processes of its requests,
-  # so a client can retry a failed request without losing its socket.
+  # and its channels. Transports talk to it through short-lived processes, such as
+  # the request processes of long polling or the process of a WebSocket, so a client
+  # can resume the session after one of them failed. A resumable WebSocket attaches
+  # to the session as its pipe, which receives our messages as we send them, while
+  # long polling requests them.
   #
-  #   LongPoll client
-  #     GET  <--> request process :flush ----+
-  #                                          +--> Session <--> socket handler
-  #     POST <--> request process :dispatch -+
+  #   WebSocket client <--> Pipe <-------------------+
+  #                               :pipe_*, :resume   |
+  #                                                  v
+  #                                               Session <--> socket handler
+  #                                                  ^
+  #   LongPoll client                                |
+  #     GET  <--> request process :flush, :resume ---+
+  #     POST <--> request process :dispatch ---------+
   #
   # Both directions number their messages, starting at 1:
   #
@@ -23,15 +30,36 @@ defmodule Phoenix.Transports.Session do
   #     already received, as the client sends them again when it did not get our
   #     response. Messages must arrive in order, as a gap means we lost messages.
   #
-  # The numbers do not depend on how the transport groups messages.
+  # The numbers do not depend on how a transport groups messages.
   #
   # Long polling addresses the session with a `client_ref`, which is the pid of the
   # request process when it runs on a node we are connected to, or the PubSub
-  # topic it subscribed to otherwise.
+  # topic it subscribed to otherwise. Pipes talk to the session directly, so they
+  # must run on a node we are connected to.
+  #
+  # A session serves the transport that started it. Long-poll requests only prove
+  # that the client has the session token, so we reject them for a session that a
+  # WebSocket started.
 
   use GenServer, restart: :temporary
   alias Phoenix.PubSub
   require Logger
+
+  # the WebSocket close codes we use when the session stops, see RFC 6455
+  @close_codes %{normal: 1000, internal_error: 1011, service_restart: 1012}
+
+  @doc """
+  Starts a session for a socket that its transport connected already.
+  """
+  def start(endpoint, handler, handler_state, transport, options) do
+    priv_topic = priv_topic()
+    arg = {:connected, endpoint, handler, handler_state, transport, options, priv_topic}
+
+    case DynamicSupervisor.start_child(__MODULE__.Supervisor, {__MODULE__, arg}) do
+      {:ok, pid} -> {:ok, pid, priv_topic}
+      {:error, _} = error -> error
+    end
+  end
 
   @doc """
   Returns a new private topic, which the session subscribes to.
@@ -70,6 +98,14 @@ defmodule Phoenix.Transports.Session do
     GenServer.start_link(__MODULE__, arg)
   end
 
+  # A WebSocket connects the socket in its request process before it starts a session.
+  # It needs the conn to answer a failed connect, and the :resumable option can decide
+  # against a session after connecting.
+  def init({:connected, endpoint, handler, handler_state, transport, options, priv_topic}) do
+    {:ok, handler_state} = handler.init(handler_state)
+    {:ok, init_state(endpoint, handler, handler_state, transport, options, priv_topic)}
+  end
+
   # Long polling connects the socket in the session. Sockets that long poll have always
   # run connect/1 and init/1 in the same process, so a connect/1 that depends on self(),
   # the process dictionary or Logger metadata keeps working.
@@ -85,7 +121,7 @@ defmodule Phoenix.Transports.Session do
     case handler.connect(config) do
       {:ok, handler_state} ->
         {:ok, handler_state} = handler.init(handler_state)
-        {:ok, init_state(endpoint, handler, handler_state, options, priv_topic)}
+        {:ok, init_state(endpoint, handler, handler_state, :longpoll, options, priv_topic)}
 
       :error ->
         :ignore
@@ -95,9 +131,11 @@ defmodule Phoenix.Transports.Session do
     end
   end
 
-  defp init_state(endpoint, handler, handler_state, options, priv_topic) do
+  defp init_state(endpoint, handler, handler_state, transport, options, priv_topic) do
     state = %{
       handler: {handler, handler_state},
+      # the transport that started the session
+      transport: transport,
       # the messages the client did not acknowledge yet, as {seq, opcode, payload}
       out: :queue.new(),
       # the number of the last message we numbered, sent and the client acknowledged
@@ -112,14 +150,42 @@ defmodule Phoenix.Transports.Session do
       window_ms: trunc(Keyword.fetch!(options, :window_ms) * 1.5),
       pubsub_server: endpoint.config(:pubsub_server),
       priv_topic: priv_topic,
-      # how we reach the client: nil, or a request waiting for messages
-      # as {:poll, client_ref, ref}
-      client: nil
+      # how we reach the client: nil, a connection that receives our messages as we send
+      # them, such as a WebSocket, as {:pipe, pid, monitor}, or a request waiting for
+      # messages as {:poll, client_ref, ref}
+      client: nil,
+      # the close code the socket asked for when it stopped
+      close_code: nil
     }
 
     :ok = PubSub.subscribe(state.pubsub_server, priv_topic)
     schedule_inactive_shutdown(state.window_ms)
     state
+  end
+
+  ## Long polling a session of another transport
+  #
+  # Long-poll requests only prove that the client has the session token, so the
+  # socket did not check them. We keep running for our client.
+
+  def handle_info({:dispatch, client_ref, _body, ref, _seq}, %{transport: transport} = state)
+      when transport != :longpoll do
+    reject(state, client_ref, ref)
+  end
+
+  def handle_info({:flush, client_ref, ref, _ack}, %{transport: transport} = state)
+      when transport != :longpoll do
+    reject(state, client_ref, ref)
+  end
+
+  def handle_info({:dispatch, client_ref, _body, ref}, %{transport: transport} = state)
+      when transport != :longpoll do
+    reject(state, client_ref, ref)
+  end
+
+  def handle_info({:flush, client_ref, ref}, %{transport: transport} = state)
+      when transport != :longpoll do
+    reject(state, client_ref, ref)
   end
 
   ## Incoming messages
@@ -134,6 +200,12 @@ defmodule Phoenix.Transports.Session do
   def handle_info({:dispatch, _client_ref, _body, _ref}, state), do: stop_unnumbered(state)
   def handle_info({:flush, _client_ref, _ref}, state), do: stop_unnumbered(state)
 
+  # Pipes number the messages they receive, starting after the last one we received
+  # when they attached.
+  def handle_info({:pipe_in, pipe, seq, frame}, state) do
+    receive_in({:pipe, pipe}, seq, frame, state)
+  end
+
   # Answers a request that checks if the session is reachable, and serves as an echo
   # after a :flush: we handle messages in order, so the echo arrives after the answer
   # to the flush.
@@ -146,13 +218,18 @@ defmodule Phoenix.Transports.Session do
   # session after this one stopped, so a client that resumes also sends the topic of
   # the token, which only this session has. We reject a mismatch but keep running for
   # our own client.
-  def handle_info({:resume, client_ref, ref, _info, priv_topic}, state)
-      when priv_topic != state.priv_topic do
-    send_client(state, client_ref, {:rejected, ref})
-    {:noreply, state}
+  def handle_info({event, client_ref, ref, _arg, priv_topic}, state)
+      when event in [:resume, :pipe_attach] and priv_topic != state.priv_topic do
+    reject(state, client_ref, ref)
   end
 
-  # A client that resumes the session after a failed request
+  # A session continues with the transport that started it.
+  def handle_info({:resume, client_ref, ref, %{transport: transport}, _priv_topic}, state)
+      when transport != state.transport do
+    reject(state, client_ref, ref)
+  end
+
+  # A client that resumes the session after a failed request or connection
   # tells us about its new connection, so the socket can check it.
   def handle_info({:resume, client_ref, ref, info, _priv_topic}, state) do
     %{handler: {handler, handler_state}} = state
@@ -175,6 +252,78 @@ defmodule Phoenix.Transports.Session do
     end
   end
 
+  ## Pipes
+
+  # A connection that receives our messages as we send them, such as a WebSocket.
+  # It replaces the previous one, which the client gave up on.
+  def handle_info({:pipe_attach, pipe, ref, ack, _priv_topic}, state) do
+    state = detach(state)
+    send(pipe, {:attached, ref, state.in_seq, state.out_seq})
+    state = acknowledge(state, ack)
+    state = %{state | client: {:pipe, pipe, Process.monitor(pipe)}}
+
+    if :queue.is_empty(state.out) do
+      {:noreply, state}
+    else
+      frames = for {_seq, opcode, payload} <- :queue.to_list(state.out), do: {opcode, payload}
+      send(pipe, {:push_frames, frames})
+      {:noreply, sent(state)}
+    end
+  end
+
+  def handle_info({:pipe_ack, _pipe, ack}, state) do
+    {:noreply, acknowledge(state, ack)}
+  end
+
+  # The client closes the session, as opposed to losing its connection.
+  def handle_info({:pipe_close, pipe}, %{client: {:pipe, pipe, _}} = state) do
+    {:stop, {:shutdown, :closed}, %{state | close_code: @close_codes.normal}}
+  end
+
+  def handle_info({:pipe_close, _pipe}, state) do
+    {:noreply, state}
+  end
+
+  def handle_info({:pipe_control, pipe, frame}, %{client: {:pipe, pipe, _}} = state) do
+    %{handler: {handler, handler_state}} = state
+
+    if function_exported?(handler, :handle_control, 2) do
+      handle_result(state, handler, handler.handle_control(frame, handler_state))
+    else
+      {:noreply, state}
+    end
+  end
+
+  def handle_info({:pipe_control, _pipe, _frame}, state) do
+    {:noreply, state}
+  end
+
+  # The reply to a heartbeat goes to the WebSocket that sent it, without a number,
+  # as there is no point in sending it again over another connection.
+  def handle_info({:pipe_heartbeat, pipe, {body, opcode}}, %{client: {:pipe, pipe, _}} = state) do
+    %{handler: {handler, handler_state}} = state
+
+    case handler.handle_in({body, opcode: opcode}, handler_state) do
+      {:reply, _status, {opcode, reply}, handler_state} ->
+        send(pipe, {:push_frames, [{opcode, IO.iodata_to_binary(reply)}]})
+        {:noreply, %{state | handler: {handler, handler_state}}}
+
+      {:ok, handler_state} ->
+        {:noreply, %{state | handler: {handler, handler_state}}}
+
+      {:stop, reason, handler_state} ->
+        {:stop, reason, %{state | handler: {handler, handler_state}}}
+    end
+  end
+
+  def handle_info({:pipe_heartbeat, _pipe, _frame}, state) do
+    {:noreply, state}
+  end
+
+  def handle_info({:DOWN, ref, _, _, _}, %{client: {:pipe, _, ref}} = state) do
+    {:noreply, lost_client(%{state | client: nil})}
+  end
+
   ## Outgoing messages
 
   # The client acknowledges the last message it received with each poll, so we send
@@ -186,7 +335,7 @@ defmodule Phoenix.Transports.Session do
       {:noreply, %{state | client: {:poll, client_ref, ref}}}
     else
       send_client(state, client_ref, {:messages, poll_payloads(state), ref, state.out_seq})
-      {:noreply, %{state | sent: state.out_seq, client: nil}}
+      {:noreply, %{sent(state) | client: nil}}
     end
   end
 
@@ -214,20 +363,55 @@ defmodule Phoenix.Transports.Session do
 
   def terminate(reason, state) do
     %{handler: {handler, handler_state}} = state
+
+    with {:pipe, pipe, _ref} <- state.client do
+      send(pipe, {:session_closed, state.close_code || close_code(reason)})
+    end
+
     handler.terminate(reason, handler_state)
     :ok
   end
 
-  # The client sends messages again when it did not get the response to its request.
+  defp close_code(:normal), do: @close_codes.normal
+  # the socket was disconnected, see Phoenix.Socket.id/1, which closes a WebSocket normally
+  defp close_code({:shutdown, :disconnected}), do: @close_codes.normal
+  defp close_code({:shutdown, :restart}), do: @close_codes.service_restart
+  defp close_code(_reason), do: @close_codes.internal_error
+
+  # The client gave up on the pipe and resumes the session over a new one.
+  defp detach(%{client: {:pipe, pipe, ref}} = state) do
+    Process.demonitor(ref, [:flush])
+    send(pipe, {:detached, self()})
+    lost_client(%{state | client: nil})
+  end
+
+  defp detach(state), do: state
+
+  # The client has a window to resume the session. When it has messages left to
+  # acknowledge, it must do so within the window that started with them.
+  defp lost_client(%{acked: acked, sent: acked} = state), do: %{state | acked_at: now_ms()}
+  defp lost_client(state), do: state
+
+  defp reject(state, client_ref, ref) do
+    send_client(state, client_ref, {:rejected, ref})
+    {:noreply, state}
+  end
+
+  # The client sends messages again when it did not get the response to its request,
+  # or over a new pipe while the one it gave up on still delivers them.
   defp receive_in(from, seq, _frame, %{in_seq: in_seq} = state) when seq <= in_seq do
     report_in(from, :ok, state)
     {:noreply, state}
   end
 
-  # We cannot process the message, as we lost the ones before it.
+  # We cannot process the message, as we lost the ones before it. A pipe
+  # learns about it from the close code.
   defp receive_in(from, seq, _frame, %{in_seq: in_seq} = state) when seq > in_seq + 1 do
-    report_in(from, :error, state)
-    {:stop, {:shutdown, :out_of_order}, state}
+    with {:poll, _client_ref, _ref} <- from do
+      report_in(from, :error, state)
+    end
+
+    {:stop, {:shutdown, :out_of_order}, %{state | close_code: @close_codes.internal_error}}
   end
 
   defp receive_in(from, _seq, frame, state) do
@@ -256,14 +440,22 @@ defmodule Phoenix.Transports.Session do
     end
   end
 
-  # A request reports the status of its messages in its response.
+  # A request reports the status of its messages in its response,
+  # while a pipe tells the client which messages we received.
   defp report_in({:poll, client_ref, ref}, status, state) do
     send_client(state, client_ref, {status, ref})
+  end
+
+  defp report_in({:pipe, pipe}, _status, state) do
+    send(pipe, {:in_seq, state.in_seq})
   end
 
   defp handle_result(state, handler, result) do
     case result do
       {:push, {opcode, reply}, handler_state} ->
+        publish_reply(%{state | handler: {handler, handler_state}}, opcode, reply)
+
+      {:reply, _status, {opcode, reply}, handler_state} ->
         publish_reply(%{state | handler: {handler, handler_state}}, opcode, reply)
 
       {:ok, handler_state} ->
@@ -283,6 +475,18 @@ defmodule Phoenix.Transports.Session do
     publish_reply(state, :text, Phoenix.json_library().encode_to_iodata!(reply))
   end
 
+  # Browsers don't deliver ping and pong frames to the client, so it could not count
+  # them. They only apply to the current WebSocket, so we drop them if there is none.
+  # Long polling has no control frames and treats them like any other message.
+  defp publish_reply(state, opcode, reply)
+       when opcode in [:ping, :pong] and state.transport != :longpoll do
+    with {:pipe, pipe, _ref} <- state.client do
+      send(pipe, {:push_frames, [{opcode, reply}]})
+    end
+
+    {:noreply, state}
+  end
+
   defp publish_reply(state, opcode, reply) do
     # A client that does not acknowledge must not be able to
     # grow the buffer indefinitely, so we close when it did not acknowledge
@@ -294,11 +498,18 @@ defmodule Phoenix.Transports.Session do
       payload = IO.iodata_to_binary(reply)
       state = %{state | out: :queue.in({seq, opcode, payload}, state.out), out_seq: seq}
 
-      with {:poll, client_ref, ref} <- state.client do
-        send_client(state, client_ref, {:now_available, ref})
-      end
+      case state.client do
+        {:pipe, pipe, _ref} ->
+          send(pipe, {:push_frames, [{opcode, payload}]})
+          {:noreply, sent(state)}
 
-      {:noreply, state}
+        {:poll, client_ref, ref} ->
+          send_client(state, client_ref, {:now_available, ref})
+          {:noreply, state}
+
+        nil ->
+          {:noreply, state}
+      end
     end
   end
 
@@ -331,9 +542,19 @@ defmodule Phoenix.Transports.Session do
     end
   end
 
-  # The client acknowledges the messages it received with each poll. When it did not
-  # acknowledge new messages within the window, and it has messages left to acknowledge,
-  # it does not get our responses. When it has none, it stopped polling.
+  # The messages we sent to a client that had none left to acknowledge
+  # get a new window, as a pipe can be idle for longer than the window.
+  defp sent(%{acked: acked, sent: acked} = state),
+    do: %{state | sent: state.out_seq, acked_at: now_ms()}
+
+  defp sent(state),
+    do: %{state | sent: state.out_seq}
+
+  # The client acknowledges the messages it received with each poll, or as a pipe
+  # receives them. When it did not acknowledge new messages within the window, and it
+  # has messages left to acknowledge, it does not get them. When it has none, it
+  # stopped polling or lost its pipe. A pipe that has nothing to acknowledge is idle.
+  defp expired?(%{client: {:pipe, _, _}, acked: acked, sent: acked}), do: false
   defp expired?(state), do: now_ms() - state.acked_at > state.window_ms
 
   defp stop_expired(%{acked: acked, sent: sent} = state) when acked < sent,

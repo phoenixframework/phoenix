@@ -252,8 +252,9 @@ defmodule Phoenix.Socket do
   @doc """
   Checks a client that resumes its socket over a new connection.
 
-  Long polling keeps the socket and its channels when a request fails, and the
-  client resumes them with its next poll. Only `c:connect/3` checks the first
+  Long polling, and WebSockets with the `:resumable` option, keep the socket and
+  its channels when a request or connection fails, and the client resumes them
+  over a new one. Only `c:connect/3` checks the first
   connection, so this callback lets you check the new one, for example to verify
   that the user is still logged in. It receives the params and `connect_info` of
   the new connection, and the socket returned by `c:connect/3`, with the
@@ -266,7 +267,8 @@ defmodule Phoenix.Socket do
   channels stop, and the client connects again and rejoins its channels,
   which invokes `c:connect/3`.
 
-  A client that long polls decides itself when it resumes after a failed request, so the
+  A WebSocket invokes this callback for every new connection of a client. A client
+  that long polls decides itself when it resumes after a failed request, so the
   callback does not run for its other requests. To make sure that a client loses
   access, disconnect its socket instead, see `c:id/1`.
 

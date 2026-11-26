@@ -141,6 +141,8 @@ defmodule Phoenix.Transports.LongPoll do
     receive do
       {:ok, ^ref} -> nil
       {:error, ^ref} -> nil
+      # the session belongs to a WebSocket, so the socket did not check this request
+      {:rejected, ^ref} -> :gone
     after
       opts[:window_ms] -> :request_timeout
     end
@@ -259,6 +261,9 @@ defmodule Phoenix.Transports.LongPoll do
         {:messages, messages, ^ref, last} ->
           {:ok, messages, last}
 
+        {:rejected, ^ref} ->
+          :rejected
+
         {:subscribe, ^echo_ref} ->
           expire(endpoint, server_ref, client_ref, ref, ack)
 
@@ -267,6 +272,7 @@ defmodule Phoenix.Transports.LongPoll do
 
           receive do
             {:messages, messages, ^ref, last} -> {:ok, messages, last}
+            {:rejected, ^ref} -> :rejected
           after
             opts[:window_ms] -> expire(endpoint, server_ref, client_ref, ref, ack)
           end
@@ -274,11 +280,17 @@ defmodule Phoenix.Transports.LongPoll do
         opts[:window_ms] -> expire(endpoint, server_ref, client_ref, ref, ack)
       end
 
-    {status, messages, last} = result
+    case result do
+      {status, messages, last} ->
+        conn
+        |> put_status(status)
+        |> status_token_messages_json(token, messages, last)
 
-    conn
-    |> put_status(status)
-    |> status_token_messages_json(token, messages, last)
+      :rejected ->
+        # The session belongs to a WebSocket, so the socket did not check this request.
+        # The client starts a new session.
+        conn |> put_status(:gone) |> status_json()
+    end
   end
 
   # The session handles our requests in order and echoes a subscribe, so the echo
