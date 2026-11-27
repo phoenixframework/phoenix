@@ -90,6 +90,10 @@ defmodule Phoenix.Logger do
 
   Phoenix's default is `["password"]`.
 
+  Parameter filtering does not change the logged request path. For example,
+  adding `"token"` to `:filter_parameters` hides the value in the parameter
+  log, but a request to `/reset/:token` still logs the token in the path.
+
   Phoenix can filter all parameters by default and selectively keep
   parameters. This can be configured like so:
 
