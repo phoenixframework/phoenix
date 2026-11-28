@@ -14,7 +14,8 @@ defmodule Phoenix.Router.Scope do
             private: %{},
             assigns: %{},
             log: :debug,
-            trailing_slash?: false
+            trailing_slash?: false,
+            routes?: false
 
   @doc """
   Initializes the scope.
@@ -48,6 +49,7 @@ defmodule Phoenix.Router.Scope do
     end
 
     {path, alias, as, private, assigns} = join(top, path, plug, alias?, as, private, assigns)
+    put_top(module, %{top | routes?: true})
 
     metadata =
       opts
@@ -126,6 +128,14 @@ defmodule Phoenix.Router.Scope do
       raise ArgumentError,
             "duplicate pipe_through for #{inspect(pipe)}. " <>
               "A plug may only be used once inside a scoped pipe_through"
+    end
+
+    if top.routes? do
+      IO.warn(
+        "calling pipe_through #{inspect(new_pipes)} after routes in the same scope is deprecated. " <>
+          "The routes defined before it do not go through the given pipelines. " <>
+          "Move pipe_through to the beginning of the scope"
+      )
     end
 
     put_top(module, %{top | pipes: pipes ++ new_pipes})

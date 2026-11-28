@@ -158,6 +158,53 @@ defmodule Phoenix.Router.PipelineTest do
     end
   end
 
+  test "pipe_through after routes in the same scope warns" do
+    warning =
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        defmodule LatePipeThroughRouter do
+          use Phoenix.Router, otp_app: :phoenix
+
+          pipeline :browser do
+          end
+
+          scope "/" do
+            get "/", SampleController, :index
+            pipe_through [:browser]
+          end
+        end
+      end)
+
+    assert warning =~
+             "calling pipe_through [:browser] after routes in the same scope is deprecated"
+  end
+
+  test "pipe_through before routes or in a nested scope does not warn" do
+    warning =
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        defmodule EarlyPipeThroughRouter do
+          use Phoenix.Router, otp_app: :phoenix
+
+          pipeline :browser do
+          end
+
+          pipeline :auth do
+          end
+
+          scope "/" do
+            pipe_through [:browser]
+            get "/", SampleController, :index
+
+            scope "/admin" do
+              pipe_through [:auth]
+              get "/", SampleController, :index
+            end
+          end
+        end
+      end)
+
+    refute warning =~ "pipe_through"
+  end
+
   test "pipeline raises on conflict" do
     assert_raise ArgumentError, ~r{there is an import from Kernel with the same name}, fn ->
       defmodule ConflictingPipeline do

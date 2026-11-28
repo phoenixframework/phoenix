@@ -1058,19 +1058,10 @@ defmodule Phoenix.Router do
 
   `pipe_through/1` can be invoked multiple times within the same scope. Each
   invocation appends new plugs and pipelines to run, which are applied to all
-  routes **after** the `pipe_through/1` invocation. For example:
-
-      scope "/" do
-        pipe_through [:browser]
-        get "/", HomeController, :index
-
-        pipe_through [:require_authenticated_user]
-        get "/settings", UserController, :edit
-      end
-
-  In the example above, `/` pipes through `browser` only, while `/settings` pipes
-  through both `browser` and `require_authenticated_user`. Therefore, to avoid
-  confusion, we recommend a single `pipe_through` at the top of each scope:
+  routes **after** the `pipe_through/1` invocation. Calling `pipe_through/1`
+  after routes have been defined in the same scope is deprecated, as it is
+  easy to miss that the earlier routes do not go through the new pipelines.
+  Instead, use a single `pipe_through` at the top of each scope:
 
       scope "/" do
         pipe_through [:browser]
