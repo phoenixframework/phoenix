@@ -56,7 +56,7 @@ Inside the scope block, however, we have our first actual route:
 get "/", PageController, :home
 ```
 
-`get` is a Phoenix macro that corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs, including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE, and HEAD.
+`get` is a Phoenix macro that corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs, including QUERY, POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE, and HEAD.
 
 > #### Why the macros? {: .info}
 >
