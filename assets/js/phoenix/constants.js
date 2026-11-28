@@ -17,6 +17,7 @@ export const CHANNEL_EVENTS = {
   close: "phx_close",
   error: "phx_error",
   join: "phx_join",
+  adopt: "phx_adopt",
   reply: "phx_reply",
   leave: "phx_leave"
 }
